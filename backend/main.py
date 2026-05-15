@@ -98,6 +98,9 @@ def create_app():
         x_content_type_options=True,
         x_xss_protection=True,
         frame_options='SAMEORIGIN',
+        session_cookie_secure=app.config.get('SESSION_COOKIE_SECURE', False),
+        session_cookie_http_only=app.config.get('SESSION_COOKIE_HTTPONLY', True),
+        session_cookie_samesite=app.config.get('SESSION_COOKIE_SAMESITE', 'Lax'),
     )
 
     login_manager = LoginManager()
@@ -186,5 +189,7 @@ def _criar_admin_inicial():
 
 if __name__ == '__main__':
     app = create_app()
+    host = os.environ.get('APP_HOST', '127.0.0.1')
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=False)
+    debug = os.environ.get('APP_DEBUG', 'true').lower() == 'true'
+    app.run(host=host, port=port, debug=debug)

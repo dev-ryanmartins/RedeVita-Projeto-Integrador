@@ -1,42 +1,19 @@
-from flask import Flask, render_template
-from flask_login import LoginManager
-from app.config import Config
-from app.database import init_db
-from app.models.usuario import Usuario
+"""Compatibilidade para configurações antigas que apontam para app.main:create_app.
 
-# Importando as rotas (Blueprints)
-from app.routes.auth import auth_bp
-from app.routes.inventario import inventory_bp
+O aplicativo oficial fica em backend/main.py. Este módulo apenas redireciona para
+esse factory para evitar divergência entre dois entrypoints Flask.
+"""
 
-def create_app():
-    app = Flask(__name__, 
-                template_folder='../../frontend/templates', 
-                static_folder='../../frontend/static')
-    
-    app.config.from_object(Config)
+from pathlib import Path
+import sys
 
-    # Inicializa Banco de Dados
-    init_db(app)
+BACKEND_DIR = Path(__file__).resolve().parents[1]
+if str(BACKEND_DIR) not in sys.path:
+    sys.path.insert(0, str(BACKEND_DIR))
 
-    # Configura o LoginManager
-    login_manager = LoginManager()
-    login_manager.login_view = 'auth.login'
-    login_manager.init_app(app)
+from main import create_app
 
-    @login_manager.user_loader
-    def load_user(user_id):
-        return Usuario.query.get(int(user_id))
-
-    # Registra as rotas
-    app.register_blueprint(auth_bp)
-    app.register_blueprint(inventory_bp)
-
-    @app.route('/')
-    def index():
-        return render_template('login.html')
-
-    return app
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=True)
+    app = create_app()
+    app.run(host='127.0.0.1', port=5000, debug=True)

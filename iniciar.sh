@@ -23,5 +23,4 @@ echo "Iniciando Flask em http://127.0.0.1:5000"
 echo "Pressione CTRL+C para encerrar."
 echo ""
 
-cd backend
-python main.py
+python rodar.py

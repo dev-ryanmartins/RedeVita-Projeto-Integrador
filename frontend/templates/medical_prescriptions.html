@@ -1,0 +1,361 @@
+{% extends "base.html" %}
+{% block title %}Prescrições Digitais — RedeVita{% endblock %}
+
+{% block extra_css %}
+<style>
+.presc-stats {
+    display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 24px;
+}
+.presc-stat-card {
+    flex: 1; min-width: 140px;
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px 20px;
+    display: flex; align-items: center; gap: 14px;
+}
+.presc-stat-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; flex-shrink: 0;
+}
+.presc-stat-label { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 2px; }
+.presc-stat-value { font-size: 1.4rem; font-weight: 700; color: var(--text-main); }
+
+.presc-card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px 20px; margin-bottom: 12px;
+    transition: var(--transition);
+}
+.presc-card:hover { border-color: var(--primary); }
+.presc-card.dispensada { opacity: 0.65; }
+
+.presc-header {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 8px; margin-bottom: 12px;
+}
+.presc-body { display: flex; flex-direction: column; gap: 6px; }
+.presc-info-row {
+    display: flex; align-items: baseline; gap: 8px; font-size: 0.88rem;
+}
+.presc-label {
+    font-size: 0.75rem; color: var(--text-muted);
+    min-width: 90px; flex-shrink: 0;
+}
+
+.pill { display: inline-flex; align-items: center; gap: 5px;
+    border-radius: 20px; padding: 3px 10px; font-size: 0.74rem; font-weight: 600; }
+.pill-pendente   { background: rgba(243,156,18,.12); color: #f5b942; border: 1px solid rgba(243,156,18,.3); }
+.pill-dispensada { background: rgba(46,204,113,.12);  color: #5dde8d; border: 1px solid rgba(46,204,113,.3); }
+.pill-344        { background: rgba(192,57,43,.15);   color: #ff6b6b; border: 1px solid rgba(192,57,43,.4);
+                   animation: pulsar 2.5s ease-in-out infinite; }
+@keyframes pulsar {
+    0%,100% { box-shadow: 0 0 0 0 rgba(192,57,43,0); }
+    50%      { box-shadow: 0 0 0 4px rgba(192,57,43,.2); }
+}
+
+.alerta-controlado {
+    display: none; border: 1px solid rgba(192,57,43,.4); border-radius: var(--radius);
+    background: rgba(192,57,43,.08); padding: 10px 14px; margin-top: 8px;
+    font-size: 0.82rem; color: #ff6b6b;
+}
+.alerta-controlado.show { display: flex; align-items: flex-start; gap: 8px; }
+.tipo-receita-field { display: none; }
+.tipo-receita-field.show { display: block; }
+
+.filter-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+.ftab {
+    padding: 5px 14px; border-radius: 20px;
+    border: 1px solid var(--border); background: var(--bg-input);
+    color: var(--text-muted); font-size: 0.8rem; font-weight: 600;
+    cursor: pointer; transition: var(--transition);
+}
+.ftab.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+.ftab:hover:not(.active) { border-color: var(--primary); color: var(--primary); }
+
+@media (max-width: 768px) {
+    .presc-grid { flex-direction: column !important; }
+    .presc-form-col { width: 100% !important; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header">
+        <div>
+            <h2><i class="fas fa-file-prescription"></i> Prescrições Digitais</h2>
+            <p class="page-subtitle">Emita e acompanhe receitas médicas. Medicamentos controlados (Portaria 344) exigem tipo especial.</p>
+        </div>
+        <span style="color:var(--text-muted); font-size:0.82rem; align-self:center;">
+            <i class="fas fa-user-md"></i> Área restrita: Admin · Médico
+        </span>
+    </div>
+
+    <!-- Estatísticas -->
+    <div class="presc-stats">
+        <div class="presc-stat-card">
+            <div class="presc-stat-icon" style="background:rgba(52,152,219,.15); color:var(--primary);">
+                <i class="fas fa-prescription"></i>
+            </div>
+            <div>
+                <div class="presc-stat-label">Total de Receitas</div>
+                <div class="presc-stat-value">{{ receitas|length }}</div>
+            </div>
+        </div>
+        <div class="presc-stat-card">
+            <div class="presc-stat-icon" style="background:rgba(243,156,18,.15); color:#f5b942;">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div>
+                <div class="presc-stat-label">Pendentes</div>
+                <div class="presc-stat-value">{{ total_pendentes }}</div>
+            </div>
+        </div>
+        <div class="presc-stat-card">
+            <div class="presc-stat-icon" style="background:rgba(46,204,113,.15); color:var(--success);">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div>
+                <div class="presc-stat-label">Dispensadas</div>
+                <div class="presc-stat-value">{{ receitas|selectattr('status','eq','dispensada')|list|length }}</div>
+            </div>
+        </div>
+        <div class="presc-stat-card">
+            <div class="presc-stat-icon" style="background:rgba(192,57,43,.15); color:#ff6b6b;">
+                <i class="fas fa-skull-crossbones"></i>
+            </div>
+            <div>
+                <div class="presc-stat-label">Controladas (P344)</div>
+                <div class="presc-stat-value">{{ total_controladas }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-grid presc-grid" style="display:flex; gap:20px; align-items:flex-start;">
+
+        <!-- Formulário -->
+        <div class="quick-actions presc-form-col" style="min-width:280px; max-width:340px; flex-shrink:0;">
+            <h3><i class="fas fa-file-medical"></i> Nova Prescrição</h3>
+            <form action="{{ url_for('medical.nova_prescricao') }}" method="POST" style="margin-top:16px;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="form-group">
+                    <label>Paciente <span class="required">*</span></label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-user-injured"></i>
+                        <select name="paciente_id" required>
+                            <option value="" disabled selected>Selecione o paciente…</option>
+                            {% for p in pacientes %}
+                                <option value="{{ p.id }}">{{ p.nome }} — {{ p.cpf }}</option>
+                            {% else %}
+                                <option disabled>Nenhum paciente cadastrado</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Médico Responsável <span class="required">*</span></label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-user-md"></i>
+                        <select name="medico_id" required>
+                            <option value="" disabled selected>Selecione o médico…</option>
+                            {% for m in medicos %}
+                                <option value="{{ m.id }}">Dr(a). {{ m.nome }} — {{ m.crm }}</option>
+                            {% else %}
+                                <option disabled>Nenhum médico cadastrado</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Medicamento <span style="color:var(--text-muted); font-size:0.78rem;">(opcional)</span></label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-pills"></i>
+                        <select name="medicamento_id" id="med-select" onchange="verificarControlado(this)">
+                            <option value="">Nenhum / Apenas observação</option>
+                            {% for m in medicamentos %}
+                                <option value="{{ m.id }}"
+                                        data-controlado="{{ '1' if m.controlado else '0' }}"
+                                        data-tipo="{{ m.tipo_receita_requerida }}">
+                                    {{ m.nome }}{% if m.controlado %} ⚠ P344{% endif %}
+                                    — Lote {{ m.lote }} ({{ m.quantidade }} un.)
+                                </option>
+                            {% else %}
+                                <option disabled>Nenhum medicamento disponível</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div id="alerta-controlado" class="alerta-controlado">
+                    <i class="fas fa-skull-crossbones" style="margin-top:2px; flex-shrink:0;"></i>
+                    <div>
+                        <strong>Medicamento Controlado — Portaria 344/98</strong><br>
+                        <span id="alerta-tipo-txt" style="font-size:0.78rem; opacity:.85;"></span>
+                    </div>
+                </div>
+
+                <div class="form-group tipo-receita-field" id="tipo-receita-field">
+                    <label>Tipo de Receita <span class="required">*</span></label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-file-prescription"></i>
+                        <select name="tipo_receita" id="tipo-receita-select">
+                            <option value="">Selecione o tipo…</option>
+                            {% for t in tipos_receita %}
+                                <option value="{{ t }}">{{ t }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Observações / Posologia</label>
+                    <textarea name="observacoes" rows="3"
+                        placeholder="Ex: 1 comprimido a cada 8h por 5 dias…"
+                        style="width:100%; background:var(--bg-input); border:1px solid var(--border);
+                               border-radius:var(--radius); color:var(--text-main); padding:10px 14px;
+                               font-family:inherit; font-size:0.88rem; resize:vertical; outline:none;
+                               transition:border-color .2s;"
+                        onfocus="this.style.borderColor='var(--primary)'"
+                        onblur="this.style.borderColor='var(--border)'"
+                        maxlength="1000"></textarea>
+                </div>
+
+                <button type="submit" class="btn-primary" style="width:100%; justify-content:center; margin-top:4px;">
+                    <i class="fas fa-file-medical"></i> Emitir Prescrição
+                </button>
+            </form>
+        </div>
+
+        <!-- Lista de Receitas -->
+        <div style="flex:1; min-width:0;">
+            <div class="filter-tabs">
+                <button class="ftab active" onclick="filtrar('todas', this)">Todas ({{ receitas|length }})</button>
+                <button class="ftab" onclick="filtrar('pendente', this)">
+                    <i class="fas fa-clock" style="color:#f5b942;"></i>
+                    Pendentes ({{ total_pendentes }})
+                </button>
+                <button class="ftab" onclick="filtrar('dispensada', this)">
+                    <i class="fas fa-check-circle" style="color:#5dde8d;"></i>
+                    Dispensadas
+                </button>
+                <button class="ftab" onclick="filtrar('controlada', this)" style="color:#ff6b6b;">
+                    <i class="fas fa-skull-crossbones"></i> P344
+                </button>
+            </div>
+
+            {% if receitas %}
+            <div id="lista-presc">
+                {% for r in receitas %}
+                <div class="presc-card{% if r.status == 'dispensada' %} dispensada{% endif %}"
+                     data-status="{{ r.status }}"
+                     data-controlada="{{ '1' if r.medicamento and r.medicamento.controlado else '0' }}">
+
+                    <div class="presc-header">
+                        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                            <span style="font-size:0.8rem; color:var(--text-muted); font-weight:600;">
+                                <i class="fas fa-hashtag"></i> Receita #{{ r.id }}
+                            </span>
+                            {% if r.status == 'pendente' %}
+                                <span class="pill pill-pendente"><i class="fas fa-clock"></i> Pendente</span>
+                            {% else %}
+                                <span class="pill pill-dispensada"><i class="fas fa-check-circle"></i> Dispensada</span>
+                            {% endif %}
+                            {% if r.medicamento and r.medicamento.controlado %}
+                                <span class="pill pill-344"><i class="fas fa-skull-crossbones"></i> Portaria 344</span>
+                            {% endif %}
+                        </div>
+                        <span style="color:var(--text-muted); font-size:0.78rem; white-space:nowrap;">
+                            {{ r.data_emissao.strftime('%d/%m/%Y %H:%M') }}
+                        </span>
+                    </div>
+
+                    <div class="presc-body">
+                        <div class="presc-info-row">
+                            <span class="presc-label"><i class="fas fa-user-injured"></i> Paciente</span>
+                            <strong>{{ r.paciente.nome }}</strong>
+                            <small style="color:var(--text-muted);">{{ r.paciente.cpf }}</small>
+                        </div>
+                        <div class="presc-info-row">
+                            <span class="presc-label"><i class="fas fa-user-md"></i> Médico</span>
+                            <strong>Dr(a). {{ r.medico.nome }}</strong>
+                            <small style="color:var(--text-muted);">CRM {{ r.medico.crm }}</small>
+                        </div>
+                        {% if r.medicamento %}
+                        <div class="presc-info-row">
+                            <span class="presc-label"><i class="fas fa-pills"></i> Medicamento</span>
+                            <strong>{{ r.medicamento.nome }}</strong>
+                            <small style="color:var(--text-muted);">{{ r.medicamento.tarja }} · Lote {{ r.medicamento.lote }}</small>
+                        </div>
+                        {% endif %}
+                        {% if r.tipo_receita %}
+                        <div class="presc-info-row">
+                            <span class="presc-label"><i class="fas fa-certificate"></i> Tipo</span>
+                            <span style="font-size:0.8rem; color:var(--primary);">{{ r.tipo_receita }}</span>
+                        </div>
+                        {% endif %}
+                        {% if r.observacoes %}
+                        <div class="presc-info-row" style="margin-top:4px;">
+                            <span class="presc-label"><i class="fas fa-sticky-note"></i> Posologia</span>
+                            <span style="font-size:0.84rem; color:var(--text-muted);">{{ r.observacoes }}</span>
+                        </div>
+                        {% endif %}
+                        {% if r.status == 'dispensada' and r.dispensada_em %}
+                        <div style="margin-top:6px; font-size:0.75rem; color:var(--text-muted); display:flex; align-items:center; gap:5px;">
+                            <i class="fas fa-check-circle" style="color:#5dde8d;"></i>
+                            Dispensada em {{ r.dispensada_em.strftime('%d/%m/%Y às %H:%M') }}
+                            {% if r.dispensada_por %} por <strong style="margin-left:3px;">{{ r.dispensada_por.nome }}</strong>{% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="quick-actions" style="text-align:center; padding:40px 20px;">
+                <i class="fas fa-file-prescription" style="font-size:2.5rem; color:var(--text-muted); display:block; margin-bottom:12px;"></i>
+                <p style="color:var(--text-muted);">Nenhuma prescrição emitida ainda.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function filtrar(status, btn) {
+    document.querySelectorAll('.ftab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.presc-card').forEach(card => {
+        let show = true;
+        if (status === 'pendente' || status === 'dispensada')
+            show = card.dataset.status === status;
+        else if (status === 'controlada')
+            show = card.dataset.controlada === '1';
+        card.style.display = show ? '' : 'none';
+    });
+}
+
+function verificarControlado(sel) {
+    const opt = sel.options[sel.selectedIndex];
+    const controlado = opt && opt.dataset.controlado === '1';
+    const tipoRequerido = opt ? (opt.dataset.tipo || '') : '';
+    const alerta = document.getElementById('alerta-controlado');
+    const field  = document.getElementById('tipo-receita-field');
+    const sel2   = document.getElementById('tipo-receita-select');
+    const txt    = document.getElementById('alerta-tipo-txt');
+    if (controlado) {
+        alerta.classList.add('show');
+        field.classList.add('show');
+        sel2.required = true;
+        txt.textContent = 'Receita exigida: ' + tipoRequerido;
+    } else {
+        alerta.classList.remove('show');
+        field.classList.remove('show');
+        sel2.required = false;
+    }
+}
+</script>
+{% endblock %}

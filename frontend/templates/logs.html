@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}Logs de Auditoria - RedeVita{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header">
+        <div>
+            <h2><i class="fas fa-shield-alt"></i> Logs de Auditoria</h2>
+            <p class="page-subtitle">Registro completo de todas as ações realizadas no sistema.</p>
+        </div>
+        <span style="color: var(--text-muted); font-size:0.85rem; align-self:center;">
+            <i class="fas fa-lock"></i> Acesso restrito — Admin
+        </span>
+    </div>
+
+    <div class="table-wrapper">
+        <table class="styled-table">
+            <thead>
+                <tr>
+                    <th>Data / Hora</th>
+                    <th>Usuário</th>
+                    <th>Ação</th>
+                    <th>Detalhes</th>
+                    <th>IP</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs.items %}
+                <tr>
+                    <td style="white-space:nowrap; color: var(--text-muted); font-size:0.83rem;">
+                        {{ log.created_at.strftime('%d/%m/%Y %H:%M:%S') }}
+                    </td>
+                    <td>
+                        {% if log.usuario %}
+                            <span style="display:flex; align-items:center; gap:6px;">
+                                <i class="fas fa-user-circle" style="color: var(--text-muted);"></i>
+                                <span>
+                                    <strong style="font-size:0.88rem;">{{ log.usuario.nome }}</strong>
+                                    <br><small style="color: var(--text-muted);">{{ log.usuario.cargo }}</small>
+                                </span>
+                            </span>
+                        {% else %}
+                            <span style="color: var(--text-muted);">Sistema</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="log-action-badge">
+                            {% if 'Exclusão' in log.acao or 'Excluiu' in log.acao %}
+                                <i class="fas fa-trash" style="color: var(--danger);"></i>
+                            {% elif 'Novo' in log.acao or 'Cadastro' in log.acao %}
+                                <i class="fas fa-plus-circle" style="color: var(--success);"></i>
+                            {% elif 'Edição' in log.acao or 'Alteração' in log.acao %}
+                                <i class="fas fa-pen" style="color: var(--primary);"></i>
+                            {% elif 'Login' in log.acao %}
+                                <i class="fas fa-sign-in-alt" style="color: var(--success);"></i>
+                            {% elif 'Logout' in log.acao %}
+                                <i class="fas fa-sign-out-alt" style="color: var(--text-muted);"></i>
+                            {% elif 'Doação' in log.acao %}
+                                <i class="fas fa-hand-holding-heart" style="color: var(--warning);"></i>
+                            {% elif 'Exportação' in log.acao %}
+                                <i class="fas fa-download" style="color: var(--primary);"></i>
+                            {% else %}
+                                <i class="fas fa-info-circle" style="color: var(--text-muted);"></i>
+                            {% endif %}
+                            {{ log.acao }}
+                        </span>
+                    </td>
+                    <td style="font-size:0.85rem; color: var(--text-muted); max-width:320px;">
+                        {{ log.detalhes or '—' }}
+                    </td>
+                    <td style="font-size:0.8rem; color: var(--text-muted);">
+                        <code>{{ log.ip or '—' }}</code>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="empty-state">
+                        <i class="fas fa-shield-alt"></i>
+                        <p>Nenhuma atividade registrada ainda.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if logs.pages > 1 %}
+    <div class="pagination">
+        {% if logs.has_prev %}
+            <a href="{{ url_for('logs.listar_logs', page=logs.prev_num) }}" class="btn-secondary">
+                <i class="fas fa-chevron-left"></i> Anterior
+            </a>
+        {% endif %}
+        <span style="color: var(--text-muted); font-size:0.85rem;">
+            Página {{ logs.page }} de {{ logs.pages }}
+        </span>
+        {% if logs.has_next %}
+            <a href="{{ url_for('logs.listar_logs', page=logs.next_num) }}" class="btn-secondary">
+                Próxima <i class="fas fa-chevron-right"></i>
+            </a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

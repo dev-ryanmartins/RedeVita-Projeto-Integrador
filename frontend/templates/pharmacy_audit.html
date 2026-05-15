@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+{% block title %}Auditoria de Lotes — RedeVita{% endblock %}
+
+{% block extra_css %}
+<style>
+.audit-stats {
+    display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 24px;
+}
+.audit-stat {
+    flex: 1; min-width: 140px;
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px 20px;
+    display: flex; align-items: center; gap: 14px;
+}
+.audit-stat-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; flex-shrink: 0;
+}
+.audit-stat-label { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 2px; }
+.audit-stat-value { font-size: 1.4rem; font-weight: 700; color: var(--text-main); }
+
+.audit-section-title {
+    font-size: 1rem; font-weight: 700; color: var(--text-main);
+    display: flex; align-items: center; gap: 8px;
+    margin: 24px 0 12px;
+    padding-bottom: 8px; border-bottom: 1px solid var(--border);
+}
+
+.lote-card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px 18px;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px; margin-bottom: 10px;
+    transition: var(--transition);
+}
+.lote-card:hover { border-color: var(--danger); }
+.lote-card.vencido { border-left: 3px solid var(--danger); }
+.lote-card.atencao  { border-left: 3px solid #f5b942; }
+.lote-card.p344     { animation: pulsar344 2.5s ease-in-out infinite; }
+@keyframes pulsar344 {
+    0%,100% { box-shadow: 0 0 0 0 rgba(192,57,43,0); }
+    50%      { box-shadow: 0 0 0 4px rgba(192,57,43,.2); }
+}
+
+.lote-info { display: flex; flex-direction: column; gap: 3px; }
+.lote-nome { font-weight: 700; font-size: 0.95rem; color: var(--text-main); }
+.lote-meta { font-size: 0.78rem; color: var(--text-muted); display: flex; gap: 10px; flex-wrap: wrap; }
+
+.badge-vencido { background:rgba(231,76,60,.15); color:#e74c3c; border:1px solid rgba(231,76,60,.3);
+    border-radius:20px; padding:3px 10px; font-size:0.74rem; font-weight:700;
+    display:inline-flex; align-items:center; gap:5px; }
+.badge-atencao { background:rgba(243,156,18,.12); color:#f5b942; border:1px solid rgba(243,156,18,.3);
+    border-radius:20px; padding:3px 10px; font-size:0.74rem; font-weight:700;
+    display:inline-flex; align-items:center; gap:5px; }
+.badge-344 { background:rgba(192,57,43,.15); color:#ff6b6b; border:1px solid rgba(192,57,43,.4);
+    border-radius:20px; padding:3px 10px; font-size:0.74rem; font-weight:700;
+    display:inline-flex; align-items:center; gap:5px; }
+.badge-qty { background:var(--bg-input); border:1px solid var(--border);
+    border-radius:20px; padding:3px 10px; font-size:0.74rem; color:var(--text-muted);
+    display:inline-flex; align-items:center; gap:5px; }
+
+.empty-audit {
+    text-align: center; padding: 40px 20px;
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius); color: var(--text-muted);
+}
+.empty-audit i { font-size: 2.2rem; display: block; margin-bottom: 10px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header">
+        <div>
+            <h2><i class="fas fa-vials"></i> Auditoria de Lotes</h2>
+            <p class="page-subtitle">Revisão de medicamentos vencidos e próximos ao vencimento. Conformidade ANVISA / Portaria 344.</p>
+        </div>
+        <span style="color:var(--text-muted); font-size:0.82rem; align-self:center;">
+            <i class="fas fa-lock"></i> Área restrita: Admin · Farmacêutico
+        </span>
+    </div>
+
+    <!-- Estatísticas -->
+    <div class="audit-stats">
+        <div class="audit-stat">
+            <div class="audit-stat-icon" style="background:rgba(231,76,60,.15); color:var(--danger);">
+                <i class="fas fa-times-circle"></i>
+            </div>
+            <div>
+                <div class="audit-stat-label">Lotes Vencidos</div>
+                <div class="audit-stat-value" style="color:var(--danger);">{{ vencidos|length }}</div>
+            </div>
+        </div>
+        <div class="audit-stat">
+            <div class="audit-stat-icon" style="background:rgba(243,156,18,.15); color:#f5b942;">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div>
+                <div class="audit-stat-label">Próximos ao Vencimento</div>
+                <div class="audit-stat-value" style="color:#f5b942;">{{ proximos|length }}</div>
+            </div>
+        </div>
+        <div class="audit-stat">
+            <div class="audit-stat-icon" style="background:rgba(192,57,43,.15); color:#ff6b6b;">
+                <i class="fas fa-skull-crossbones"></i>
+            </div>
+            <div>
+                <div class="audit-stat-label">Controlados Críticos (P344)</div>
+                <div class="audit-stat-value" style="color:#ff6b6b;">{{ controlados_criticos|length }}</div>
+            </div>
+        </div>
+        <div class="audit-stat">
+            <div class="audit-stat-icon" style="background:rgba(52,152,219,.15); color:var(--primary);">
+                <i class="fas fa-boxes"></i>
+            </div>
+            <div>
+                <div class="audit-stat-label">Unidades Vencidas em Estoque</div>
+                <div class="audit-stat-value">{{ total_unidades_vencidas }}</div>
+            </div>
+        </div>
+    </div>
+
+    {% if controlados_criticos %}
+    <div style="background:rgba(192,57,43,.08); border:1px solid rgba(192,57,43,.4); border-radius:var(--radius); padding:12px 16px; margin-bottom:20px; display:flex; gap:10px; align-items:flex-start;">
+        <i class="fas fa-skull-crossbones" style="color:#ff6b6b; margin-top:2px; flex-shrink:0;"></i>
+        <div style="font-size:0.85rem; color:#ff6b6b;">
+            <strong>Atenção — Portaria 344/98:</strong>
+            {{ controlados_criticos|length }} medicamento(s) controlado(s) com validade crítica.
+            Ação imediata requerida conforme regulamentação ANVISA.
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Vencidos -->
+    <div class="audit-section-title" style="color:var(--danger);">
+        <i class="fas fa-times-circle"></i> Lotes Vencidos ({{ vencidos|length }})
+    </div>
+
+    {% if vencidos %}
+        {% for m in vencidos %}
+        <div class="lote-card vencido{% if m.controlado %} p344{% endif %}">
+            <div class="lote-info">
+                <div class="lote-nome">{{ m.nome }}</div>
+                <div class="lote-meta">
+                    <span><i class="fas fa-barcode"></i> Lote: {{ m.lote }}</span>
+                    {% if m.principio_ativo %}
+                    <span><i class="fas fa-atom"></i> {{ m.principio_ativo }}</span>
+                    {% endif %}
+                    <span><i class="fas fa-calendar-times" style="color:var(--danger);"></i>
+                        Vencimento: <strong style="color:var(--danger);">{{ m.data_validade.strftime('%d/%m/%Y') }}</strong>
+                    </span>
+                </div>
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                <span class="badge-qty"><i class="fas fa-boxes"></i> {{ m.quantidade }} un.</span>
+                <span class="badge-vencido"><i class="fas fa-times-circle"></i> Vencido</span>
+                {% if m.controlado %}
+                <span class="badge-344"><i class="fas fa-skull-crossbones"></i> Portaria 344</span>
+                {% endif %}
+                <span style="font-size:0.76rem; color:var(--text-muted); background:var(--bg-input); border:1px solid var(--border); border-radius:20px; padding:3px 10px;">
+                    {{ m.tarja }}
+                </span>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+    <div class="empty-audit">
+        <i class="fas fa-check-circle" style="color:var(--success);"></i>
+        <p>Nenhum lote vencido encontrado.</p>
+    </div>
+    {% endif %}
+
+    <!-- Próximos ao Vencimento -->
+    <div class="audit-section-title" style="color:#f5b942; margin-top:32px;">
+        <i class="fas fa-exclamation-triangle"></i> Próximos ao Vencimento ({{ proximos|length }})
+    </div>
+
+    {% if proximos %}
+        {% for m in proximos %}
+        <div class="lote-card atencao{% if m.controlado %} p344{% endif %}">
+            <div class="lote-info">
+                <div class="lote-nome">{{ m.nome }}</div>
+                <div class="lote-meta">
+                    <span><i class="fas fa-barcode"></i> Lote: {{ m.lote }}</span>
+                    {% if m.principio_ativo %}
+                    <span><i class="fas fa-atom"></i> {{ m.principio_ativo }}</span>
+                    {% endif %}
+                    <span><i class="fas fa-calendar-alt" style="color:#f5b942;"></i>
+                        Vencimento: <strong style="color:#f5b942;">{{ m.data_validade.strftime('%d/%m/%Y') }}</strong>
+                    </span>
+                </div>
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                <span class="badge-qty"><i class="fas fa-boxes"></i> {{ m.quantidade }} un.</span>
+                <span class="badge-atencao"><i class="fas fa-exclamation-triangle"></i> Atenção</span>
+                {% if m.controlado %}
+                <span class="badge-344"><i class="fas fa-skull-crossbones"></i> Portaria 344</span>
+                {% endif %}
+                <span style="font-size:0.76rem; color:var(--text-muted); background:var(--bg-input); border:1px solid var(--border); border-radius:20px; padding:3px 10px;">
+                    {{ m.tarja }}
+                </span>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+    <div class="empty-audit">
+        <i class="fas fa-calendar-check" style="color:var(--success);"></i>
+        <p>Nenhum medicamento próximo ao vencimento.</p>
+    </div>
+    {% endif %}
+
+    <div style="margin-top:24px; padding:14px 18px; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); font-size:0.8rem; color:var(--text-muted); display:flex; align-items:center; gap:8px;">
+        <i class="fas fa-info-circle"></i>
+        Auditoria gerada em {{ hoje.strftime('%d/%m/%Y') }}.
+        Medicamentos marcados como "Próximos ao Vencimento" vencem nos próximos 90 dias.
+        Para excluir lotes vencidos, acesse o <a href="{{ url_for('inventory.listar_medicamentos') }}" style="color:var(--primary);">Inventário</a> (Admin).
+    </div>
+</div>
+{% endblock %}

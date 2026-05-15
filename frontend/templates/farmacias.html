@@ -1,0 +1,277 @@
+{% extends "base.html" %}
+{% block title %}Farmácias - RedeVita{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header">
+        <div>
+            <h2><i class="fas fa-hospital"></i> Gestão de Farmácias</h2>
+            <p class="page-subtitle">Cadastre e gerencie os estabelecimentos parceiros.</p>
+        </div>
+        <button class="btn-primary" onclick="abrirModal('modal-add')">
+            <i class="fas fa-plus"></i> Nova Farmácia
+        </button>
+    </div>
+
+    <div class="table-wrapper">
+        <table class="styled-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Nome Fantasia</th>
+                    <th>Razão Social</th>
+                    <th>CNPJ</th>
+                    <th>Responsável</th>
+                    <th>Endereço</th>
+                    <th>Cadastrado em</th>
+                    <th style="text-align:center;">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for f in farmacias %}
+                <tr>
+                    <td style="color: var(--text-muted);">{{ loop.index }}</td>
+                    <td>
+                        <strong>{{ f.nome_fantasia }}</strong>
+                    </td>
+                    <td style="color: var(--text-muted); font-size:0.85rem;">
+                        {{ f.razao_social or '—' }}
+                    </td>
+                    <td><code class="lote-code">{{ f.cnpj }}</code></td>
+                    <td>
+                        <i class="fas fa-user" style="color: var(--text-muted); font-size:0.8rem;"></i>
+                        {{ f.responsavel }}
+                    </td>
+                    <td style="max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+                               color: var(--text-muted); font-size: 0.85rem;" title="{{ f.endereco }}">
+                        <i class="fas fa-map-marker-alt" style="color: var(--text-muted); font-size:0.8rem;"></i>
+                        {{ f.endereco }}
+                    </td>
+                    <td style="color: var(--text-muted); font-size: 0.85rem;">
+                        {{ f.created_at.strftime('%d/%m/%Y') if f.created_at else '—' }}
+                    </td>
+                    <td style="text-align:center;">
+                        <div class="action-btns">
+                            <button class="btn-icon btn-edit" title="Editar"
+                                data-id="{{ f.id }}"
+                                data-nome="{{ f.nome_fantasia }}"
+                                data-razao="{{ f.razao_social or '' }}"
+                                data-cnpj="{{ f.cnpj }}"
+                                data-endereco="{{ f.endereco }}"
+                                data-responsavel="{{ f.responsavel }}"
+                                onclick="abrirEdicaoFarmacia(this)">
+                                <i class="fas fa-pen"></i>
+                            </button>
+                            <button class="btn-icon btn-delete" title="Excluir"
+                                data-id="{{ f.id }}"
+                                data-nome="{{ f.nome_fantasia }}"
+                                onclick="confirmarExclusao(this)">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8" class="empty-state">
+                        <i class="fas fa-hospital"></i>
+                        <p>Nenhuma farmácia cadastrada ainda.</p>
+                        <button class="btn-primary" onclick="abrirModal('modal-add')">Cadastrar a primeira</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="modal-add" class="modal-overlay" onclick="fecharModalFora(event, 'modal-add')">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3><i class="fas fa-hospital"></i> Nova Farmácia</h3>
+            <button class="modal-close" onclick="fecharModal('modal-add')">&times;</button>
+        </div>
+        <form action="{{ url_for('farmacias.nova_farmacia') }}" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-row">
+                <div class="form-group" style="flex: 2;">
+                    <label>Nome Fantasia <span class="required">*</span></label>
+                    <input type="text" name="nome_fantasia" placeholder="Ex: Farmácia Popular" required maxlength="150">
+                </div>
+                <div class="form-group">
+                    <label>CNPJ <span class="required">*</span></label>
+                    <input type="text" name="cnpj" placeholder="00.000.000/0000-00" required maxlength="18" class="mask-cnpj">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Razão Social</label>
+                <input type="text" name="razao_social" placeholder="Ex: Farmácia Popular LTDA" maxlength="200">
+            </div>
+            <div class="form-group">
+                <label>Responsável <span class="required">*</span></label>
+                <input type="text" name="responsavel" placeholder="Nome do responsável legal" required maxlength="150">
+            </div>
+            <div class="form-row">
+                <div class="form-group" style="flex: 0 0 140px;">
+                    <label>CEP</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-map-pin"></i>
+                        <input type="text" id="add-cep-farm" placeholder="00000-000" maxlength="9"
+                               class="mask-cep" oninput="buscarCEP(this,'add-endereco-farm','add-bairro-farm','add-cidade-farm')">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Bairro</label>
+                    <input type="text" id="add-bairro-farm" placeholder="Bairro" maxlength="100">
+                </div>
+                <div class="form-group">
+                    <label>Cidade / UF</label>
+                    <input type="text" id="add-cidade-farm" placeholder="Cidade - UF" maxlength="80">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Endereço Completo <span class="required">*</span></label>
+                <input type="text" id="add-endereco-farm" name="endereco"
+                       placeholder="Rua, número, bairro, cidade - UF" required maxlength="255">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="fecharModal('modal-add')">Cancelar</button>
+                <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Cadastrar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="modal-edit" class="modal-overlay" onclick="fecharModalFora(event, 'modal-edit')">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3><i class="fas fa-pen"></i> Editar Farmácia</h3>
+            <button class="modal-close" onclick="fecharModal('modal-edit')">&times;</button>
+        </div>
+        <form id="form-edit" action="" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-row">
+                <div class="form-group" style="flex: 2;">
+                    <label>Nome Fantasia <span class="required">*</span></label>
+                    <input type="text" id="edit-nome" name="nome_fantasia" required maxlength="150">
+                </div>
+                <div class="form-group">
+                    <label>CNPJ <span class="required">*</span></label>
+                    <input type="text" id="edit-cnpj" name="cnpj" required maxlength="18" class="mask-cnpj">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Razão Social</label>
+                <input type="text" id="edit-razao" name="razao_social" maxlength="200">
+            </div>
+            <div class="form-group">
+                <label>Responsável <span class="required">*</span></label>
+                <input type="text" id="edit-responsavel" name="responsavel" required maxlength="150">
+            </div>
+            <div class="form-row">
+                <div class="form-group" style="flex: 0 0 140px;">
+                    <label>CEP</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-map-pin"></i>
+                        <input type="text" id="edit-cep-farm" placeholder="00000-000" maxlength="9"
+                               class="mask-cep" oninput="buscarCEP(this,'edit-endereco','edit-bairro-farm','edit-cidade-farm')">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Bairro</label>
+                    <input type="text" id="edit-bairro-farm" placeholder="Bairro" maxlength="100">
+                </div>
+                <div class="form-group">
+                    <label>Cidade / UF</label>
+                    <input type="text" id="edit-cidade-farm" placeholder="Cidade - UF" maxlength="80">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Endereço Completo <span class="required">*</span></label>
+                <input type="text" id="edit-endereco" name="endereco" required maxlength="255">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="fecharModal('modal-edit')">Cancelar</button>
+                <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Salvar Alterações</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="modal-delete" class="modal-overlay" onclick="fecharModalFora(event, 'modal-delete')">
+    <div class="modal-box modal-sm">
+        <div class="modal-header">
+            <h3><i class="fas fa-trash"></i> Confirmar Exclusão</h3>
+            <button class="modal-close" onclick="fecharModal('modal-delete')">&times;</button>
+        </div>
+        <p id="delete-msg" style="color: var(--text-muted); margin-bottom: 24px;"></p>
+        <form id="form-delete" action="" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="fecharModal('modal-delete')">Cancelar</button>
+                <button type="submit" class="btn-danger"><i class="fas fa-trash"></i> Excluir</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function abrirModal(id) {
+    document.getElementById(id).classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+function fecharModal(id) {
+    document.getElementById(id).classList.remove('active');
+    document.body.style.overflow = '';
+}
+function fecharModalFora(event, id) {
+    if (event.target.id === id) fecharModal(id);
+}
+function abrirEdicaoFarmacia(btn) {
+    const id = btn.dataset.id;
+    document.getElementById('form-edit').action = `/farmacia/${id}/editar`;
+    document.getElementById('edit-nome').value = btn.dataset.nome;
+    document.getElementById('edit-razao').value = btn.dataset.razao;
+    document.getElementById('edit-cnpj').value = btn.dataset.cnpj;
+    document.getElementById('edit-responsavel').value = btn.dataset.responsavel;
+    document.getElementById('edit-endereco').value = btn.dataset.endereco;
+    document.getElementById('edit-cep-farm').value = '';
+    document.getElementById('edit-bairro-farm').value = '';
+    document.getElementById('edit-cidade-farm').value = '';
+    abrirModal('modal-edit');
+}
+function confirmarExclusao(btn) {
+    const id = btn.dataset.id;
+    const nome = btn.dataset.nome;
+    document.getElementById('form-delete').action = `/farmacia/${id}/excluir`;
+    document.getElementById('delete-msg').textContent =
+        `Tem certeza que deseja excluir a farmácia "${nome}"? Esta ação não pode ser desfeita.`;
+    abrirModal('modal-delete');
+}
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') ['modal-add', 'modal-edit', 'modal-delete'].forEach(fecharModal);
+});
+
+async function buscarCEP(input, idEndereco, idBairro, idCidade) {
+    const cep = input.value.replace(/\D/g, '');
+    if (cep.length !== 8) return;
+    const spinner = document.createElement('small');
+    spinner.id = 'cep-spin-' + idEndereco;
+    spinner.style.cssText = 'color:var(--primary);font-size:.75rem;margin-left:6px;';
+    spinner.textContent = 'Buscando…';
+    input.parentElement.appendChild(spinner);
+    try {
+        const r = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+        const d = await r.json();
+        if (d.erro) { spinner.textContent = 'CEP não encontrado.'; return; }
+        const rua = [d.logradouro, d.bairro, d.localidade + ' - ' + d.uf].filter(Boolean).join(', ');
+        document.getElementById(idEndereco).value = rua;
+        if (idBairro) document.getElementById(idBairro).value = d.bairro || '';
+        if (idCidade) document.getElementById(idCidade).value = (d.localidade || '') + (d.uf ? ' - ' + d.uf : '');
+        spinner.remove();
+    } catch { spinner.textContent = 'Erro ao buscar CEP.'; }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+{% block title %}Triagem de Entrada — RedeVita{% endblock %}
+
+{% block extra_css %}
+<style>
+.triagem-grid {
+    display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;
+}
+.triagem-form-col {
+    min-width: 280px; max-width: 360px; flex-shrink: 0;
+}
+@media (max-width: 768px) {
+    .triagem-grid { flex-direction: column; }
+    .triagem-form-col { max-width: 100%; }
+}
+
+.status-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    border-radius: 20px; padding: 3px 10px;
+    font-size: 0.74rem; font-weight: 700;
+}
+.status-ok      { background:rgba(46,204,113,.12); color:#5dde8d; border:1px solid rgba(46,204,113,.3); }
+.status-atencao { background:rgba(243,156,18,.12);  color:#f5b942; border:1px solid rgba(243,156,18,.3); }
+.status-vencido { background:rgba(231,76,60,.15);   color:#e74c3c; border:1px solid rgba(231,76,60,.3); }
+.status-344     { background:rgba(192,57,43,.15);   color:#ff6b6b; border:1px solid rgba(192,57,43,.4);
+                  animation: pulsar 2.5s ease-in-out infinite; }
+@keyframes pulsar {
+    0%,100% { box-shadow: 0 0 0 0 rgba(192,57,43,0); }
+    50%      { box-shadow: 0 0 0 4px rgba(192,57,43,.2); }
+}
+
+.recente-card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 12px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 10px; margin-bottom: 8px;
+    transition: var(--transition);
+}
+.recente-card:hover { border-color: var(--primary); }
+.recente-nome { font-weight: 600; font-size: 0.9rem; color: var(--text-main); }
+.recente-meta { font-size: 0.76rem; color: var(--text-muted); display:flex; gap:8px; flex-wrap:wrap; margin-top:2px; }
+
+.info-box {
+    background: rgba(52,152,219,.08); border: 1px solid rgba(52,152,219,.3);
+    border-radius: var(--radius); padding: 12px 16px;
+    font-size: 0.82rem; color: var(--text-muted);
+    display: flex; gap: 10px; align-items: flex-start;
+    margin-bottom: 20px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header">
+        <div>
+            <h2><i class="fas fa-clipboard-check"></i> Triagem de Entrada</h2>
+            <p class="page-subtitle">Validação e registro de medicamentos recebidos por doação. Confira condições e validade antes de aceitar.</p>
+        </div>
+        <span style="color:var(--text-muted); font-size:0.82rem; align-self:center;">
+            <i class="fas fa-lock"></i> Área restrita: Admin · Operador · Farmacêutico
+        </span>
+    </div>
+
+    <div class="info-box">
+        <i class="fas fa-info-circle" style="color:var(--primary); flex-shrink:0; margin-top:1px;"></i>
+        <div>
+            <strong>Como funciona a triagem:</strong> Ao preencher o formulário, o medicamento é validado e adicionado diretamente ao estoque.
+            Medicamentos vencidos ou próximos ao vencimento geram um alerta automático.
+            Medicamentos <strong>Portaria 344</strong> exigem atenção redobrada e documentação.
+        </div>
+    </div>
+
+    <div class="triagem-grid">
+
+        <!-- Formulário de triagem -->
+        <div class="quick-actions triagem-form-col">
+            <h3><i class="fas fa-plus-circle"></i> Registrar Recebimento</h3>
+            <form action="{{ url_for('donation.triagem') }}" method="POST" style="margin-top:16px;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="form-group">
+                    <label>Nome do Medicamento <span class="required">*</span></label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-pills"></i>
+                        <input type="text" name="nome" placeholder="Ex: Dipirona 500mg" required maxlength="100">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Princípio Ativo</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-atom"></i>
+                        <input type="text" name="principio_ativo" placeholder="Ex: Metamizol sódico" maxlength="120">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Número do Lote <span class="required">*</span></label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-barcode"></i>
+                        <input type="text" name="lote" placeholder="Ex: L2024-001" required maxlength="50">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Data de Validade <span class="required">*</span></label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-calendar-alt"></i>
+                        <input type="date" name="data_validade" required class="date-future">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Quantidade Recebida <span class="required">*</span></label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-sort-numeric-up"></i>
+                        <input type="number" name="quantidade" placeholder="0" min="1" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Classificação (Tarja)</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-tag"></i>
+                        <select name="tarja">
+                            {% for t in tarjas %}
+                                <option value="{{ t }}">{{ t }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Nome do Doador</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-user"></i>
+                        <input type="text" name="doador" placeholder="Nome ou instituição doadora" maxlength="150">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Observações da Triagem</label>
+                    <textarea name="observacoes" rows="2"
+                        placeholder="Ex: Embalagem lacrada, sem sinais de adulteração…"
+                        style="width:100%; background:var(--bg-input); border:1px solid var(--border);
+                               border-radius:var(--radius); color:var(--text-main); padding:10px 14px;
+                               font-family:inherit; font-size:0.88rem; resize:vertical; outline:none;
+                               transition:border-color .2s;"
+                        onfocus="this.style.borderColor='var(--primary)'"
+                        onblur="this.style.borderColor='var(--border)'"
+                        maxlength="500"></textarea>
+                </div>
+
+                <button type="submit" class="btn-primary" style="width:100%; justify-content:center; margin-top:4px;"
+                        onclick="return confirm('Confirmar entrada deste medicamento no estoque?')">
+                    <i class="fas fa-clipboard-check"></i> Aprovar e Adicionar ao Estoque
+                </button>
+            </form>
+        </div>
+
+        <!-- Últimas entradas -->
+        <div style="flex:1; min-width:0;">
+            <h3 style="margin-bottom:14px;"><i class="fas fa-history"></i> Últimas Entradas no Estoque</h3>
+
+            {% if recentes %}
+                {% for m in recentes %}
+                <div class="recente-card">
+                    <div>
+                        <div class="recente-nome">{{ m.nome }}</div>
+                        <div class="recente-meta">
+                            <span><i class="fas fa-barcode"></i> {{ m.lote }}</span>
+                            <span><i class="fas fa-calendar-alt"></i> Val: {{ m.data_validade.strftime('%d/%m/%Y') }}</span>
+                            <span><i class="fas fa-boxes"></i> {{ m.quantidade }} un.</span>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+                        {% if m.status_semaforo == 2 %}
+                            <span class="status-badge status-vencido"><i class="fas fa-times-circle"></i> Vencido</span>
+                        {% elif m.status_semaforo == 1 %}
+                            <span class="status-badge status-atencao"><i class="fas fa-exclamation-triangle"></i> Atenção</span>
+                        {% else %}
+                            <span class="status-badge status-ok"><i class="fas fa-check-circle"></i> Válido</span>
+                        {% endif %}
+                        {% if m.controlado %}
+                            <span class="status-badge status-344"><i class="fas fa-skull-crossbones"></i> P344</span>
+                        {% endif %}
+                        <span style="font-size:0.74rem; color:var(--text-muted); background:var(--bg-input);
+                                     border:1px solid var(--border); border-radius:20px; padding:3px 9px;">
+                            {{ m.tarja }}
+                        </span>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+            <div style="text-align:center; padding:40px 20px; background:var(--bg-card);
+                        border:1px solid var(--border); border-radius:var(--radius); color:var(--text-muted);">
+                <i class="fas fa-inbox" style="font-size:2rem; display:block; margin-bottom:10px;"></i>
+                <p>Nenhum medicamento no estoque ainda.</p>
+            </div>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+{% endblock %}

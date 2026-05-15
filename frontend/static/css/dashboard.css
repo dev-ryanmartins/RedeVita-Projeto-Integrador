@@ -1,0 +1,93 @@
+/* ==========================================================================
+   DASHBOARD E CARDS DE ESTATÍSTICA
+   ========================================================================== */
+.dashboard-container {
+    padding: 30px;
+    animation: fadeIn 0.6s ease-out;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
+    margin-top: 30px;
+}
+
+.stat-card {
+    background: var(--bg-card);
+    padding: 30px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow);
+}
+
+/* Efeito de destaque ao passar o mouse */
+.stat-card:hover {
+    transform: translateY(-8px);
+    border-color: var(--primary);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+}
+
+.stat-card i {
+    font-size: 2.5rem;
+    color: var(--primary);
+}
+
+/* Cores específicas para alertas e sucessos */
+.stat-card.warning i { color: var(--warning); }
+.stat-card.success i { color: var(--success); }
+
+.stat-info .stat-value {
+    font-size: 1.8rem;
+    font-weight: 800;
+    display: block;
+    color: var(--text-main);
+}
+
+.stat-info .stat-label {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Botões de Ação Rápida no Dashboard */
+.quick-actions-box {
+    margin-top: 40px;
+    padding: 25px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 20px;
+    border: 1px solid var(--border);
+}
+
+.btn-dash {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 24px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: 0.3s;
+    margin-right: 15px;
+}
+
+.btn-dash.primary {
+    background: var(--primary);
+    color: white;
+}
+
+.btn-dash.secondary {
+    background: var(--bg-input);
+    color: var(--text-main);
+    border: 1px solid var(--border);
+}
+
+.btn-dash:hover {
+    opacity: 0.9;
+    transform: scale(1.02);
+}

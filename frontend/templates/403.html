@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Acesso Negado — RedeVita{% endblock %}
+
+{% block content %}
+<div class="page-wrapper" style="display:flex; align-items:center; justify-content:center; min-height:60vh;">
+    <div style="text-align:center; max-width:420px; padding:40px 24px;">
+        <div style="font-size:4rem; margin-bottom:16px; color:var(--danger);">
+            <i class="fas fa-ban"></i>
+        </div>
+        <h2 style="font-size:1.6rem; margin-bottom:8px; color:var(--text-main);">
+            Acesso Negado
+        </h2>
+        <p style="color:var(--text-muted); margin-bottom:6px; font-size:0.95rem;">
+            Você não tem permissão para acessar esta área.
+        </p>
+        <p style="color:var(--text-muted); font-size:0.82rem; margin-bottom:28px;">
+            Esta seção é restrita ao seu perfil de acesso
+            {% if current_user.is_authenticated %}
+            (<strong style="color:var(--text-main);">{{ current_user.cargo }}</strong>){% endif %}.
+            Caso acredite que isto é um erro, contate o administrador do sistema.
+        </p>
+        <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+            <a href="{{ url_for('inventory.dashboard') }}" class="btn-primary">
+                <i class="fas fa-home"></i> Voltar ao Dashboard
+            </a>
+            <a href="javascript:history.back()" class="btn-secondary">
+                <i class="fas fa-arrow-left"></i> Página Anterior
+            </a>
+        </div>
+        <p style="margin-top:32px; font-size:0.75rem; color:var(--text-muted);">
+            Código de erro: <code>403 Forbidden</code>
+        </p>
+    </div>
+</div>
+{% endblock %}

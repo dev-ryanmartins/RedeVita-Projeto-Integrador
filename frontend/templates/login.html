@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Login - RedeVita{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div class="login-box">
+
+        <div class="login-side-image">
+            <div class="image-overlay-card">
+                <h1><i class="fas fa-heartbeat"></i> RedeVita</h1>
+                <p>Gestão inteligente de medicamentos e doações.</p>
+                <ul class="features-list">
+                    <li><i class="fas fa-check-circle"></i> Controle de estoque em tempo real</li>
+                    <li><i class="fas fa-check-circle"></i> Alerta de vencimento automático</li>
+                    <li><i class="fas fa-check-circle"></i> Histórico completo de doações</li>
+                    <li><i class="fas fa-check-circle"></i> Segurança e rastreabilidade</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="login-side-form">
+            <div class="form-content">
+                <h2>Bem-vindo!</h2>
+                <p class="subtitle">Acesse sua conta para continuar.</p>
+
+                <form action="/login" method="POST" class="modern-form">               
+                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <div class="form-group">
+                        <label id="label-identificador" for="identificador">CPF</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-id-card"></i>
+                            <input type="text" name="identificador" id="identificador"
+                                   placeholder="000.000.000-00" required maxlength="14"
+                                   autocomplete="username">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="senha">Senha</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" name="senha" id="senha"
+                                   placeholder="••••••••" required autocomplete="current-password">
+                        </div>
+                    </div>
+
+                    <div class="forgot-pass-container">
+                        <a href="{{ url_for('auth.recuperar_senha') }}" class="forgot-link">Esqueceu a senha?</a>
+                    </div>
+
+                    <button type="submit" class="btn-primary-gradient">
+                        Entrar no Sistema <i class="fas fa-arrow-right"></i>
+                    </button>
+                </form>
+
+                <div class="auth-footer" style="margin-top: 20px; text-align: center;">
+                    <p>Não tem uma conta? <a href="{{ url_for('auth.cadastro') }}">Cadastre-se</a></p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

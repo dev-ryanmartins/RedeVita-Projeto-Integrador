@@ -1,0 +1,98 @@
+/* ==========================================================================
+   ESTRUTURA PRINCIPAL (SIDEBAR + CONTENT)
+   ========================================================================== */
+.app-wrapper {
+    display: flex;
+    min-height: 100vh;
+    background-color: var(--bg-dark);
+}
+
+/* Sidebar Lateral Fixa */
+.sidebar {
+    width: 260px;
+    background: var(--bg-card);
+    border-right: 1px solid var(--border);
+    padding: 30px 20px;
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    z-index: 100;
+}
+
+.sidebar-brand {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--primary);
+    margin-bottom: 40px;
+    padding-left: 10px;
+}
+
+/* Links da Sidebar */
+.nav-menu {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.nav-item a {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 14px 18px;
+    color: var(--text-muted);
+    text-decoration: none;
+    border-radius: 12px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.nav-item a i {
+    font-size: 1.2rem;
+    width: 20px;
+    text-align: center;
+}
+
+.nav-item a:hover, .nav-item a.active {
+    background: rgba(52, 152, 219, 0.1);
+    color: var(--primary);
+}
+
+.nav-item a.active {
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 8px 20px rgba(52, 152, 219, 0.3);
+}
+
+/* Área de Conteúdo (Dashboard, Inventário, etc) */
+.main-area {
+    flex: 1;
+    padding: 40px;
+    overflow-y: auto;
+}
+
+/* Header de cada página interna */
+.content-header {
+    margin-bottom: 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.content-header h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+}
+
+/* ==========================================================================
+   UTILITÁRIOS DE LAYOUT
+   ========================================================================== */
+.card-glass {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 25px;
+    box-shadow: var(--shadow);
+}

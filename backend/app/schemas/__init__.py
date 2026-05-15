@@ -1,0 +1,2 @@
+from .user_schema import validar_cadastro_usuario
+from .med_schema import validar_entrada_medicamento

@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% block title %}Relatórios - RedeVita{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header">
+        <div>
+            <h2><i class="fas fa-chart-bar"></i> Relatórios e Exportação</h2>
+            <p class="page-subtitle">Visualize alertas e exporte dados em CSV para análise.</p>
+        </div>
+    </div>
+
+    <div class="stats-grid" style="margin-bottom: 32px;">
+        <div class="stat-card">
+            <div class="stat-icon blue"><i class="fas fa-pills"></i></div>
+            <div class="stat-info">
+                <p class="stat-label">Medicamentos</p>
+                <p class="stat-value">{{ total_medicamentos }}</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon red"><i class="fas fa-hand-holding-heart"></i></div>
+            <div class="stat-info">
+                <p class="stat-label">Doações</p>
+                <p class="stat-value">{{ total_doacoes }}</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon purple"><i class="fas fa-user-md"></i></div>
+            <div class="stat-info">
+                <p class="stat-label">Médicos</p>
+                <p class="stat-value">{{ total_medicos }}</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon teal"><i class="fas fa-hospital"></i></div>
+            <div class="stat-info">
+                <p class="stat-label">Farmácias</p>
+                <p class="stat-value">{{ total_farmacias }}</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon orange"><i class="fas fa-user-injured"></i></div>
+            <div class="stat-info">
+                <p class="stat-label">Pacientes</p>
+                <p class="stat-value">{{ total_pacientes }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <div>
+            {% if proximos_vencimento %}
+            <div class="alert-section">
+                <div class="section-header">
+                    <h3><i class="fas fa-exclamation-triangle"></i> Medicamentos Próximos do Vencimento</h3>
+                    <span class="chart-badge warning-badge">{{ proximos_vencimento|length }} item(s)</span>
+                </div>
+                <div class="table-wrapper" style="margin-bottom:24px;">
+                    <table class="styled-table">
+                        <thead>
+                            <tr>
+                                <th>Medicamento</th>
+                                <th>Lote</th>
+                                <th>Vencimento</th>
+                                <th>Qtd.</th>
+                                <th>Dias Restantes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for m in proximos_vencimento %}
+                            {% set dias = (m.data_validade - hoje).days %}
+                            <tr>
+                                <td><strong>{{ m.nome }}</strong></td>
+                                <td><code class="lote-code">{{ m.lote }}</code></td>
+                                <td>{{ m.data_validade.strftime('%d/%m/%Y') }}</td>
+                                <td>{{ m.quantidade }} un.</td>
+                                <td>
+                                    <span class="status-pill yellow">
+                                        <i class="fas fa-clock"></i> {{ dias }} dia(s)
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% else %}
+            <div class="quick-actions" style="text-align:center; padding: 30px; margin-bottom:24px;">
+                <i class="fas fa-check-circle" style="font-size:2rem; color: var(--success); display:block; margin-bottom:10px;"></i>
+                <p style="color: var(--text-muted);">Nenhum medicamento próximo do vencimento (nos próximos 30 dias).</p>
+            </div>
+            {% endif %}
+
+            {% if vencidos %}
+            <div class="section-header">
+                <h3><i class="fas fa-times-circle"></i> Medicamentos Vencidos</h3>
+                <span class="chart-badge danger-badge">{{ vencidos|length }} item(s)</span>
+            </div>
+            <div class="table-wrapper">
+                <table class="styled-table">
+                    <thead>
+                        <tr>
+                            <th>Medicamento</th>
+                            <th>Lote</th>
+                            <th>Vencimento</th>
+                            <th>Qtd.</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for m in vencidos %}
+                        <tr>
+                            <td><strong>{{ m.nome }}</strong></td>
+                            <td><code class="lote-code">{{ m.lote }}</code></td>
+                            <td><span class="status-pill red">{{ m.data_validade.strftime('%d/%m/%Y') }}</span></td>
+                            <td>{{ m.quantidade }} un.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="quick-panel">
+            <div class="quick-actions">
+                <h3><i class="fas fa-download"></i> Exportar Dados</h3>
+                <p style="color: var(--text-muted); font-size:0.85rem; margin: 10px 0 16px;">
+                    Baixe os dados em formato CSV compatível com Excel e Google Sheets.
+                </p>
+                <div style="display:flex; flex-direction:column; gap:10px;">
+                    <a href="{{ url_for('relatorios.exportar_medicamentos') }}" class="btn-secondary"
+                       style="justify-content:center;">
+                        <i class="fas fa-pills"></i> Exportar Medicamentos
+                    </a>
+                    <a href="{{ url_for('relatorios.exportar_medicos') }}" class="btn-secondary"
+                       style="justify-content:center;">
+                        <i class="fas fa-user-md"></i> Exportar Médicos
+                    </a>
+                    <a href="{{ url_for('relatorios.exportar_farmacias') }}" class="btn-secondary"
+                       style="justify-content:center;">
+                        <i class="fas fa-hospital"></i> Exportar Farmácias
+                    </a>
+                    <a href="{{ url_for('relatorios.exportar_pacientes') }}" class="btn-secondary"
+                       style="justify-content:center;">
+                        <i class="fas fa-user-injured"></i> Exportar Pacientes
+                    </a>
+                    <hr style="border-color: var(--border); margin: 4px 0;">
+                    <button onclick="window.print()" class="btn-primary" style="justify-content:center;">
+                        <i class="fas fa-print"></i> Imprimir Página
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,43 @@
+{
+  "name": "RedeVita",
+  "short_name": "RedeVita",
+  "description": "Gestão inteligente de medicamentos e doações",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f0f0f",
+  "theme_color": "#3498db",
+  "orientation": "portrait-primary",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "/static/img/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/img/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["health", "medical", "productivity"],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "url": "/dashboard",
+      "description": "Ver resumo do sistema"
+    },
+    {
+      "name": "Nova Doação",
+      "url": "/doacoes/nova",
+      "description": "Registrar nova doação"
+    },
+    {
+      "name": "Inventário",
+      "url": "/medicamentos",
+      "description": "Gerenciar estoque"
+    }
+  ]
+}

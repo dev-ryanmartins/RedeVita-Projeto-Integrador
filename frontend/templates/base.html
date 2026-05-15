@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>{% block title %}RedeVita{% endblock %}</title>
+
+    <!-- PWA -->
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <meta name="theme-color" content="#3498db">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="RedeVita">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/icons/icon-192x192.png') }}">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+{% if current_user.is_authenticated %}
+{# Atalhos de cargo para uso no template #}
+{% set is_admin       = current_user.cargo == 'Admin' %}
+{% set is_medico      = current_user.cargo == 'Médico' %}
+{% set is_farmaceutico= current_user.cargo == 'Farmacêutico' %}
+{% set is_operador    = current_user.cargo == 'Operador' %}
+{% set is_voluntario  = current_user.cargo == 'Voluntário' %}
+{% set equipe_clinica = is_admin or is_operador or is_medico or is_farmaceutico %}
+
+<nav class="navbar">
+    <div class="container-nav">
+        <a href="{{ url_for('inventory.dashboard') }}" class="logo">
+            <i class="fas fa-heartbeat"></i> <strong>Rede</strong>Vita
+        </a>
+
+        <button class="nav-toggle" id="navToggle" aria-label="Abrir menu">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <ul class="nav-links" id="navLinks">
+
+            <!-- Dashboard — todos -->
+            <li>
+                <a href="{{ url_for('inventory.dashboard') }}"
+                   class="{{ 'active' if request.endpoint == 'inventory.dashboard' else '' }}">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+            </li>
+
+            <!-- Inventário — todos (ações restritas no backend por cargo) -->
+            <li>
+                <a href="{{ url_for('inventory.listar_medicamentos') }}"
+                   class="{{ 'active' if request.endpoint == 'inventory.listar_medicamentos' else '' }}">
+                    <i class="fas fa-pills"></i> Inventário
+                </a>
+            </li>
+
+            <!-- Doações — todos -->
+            <li>
+                <a href="{{ url_for('donation.nova_doacao') }}"
+                   class="{{ 'active' if request.endpoint == 'donation.nova_doacao' else '' }}">
+                    <i class="fas fa-hand-holding-heart"></i> Doações
+                </a>
+            </li>
+
+            <!-- Pacientes — equipe clínica (não Voluntário) -->
+            {% if equipe_clinica %}
+            <li>
+                <a href="{{ url_for('pacientes.listar_pacientes') }}"
+                   class="{{ 'active' if request.endpoint and request.endpoint.startswith('pacientes.') else '' }}">
+                    <i class="fas fa-user-injured"></i> Pacientes
+                </a>
+            </li>
+            {% endif %}
+
+            <!-- Receituário — equipe clínica (não Voluntário) -->
+            {% if equipe_clinica %}
+            <li>
+                <a href="{{ url_for('pacientes.receituario') }}"
+                   class="{{ 'active' if request.endpoint == 'pacientes.receituario' else '' }}">
+                    <i class="fas fa-prescription"></i> Receituário
+                </a>
+            </li>
+            {% endif %}
+
+            <!-- Médicos — equipe clínica (não Voluntário) -->
+            {% if equipe_clinica %}
+            <li>
+                <a href="{{ url_for('medicos.listar_medicos') }}"
+                   class="{{ 'active' if request.endpoint and request.endpoint.startswith('medicos.') else '' }}">
+                    <i class="fas fa-user-md"></i> Médicos
+                </a>
+            </li>
+            {% endif %}
+
+            <!-- Farmácias — equipe clínica (não Voluntário) -->
+            {% if equipe_clinica %}
+            <li>
+                <a href="{{ url_for('farmacias.listar_farmacias') }}"
+                   class="{{ 'active' if request.endpoint and request.endpoint.startswith('farmacias.') else '' }}">
+                    <i class="fas fa-hospital"></i> Farmácias
+                </a>
+            </li>
+            {% endif %}
+
+            <!-- Relatórios — equipe clínica (não Voluntário) -->
+            {% if equipe_clinica %}
+            <li>
+                <a href="{{ url_for('relatorios.relatorios') }}"
+                   class="{{ 'active' if request.endpoint and request.endpoint.startswith('relatorios.') else '' }}">
+                    <i class="fas fa-chart-bar"></i> Relatórios
+                </a>
+            </li>
+            {% endif %}
+
+            <!-- Mapa — todos -->
+            <li>
+                <a href="{{ url_for('mapa.mapa_saude') }}"
+                   class="{{ 'active' if request.endpoint and request.endpoint.startswith('mapa.') else '' }}">
+                    <i class="fas fa-map-marked-alt"></i> Mapa
+                </a>
+            </li>
+
+            <!-- ── Seção Médico ─────────────────────────────────────────── -->
+            {% if is_admin or is_medico %}
+            <li class="nav-divider"></li>
+            <li>
+                <a href="{{ url_for('medical.prescriptions') }}"
+                   class="{{ 'active' if request.endpoint and request.endpoint.startswith('medical.') else '' }} nav-role-medico"
+                   title="Área do Médico">
+                    <i class="fas fa-file-prescription"></i> Prescrições
+                </a>
+            </li>
+            {% endif %}
+
+            <!-- ── Seção Farmacêutico ───────────────────────────────────── -->
+            {% if is_admin or is_farmaceutico or is_operador %}
+            {% if not (is_admin or is_medico) %}<li class="nav-divider"></li>{% endif %}
+            <li>
+                <a href="{{ url_for('donation.triagem') }}"
+                   class="{{ 'active' if request.endpoint == 'donation.triagem' else '' }} nav-role-operador"
+                   title="Triagem de medicamentos recebidos">
+                    <i class="fas fa-clipboard-check"></i> Triagem de Entrada
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('pharmacy.auditoria') }}"
+                   class="{{ 'active' if request.endpoint and request.endpoint.startswith('pharmacy.') else '' }} nav-role-farmaceutico"
+                   title="Auditoria de validade de lotes">
+                    <i class="fas fa-vials"></i> Auditoria de Lotes
+                </a>
+            </li>
+            {% endif %}
+
+            <!-- ── Seção Admin ──────────────────────────────────────────── -->
+            {% if is_admin %}
+            <li class="nav-divider"></li>
+            <li>
+                <a href="{{ url_for('notificacoes.painel') }}"
+                   class="{{ 'active' if request.endpoint and request.endpoint.startswith('notificacoes.') else '' }} nav-admin"
+                   style="position:relative">
+                    <i class="fas fa-bell"></i> Notificações
+                    <span id="alertaBadge" style="display:none;position:absolute;top:-4px;right:-8px;
+                          background:#e74c3c;color:#fff;font-size:.6rem;font-weight:800;
+                          min-width:17px;height:17px;border-radius:9px;
+                          display:none;align-items:center;justify-content:center;
+                          padding:0 4px;line-height:1;border:2px solid var(--bg-dark);">0</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('usuarios.listar_usuarios') }}"
+                   class="{{ 'active' if request.endpoint and request.endpoint.startswith('usuarios.') else '' }} nav-admin">
+                    <i class="fas fa-users-cog"></i> Usuários
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('logs.listar_logs') }}"
+                   class="{{ 'active' if request.endpoint and request.endpoint.startswith('logs.') else '' }} nav-admin">
+                    <i class="fas fa-shield-alt"></i> Logs
+                </a>
+            </li>
+            {% endif %}
+
+            <li>
+                <a href="{{ url_for('auth.logout') }}" class="btn-logout">
+                    <i class="fas fa-sign-out-alt"></i> Sair
+                </a>
+            </li>
+        </ul>
+    </div>
+</nav>
+{% endif %}
+
+<main class="main-content">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        <i class="fas fa-{% if category == 'success' %}check-circle{% elif category == 'danger' %}exclamation-circle{% elif category == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+                        {{ message }}
+                        <button class="alert-close" onclick="this.parentElement.remove()" aria-label="Fechar">&times;</button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+</main>
+
+<footer class="main-footer">
+    <p><i class="fas fa-heart" style="color: var(--danger);"></i> RedeVita &mdash; Desenvolvido por Alloy &bull; ADS UNISO 2026</p>
+</footer>
+
+<script src="{{ url_for('static', filename='js/mascaras.js') }}"></script>
+<script>
+  {% if current_user.is_authenticated and current_user.cargo == 'Admin' %}
+  (function carregarAlertas() {
+    fetch('/api/alertas')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (!data || data.total === 0) return;
+        const badge = document.getElementById('alertaBadge');
+        if (badge) {
+          badge.textContent = data.total > 99 ? '99+' : data.total;
+          badge.style.display = 'inline-flex';
+        }
+      })
+      .catch(() => {});
+    setTimeout(carregarAlertas, 5 * 60 * 1000);
+  })();
+  {% endif %}
+
+    const navToggle = document.getElementById('navToggle');
+    const navLinks = document.getElementById('navLinks');
+    if (navToggle) {
+        navToggle.addEventListener('click', () => {
+            navLinks.classList.toggle('open');
+        });
+        document.addEventListener('click', (e) => {
+            if (!navToggle.contains(e.target) && !navLinks.contains(e.target)) {
+                navLinks.classList.remove('open');
+            }
+        });
+    }
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(regs => {
+            regs.forEach(r => r.unregister());
+        });
+    }
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

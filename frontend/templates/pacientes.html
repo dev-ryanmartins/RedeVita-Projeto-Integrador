@@ -1,0 +1,278 @@
+{% extends "base.html" %}
+{% block title %}Pacientes - RedeVita{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header">
+        <div>
+            <h2><i class="fas fa-user-injured"></i> Gestão de Pacientes</h2>
+            <p class="page-subtitle">Cadastre e gerencie os pacientes atendidos pela rede.</p>
+        </div>
+        <div style="display:flex; gap:10px;">
+            <a href="{{ url_for('pacientes.receituario') }}" class="btn-secondary">
+                <i class="fas fa-prescription"></i> Receituário
+            </a>
+            <button class="btn-primary" onclick="abrirModal('modal-add')">
+                <i class="fas fa-plus"></i> Novo Paciente
+            </button>
+        </div>
+    </div>
+
+    <div class="table-wrapper">
+        <table class="styled-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Nome</th>
+                    <th>CPF</th>
+                    <th>Data de Nascimento</th>
+                    <th>Endereço</th>
+                    <th>Cadastrado em</th>
+                    <th style="text-align:center;">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in pacientes %}
+                <tr>
+                    <td style="color: var(--text-muted);">{{ loop.index }}</td>
+                    <td><strong>{{ p.nome }}</strong></td>
+                    <td><code class="lote-code">{{ p.cpf }}</code></td>
+                    <td>
+                        <span style="color: var(--text-muted); font-size:0.88rem;">
+                            <i class="fas fa-birthday-cake" style="color: var(--text-muted); font-size:0.75rem;"></i>
+                            {{ p.data_nascimento.strftime('%d/%m/%Y') if p.data_nascimento else '—' }}
+                        </span>
+                    </td>
+                    <td style="max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+                               color: var(--text-muted); font-size:0.85rem;" title="{{ p.endereco or '' }}">
+                        {% if p.endereco %}
+                            <i class="fas fa-map-marker-alt" style="color: var(--text-muted); font-size:0.8rem;"></i>
+                            {{ p.endereco }}
+                        {% else %}
+                            <span style="color: var(--text-muted);">—</span>
+                        {% endif %}
+                    </td>
+                    <td style="color: var(--text-muted); font-size:0.85rem;">
+                        {{ p.created_at.strftime('%d/%m/%Y') if p.created_at else '—' }}
+                    </td>
+                    <td style="text-align:center;">
+                        <div class="action-btns">
+                            <button class="btn-icon btn-edit" title="Editar"
+                                data-id="{{ p.id }}"
+                                data-nome="{{ p.nome }}"
+                                data-cpf="{{ p.cpf }}"
+                                data-nascimento="{{ p.data_nascimento.strftime('%Y-%m-%d') if p.data_nascimento else '' }}"
+                                data-endereco="{{ p.endereco or '' }}"
+                                onclick="abrirEdicaoPaciente(this)">
+                                <i class="fas fa-pen"></i>
+                            </button>
+                            <button class="btn-icon btn-delete" title="Excluir"
+                                data-id="{{ p.id }}"
+                                data-nome="{{ p.nome }}"
+                                onclick="confirmarExclusao(this)">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="empty-state">
+                        <i class="fas fa-user-injured"></i>
+                        <p>Nenhum paciente cadastrado ainda.</p>
+                        <button class="btn-primary" onclick="abrirModal('modal-add')">Cadastrar o primeiro</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="modal-add" class="modal-overlay" onclick="fecharModalFora(event, 'modal-add')">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3><i class="fas fa-user-injured"></i> Novo Paciente</h3>
+            <button class="modal-close" onclick="fecharModal('modal-add')">&times;</button>
+        </div>
+        <form action="{{ url_for('pacientes.novo_paciente') }}" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-group">
+                <label>Nome Completo <span class="required">*</span></label>
+                <div class="input-with-icon">
+                    <i class="fas fa-user"></i>
+                    <input type="text" name="nome" placeholder="Ex: Maria da Silva" required maxlength="150">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>CPF <span class="required">*</span></label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-id-card"></i>
+                        <input type="text" name="cpf" placeholder="000.000.000-00"
+                               required maxlength="14" class="mask-cpf" autocomplete="off">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Data de Nascimento <span class="required">*</span></label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-calendar"></i>
+                        <input type="date" name="data_nascimento" required class="date-nascimento">
+                    </div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group" style="flex: 0 0 140px;">
+                    <label>CEP</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-map-pin"></i>
+                        <input type="text" id="add-cep-pac" placeholder="00000-000" maxlength="9"
+                               class="mask-cep" oninput="buscarCEP(this,'add-endereco-pac',null,null)">
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Endereço</label>
+                <div class="input-with-icon">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <input type="text" id="add-endereco-pac" name="endereco"
+                           placeholder="Rua, número, bairro, cidade - UF" maxlength="255">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="fecharModal('modal-add')">Cancelar</button>
+                <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Cadastrar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="modal-edit" class="modal-overlay" onclick="fecharModalFora(event, 'modal-edit')">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3><i class="fas fa-pen"></i> Editar Paciente</h3>
+            <button class="modal-close" onclick="fecharModal('modal-edit')">&times;</button>
+        </div>
+        <form id="form-edit" action="" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-group">
+                <label>Nome Completo <span class="required">*</span></label>
+                <div class="input-with-icon">
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="edit-nome" name="nome" required maxlength="150">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>CPF <span class="required">*</span></label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-id-card"></i>
+                        <input type="text" id="edit-cpf" name="cpf" required maxlength="14" class="mask-cpf">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Data de Nascimento <span class="required">*</span></label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-calendar"></i>
+                        <input type="date" id="edit-nascimento" name="data_nascimento" required class="date-nascimento">
+                    </div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group" style="flex: 0 0 140px;">
+                    <label>CEP</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-map-pin"></i>
+                        <input type="text" id="edit-cep-pac" placeholder="00000-000" maxlength="9"
+                               class="mask-cep" oninput="buscarCEP(this,'edit-endereco',null,null)">
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Endereço</label>
+                <div class="input-with-icon">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <input type="text" id="edit-endereco" name="endereco" maxlength="255">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="fecharModal('modal-edit')">Cancelar</button>
+                <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Salvar Alterações</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="modal-delete" class="modal-overlay" onclick="fecharModalFora(event, 'modal-delete')">
+    <div class="modal-box modal-sm">
+        <div class="modal-header">
+            <h3><i class="fas fa-trash"></i> Confirmar Exclusão</h3>
+            <button class="modal-close" onclick="fecharModal('modal-delete')">&times;</button>
+        </div>
+        <p id="delete-msg" style="color: var(--text-muted); margin-bottom: 24px;"></p>
+        <form id="form-delete" action="" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="fecharModal('modal-delete')">Cancelar</button>
+                <button type="submit" class="btn-danger"><i class="fas fa-trash"></i> Excluir</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function abrirModal(id) {
+    document.getElementById(id).classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+function fecharModal(id) {
+    document.getElementById(id).classList.remove('active');
+    document.body.style.overflow = '';
+}
+function fecharModalFora(event, id) {
+    if (event.target.id === id) fecharModal(id);
+}
+function abrirEdicaoPaciente(btn) {
+    const id = btn.dataset.id;
+    document.getElementById('form-edit').action = `/paciente/${id}/editar`;
+    document.getElementById('edit-nome').value = btn.dataset.nome;
+    document.getElementById('edit-cpf').value = btn.dataset.cpf;
+    document.getElementById('edit-nascimento').value = btn.dataset.nascimento;
+    document.getElementById('edit-endereco').value = btn.dataset.endereco;
+    document.getElementById('edit-cep-pac').value = '';
+    abrirModal('modal-edit');
+}
+
+async function buscarCEP(input, idEndereco, idBairro, idCidade) {
+    const cep = input.value.replace(/\D/g, '');
+    if (cep.length !== 8) return;
+    const spin = document.createElement('small');
+    spin.style.cssText = 'color:var(--primary);font-size:.75rem;margin-left:6px;';
+    spin.textContent = 'Buscando…';
+    input.parentElement.appendChild(spin);
+    try {
+        const r = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+        const d = await r.json();
+        if (d.erro) { spin.textContent = 'CEP não encontrado.'; return; }
+        const rua = [d.logradouro, d.bairro, d.localidade + ' - ' + d.uf].filter(Boolean).join(', ');
+        document.getElementById(idEndereco).value = rua;
+        if (idBairro) document.getElementById(idBairro).value = d.bairro || '';
+        if (idCidade) document.getElementById(idCidade).value = (d.localidade || '') + (d.uf ? ' - ' + d.uf : '');
+        spin.remove();
+    } catch { spin.textContent = 'Erro ao buscar CEP.'; }
+}
+function confirmarExclusao(btn) {
+    const id = btn.dataset.id;
+    const nome = btn.dataset.nome;
+    document.getElementById('form-delete').action = `/paciente/${id}/excluir`;
+    document.getElementById('delete-msg').textContent =
+        `Tem certeza que deseja excluir o paciente "${nome}"? Esta ação não pode ser desfeita.`;
+    abrirModal('modal-delete');
+}
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') ['modal-add', 'modal-edit', 'modal-delete'].forEach(fecharModal);
+});
+</script>
+{% endblock %}

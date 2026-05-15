@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Muitas tentativas — RedeVita{% endblock %}
+
+{% block content %}
+<div class="error-page-full">
+
+    <div class="error-glow error-glow-500"></div>
+
+    <div class="error-card">
+        <div class="error-logo">
+            <i class="fas fa-heartbeat"></i>
+            <span><strong>Rede</strong>Vita</span>
+        </div>
+
+        <div class="error-visual">
+            <div class="error-number">
+                <span class="digit">4</span>
+                <span class="digit pulse-icon danger"><i class="fas fa-shield-alt"></i></span>
+                <span class="digit">9</span>
+            </div>
+        </div>
+
+        <div class="error-body">
+            <h1>Muitas tentativas</h1>
+            <p>Você realizou muitas tentativas em pouco tempo. Por segurança, aguarde um momento antes de tentar novamente.</p>
+        </div>
+
+        <div class="error-actions-card">
+            <a href="{{ url_for('auth.login') }}" class="btn-primary-gradient" style="max-width:260px; margin:0 auto;">
+                <i class="fas fa-arrow-left"></i> Voltar ao Login
+            </a>
+        </div>
+
+        <p class="error-code-label">Código de erro: <code>HTTP 429</code></p>
+    </div>
+
+</div>
+{% endblock %}

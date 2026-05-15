@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Usuários - RedeVita{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header">
+        <div>
+            <h2><i class="fas fa-users-cog"></i> Gestão de Usuários</h2>
+            <p class="page-subtitle">Gerencie cargos e status de acesso dos usuários do sistema.</p>
+        </div>
+        <a href="{{ url_for('auth.cadastro') }}" class="btn-primary">
+            <i class="fas fa-user-plus"></i> Novo Usuário
+        </a>
+    </div>
+
+    <div class="table-wrapper">
+        <table class="styled-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Nome</th>
+                    <th>CPF</th>
+                    <th>E-mail</th>
+                    <th>Cargo</th>
+                    <th>Status</th>
+                    <th style="text-align:center;">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in usuarios %}
+                <tr>
+                    <td style="color: var(--text-muted);">{{ loop.index }}</td>
+                    <td>
+                        <strong>{{ u.nome }}</strong>
+                        {% if u.id == current_user.id %}
+                            <span class="status-pill blue" style="font-size:0.68rem; margin-left:6px;">Você</span>
+                        {% endif %}
+                    </td>
+                    <td><code class="lote-code">{{ u.cpf }}</code></td>
+                    <td style="color: var(--text-muted); font-size:0.85rem;">{{ u.email or '—' }}</td>
+                    <td>
+                        <form action="{{ url_for('usuarios.alterar_cargo', uid=u.id) }}" method="POST"
+                              style="display:flex; gap:8px; align-items:center;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <select name="cargo" class="cargo-select"
+                                onchange="this.form.submit()"
+                                {% if u.id == current_user.id %}disabled title="Não é possível alterar seu próprio cargo"{% endif %}>
+                                {% for c in ['Voluntário','Operador','Farmacêutico','Médico','Admin'] %}
+                                    <option value="{{ c }}" {% if u.cargo == c %}selected{% endif %}>{{ c }}</option>
+                                {% endfor %}
+                            </select>
+                        </form>
+                    </td>
+                    <td>
+                        {% if u.ativo is not false %}
+                            <span class="status-pill green"><i class="fas fa-circle"></i> Ativo</span>
+                        {% else %}
+                            <span class="status-pill red"><i class="fas fa-circle"></i> Inativo</span>
+                        {% endif %}
+                    </td>
+                    <td style="text-align:center;">
+                        <form action="{{ url_for('usuarios.toggle_ativo', uid=u.id) }}" method="POST"
+                              style="display:inline;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn-icon {% if u.ativo is not false %}btn-delete{% else %}btn-edit{% endif %}"
+                                title="{% if u.ativo is not false %}Desativar usuário{% else %}Reativar usuário{% endif %}"
+                                {% if u.id == current_user.id %}disabled title="Não é possível desativar sua própria conta"{% endif %}>
+                                <i class="fas fa-{% if u.ativo is not false %}user-slash{% else %}user-check{% endif %}"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="empty-state">
+                        <i class="fas fa-users"></i>
+                        <p>Nenhum usuário encontrado.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Nova Senha - RedeVita{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div class="auth-card">
+        <div class="auth-header">
+            <a href="{{ url_for('auth.login') }}" class="logo-auth">
+                <i class="fas fa-heartbeat"></i> <strong>Rede</strong>Vita
+            </a>
+            <h2>Redefinir Senha</h2>
+            <p>Escolha uma nova senha segura para sua conta.</p>
+        </div>
+
+        <form action="" method="POST" class="modern-form" id="form-redefinir">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-group">
+                <label for="nova_senha">Nova Senha <span class="required">*</span></label>
+                <div class="input-with-icon">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" name="nova_senha" id="nova_senha"
+                           placeholder="Mínimo 6 caracteres" minlength="6" required
+                           autocomplete="new-password">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="confirmar_senha">Confirmar Nova Senha <span class="required">*</span></label>
+                <div class="input-with-icon">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" name="confirmar_senha" id="confirmar_senha"
+                           placeholder="Repita a senha" required autocomplete="new-password">
+                </div>
+            </div>
+            <button type="submit" class="btn-primary-gradient">
+                <i class="fas fa-check"></i> Salvar Nova Senha
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            <a href="{{ url_for('auth.login') }}"><i class="fas fa-arrow-left"></i> Voltar para o Login</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('form-redefinir').addEventListener('submit', function(e) {
+    const nova = document.getElementById('nova_senha').value;
+    const confirmar = document.getElementById('confirmar_senha').value;
+    if (nova !== confirmar) {
+        e.preventDefault();
+        alert('As senhas não coincidem!');
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,827 @@
+{% extends "base.html" %}
+{% block title %}Mapa de Saúde — RedeVita{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/leaflet.css') }}">
+<style>
+  .mapa-layout {
+    display: flex;
+    height: calc(100vh - 62px);
+    overflow: hidden;
+  }
+
+  /* ── Sidebar ── */
+  .mapa-sidebar {
+    width: 320px;
+    min-width: 270px;
+    background: var(--bg-card);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 10;
+    flex-shrink: 0;
+  }
+
+  .mapa-sidebar-header {
+    padding: 16px 18px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .mapa-sidebar-header h2 {
+    font-size: 1rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .mapa-sidebar-header h2 i { color: var(--primary); }
+
+  .mapa-search-bar { display: flex; gap: 8px; }
+
+  .mapa-search-input {
+    flex: 1;
+    padding: 9px 13px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text-main);
+    font-size: 0.86rem;
+    outline: none;
+    transition: border-color 0.2s;
+    font-family: inherit;
+  }
+  .mapa-search-input::placeholder { color: var(--text-muted); }
+  .mapa-search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(52,152,219,0.1); }
+
+  .mapa-search-btn {
+    padding: 9px 13px;
+    background: var(--primary);
+    border: none;
+    border-radius: var(--radius);
+    color: #fff;
+    cursor: pointer;
+    font-size: 0.88rem;
+    transition: var(--transition);
+    flex-shrink: 0;
+  }
+  .mapa-search-btn:hover { background: var(--primary-dark); }
+
+  /* ── Filters ── */
+  .mapa-filters {
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .mapa-filter-section { display: flex; flex-direction: column; gap: 6px; }
+
+  .mapa-filter-label {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+  }
+
+  .mapa-filter-options { display: flex; flex-direction: column; gap: 5px; }
+
+  .mapa-filter-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--text-main);
+    user-select: none;
+  }
+
+  .mapa-filter-item input[type="checkbox"] { display: none; }
+
+  .filter-dot {
+    width: 11px; height: 11px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    border: 2px solid rgba(255,255,255,0.2);
+    transition: opacity 0.2s;
+  }
+  .filter-dot.blue    { background: #3498db; }
+  .filter-dot.green   { background: #2ecc71; }
+  .filter-dot.red     { background: #e74c3c; }
+  .filter-dot.orange  { background: #e67e22; }
+  .filter-dot.teal    { background: #1abc9c; }
+
+  .mapa-filter-item input:not(:checked) ~ .filter-dot { opacity: 0.25; }
+  .mapa-filter-item input:not(:checked) ~ span:not(.filter-dot) { color: var(--text-muted); }
+
+  .filter-count {
+    margin-left: auto;
+    font-size: 0.72rem;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1px 7px;
+    color: var(--text-muted);
+    min-width: 22px;
+    text-align: center;
+  }
+
+  /* ── Público/Privado pills ── */
+  .acesso-pills {
+    display: flex; gap: 6px;
+  }
+  .acesso-pill {
+    flex: 1; padding: 5px 0;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--bg-input);
+    color: var(--text-muted);
+    font-size: 0.75rem; font-weight: 600;
+    cursor: pointer; transition: var(--transition);
+    text-align: center;
+  }
+  .acesso-pill.active { border-color: var(--primary); color: var(--primary); background: rgba(52,152,219,0.1); }
+  .acesso-pill:hover:not(.active) { border-color: var(--primary); color: var(--primary); }
+
+  /* ── Results list ── */
+  .mapa-results { flex: 1; overflow-y: auto; padding: 0; }
+  .mapa-results::-webkit-scrollbar { width: 4px; }
+  .mapa-results::-webkit-scrollbar-track { background: transparent; }
+  .mapa-results::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  .mapa-results-header {
+    padding: 10px 18px 7px;
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0;
+    background: var(--bg-card);
+    z-index: 1;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+
+  .mapa-result-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    padding: 10px 18px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .mapa-result-item:hover { background: var(--bg-hover); }
+  .mapa-result-item:last-child { border-bottom: none; }
+  .mapa-result-item.hidden { display: none; }
+
+  .result-icon {
+    width: 32px; height: 32px;
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.82rem;
+    flex-shrink: 0; margin-top: 1px;
+  }
+  .result-icon.blue   { background: rgba(52,152,219,0.15);  color: #3498db; }
+  .result-icon.green  { background: rgba(46,204,113,0.15);  color: #2ecc71; }
+  .result-icon.red    { background: rgba(231,76,60,0.15);   color: #e74c3c; }
+  .result-icon.orange { background: rgba(230,126,34,0.15);  color: #e67e22; }
+  .result-icon.teal   { background: rgba(26,188,156,0.15);  color: #1abc9c; }
+
+  .result-info { min-width: 0; flex: 1; }
+  .result-name {
+    font-size: 0.85rem; font-weight: 600;
+    color: var(--text-main);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .result-address {
+    font-size: 0.76rem; color: var(--text-muted);
+    margin-top: 1px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .result-badges { display: flex; gap: 4px; margin-top: 4px; flex-wrap: wrap; }
+  .result-badge {
+    font-size: 0.67rem; padding: 1px 6px;
+    border-radius: 7px; font-weight: 700;
+    white-space: nowrap;
+  }
+  .result-badge.blue   { background: rgba(52,152,219,0.15); color: #3498db; border: 1px solid rgba(52,152,219,0.25); }
+  .result-badge.green  { background: rgba(46,204,113,0.15); color: #2ecc71; border: 1px solid rgba(46,204,113,0.25); }
+  .result-badge.red    { background: rgba(231,76,60,0.15);  color: #e74c3c; border: 1px solid rgba(231,76,60,0.25); }
+  .result-badge.orange { background: rgba(230,126,34,0.15); color: #e67e22; border: 1px solid rgba(230,126,34,0.25); }
+  .result-badge.teal   { background: rgba(26,188,156,0.15); color: #1abc9c; border: 1px solid rgba(26,188,156,0.25); }
+  .result-badge.pub    { background: rgba(46,204,113,0.1);  color: #27ae60; border: 1px solid rgba(46,204,113,0.2); font-size: 0.63rem; }
+  .result-badge.priv   { background: rgba(241,196,15,0.1);  color: #d4a017; border: 1px solid rgba(241,196,15,0.2); font-size: 0.63rem; }
+
+  .mapa-empty-results {
+    padding: 28px 18px; text-align: center;
+    color: var(--text-muted); font-size: 0.86rem;
+  }
+  .mapa-empty-results i { font-size: 1.7rem; display: block; margin-bottom: 10px; opacity: 0.3; }
+
+  /* ── Map canvas ── */
+  .mapa-canvas { flex: 1; position: relative; background: #1a1a2e; }
+  #map { width: 100%; height: 100%; }
+
+  /* ── Reset location button (floating) ── */
+  .mapa-reset-btn {
+    position: absolute;
+    top: 80px; right: 10px;
+    z-index: 1000;
+    width: 34px; height: 34px;
+    border-radius: 8px;
+    border: 2px solid rgba(255,255,255,0.12);
+    background: var(--bg-card);
+    color: var(--primary);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem;
+    transition: var(--transition);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  }
+  .mapa-reset-btn:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .mapa-reset-btn:active { transform: scale(0.94); }
+
+  /* ── Loading overlay ── */
+  .mapa-loading-overlay {
+    position: absolute; inset: 0;
+    background: var(--bg-dark);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 14px; z-index: 1000;
+    transition: opacity 0.4s ease;
+  }
+  .mapa-loading-overlay.hidden { opacity: 0; pointer-events: none; }
+
+  .mapa-spinner {
+    width: 38px; height: 38px;
+    border: 3px solid var(--border);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .mapa-loading-overlay p { color: var(--text-muted); font-size: 0.88rem; }
+
+  /* ── Status bar ── */
+  .mapa-status-bar {
+    position: absolute;
+    bottom: 20px; left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 7px 16px;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 500;
+    box-shadow: var(--shadow-sm);
+    display: flex; align-items: center; gap: 7px;
+  }
+  .mapa-status-bar i { color: var(--primary); }
+
+  /* ── Dark Leaflet overrides ── */
+  .leaflet-popup-content-wrapper {
+    background: #1e1e1e !important; color: #f0f0f0 !important;
+    border: 1px solid #2c2c2c !important; border-radius: 12px !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5) !important;
+  }
+  .leaflet-popup-tip { background: #1e1e1e !important; }
+  .leaflet-popup-close-button { color: #888 !important; }
+  .leaflet-popup-close-button:hover { color: #fff !important; }
+  .leaflet-bar a {
+    background: #1e1e1e !important; color: #f0f0f0 !important;
+    border-color: #2c2c2c !important;
+  }
+  .leaflet-bar a:hover { background: #2c2c2c !important; }
+  .leaflet-control-attribution {
+    background: rgba(15,15,15,0.8) !important; color: #555 !important; font-size: 0.63rem !important;
+  }
+  .leaflet-control-attribution a { color: #666 !important; }
+
+  @media (max-width: 768px) {
+    .mapa-layout { flex-direction: column; height: auto; min-height: calc(100vh - 62px); }
+    .mapa-sidebar { width: 100%; min-width: unset; border-right: none; border-bottom: 1px solid var(--border); max-height: 48vh; }
+    .mapa-canvas { height: 52vh; flex: none; }
+    .mapa-status-bar { bottom: 8px; font-size: 0.72rem; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mapa-layout">
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="mapa-sidebar">
+    <div class="mapa-sidebar-header">
+      <h2><i class="fas fa-map-marked-alt"></i> Mapa de Saúde</h2>
+      <div class="mapa-search-bar">
+        <input type="text" id="mapaSearch" class="mapa-search-input"
+               placeholder="Buscar por CEP ou endereço…" autocomplete="off" maxlength="120">
+        <button class="mapa-search-btn" id="mapaSearchBtn" title="Buscar">
+          <i class="fas fa-search"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="mapa-filters">
+      <!-- Filtro: tipo de acesso -->
+      <div class="mapa-filter-section">
+        <span class="mapa-filter-label">Tipo de serviço</span>
+        <div class="acesso-pills">
+          <button class="acesso-pill active" data-acesso="todos" onclick="setAcesso('todos',this)">Todos</button>
+          <button class="acesso-pill" data-acesso="publico" onclick="setAcesso('publico',this)"><i class="fas fa-building" style="font-size:.7rem;margin-right:3px;"></i>Público</button>
+          <button class="acesso-pill" data-acesso="privado" onclick="setAcesso('privado',this)"><i class="fas fa-lock" style="font-size:.65rem;margin-right:3px;"></i>Privado</button>
+        </div>
+      </div>
+
+      <!-- Filtro: camadas -->
+      <div class="mapa-filter-section">
+        <span class="mapa-filter-label">Exibir no mapa</span>
+        <div class="mapa-filter-options">
+          <label class="mapa-filter-item">
+            <input type="checkbox" id="filterRedevita" checked onchange="toggleLayer('redevita',this.checked)">
+            <span class="filter-dot blue"></span>
+            <span>Pontos de Doação (RedeVita)</span>
+            <span class="filter-count" id="countRedevita">0</span>
+          </label>
+          <label class="mapa-filter-item">
+            <input type="checkbox" id="filterUPA" checked onchange="toggleLayer('upa',this.checked)">
+            <span class="filter-dot orange"></span>
+            <span>UPA — Pronto Atendimento</span>
+            <span class="filter-count" id="countUPA">0</span>
+          </label>
+          <label class="mapa-filter-item">
+            <input type="checkbox" id="filterUBS" checked onchange="toggleLayer('ubs',this.checked)">
+            <span class="filter-dot teal"></span>
+            <span>UBS / Posto de Saúde</span>
+            <span class="filter-count" id="countUBS">0</span>
+          </label>
+          <label class="mapa-filter-item">
+            <input type="checkbox" id="filterHospital" checked onchange="toggleLayer('hospital',this.checked)">
+            <span class="filter-dot red"></span>
+            <span>Hospital / Clínica</span>
+            <span class="filter-count" id="countHospital">0</span>
+          </label>
+          <label class="mapa-filter-item">
+            <input type="checkbox" id="filterFarmacias" checked onchange="toggleLayer('farmacia',this.checked)">
+            <span class="filter-dot green"></span>
+            <span>Farmácias</span>
+            <span class="filter-count" id="countFarmacias">0</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="mapa-results" id="mapaResults">
+      <div class="mapa-results-header">
+        <span>Resultados próximos</span>
+        <span id="mapaResultCount" style="font-size:0.72rem;color:var(--text-muted);">—</span>
+      </div>
+      <div class="mapa-empty-results" id="mapaEmptyState">
+        <i class="fas fa-map-pin"></i>
+        Aguardando localização…
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── MAP ── -->
+  <div class="mapa-canvas">
+    <div class="mapa-loading-overlay" id="mapaLoading">
+      <div class="mapa-spinner"></div>
+      <p>Carregando Mapa de Saúde…</p>
+    </div>
+
+    <div id="map"></div>
+
+    <!-- Botão Resetar Localização -->
+    <button class="mapa-reset-btn" id="btnReset" title="Resetar localização" onclick="resetLocalizacao()">
+      <i class="fas fa-crosshairs"></i>
+    </button>
+
+    <div class="mapa-status-bar" id="mapaStatusBar">
+      <i class="fas fa-circle" style="font-size:0.45rem;"></i>
+      <span id="mapaStatusText">Obtendo sua localização…</span>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/leaflet.js') }}"></script>
+<script>
+(function () {
+
+  const FARMACIAS_REDEVITA = {{ farmacias_json | safe }};
+
+  // ── Leaflet default icons ──────────────────────────────────────────────────
+  delete L.Icon.Default.prototype._getIconUrl;
+  L.Icon.Default.mergeOptions({ shadowUrl: null, shadowSize: null });
+
+  // ── Custom SVG marker factory ──────────────────────────────────────────────
+  function makeIcon(fill, letter, stroke) {
+    stroke = stroke || 'rgba(0,0,0,0.45)';
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 42" width="28" height="42">
+      <path d="M14 0C6.27 0 0 6.27 0 14c0 10.5 14 28 14 28S28 24.5 28 14C28 6.27 21.73 0 14 0z"
+        fill="${fill}" stroke="${stroke}" stroke-width="1.5"/>
+      <circle cx="14" cy="14" r="7" fill="rgba(255,255,255,0.2)"/>
+      <text x="14" y="18.5" text-anchor="middle" dominant-baseline="middle"
+        fill="white" font-family="Inter,sans-serif" font-size="10" font-weight="800">${letter}</text>
+    </svg>`;
+    return L.icon({
+      iconUrl: 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg),
+      iconSize: [28, 42], iconAnchor: [14, 42], popupAnchor: [0, -44],
+    });
+  }
+
+  const ICONS = {
+    redevita : makeIcon('#3498db', 'D'),
+    upa      : makeIcon('#e67e22', 'U'),
+    ubs      : makeIcon('#1abc9c', 'B'),
+    hospital : makeIcon('#e74c3c', 'H'),
+    farmacia : makeIcon('#2ecc71', 'F'),
+    user     : makeIcon('#f39c12', '⊙'),
+  };
+
+  const COLOR = {
+    redevita: 'blue', upa: 'orange', ubs: 'teal', hospital: 'red', farmacia: 'green',
+  };
+  const ICON_FA = {
+    redevita: 'fa-hand-holding-heart', upa: 'fa-ambulance', ubs: 'fa-clinic-medical',
+    hospital: 'fa-hospital', farmacia: 'fa-pills',
+  };
+  const LABEL = {
+    redevita: 'Ponto de Doação', upa: 'UPA', ubs: 'UBS / Posto de Saúde',
+    hospital: 'Hospital / Clínica', farmacia: 'Farmácia',
+  };
+  const COUNT_ID = {
+    redevita: 'countRedevita', upa: 'countUPA', ubs: 'countUBS',
+    hospital: 'countHospital', farmacia: 'countFarmacias',
+  };
+
+  // ── Layer groups ───────────────────────────────────────────────────────────
+  const layers = {
+    redevita : L.layerGroup(),
+    upa      : L.layerGroup(),
+    ubs      : L.layerGroup(),
+    hospital : L.layerGroup(),
+    farmacia : L.layerGroup(),
+  };
+
+  // ── State ──────────────────────────────────────────────────────────────────
+  let userLat = null, userLng = null;
+  let userCircle = null, userMarker = null;
+  let filtroAcesso = 'todos';
+  const contadores = { redevita: 0, upa: 0, ubs: 0, hospital: 0, farmacia: 0 };
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  function setStatus(msg) { document.getElementById('mapaStatusText').textContent = msg; }
+  function hideLoading() { document.getElementById('mapaLoading').classList.add('hidden'); }
+
+  function incCount(tipo) {
+    contadores[tipo]++;
+    document.getElementById(COUNT_ID[tipo]).textContent = contadores[tipo];
+    atualizarTotal();
+  }
+
+  function resetCount(tipo) {
+    contadores[tipo] = 0;
+    document.getElementById(COUNT_ID[tipo]).textContent = 0;
+  }
+
+  function atualizarTotal() {
+    const total = Object.values(contadores).reduce((a, b) => a + b, 0);
+    document.getElementById('mapaResultCount').textContent = total + ' locais';
+  }
+
+  // ── Sidebar item ───────────────────────────────────────────────────────────
+  function addResultItem(nome, endereco, tipo, acesso, latlng) {
+    const container = document.getElementById('mapaResults');
+    const empty = document.getElementById('mapaEmptyState');
+    if (empty) empty.remove();
+
+    const cor = COLOR[tipo] || 'blue';
+    const icon = ICON_FA[tipo] || 'fa-map-pin';
+    const label = LABEL[tipo] || tipo;
+    const acessoBadge = acesso === 'publico'
+      ? '<span class="result-badge pub">Público</span>'
+      : '<span class="result-badge priv">Privado</span>';
+
+    const item = document.createElement('div');
+    item.className = 'mapa-result-item';
+    item.dataset.acesso = acesso;
+    item.dataset.tipo = tipo;
+    item.innerHTML = `
+      <div class="result-icon ${cor}"><i class="fas ${icon}"></i></div>
+      <div class="result-info">
+        <div class="result-name" title="${nome}">${nome}</div>
+        <div class="result-address" title="${endereco}">${endereco || 'Endereço não disponível'}</div>
+        <div class="result-badges">
+          <span class="result-badge ${cor}">${label}</span>
+          ${acessoBadge}
+        </div>
+      </div>`;
+    item.addEventListener('click', () => {
+      map.setView(latlng, 16);
+      layers[tipo].eachLayer(m => {
+        if (m.getLatLng && m.getLatLng().lat === latlng[0] && m.getLatLng().lng === latlng[1])
+          m.openPopup();
+      });
+    });
+    container.appendChild(item);
+    aplicarFiltroAcesso();
+  }
+
+  // ── Acesso filter (Público / Privado) ──────────────────────────────────────
+  function setAcesso(acesso, btn) {
+    filtroAcesso = acesso;
+    document.querySelectorAll('.acesso-pill').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    aplicarFiltroAcesso();
+  }
+  window.setAcesso = setAcesso;
+
+  function aplicarFiltroAcesso() {
+    document.querySelectorAll('.mapa-result-item').forEach(item => {
+      if (filtroAcesso === 'todos') {
+        item.classList.remove('hidden');
+      } else {
+        item.classList.toggle('hidden', item.dataset.acesso !== filtroAcesso);
+      }
+    });
+    const visiveis = document.querySelectorAll('.mapa-result-item:not(.hidden)').length;
+    document.getElementById('mapaResultCount').textContent = visiveis + ' locais';
+  }
+
+  // ── Layer toggle ───────────────────────────────────────────────────────────
+  function toggleLayer(tipo, visible) {
+    visible ? layers[tipo].addTo(map) : map.removeLayer(layers[tipo]);
+  }
+  window.toggleLayer = toggleLayer;
+
+  // ── Popup HTML ─────────────────────────────────────────────────────────────
+  function popupHTML(nome, endereco, tipo, acesso, tags) {
+    const cor = { blue:'#3498db', orange:'#e67e22', teal:'#1abc9c', red:'#e74c3c', green:'#2ecc71' }[COLOR[tipo]] || '#3498db';
+    const acessoStr = acesso === 'publico' ? '🏛️ Público' : '🔒 Privado';
+    const phone = tags?.phone ? `<br><span style="color:#888;font-size:0.75rem">📞 ${tags.phone}</span>` : '';
+    const hours = tags?.opening_hours ? `<br><span style="color:#888;font-size:0.75rem">🕐 ${tags.opening_hours}</span>` : '';
+    return `<div style="font-family:Inter,sans-serif;min-width:190px;max-width:240px">
+      <strong style="color:${cor};font-size:0.9rem">${nome}</strong><br>
+      <span style="color:#aaa;font-size:0.78rem">${endereco || 'Endereço não disponível'}</span>
+      <br><span style="color:#888;font-size:0.73rem">${LABEL[tipo] || tipo} · ${acessoStr}</span>
+      ${phone}${hours}
+    </div>`;
+  }
+
+  // ── Determine public/private from OSM tags ─────────────────────────────────
+  function detectarAcesso(tags, nome, tipo) {
+    const op = (tags['operator:type'] || tags['healthcare:ownership'] || '').toLowerCase();
+    if (op === 'public' || op === 'government') return 'publico';
+    if (op === 'private') return 'privado';
+
+    // UPA e UBS são exclusivamente públicas no Brasil
+    if (tipo === 'upa' || tipo === 'ubs') return 'publico';
+
+    const n = nome.toLowerCase();
+
+    // Indicadores explícitos de privado no nome
+    const palavrasPrivadas = ['particular', 'plano de saúde', 'convênio', 'privado', 'premium'];
+    if (palavrasPrivadas.some(p => n.includes(p))) return 'privado';
+
+    // Indicadores de público
+    const palavrasPublicas = [
+      'upa', 'ubs', 'caps', 'cras', 'creas', 'samu', 'municipal', 'estadual', 'federal',
+      'sus', 'secretaria', 'prefeitura', 'posto de saúde', 'unidade básica', 'pronto-socorro',
+      'hospital geral', 'hospital universitário', 'hospital regional', 'hospital de base',
+      'hospital público', 'santa casa', 'misericórdia', 'beneficente', 'caridade',
+      'instituto', 'hgv', 'hgf', 'hucam', 'inca', 'hras', 'hbdf', 'incor',
+      'fundação', 'universit', 'público',
+    ];
+    if (palavrasPublicas.some(p => n.includes(p))) return 'publico';
+
+    // Hospitais e clínicas sem indicadores claros — padrão público (maioria no OSM do Brasil)
+    return 'publico';
+  }
+
+  // ── Categorize OSM element into tipo ──────────────────────────────────────
+  function detectarTipo(el) {
+    const tags = el.tags || {};
+    const name = (tags.name || '').toLowerCase();
+    const amenity = tags.amenity || '';
+    const healthcare = tags.healthcare || '';
+
+    if (amenity === 'pharmacy') return 'farmacia';
+
+    if (name.includes('upa') || name.includes('pronto atendimento') ||
+        name.includes('urgência') || healthcare === 'urgency') return 'upa';
+
+    if (name.includes('ubs') || name.includes('unidade básica') ||
+        name.includes('posto de saúde') || name.includes('posto saude') ||
+        healthcare === 'centre' || healthcare === 'health_centre') return 'ubs';
+
+    return 'hospital';
+  }
+
+  // ── Geocoding via Nominatim ────────────────────────────────────────────────
+  async function geocode(address) {
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address + ', Brasil')}&format=json&limit=1&accept-language=pt-BR`;
+    try {
+      const res = await fetch(url, { headers: { 'Accept-Language': 'pt-BR' } });
+      const data = await res.json();
+      if (data.length > 0) return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon), display: data[0].display_name };
+    } catch {}
+    return null;
+  }
+
+  // ── Overpass — combined health query ──────────────────────────────────────
+  async function fetchSaude(lat, lng, radiusM) {
+    const q = `[out:json][timeout:25];(
+      node[amenity=hospital](around:${radiusM},${lat},${lng});
+      way[amenity=hospital](around:${radiusM},${lat},${lng});
+      node[amenity=clinic](around:${radiusM},${lat},${lng});
+      way[amenity=clinic](around:${radiusM},${lat},${lng});
+      node[healthcare=urgency](around:${radiusM},${lat},${lng});
+      way[healthcare=urgency](around:${radiusM},${lat},${lng});
+      node[healthcare=centre](around:${radiusM},${lat},${lng});
+      way[healthcare=centre](around:${radiusM},${lat},${lng});
+    );out center 40;`;
+    try {
+      const res = await fetch('https://overpass-api.de/api/interpreter', {
+        method: 'POST', body: 'data=' + encodeURIComponent(q)
+      });
+      const data = await res.json();
+      return data.elements || [];
+    } catch { return []; }
+  }
+
+  async function fetchFarmacias(lat, lng, radiusM) {
+    const q = `[out:json][timeout:20];(node[amenity=pharmacy](around:${radiusM},${lat},${lng});way[amenity=pharmacy](around:${radiusM},${lat},${lng}););out center 25;`;
+    try {
+      const res = await fetch('https://overpass-api.de/api/interpreter', {
+        method: 'POST', body: 'data=' + encodeURIComponent(q)
+      });
+      const data = await res.json();
+      return data.elements || [];
+    } catch { return []; }
+  }
+
+  // ── Place RedeVita pharmacies ──────────────────────────────────────────────
+  async function placeRedevita() {
+    for (const f of FARMACIAS_REDEVITA) {
+      const pos = await geocode(f.endereco);
+      if (!pos) continue;
+      const ll = [pos.lat, pos.lng];
+      const marker = L.marker(ll, { icon: ICONS.redevita })
+        .bindPopup(`<div style="font-family:Inter,sans-serif;min-width:190px">
+          <strong style="color:#3498db;font-size:0.9rem">${f.nome}</strong><br>
+          <span style="color:#aaa;font-size:0.78rem">${f.endereco}</span><br>
+          <span style="color:#888;font-size:0.73rem">CNPJ: ${f.cnpj}</span><br>
+          <span style="color:#888;font-size:0.73rem">Resp.: ${f.responsavel}</span>
+          <div style="margin-top:6px;font-size:0.73rem;color:#3498db;font-weight:700">
+            <i class="fas fa-hand-holding-heart"></i> Ponto de Doação RedeVita
+          </div></div>`);
+      layers.redevita.addLayer(marker);
+      incCount('redevita');
+      addResultItem(f.nome, f.endereco, 'redevita', 'publico', ll);
+    }
+  }
+
+  // ── Place health facilities ─────────────────────────────────────────────────
+  function placeElement(el) {
+    const tags = el.tags || {};
+    const elLat = el.lat ?? el.center?.lat;
+    const elLng = el.lon ?? el.center?.lon;
+    if (!elLat || !elLng) return;
+
+    const tipo = detectarTipo(el);
+    const nome = tags.name || (tipo === 'farmacia' ? 'Farmácia' : tipo === 'upa' ? 'UPA' : tipo === 'ubs' ? 'UBS' : 'Hospital');
+    const endereco = [tags['addr:street'], tags['addr:housenumber'], tags['addr:city']].filter(Boolean).join(', ');
+    const acesso = detectarAcesso(tags, nome, tipo);
+    const ll = [elLat, elLng];
+
+    const marker = L.marker(ll, { icon: ICONS[tipo] })
+      .bindPopup(popupHTML(nome, endereco, tipo, acesso, tags));
+    layers[tipo].addLayer(marker);
+    incCount(tipo);
+    addResultItem(nome, endereco, tipo, acesso, ll);
+  }
+
+  // ── Load nearby data ───────────────────────────────────────────────────────
+  async function carregarProximos(lat, lng) {
+    const [saude, farmacias] = await Promise.all([
+      fetchSaude(lat, lng, 5000),
+      fetchFarmacias(lat, lng, 5000),
+    ]);
+
+    saude.forEach(placeElement);
+    farmacias.forEach(placeElement);
+
+    const total = Object.values(contadores).reduce((a, b) => a + b, 0);
+    setStatus(`${total} locais encontrados em 5 km`);
+    aplicarFiltroAcesso();
+  }
+
+  // ── Reset location ─────────────────────────────────────────────────────────
+  async function resetLocalizacao() {
+    if (userLat === null) {
+      setStatus('Localização não disponível. Permite acesso no navegador.');
+      return;
+    }
+    map.setView([userLat, userLng], 14);
+    setStatus('Localizando locais próximos…');
+
+    // Clear all nearby layers and counts
+    ['upa', 'ubs', 'hospital', 'farmacia'].forEach(t => {
+      layers[t].clearLayers();
+      resetCount(t);
+    });
+
+    // Clear sidebar items (keep header)
+    const container = document.getElementById('mapaResults');
+    const header = container.querySelector('.mapa-results-header');
+    const items = container.querySelectorAll('.mapa-result-item');
+    items.forEach(i => i.remove());
+    if (!container.querySelector('.mapa-results-header')) container.prepend(header);
+
+    await carregarProximos(userLat, userLng);
+  }
+  window.resetLocalizacao = resetLocalizacao;
+
+  // ── Search bar ─────────────────────────────────────────────────────────────
+  async function doSearch() {
+    const raw = document.getElementById('mapaSearch').value.trim();
+    if (!raw) return;
+    const q = raw.replace(/[<>"'`;]/g, '').slice(0, 120);
+    setStatus('Buscando…');
+    const pos = await geocode(q);
+    if (pos) {
+      map.setView([pos.lat, pos.lng], 15);
+      setStatus('Resultado: ' + pos.display.split(',').slice(0, 3).join(','));
+    } else {
+      setStatus('Endereço não encontrado. Tente outro CEP ou nome.');
+    }
+  }
+
+  document.getElementById('mapaSearchBtn').addEventListener('click', doSearch);
+  document.getElementById('mapaSearch').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+
+  // ── Map init ───────────────────────────────────────────────────────────────
+  const DEFAULT_CENTER = [-23.5505, -46.6333];
+
+  const map = L.map('map', {
+    center: DEFAULT_CENTER,
+    zoom: 13,
+    zoomControl: true,
+  });
+
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
+    subdomains: 'abcd', maxZoom: 19,
+  }).addTo(map);
+
+  Object.values(layers).forEach(l => l.addTo(map));
+
+  // ── Geolocation ────────────────────────────────────────────────────────────
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        userLat = pos.coords.latitude;
+        userLng = pos.coords.longitude;
+        map.setView([userLat, userLng], 14);
+        hideLoading();
+
+        userMarker = L.circleMarker([userLat, userLng], {
+          radius: 9, fillColor: '#3498db', fillOpacity: 1, color: '#fff', weight: 3,
+        }).addTo(map).bindPopup('<strong>Sua localização</strong>');
+
+        userCircle = L.circle([userLat, userLng], {
+          radius: pos.coords.accuracy, color: '#3498db',
+          fillColor: '#3498db', fillOpacity: 0.06, weight: 1,
+        }).addTo(map);
+
+        setStatus('Carregando locais próximos…');
+        carregarProximos(userLat, userLng);
+      },
+      () => {
+        hideLoading();
+        setStatus('Localização não concedida. Exibindo São Paulo como padrão.');
+        carregarProximos(DEFAULT_CENTER[0], DEFAULT_CENTER[1]);
+      },
+      { enableHighAccuracy: true, timeout: 5000 }
+    );
+  } else {
+    hideLoading();
+    setStatus('Geolocalização não suportada. Exibindo São Paulo.');
+    carregarProximos(DEFAULT_CENTER[0], DEFAULT_CENTER[1]);
+  }
+
+})();
+</script>
+{% endblock %}

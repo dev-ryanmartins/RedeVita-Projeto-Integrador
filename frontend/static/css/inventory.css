@@ -1,0 +1,21 @@
+.modern-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 10px;
+}
+
+.modern-table tr {
+    background: rgba(255, 255, 255, 0.02);
+    transition: 0.3s;
+}
+
+.modern-table tr:hover {
+    background: rgba(52, 152, 219, 0.1);
+    transform: scale(1.01);
+}
+
+.modern-table td {
+    padding: 18px;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+}

@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+{% block title %}Médicos - RedeVita{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header">
+        <div>
+            <h2><i class="fas fa-user-md"></i> Gestão de Médicos</h2>
+            <p class="page-subtitle">Cadastre e gerencie os médicos parceiros da rede.</p>
+        </div>
+        <button class="btn-primary" onclick="abrirModal('modal-add')">
+            <i class="fas fa-plus"></i> Novo Médico
+        </button>
+    </div>
+
+    <div class="table-wrapper">
+        <table class="styled-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Nome</th>
+                    <th>CRM</th>
+                    <th>Especialidade</th>
+                    <th>Contato</th>
+                    <th>Cadastrado em</th>
+                    <th style="text-align:center;">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in medicos %}
+                <tr>
+                    <td style="color: var(--text-muted);">{{ loop.index }}</td>
+                    <td><strong>Dr(a). {{ m.nome }}</strong></td>
+                    <td><code class="lote-code">{{ m.crm }}</code></td>
+                    <td>
+                        <span class="status-pill blue" style="font-size: 0.75rem;">
+                            <i class="fas fa-stethoscope"></i> {{ m.especialidade }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if m.contato %}
+                            <i class="fas fa-phone" style="color: var(--text-muted); font-size:0.8rem;"></i>
+                            {{ m.contato }}
+                        {% else %}
+                            <span style="color: var(--text-muted);">—</span>
+                        {% endif %}
+                    </td>
+                    <td style="color: var(--text-muted); font-size: 0.85rem;">
+                        {{ m.created_at.strftime('%d/%m/%Y') if m.created_at else '—' }}
+                    </td>
+                    <td style="text-align:center;">
+                        <div class="action-btns">
+                            <button class="btn-icon btn-edit" title="Editar"
+                                data-id="{{ m.id }}"
+                                data-nome="{{ m.nome }}"
+                                data-crm="{{ m.crm }}"
+                                data-especialidade="{{ m.especialidade }}"
+                                data-contato="{{ m.contato or '' }}"
+                                onclick="abrirEdicaoMedico(this)">
+                                <i class="fas fa-pen"></i>
+                            </button>
+                            <button class="btn-icon btn-delete" title="Excluir"
+                                data-id="{{ m.id }}"
+                                data-nome="{{ m.nome }}"
+                                onclick="confirmarExclusao(this)">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="empty-state">
+                        <i class="fas fa-user-md"></i>
+                        <p>Nenhum médico cadastrado ainda.</p>
+                        <button class="btn-primary" onclick="abrirModal('modal-add')">Cadastrar o primeiro</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="modal-add" class="modal-overlay" onclick="fecharModalFora(event, 'modal-add')">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3><i class="fas fa-user-md"></i> Novo Médico</h3>
+            <button class="modal-close" onclick="fecharModal('modal-add')">&times;</button>
+        </div>
+        <form action="{{ url_for('medicos.novo_medico') }}" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-group">
+                <label>Nome Completo <span class="required">*</span></label>
+                <input type="text" name="nome" placeholder="Ex: João da Silva" required maxlength="150">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>CRM <span class="required">*</span></label>
+                    <input type="text" name="crm" placeholder="Ex: CRM/SP 123456" required maxlength="30">
+                </div>
+                <div class="form-group">
+                    <label>Contato</label>
+                    <input type="text" name="contato" placeholder="(00) 00000-0000" maxlength="30" class="mask-tel">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Especialidade <span class="required">*</span></label>
+                <select name="especialidade" required>
+                    <option value="" disabled selected>Selecione a especialidade</option>
+                    <option>Clínica Geral</option>
+                    <option>Cardiologia</option>
+                    <option>Dermatologia</option>
+                    <option>Endocrinologia</option>
+                    <option>Farmacologia</option>
+                    <option>Geriatria</option>
+                    <option>Ginecologia</option>
+                    <option>Neurologia</option>
+                    <option>Oncologia</option>
+                    <option>Ortopedia</option>
+                    <option>Pediatria</option>
+                    <option>Psiquiatria</option>
+                    <option>Reumatologia</option>
+                    <option>Urologia</option>
+                    <option>Outra</option>
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="fecharModal('modal-add')">Cancelar</button>
+                <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Cadastrar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="modal-edit" class="modal-overlay" onclick="fecharModalFora(event, 'modal-edit')">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3><i class="fas fa-pen"></i> Editar Médico</h3>
+            <button class="modal-close" onclick="fecharModal('modal-edit')">&times;</button>
+        </div>
+        <form id="form-edit" action="" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-group">
+                <label>Nome Completo <span class="required">*</span></label>
+                <input type="text" id="edit-nome" name="nome" required maxlength="150">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>CRM <span class="required">*</span></label>
+                    <input type="text" id="edit-crm" name="crm" required maxlength="30">
+                </div>
+                <div class="form-group">
+                    <label>Contato</label>
+                    <input type="text" id="edit-contato" name="contato" maxlength="30" class="mask-tel">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Especialidade <span class="required">*</span></label>
+                <select id="edit-especialidade" name="especialidade" required>
+                    <option value="" disabled>Selecione a especialidade</option>
+                    <option>Clínica Geral</option>
+                    <option>Cardiologia</option>
+                    <option>Dermatologia</option>
+                    <option>Endocrinologia</option>
+                    <option>Farmacologia</option>
+                    <option>Geriatria</option>
+                    <option>Ginecologia</option>
+                    <option>Neurologia</option>
+                    <option>Oncologia</option>
+                    <option>Ortopedia</option>
+                    <option>Pediatria</option>
+                    <option>Psiquiatria</option>
+                    <option>Reumatologia</option>
+                    <option>Urologia</option>
+                    <option>Outra</option>
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="fecharModal('modal-edit')">Cancelar</button>
+                <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Salvar Alterações</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="modal-delete" class="modal-overlay" onclick="fecharModalFora(event, 'modal-delete')">
+    <div class="modal-box modal-sm">
+        <div class="modal-header">
+            <h3><i class="fas fa-trash"></i> Confirmar Exclusão</h3>
+            <button class="modal-close" onclick="fecharModal('modal-delete')">&times;</button>
+        </div>
+        <p id="delete-msg" style="color: var(--text-muted); margin-bottom: 24px;"></p>
+        <form id="form-delete" action="" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="fecharModal('modal-delete')">Cancelar</button>
+                <button type="submit" class="btn-danger"><i class="fas fa-trash"></i> Excluir</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function abrirModal(id) {
+    document.getElementById(id).classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+function fecharModal(id) {
+    document.getElementById(id).classList.remove('active');
+    document.body.style.overflow = '';
+}
+function fecharModalFora(event, id) {
+    if (event.target.id === id) fecharModal(id);
+}
+function abrirEdicaoMedico(btn) {
+    const id = btn.dataset.id;
+    document.getElementById('form-edit').action = `/medico/${id}/editar`;
+    document.getElementById('edit-nome').value = btn.dataset.nome;
+    document.getElementById('edit-crm').value = btn.dataset.crm;
+    document.getElementById('edit-contato').value = btn.dataset.contato;
+    const sel = document.getElementById('edit-especialidade');
+    for (let opt of sel.options) {
+        opt.selected = opt.value === btn.dataset.especialidade;
+    }
+    abrirModal('modal-edit');
+}
+function confirmarExclusao(btn) {
+    const id = btn.dataset.id;
+    const nome = btn.dataset.nome;
+    document.getElementById('form-delete').action = `/medico/${id}/excluir`;
+    document.getElementById('delete-msg').textContent =
+        `Tem certeza que deseja excluir o Dr(a). "${nome}"? Esta ação não pode ser desfeita.`;
+    abrirModal('modal-delete');
+}
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') ['modal-add', 'modal-edit', 'modal-delete'].forEach(fecharModal);
+});
+</script>
+{% endblock %}

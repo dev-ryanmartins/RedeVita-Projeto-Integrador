@@ -39,7 +39,7 @@ if not exist ".env" (
     echo Crie o arquivo .env na raiz do projeto com o conteudo abaixo:
     echo.
     echo   SECRET_KEY=redevita_projeto_ads_2026
-    echo   DATABASE_URL=mysql://root:Branco015@127.0.0.1:3306/redevita
+    echo   DATABASE_URL=mysql+pymysql://root:SUA_SENHA@localhost:3306/redevita
     echo.
 ) else (
     echo [OK] Arquivo .env encontrado.

@@ -27,7 +27,7 @@ class Config:
     PERMANENT_SESSION_LIFETIME = 3600
 
     SESSION_COOKIE_SAMESITE = 'Lax'
-    SESSION_COOKIE_SECURE = False
+    SESSION_COOKIE_SECURE = os.environ.get('SESSION_COOKIE_SECURE', 'false').lower() == 'true'
     SESSION_COOKIE_HTTPONLY = True
 
     WTF_CSRF_ENABLED = False

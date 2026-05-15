@@ -31,32 +31,6 @@ http://localhost:5000
 
 Assim você não precisa usar o IP da rede, como `http://192.168.x.x:5000`.
 
-
-## Como usar MySQL
-
-Se quiser apresentar usando MySQL em vez de SQLite:
-
-1. Abra o MySQL Workbench, phpMyAdmin ou outro cliente MySQL.
-2. Execute o arquivo `criar_banco_mysql.sql` completo.
-3. Crie um arquivo `.env` na raiz do projeto com uma conexão parecida com:
-
-```env
-SECRET_KEY=redevita_projeto_ads_2026
-DATABASE_URL=mysql+pymysql://root:SUA_SENHA@localhost:3306/redevita
-```
-
-O script SQL cria as tabelas principais, os usuários de apresentação e carrega a lista de medicamentos de referência usada pelo sistema.
-
-Usuários criados pelo SQL, todos com senha `admin123`:
-
-| Cargo | CPF |
-|---|---|
-| Admin | `000.000.000-00` |
-| Operador | `111.111.111-11` |
-| Médico | `222.222.222-22` |
-| Farmacêutico | `333.333.333-33` |
-| Voluntário | `444.444.444-44` |
-
 ## Login inicial
 
 ```text

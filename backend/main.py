@@ -98,6 +98,9 @@ def create_app():
         x_content_type_options=True,
         x_xss_protection=True,
         frame_options='SAMEORIGIN',
+        session_cookie_secure=app.config.get('SESSION_COOKIE_SECURE', False),
+        session_cookie_http_only=app.config.get('SESSION_COOKIE_HTTPONLY', True),
+        session_cookie_samesite=app.config.get('SESSION_COOKIE_SAMESITE', 'Lax'),
     )
 
     login_manager = LoginManager()

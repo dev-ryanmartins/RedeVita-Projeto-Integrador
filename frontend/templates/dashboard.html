@@ -99,7 +99,7 @@
     </div>
 
     <!-- Charts row -->
-    <div class="dashboard-grid" style="margin-bottom:32px;">
+    <div class="dashboard-grid" style="margin-bottom:32px; align-items: start;">
         <!-- Doughnut: distribuição geral -->
         <div class="chart-card">
             <div class="chart-card-header">
@@ -118,42 +118,44 @@
             </div>
         </div>
 
-        <!-- Quick panel -->
-        <div class="quick-panel">
-            <div class="quick-actions">
-                <h3><i class="fas fa-bolt"></i> Ações Rápidas</h3>
-                <div style="display:flex; flex-direction:column; gap:10px; margin-top:14px;">
-                    <a href="{{ url_for('inventory.listar_medicamentos') }}" class="btn-secondary" style="justify-content:center;">
-                        <i class="fas fa-pills"></i> Gerenciar Inventário
-                    </a>
-                    <a href="{{ url_for('donation.nova_doacao') }}" class="btn-primary" style="justify-content:center;">
-                        <i class="fas fa-plus"></i> Registrar Doação
-                    </a>
-                    <a href="{{ url_for('pacientes.listar_pacientes') }}" class="btn-secondary" style="justify-content:center;">
-                        <i class="fas fa-user-injured"></i> Gerenciar Pacientes
-                    </a>
-                    <a href="{{ url_for('pacientes.receituario') }}" class="btn-secondary" style="justify-content:center;">
-                        <i class="fas fa-prescription"></i> Receituário Digital
-                    </a>
-                    <a href="{{ url_for('medicos.listar_medicos') }}" class="btn-secondary" style="justify-content:center;">
-                        <i class="fas fa-user-md"></i> Cadastrar Médico
-                    </a>
-                    <a href="{{ url_for('relatorios.relatorios') }}" class="btn-secondary" style="justify-content:center;">
-                        <i class="fas fa-chart-bar"></i> Ver Relatórios
-                    </a>
+        <!-- Coluna direita: ações rápidas + gráfico de barras -->
+        <div style="display:flex; flex-direction:column; gap:16px;">
+            <div class="quick-panel" style="flex:none;">
+                <div class="quick-actions">
+                    <h3><i class="fas fa-bolt"></i> Ações Rápidas</h3>
+                    <div style="display:flex; flex-direction:column; gap:10px; margin-top:14px;">
+                        <a href="{{ url_for('inventory.listar_medicamentos') }}" class="btn-secondary" style="justify-content:center;">
+                            <i class="fas fa-pills"></i> Gerenciar Inventário
+                        </a>
+                        <a href="{{ url_for('donation.nova_doacao') }}" class="btn-primary" style="justify-content:center;">
+                            <i class="fas fa-plus"></i> Registrar Doação
+                        </a>
+                        <a href="{{ url_for('pacientes.listar_pacientes') }}" class="btn-secondary" style="justify-content:center;">
+                            <i class="fas fa-user-injured"></i> Gerenciar Pacientes
+                        </a>
+                        <a href="{{ url_for('pacientes.receituario') }}" class="btn-secondary" style="justify-content:center;">
+                            <i class="fas fa-prescription"></i> Receituário Digital
+                        </a>
+                        <a href="{{ url_for('medicos.listar_medicos') }}" class="btn-secondary" style="justify-content:center;">
+                            <i class="fas fa-user-md"></i> Cadastrar Médico
+                        </a>
+                        <a href="{{ url_for('relatorios.relatorios') }}" class="btn-secondary" style="justify-content:center;">
+                            <i class="fas fa-chart-bar"></i> Ver Relatórios
+                        </a>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- Bar chart: Médicos, Farmácias, Pacientes -->
-    <div class="chart-card" style="margin-bottom:32px;">
-        <div class="chart-card-header">
-            <h3><i class="fas fa-chart-bar"></i> Cadastros por Categoria</h3>
-            <span class="chart-badge">Médicos · Farmácias · Pacientes</span>
-        </div>
-        <div class="chart-container" style="height:220px;">
-            <canvas id="barChart"></canvas>
+            <!-- Gráfico de barras: Médicos, Farmácias, Pacientes -->
+            <div class="chart-card" style="flex:none;">
+                <div class="chart-card-header">
+                    <h3><i class="fas fa-chart-bar"></i> Cadastros por Categoria</h3>
+                    <span class="chart-badge">Médicos · Farmácias · Pacientes</span>
+                </div>
+                <div class="chart-container" style="height:180px;">
+                    <canvas id="barChart"></canvas>
+                </div>
+            </div>
         </div>
     </div>
 

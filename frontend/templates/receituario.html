@@ -318,6 +318,7 @@
             <div id="lista-receitas" style="display:flex; flex-direction:column; gap:12px;">
                 {% for r in receitas %}
                 <div class="receita-card{% if r.status == 'dispensada' %} receita-dispensada{% endif %}"
+                     id="receita-{{ r.id }}"
                      data-status="{{ r.status }}"
                      data-controlada="{{ '1' if r.medicamento and r.medicamento.controlado else '0' }}">
                     <div class="receita-header">
@@ -344,9 +345,19 @@
                                 </span>
                             {% endif %}
                         </div>
-                        <span style="color:var(--text-muted); font-size:0.8rem; white-space:nowrap;">
-                            {{ r.data_emissao.strftime('%d/%m/%Y %H:%M') }}
-                        </span>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span style="color:var(--text-muted); font-size:0.8rem; white-space:nowrap;">
+                                {{ r.data_emissao.strftime('%d/%m/%Y %H:%M') }}
+                            </span>
+                            <button onclick="imprimirReceita('receita-{{ r.id }}')"
+                                    title="Imprimir receita"
+                                    style="background:rgba(52,152,219,.1); border:1px solid rgba(52,152,219,.3);
+                                           border-radius:var(--radius); color:var(--primary); padding:3px 10px;
+                                           font-size:0.78rem; cursor:pointer; transition:var(--transition);
+                                           display:inline-flex; align-items:center; gap:5px; white-space:nowrap;">
+                                <i class="fas fa-print"></i> Imprimir
+                            </button>
+                        </div>
                     </div>
 
                     <div class="receita-body">
@@ -562,6 +573,46 @@ if (uploadArea) {
         input.files = e.dataTransfer.files;
         previewUpload(input);
     });
+}
+
+/* ── Imprimir Receita Individual ─────────────────────────────────────────── */
+function imprimirReceita(cardId) {
+    var card = document.getElementById(cardId);
+    if (!card) return;
+    var pw = window.open('', '_blank', 'width=700,height=600');
+    pw.document.write('<!DOCTYPE html><html lang="pt-br"><head><meta charset="UTF-8">');
+    pw.document.write('<title>Receita RedeVita</title>');
+    pw.document.write('<style>');
+    pw.document.write('body{font-family:Arial,sans-serif;padding:28px;color:#111;font-size:14px;}');
+    pw.document.write('h2{margin:0 0 16px; border-bottom:2px solid #3498db; padding-bottom:8px; color:#2c3e50;}');
+    pw.document.write('.row{display:flex;gap:8px;margin-bottom:10px;align-items:baseline;}');
+    pw.document.write('.lbl{font-weight:700;min-width:130px;color:#555;font-size:12px;text-transform:uppercase;}');
+    pw.document.write('.val{color:#111;}');
+    pw.document.write('.obs{background:#f8f9fa;border-left:3px solid #3498db;padding:8px 12px;margin-top:12px;border-radius:4px;}');
+    pw.document.write('.footer{margin-top:40px;border-top:1px solid #ddd;padding-top:12px;font-size:11px;color:#777;display:flex;justify-content:space-between;}');
+    pw.document.write('</style></head><body>');
+    pw.document.write('<h2><span style="color:#3498db;">Rede</span>Vita — Ordem de Retirada</h2>');
+
+    var rows = card.querySelectorAll('.receita-info-row');
+    rows.forEach(function(r) {
+        var lbl = r.querySelector('.receita-label');
+        var vals = Array.from(r.querySelectorAll('strong, span:not(.receita-label), small'));
+        var val = vals.map(function(v){ return v.textContent.trim(); }).filter(Boolean).join(' — ');
+        if (lbl && val) {
+            pw.document.write('<div class="row"><span class="lbl">' + lbl.textContent.trim() + '</span><span class="val">' + val + '</span></div>');
+        }
+    });
+
+    var obs = card.querySelector('.receita-obs');
+    if (obs) {
+        pw.document.write('<div class="obs">' + (obs.querySelector('span') ? obs.querySelector('span').textContent.trim() : '') + '</div>');
+    }
+
+    pw.document.write('<div class="footer"><span>Emitido pelo sistema RedeVita</span><span>' + new Date().toLocaleDateString('pt-BR') + '</span></div>');
+    pw.document.write('</body></html>');
+    pw.document.close();
+    pw.focus();
+    setTimeout(function(){ pw.print(); }, 400);
 }
 </script>
 {% endblock %}

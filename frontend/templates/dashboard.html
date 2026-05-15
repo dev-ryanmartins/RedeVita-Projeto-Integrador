@@ -20,6 +20,19 @@
         </div>
     </div>
 
+    {% if sem_estoque %}
+    <div class="alert-banner" style="background:rgba(231,76,60,.07); border-color:rgba(231,76,60,.25);">
+        <i class="fas fa-box-open" style="color:var(--danger);"></i>
+        <div>
+            <strong style="color:var(--danger);">Estoque Zerado:</strong>
+            {{ sem_estoque }} medicamento(s) com quantidade zero no estoque.
+        </div>
+        <a href="{{ url_for('inventory.listar_medicamentos') }}" class="alert-banner-link">
+            Ver inventário <i class="fas fa-arrow-right"></i>
+        </a>
+    </div>
+    {% endif %}
+
     {% if proximos_vencimento %}
     <div class="alert-banner">
         <i class="fas fa-exclamation-triangle"></i>

@@ -48,6 +48,43 @@
         </div>
     </div>
 
+    {% if tarja_stats %}
+    <div class="table-wrapper" style="margin-bottom:24px;">
+        <div style="padding:16px 20px 0; display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+            <h3 style="margin:0;"><i class="fas fa-tags"></i> Estoque por Tipo de Tarja</h3>
+            <span class="chart-badge">ANVISA</span>
+        </div>
+        <table class="styled-table">
+            <thead>
+                <tr>
+                    <th>Tipo de Tarja</th>
+                    <th>Qtd. de Lotes</th>
+                    <th>Unidades em Estoque</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tarja, lotes, unidades in tarja_stats %}
+                <tr>
+                    <td>
+                        {% if tarja == 'Portaria 344' %}
+                            <span class="status-pill red"><i class="fas fa-skull-crossbones"></i> {{ tarja }}</span>
+                        {% elif tarja == 'Tarja Vermelha' %}
+                            <span class="status-pill red">{{ tarja }}</span>
+                        {% elif tarja == 'Tarja Amarela' %}
+                            <span class="status-pill yellow">{{ tarja }}</span>
+                        {% else %}
+                            <span class="status-pill green">{{ tarja }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ lotes }} lote(s)</td>
+                    <td><strong>{{ unidades or 0 }}</strong> un.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
     <div class="dashboard-grid">
         <div>
             {% if proximos_vencimento %}
@@ -145,6 +182,10 @@
                     <a href="{{ url_for('relatorios.exportar_pacientes') }}" class="btn-secondary"
                        style="justify-content:center;">
                         <i class="fas fa-user-injured"></i> Exportar Pacientes
+                    </a>
+                    <a href="{{ url_for('relatorios.exportar_doacoes') }}" class="btn-secondary"
+                       style="justify-content:center;">
+                        <i class="fas fa-hand-holding-heart"></i> Exportar Doações
                     </a>
                     <hr style="border-color: var(--border); margin: 4px 0;">
                     <button onclick="window.print()" class="btn-primary" style="justify-content:center;">

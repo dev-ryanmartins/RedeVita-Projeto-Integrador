@@ -54,6 +54,7 @@ def dashboard():
     total_itens = len(medicamentos)
     total_estoque = sum(m.quantidade for m in medicamentos)
     alertas = len([m for m in medicamentos if m.status_semaforo == 2])
+    sem_estoque = len([m for m in medicamentos if m.quantidade == 0])
     total_doacoes = Doacao.query.count()
     total_medicos = Medico.query.count()
     total_farmacias = Farmacia.query.count()
@@ -83,6 +84,7 @@ def dashboard():
         proximos_vencimento=proximos_vencimento,
         ultimos_medicos=ultimos_medicos,
         ultimas_farmacias=ultimas_farmacias,
+        sem_estoque=sem_estoque,
         now=date.today()
     )
 
@@ -336,4 +338,36 @@ def excluir_medicamento(med_id):
         db.session.rollback()
         flash('Erro ao remover medicamento. Verifique se há doações vinculadas.', 'danger')
 
+    return redirect(url_for('inventory.listar_medicamentos'))
+
+
+# ── Duplicar Medicamento ──────────────────────────────────────────────────────
+
+@inventory_bp.route('/medicamento/<int:med_id>/duplicar', methods=['POST'])
+@login_required
+@farmaceutico_required
+def duplicar_medicamento(med_id):
+    orig = db.session.get(Medicamento, med_id)
+    if not orig:
+        flash('Medicamento não encontrado.', 'danger')
+        return redirect(url_for('inventory.listar_medicamentos'))
+    try:
+        copia = Medicamento(
+            nome=orig.nome,
+            lote=f'COPIA-{orig.lote}',
+            data_validade=orig.data_validade,
+            quantidade=0,
+            status_semaforo=orig.status_semaforo,
+            tarja=orig.tarja,
+            principio_ativo=orig.principio_ativo,
+            uso_continuo=orig.uso_continuo,
+            referencia_id=orig.referencia_id,
+        )
+        db.session.add(copia)
+        db.session.commit()
+        registrar_log('Medicamento Duplicado', f'"{orig.nome}" (Lote {orig.lote}) duplicado com lote COPIA-{orig.lote}')
+        flash(f'"{orig.nome}" duplicado com sucesso. Atualize o lote e a quantidade.', 'success')
+    except Exception:
+        db.session.rollback()
+        flash('Erro ao duplicar medicamento. Tente novamente.', 'danger')
     return redirect(url_for('inventory.listar_medicamentos'))

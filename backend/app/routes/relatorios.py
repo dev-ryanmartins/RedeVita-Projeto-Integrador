@@ -2,6 +2,7 @@ import csv
 import io
 from flask import Blueprint, render_template, request, Response, redirect, url_for
 from flask_login import login_required
+from sqlalchemy import func
 from app.core.decorators import equipe_clinica_required
 from app.models.medicamento import Medicamento
 from app.models.medico import Medico
@@ -9,6 +10,7 @@ from app.models.farmacia import Farmacia
 from app.models.doacao import Doacao
 from app.models.paciente import Paciente
 from app.utils.log_helper import registrar_log
+from app.database import db
 from datetime import date, timedelta
 
 relatorios_bp = Blueprint('relatorios', __name__)
@@ -39,6 +41,10 @@ def relatorios():
     total_doacoes = Doacao.query.count()
     total_pacientes = Paciente.query.count()
 
+    tarja_stats = db.session.query(
+        Medicamento.tarja, func.count(Medicamento.id), func.sum(Medicamento.quantidade)
+    ).group_by(Medicamento.tarja).all()
+
     return render_template(
         'relatorios.html',
         proximos_vencimento=proximos_vencimento,
@@ -48,6 +54,7 @@ def relatorios():
         total_medicamentos=total_medicamentos,
         total_doacoes=total_doacoes,
         total_pacientes=total_pacientes,
+        tarja_stats=tarja_stats,
         hoje=hoje
     )
 
@@ -138,5 +145,30 @@ def exportar_pacientes():
     return _make_csv_response(
         f'pacientes_{date.today()}.csv',
         ['ID', 'Nome', 'CPF', 'Data de Nascimento', 'Endereço', 'Cadastrado em'],
+        rows
+    )
+
+
+@relatorios_bp.route('/relatorios/exportar/doacoes')
+@login_required
+@equipe_clinica_required
+def exportar_doacoes():
+    doacoes = Doacao.query.order_by(Doacao.data_doacao.desc()).all()
+    registrar_log('Exportação CSV', 'Exportou histórico de doações')
+    rows = [
+        [
+            d.id,
+            d.data_doacao.strftime('%d/%m/%Y %H:%M'),
+            d.medicamento.nome if d.medicamento else '—',
+            d.medicamento.lote if d.medicamento else '—',
+            d.quantidade,
+            d.usuario.nome if d.usuario else '—',
+            d.usuario.cargo if d.usuario else '—',
+        ]
+        for d in doacoes
+    ]
+    return _make_csv_response(
+        f'doacoes_{date.today()}.csv',
+        ['ID', 'Data/Hora', 'Medicamento', 'Lote', 'Qtd', 'Responsável', 'Cargo'],
         rows
     )

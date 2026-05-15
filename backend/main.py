@@ -24,6 +24,8 @@ from app.routes.bula import bula_bp
 from app.routes.notificacoes import notificacoes_bp
 from app.routes.medical import medical_bp
 from app.routes.pharmacy import pharmacy_bp
+from app.routes.perfil import perfil_bp
+from app.routes.busca import busca_bp
 
 mail = Mail()
 csrf = CSRFProtect()
@@ -122,6 +124,8 @@ def create_app():
     app.register_blueprint(notificacoes_bp)
     app.register_blueprint(medical_bp)
     app.register_blueprint(pharmacy_bp)
+    app.register_blueprint(perfil_bp)
+    app.register_blueprint(busca_bp)
 
     registrar_handlers_limite(app)
 

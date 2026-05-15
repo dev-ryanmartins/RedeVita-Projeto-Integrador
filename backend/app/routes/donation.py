@@ -67,8 +67,29 @@ def nova_doacao():
         return redirect(url_for('donation.nova_doacao'))
 
     medicamentos = Medicamento.query.filter(Medicamento.quantidade > 0).all()
-    doacoes = Doacao.query.order_by(Doacao.data_doacao.desc()).all()
-    return render_template('doacoes.html', medicamentos=medicamentos, doacoes=doacoes)
+
+    data_inicio = request.args.get('data_inicio', '').strip()
+    data_fim = request.args.get('data_fim', '').strip()
+    q = Doacao.query.order_by(Doacao.data_doacao.desc())
+    if data_inicio:
+        try:
+            q = q.filter(Doacao.data_doacao >= datetime.strptime(data_inicio, '%Y-%m-%d'))
+        except ValueError:
+            pass
+    if data_fim:
+        try:
+            q = q.filter(Doacao.data_doacao <= datetime.strptime(data_fim + ' 23:59:59', '%Y-%m-%d %H:%M:%S'))
+        except ValueError:
+            pass
+    doacoes = q.all()
+
+    return render_template(
+        'doacoes.html',
+        medicamentos=medicamentos,
+        doacoes=doacoes,
+        data_inicio=data_inicio,
+        data_fim=data_fim,
+    )
 
 
 # ── Triagem de entrada (recebimento de medicamentos doados ao estoque) ────────
@@ -171,3 +192,21 @@ def excluir_doacao(doacao_id):
         db.session.rollback()
         flash('Erro ao excluir doação. Tente novamente.', 'danger')
     return redirect(url_for('donation.nova_doacao'))
+
+
+# ── Movimentações Consolidadas ────────────────────────────────────────────────
+
+@donation_bp.route('/movimentacoes')
+@login_required
+def movimentacoes():
+    saidas = Doacao.query.order_by(Doacao.data_doacao.desc()).limit(100).all()
+    entradas = Medicamento.query.order_by(Medicamento.id.desc()).limit(50).all()
+    total_saidas = sum(d.quantidade for d in saidas)
+    total_entradas = sum(m.quantidade for m in entradas)
+    return render_template(
+        'movimentacoes.html',
+        saidas=saidas,
+        entradas=entradas,
+        total_saidas=total_saidas,
+        total_entradas=total_entradas,
+    )

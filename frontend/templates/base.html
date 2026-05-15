@@ -185,6 +185,33 @@
             </li>
             {% endif %}
 
+            <!-- Busca global -->
+            <li>
+                <form method="GET" action="{{ url_for('busca.buscar') }}"
+                      style="display:flex; align-items:center;">
+                    <div style="position:relative;">
+                        <input type="text" name="q" placeholder="Buscar…"
+                               style="padding:6px 12px 6px 30px; border-radius:20px;
+                                      border:1px solid var(--border); background:var(--bg-input);
+                                      color:var(--text-main); font-size:0.82rem; width:150px; outline:none;
+                                      transition:width .2s, border-color .2s;"
+                               onfocus="this.style.width='190px'; this.style.borderColor='var(--primary)'"
+                               onblur="this.style.width='150px'; this.style.borderColor='var(--border)'">
+                        <i class="fas fa-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);
+                           color:var(--text-muted);font-size:0.72rem;pointer-events:none;"></i>
+                    </div>
+                </form>
+            </li>
+
+            <!-- Perfil -->
+            <li>
+                <a href="{{ url_for('perfil.meu_perfil') }}"
+                   class="{{ 'active' if request.endpoint and request.endpoint.startswith('perfil.') else '' }}"
+                   title="Meu Perfil">
+                    <i class="fas fa-user-circle"></i> {{ current_user.nome.split()[0] }}
+                </a>
+            </li>
+
             <li>
                 <a href="{{ url_for('auth.logout') }}" class="btn-logout">
                     <i class="fas fa-sign-out-alt"></i> Sair

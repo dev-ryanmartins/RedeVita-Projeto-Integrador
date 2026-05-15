@@ -251,6 +251,15 @@ tr.row-continuo td { background: rgba(52,152,219,.04) !important; }
                                 )">
                                 <i class="fas fa-pen"></i>
                             </button>
+                            <form method="POST" action="{{ url_for('inventory.duplicar_medicamento', med_id=med.id) }}"
+                                  style="display:inline;"
+                                  onsubmit="return confirm('Duplicar {{ med.nome|replace("'","\\'") }}? Uma cópia será criada com quantidade zero.')">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn-icon" title="Duplicar"
+                                        style="color:var(--primary); border-color:rgba(52,152,219,.3); background:rgba(52,152,219,.08);">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </form>
                             <button class="btn-icon btn-delete" title="Excluir"
                                 onclick="confirmarExclusao({{ med.id }}, '{{ med.nome|replace("'","\\'") }}')">
                                 <i class="fas fa-trash"></i>

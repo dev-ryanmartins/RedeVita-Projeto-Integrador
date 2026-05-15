@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+{% block title %}Movimentações - RedeVita{% endblock %}
+
+{% block extra_css %}
+<style>
+.mov-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+@media (max-width: 900px) { .mov-grid { grid-template-columns: 1fr; } }
+.mov-stats { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+.mov-stat-card {
+    flex: 1; min-width: 160px; background: var(--bg-card);
+    border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 16px; display: flex; align-items: center; gap: 14px;
+}
+.tag-entrada {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: rgba(46,204,113,.12); color: #5dde8d;
+    border: 1px solid rgba(46,204,113,.3); border-radius: 20px;
+    padding: 2px 10px; font-size: 0.75rem; font-weight: 700;
+}
+.tag-saida {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: rgba(231,76,60,.10); color: #e74c3c;
+    border: 1px solid rgba(231,76,60,.3); border-radius: 20px;
+    padding: 2px 10px; font-size: 0.75rem; font-weight: 700;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header">
+        <div>
+            <h2><i class="fas fa-exchange-alt"></i> Movimentações de Estoque</h2>
+            <p class="page-subtitle">Visão consolidada de entradas e saídas de medicamentos.</p>
+        </div>
+        <div style="display:flex; gap:10px;">
+            <a href="{{ url_for('donation.nova_doacao') }}" class="btn-secondary">
+                <i class="fas fa-hand-holding-heart"></i> Doações
+            </a>
+            <a href="{{ url_for('donation.triagem') }}" class="btn-primary">
+                <i class="fas fa-clipboard-check"></i> Triagem
+            </a>
+        </div>
+    </div>
+
+    <!-- Totais -->
+    <div class="mov-stats">
+        <div class="mov-stat-card">
+            <div class="stat-icon green" style="width:44px;height:44px;flex-shrink:0;"><i class="fas fa-arrow-down"></i></div>
+            <div>
+                <p class="stat-label">Unidades Recebidas</p>
+                <p class="stat-value">{{ total_entradas }}</p>
+            </div>
+        </div>
+        <div class="mov-stat-card">
+            <div class="stat-icon red" style="width:44px;height:44px;flex-shrink:0;"><i class="fas fa-arrow-up"></i></div>
+            <div>
+                <p class="stat-label">Unidades Distribuídas</p>
+                <p class="stat-value">{{ total_saidas }}</p>
+            </div>
+        </div>
+        <div class="mov-stat-card">
+            <div class="stat-icon blue" style="width:44px;height:44px;flex-shrink:0;"><i class="fas fa-pills"></i></div>
+            <div>
+                <p class="stat-label">Itens no Estoque</p>
+                <p class="stat-value">{{ entradas|length }}</p>
+            </div>
+        </div>
+        <div class="mov-stat-card">
+            <div class="stat-icon orange" style="width:44px;height:44px;flex-shrink:0;"><i class="fas fa-hand-holding-heart"></i></div>
+            <div>
+                <p class="stat-label">Doações Registradas</p>
+                <p class="stat-value">{{ saidas|length }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="mov-grid">
+        <!-- Entradas -->
+        <div>
+            <div class="section-header" style="margin-bottom:12px;">
+                <h3><i class="fas fa-arrow-circle-down" style="color:#5dde8d;"></i> Entradas — Estoque Atual</h3>
+                <span class="tag-entrada"><i class="fas fa-plus"></i> {{ entradas|length }} item(s)</span>
+            </div>
+            <div class="table-wrapper">
+                <table class="styled-table">
+                    <thead>
+                        <tr>
+                            <th>Medicamento</th>
+                            <th>Lote</th>
+                            <th>Qtd</th>
+                            <th>Validade</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for m in entradas %}
+                        <tr>
+                            <td>
+                                <strong>{{ m.nome }}</strong>
+                                {% if m.tarja != 'Sem Tarja' %}
+                                <br><small style="color:var(--text-muted);">{{ m.tarja }}</small>
+                                {% endif %}
+                            </td>
+                            <td><code class="lote-code">{{ m.lote }}</code></td>
+                            <td style="font-weight:700;">{{ m.quantidade }}</td>
+                            <td>
+                                <span class="status-pill {% if m.status_semaforo==0 %}green{% elif m.status_semaforo==1 %}yellow{% else %}red{% endif %}">
+                                    {{ m.data_validade.strftime('%d/%m/%Y') }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="empty-state">
+                                <i class="fas fa-box-open"></i>
+                                <p>Nenhum item no estoque.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Saídas -->
+        <div>
+            <div class="section-header" style="margin-bottom:12px;">
+                <h3><i class="fas fa-arrow-circle-up" style="color:#e74c3c;"></i> Saídas — Doações</h3>
+                <span class="tag-saida"><i class="fas fa-minus"></i> {{ saidas|length }} registro(s)</span>
+            </div>
+            <div class="table-wrapper">
+                <table class="styled-table">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Medicamento</th>
+                            <th>Qtd</th>
+                            <th>Responsável</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for d in saidas %}
+                        <tr>
+                            <td style="font-size:0.83rem; color:var(--text-muted); white-space:nowrap;">
+                                {{ d.data_doacao.strftime('%d/%m/%Y %H:%M') }}
+                            </td>
+                            <td>
+                                <strong>{{ d.medicamento.nome }}</strong>
+                                <br><small style="color:var(--text-muted);">Lote {{ d.medicamento.lote }}</small>
+                            </td>
+                            <td style="font-weight:700; color:#e74c3c;">–{{ d.quantidade }}</td>
+                            <td style="font-size:0.85rem;">{{ d.usuario.nome }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="empty-state">
+                                <i class="fas fa-history"></i>
+                                <p>Nenhuma doação registrada.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

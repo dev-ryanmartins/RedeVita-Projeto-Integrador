@@ -106,7 +106,37 @@
 
     <!-- Histórico -->
     <div class="recent-section">
-        <h3>Histórico de Movimentações</h3>
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:14px;">
+            <h3 style="margin:0;">Histórico de Movimentações</h3>
+            <div style="display:flex; gap:8px; align-items:center; margin-left:auto; flex-wrap:wrap;">
+                <form method="GET" action="{{ url_for('donation.nova_doacao') }}"
+                      style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+                    <input type="date" name="data_inicio" value="{{ data_inicio }}"
+                           style="padding:5px 10px; border-radius:var(--radius); border:1px solid var(--border);
+                                  background:var(--bg-input); color:var(--text-main); font-size:0.82rem;">
+                    <input type="date" name="data_fim" value="{{ data_fim }}"
+                           style="padding:5px 10px; border-radius:var(--radius); border:1px solid var(--border);
+                                  background:var(--bg-input); color:var(--text-main); font-size:0.82rem;">
+                    <button type="submit" class="btn-secondary" style="padding:5px 12px; font-size:0.82rem;">
+                        <i class="fas fa-filter"></i> Filtrar
+                    </button>
+                    {% if data_inicio or data_fim %}
+                    <a href="{{ url_for('donation.nova_doacao') }}" class="btn-secondary"
+                       style="padding:5px 10px; font-size:0.82rem;" title="Limpar filtro">
+                        <i class="fas fa-times"></i>
+                    </a>
+                    {% endif %}
+                </form>
+                <a href="{{ url_for('relatorios.exportar_doacoes') }}" class="btn-secondary"
+                   style="padding:5px 12px; font-size:0.82rem;">
+                    <i class="fas fa-download"></i> CSV
+                </a>
+                <a href="{{ url_for('donation.movimentacoes') }}" class="btn-secondary"
+                   style="padding:5px 12px; font-size:0.82rem;">
+                    <i class="fas fa-exchange-alt"></i> Movimentações
+                </a>
+            </div>
+        </div>
         <div class="table-wrapper">
             <table class="styled-table">
                 <thead>

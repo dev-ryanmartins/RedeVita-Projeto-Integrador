@@ -1,18 +1,20 @@
 {% macro brand_logo(href, compact=false) -%}
 <style>
     .redevita-brand {
-        display: flex;
+        display: inline-flex;
         align-items: center;
-        gap: 12px;
+        vertical-align: middle;
+        gap: 8px;
         text-decoration: none;
     }
     .redevita-brand--compact {
-        gap: 10px;
+        gap: 6px;
     }
     .redevita-logo-icon {
-        display: flex;
+        display: inline-flex;
         align-items: center;
         justify-content: center;
+        vertical-align: middle;
     }
     .redevita-logo-icon svg {
         height: 32px;
@@ -23,8 +25,9 @@
         width: auto;
     }
     .redevita-brand-text {
-        display: flex;
+        display: inline-flex;
         align-items: center;
+        vertical-align: middle;
     }
 </style>
 <a href="{{ href }}" class="redevita-brand{% if compact %} redevita-brand--compact{% endif %}" aria-label="RedeVita — início">

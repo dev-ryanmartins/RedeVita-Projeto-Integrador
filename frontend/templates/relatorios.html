@@ -130,26 +130,56 @@
                     Baixe os dados em formato CSV compatível com Excel e Google Sheets.
                 </p>
                 <div style="display:flex; flex-direction:column; gap:10px;">
-                    <a href="{{ url_for('relatorios.exportar_medicamentos') }}" class="btn-secondary"
-                       style="justify-content:center;" data-export-button>
-                        <svg class="download-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg> Exportar Medicamentos
-                    </a>
-                    <a href="{{ url_for('relatorios.exportar_medicos') }}" class="btn-secondary"
-                       style="justify-content:center;" data-export-button>
-                        <svg class="download-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg> Exportar Médicos
-                    </a>
-                    <a href="{{ url_for('relatorios.exportar_farmacias') }}" class="btn-secondary"
-                       style="justify-content:center;" data-export-button>
-                        <svg class="download-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg> Exportar Farmácias
-                    </a>
-                    <a href="{{ url_for('relatorios.exportar_pacientes') }}" class="btn-secondary"
-                       style="justify-content:center;" data-export-button>
-                        <svg class="download-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg> Exportar Pacientes
-                    </a>
-                    <a href="{{ url_for('relatorios.exportar_doacoes') }}" class="btn-secondary"
-                       style="justify-content:center;" data-export-button>
-                        <svg class="download-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg> Exportar Doações
-                    </a>
+                    <div style="display:flex; gap:8px;">
+                        <a href="{{ url_for('relatorios.exportar_medicamentos') }}" class="btn-secondary"
+                           style="justify-content:center; flex:1;" data-export-button>
+                            <svg class="download-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg> CSV
+                        </a>
+                        <a href="{{ url_for('relatorios.exportar_medicamentos_pdf') }}" class="btn-secondary"
+                           style="justify-content:center; flex:1;" data-export-button>
+                            <svg class="download-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg> PDF
+                        </a>
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <a href="{{ url_for('relatorios.exportar_medicos') }}" class="btn-secondary"
+                           style="justify-content:center; flex:1;" data-export-button>
+                            <svg class="download-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg> CSV
+                        </a>
+                        <a href="{{ url_for('relatorios.exportar_medicos_pdf') }}" class="btn-secondary"
+                           style="justify-content:center; flex:1;" data-export-button>
+                            <svg class="download-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg> PDF
+                        </a>
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <a href="{{ url_for('relatorios.exportar_farmacias') }}" class="btn-secondary"
+                           style="justify-content:center; flex:1;" data-export-button>
+                            <svg class="download-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg> CSV
+                        </a>
+                        <a href="{{ url_for('relatorios.exportar_farmacias_pdf') }}" class="btn-secondary"
+                           style="justify-content:center; flex:1;" data-export-button>
+                            <svg class="download-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg> PDF
+                        </a>
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <a href="{{ url_for('relatorios.exportar_pacientes') }}" class="btn-secondary"
+                           style="justify-content:center; flex:1;" data-export-button>
+                            <svg class="download-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg> CSV
+                        </a>
+                        <a href="{{ url_for('relatorios.exportar_pacientes_pdf') }}" class="btn-secondary"
+                           style="justify-content:center; flex:1;" data-export-button>
+                            <svg class="download-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg> PDF
+                        </a>
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <a href="{{ url_for('relatorios.exportar_doacoes') }}" class="btn-secondary"
+                           style="justify-content:center; flex:1;" data-export-button>
+                            <svg class="download-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg> CSV
+                        </a>
+                        <a href="{{ url_for('relatorios.exportar_doacoes_pdf') }}" class="btn-secondary"
+                           style="justify-content:center; flex:1;" data-export-button>
+                            <svg class="download-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg> PDF
+                        </a>
+                    </div>
                     <hr style="border-color: var(--border); margin: 4px 0;">
                     <button onclick="window.print()" class="btn-primary" style="justify-content:center;">
                         <i class="fas fa-print"></i> Imprimir Página

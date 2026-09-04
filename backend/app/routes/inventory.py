@@ -183,15 +183,19 @@ def dashboard():
         labels_doacoes = meses_abreviados[:6]
 
     estoque_status = {"Seguro": 0, "Atenção": 0, "Vencido": 0, "Sem estoque": 0}
+    validade_status = {"Vencidos": 0, "Próximo Vencimento": 0, "Seguros": 0}
     for medicamento in medicamentos:
         if not medicamento.quantidade:
             estoque_status["Sem estoque"] += 1
         elif medicamento.status_semaforo == 2:
             estoque_status["Vencido"] += 1
+            validade_status["Vencidos"] += 1
         elif medicamento.status_semaforo == 1:
             estoque_status["Atenção"] += 1
+            validade_status["Próximo Vencimento"] += 1
         else:
             estoque_status["Seguro"] += 1
+            validade_status["Seguros"] += 1
 
     return render_template(
         "dashboard.html",
@@ -211,6 +215,7 @@ def dashboard():
         labels_doacoes=labels_doacoes,
         doacoes_mensais=doacoes_mensais,
         estoque_status=estoque_status,
+        validade_status=validade_status,
     )
 
 

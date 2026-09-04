@@ -8,9 +8,21 @@
             <h2><i class="fas fa-pills"></i> Inventário de Medicamentos</h2>
             <p class="page-subtitle">Gerencie o estoque de medicamentos cadastrados.</p>
         </div>
-        <button class="btn-primary" onclick="abrirModal('modal-add')">
-            <i class="fas fa-plus"></i> Novo Medicamento
-        </button>
+        <div style="display:flex; gap:10px;">
+            <div style="display:flex; gap:8px;">
+                <a href="{{ url_for('relatorios.exportar_medicamentos') }}" class="btn-secondary"
+                   style="justify-content:center;" data-export-button>
+                    <svg class="download-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg> CSV
+                </a>
+                <a href="{{ url_for('relatorios.exportar_medicamentos_pdf') }}" class="btn-secondary"
+                   style="justify-content:center;" data-export-button>
+                    <svg class="download-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg> PDF
+                </a>
+            </div>
+            <button class="btn-primary" onclick="abrirModal('modal-add')">
+                <i class="fas fa-plus"></i> Novo Medicamento
+            </button>
+        </div>
     </div>
 
     <div class="table-toolbar" role="search">
@@ -19,6 +31,15 @@
             <input type="search" id="inventory-table-search" data-table-search="inventory-table"
                    placeholder="Buscar medicamento, lote ou status" autocomplete="off">
         </label>
+        <div style="display:flex; gap:8px; align-items:center;">
+            <label style="font-size:0.85rem; color:var(--text-muted);">Filtro Tarja:</label>
+            <select id="filtro-tarja" onchange="aplicarFiltros()" style="padding:6px 12px; border:1px solid var(--border); border-radius:6px; background:var(--bg-secondary); color:var(--text); font-size:0.85rem;">
+                <option value="">Todos</option>
+                <option value="Sem Tarja">Sem Tarja</option>
+                <option value="Vermelha">Vermelha</option>
+                <option value="Portaria 344">Portaria 344</option>
+            </select>
+        </div>
         <span class="table-search-hint">Filtra os itens desta página sem recarregar.</span>
     </div>
     <div class="table-wrapper">
@@ -30,12 +51,13 @@
                     <th>Lote</th>
                     <th>Validade</th>
                     <th>Qtd.</th>
+                    <th>Tarja</th>
                     <th style="text-align:center;">Ações</th>
                 </tr>
             </thead>
             <tbody>
                 {% for med in medicamentos %}
-                <tr>
+                <tr data-tarja="{{ med.tarja or '' }}">
                     <td>
                         {% if med.status_semaforo == 0 %}
                             <span class="status-pill green"><i class="fas fa-circle"></i> Seguro</span>
@@ -49,6 +71,7 @@
                     <td><code class="lote-code">{{ med.lote }}</code></td>
                     <td>{{ med.data_validade.strftime('%d/%m/%Y') }}</td>
                     <td>{{ med.quantidade }} un.</td>
+                    <td>{{ med.tarja or '—' }}</td>
                     <td style="text-align:center;">
                         <div class="action-btns">
                             <button class="btn-icon btn-edit"
@@ -66,7 +89,7 @@
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="6" class="empty-state">
+                    <td colspan="7" class="empty-state">
                         <i class="fas fa-box-open"></i>
                         <p>Nenhum medicamento cadastrado ainda.</p>
                         <button class="btn-primary" onclick="abrirModal('modal-add')">Cadastrar o primeiro</button>
@@ -190,6 +213,20 @@ function confirmarExclusao(id, nome) {
     document.getElementById('form-delete').action = `/medicamento/${id}/excluir`;
     document.getElementById('delete-msg').textContent = `Tem certeza que deseja excluir "${nome}"? Esta ação não pode ser desfeita.`;
     abrirModal('modal-delete');
+}
+function aplicarFiltros() {
+    const filtroTarja = document.getElementById('filtro-tarja').value;
+    const rows = document.querySelectorAll('#inventory-table tbody tr');
+    
+    rows.forEach(row => {
+        if (row.classList.contains('empty-state')) return;
+        
+        const tarja = row.getAttribute('data-tarja') || '';
+        
+        const tarjaMatch = !filtroTarja || tarja === filtroTarja;
+        
+        row.style.display = tarjaMatch ? '' : 'none';
+    });
 }
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {

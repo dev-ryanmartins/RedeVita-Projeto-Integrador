@@ -315,3 +315,261 @@ def exportar_medicamentos_pdf():
     response.data = pdf
 
     return response
+
+
+@relatorios_bp.route("/relatorios/exportar/medicos/pdf")
+@login_required
+@equipe_clinica_required
+def exportar_medicos_pdf():
+    if not REPORTLAB_AVAILABLE:
+        return redirect(url_for("relatorios.relatorios"))
+
+    medicos = Medico.query.order_by(Medico.nome).all()
+    registrar_log("Exportação PDF", "Exportou lista de médicos em PDF")
+
+    response = Response(content_type="application/pdf")
+    response.headers["Content-Disposition"] = (
+        f"attachment; filename=medicos_{date.today()}.pdf"
+    )
+
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    elements = []
+
+    styles = getSampleStyleSheet()
+    title = Paragraph("Relatório de Médicos", styles["Heading1"])
+    elements.append(title)
+
+    data = [["Nome", "CRM", "Especialidade", "Contato", "Cadastrado em"]]
+
+    for m in medicos:
+        data.append(
+            [
+                m.nome,
+                m.crm,
+                m.especialidade,
+                m.contato or "",
+                m.created_at.strftime("%d/%m/%Y") if m.created_at else "",
+            ]
+        )
+
+    table = Table(
+        data, colWidths=[2 * inch, 1 * inch, 1.5 * inch, 1.5 * inch, 1 * inch]
+    )
+    table.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+                ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                ("FONTSIZE", (0, 0), (-1, 0), 12),
+                ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
+                ("BACKGROUND", (0, 1), (-1, -1), colors.beige),
+                ("GRID", (0, 0), (-1, -1), 1, colors.black),
+            ]
+        )
+    )
+
+    elements.append(table)
+    doc.build(elements)
+
+    pdf = buffer.getvalue()
+    buffer.close()
+    response.data = pdf
+
+    return response
+
+
+@relatorios_bp.route("/relatorios/exportar/farmacias/pdf")
+@login_required
+@equipe_clinica_required
+def exportar_farmacias_pdf():
+    if not REPORTLAB_AVAILABLE:
+        return redirect(url_for("relatorios.relatorios"))
+
+    farmacias = Farmacia.query.order_by(Farmacia.nome_fantasia).all()
+    registrar_log("Exportação PDF", "Exportou lista de farmácias em PDF")
+
+    response = Response(content_type="application/pdf")
+    response.headers["Content-Disposition"] = (
+        f"attachment; filename=farmacias_{date.today()}.pdf"
+    )
+
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    elements = []
+
+    styles = getSampleStyleSheet()
+    title = Paragraph("Relatório de Farmácias", styles["Heading1"])
+    elements.append(title)
+
+    data = [["Nome Fantasia", "Razão Social", "CNPJ", "Responsável", "Endereço", "Cadastrado em"]]
+
+    for f in farmacias:
+        data.append(
+            [
+                f.nome_fantasia,
+                f.razao_social or "",
+                f.cnpj,
+                f.responsavel,
+                f.endereco,
+                f.created_at.strftime("%d/%m/%Y") if f.created_at else "",
+            ]
+        )
+
+    table = Table(
+        data, colWidths=[1.5 * inch, 1.5 * inch, 1 * inch, 1 * inch, 1.5 * inch, 1 * inch]
+    )
+    table.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+                ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                ("FONTSIZE", (0, 0), (-1, 0), 12),
+                ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
+                ("BACKGROUND", (0, 1), (-1, -1), colors.beige),
+                ("GRID", (0, 0), (-1, -1), 1, colors.black),
+            ]
+        )
+    )
+
+    elements.append(table)
+    doc.build(elements)
+
+    pdf = buffer.getvalue()
+    buffer.close()
+    response.data = pdf
+
+    return response
+
+
+@relatorios_bp.route("/relatorios/exportar/pacientes/pdf")
+@login_required
+@equipe_clinica_required
+def exportar_pacientes_pdf():
+    if not REPORTLAB_AVAILABLE:
+        return redirect(url_for("relatorios.relatorios"))
+
+    pacientes = Paciente.query.order_by(Paciente.nome).all()
+    registrar_log("Exportação PDF", "Exportou lista de pacientes em PDF")
+
+    response = Response(content_type="application/pdf")
+    response.headers["Content-Disposition"] = (
+        f"attachment; filename=pacientes_{date.today()}.pdf"
+    )
+
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    elements = []
+
+    styles = getSampleStyleSheet()
+    title = Paragraph("Relatório de Pacientes", styles["Heading1"])
+    elements.append(title)
+
+    data = [["Nome", "CPF", "Data de Nascimento", "Endereço", "Cadastrado em"]]
+
+    for p in pacientes:
+        data.append(
+            [
+                p.nome,
+                p.cpf,
+                p.data_nascimento.strftime("%d/%m/%Y") if p.data_nascimento else "",
+                p.endereco or "",
+                p.created_at.strftime("%d/%m/%Y") if p.created_at else "",
+            ]
+        )
+
+    table = Table(
+        data, colWidths=[2 * inch, 1 * inch, 1 * inch, 1.5 * inch, 1 * inch]
+    )
+    table.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+                ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                ("FONTSIZE", (0, 0), (-1, 0), 12),
+                ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
+                ("BACKGROUND", (0, 1), (-1, -1), colors.beige),
+                ("GRID", (0, 0), (-1, -1), 1, colors.black),
+            ]
+        )
+    )
+
+    elements.append(table)
+    doc.build(elements)
+
+    pdf = buffer.getvalue()
+    buffer.close()
+    response.data = pdf
+
+    return response
+
+
+@relatorios_bp.route("/relatorios/exportar/doacoes/pdf")
+@login_required
+@equipe_clinica_required
+def exportar_doacoes_pdf():
+    if not REPORTLAB_AVAILABLE:
+        return redirect(url_for("relatorios.relatorios"))
+
+    doacoes = Doacao.query.order_by(Doacao.data_doacao.desc()).all()
+    registrar_log("Exportação PDF", "Exportou histórico de doações em PDF")
+
+    response = Response(content_type="application/pdf")
+    response.headers["Content-Disposition"] = (
+        f"attachment; filename=doacoes_{date.today()}.pdf"
+    )
+
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    elements = []
+
+    styles = getSampleStyleSheet()
+    title = Paragraph("Relatório de Doações", styles["Heading1"])
+    elements.append(title)
+
+    data = [["Data/Hora", "Medicamento", "Lote", "Qtd", "Responsável", "Cargo"]]
+
+    for d in doacoes:
+        data.append(
+            [
+                d.data_doacao.strftime("%d/%m/%Y %H:%M"),
+                d.medicamento.nome if d.medicamento else "—",
+                d.medicamento.lote if d.medicamento else "—",
+                str(d.quantidade),
+                d.usuario.nome if d.usuario else "—",
+                d.usuario.cargo if d.usuario else "—",
+            ]
+        )
+
+    table = Table(
+        data, colWidths=[1.2 * inch, 1.5 * inch, 0.8 * inch, 0.5 * inch, 1.2 * inch, 1 * inch]
+    )
+    table.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+                ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                ("FONTSIZE", (0, 0), (-1, 0), 12),
+                ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
+                ("BACKGROUND", (0, 1), (-1, -1), colors.beige),
+                ("GRID", (0, 0), (-1, -1), 1, colors.black),
+            ]
+        )
+    )
+
+    elements.append(table)
+    doc.build(elements)
+
+    pdf = buffer.getvalue()
+    buffer.close()
+    response.data = pdf
+
+    return response

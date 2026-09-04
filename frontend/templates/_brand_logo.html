@@ -1,24 +1,17 @@
 {% macro brand_logo(href, compact=false) -%}
 <a href="{{ href }}" class="redevita-brand{% if compact %} redevita-brand--compact{% endif %}" aria-label="RedeVita — início">
     <span class="redevita-logo-icon" aria-hidden="true">
-        <svg width="34" height="34" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <!-- Cruz médica azul em contorno atrás -->
-            <path d="M52 28 H68 V44 H84 V60 H68 V76 H52"
-                  stroke="#38bdf8"
-                  stroke-width="5.5"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"/>
-
-            <!-- Coração vermelho principal -->
-            <path d="M48 82 L20 54 C10 44 10 28 24 18 C34 11 44 16 48 24 C52 16 62 11 72 18 C86 28 86 44 76 54 Z"
-                  fill="#e11d48"/>
-
-            <!-- Linha contínua do eletrocardiograma -->
-            <path d="M14 54 H34 L40 40 L48 68 L56 46 L62 54 H82"
-                  stroke="#ffffff"
-                  stroke-width="5"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"/>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 52" width="34" height="34">
+            <defs>
+                <style>
+                    .cruz-borda { fill: none; stroke: #0ea5e9; stroke-width: 2.8; stroke-linecap: round; stroke-linejoin: round; }
+                    .coracao-vermelho { fill: #f43f5e; }
+                    .ecg-linha { fill: none; stroke: #ffffff; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+                </style>
+            </defs>
+            <path class="cruz-borda" d="M 27 5 h 12 a 4 4 0 0 1 4 4 v 11 h 11 a 4 4 0 0 1 4 4 v 10 a 4 4 0 0 1 -4 4 h -11 v 11 a 4 4 0 0 1 -4 4 h -12 a 4 4 0 0 1 -4 -4 v -11 h -11 a 4 4 0 0 1 -4 -4 v -10 a 4 4 0 0 1 4 -4 h 11 v -11 a 4 4 0 0 1 4 -4 z" />
+            <path class="coracao-vermelho" transform="translate(1, -4) scale(1.5)" d="M 40 20 C 40 13 31 11 27 17 C 23 11 14 13 14 20 C 14 29 27 37 27 37 C 27 37 40 29 40 20 Z" />
+            <path class="ecg-linha" d="M 21 25 h 5 l 3.5 -11 l 5 22 l 4.5 -14 l 3.5 3 h 6" />
         </svg>
     </span>
     <span class="redevita-brand-text">

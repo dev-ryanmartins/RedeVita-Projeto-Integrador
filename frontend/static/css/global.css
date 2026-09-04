@@ -600,6 +600,10 @@ code { font-family: 'Courier New', monospace; }
 .btn-icon:hover { border-color: var(--primary); color: var(--primary); }
 .btn-edit:hover  { border-color: var(--primary); color: var(--primary); background: rgba(52,152,219,0.1); }
 .btn-delete:hover { border-color: var(--danger); color: var(--danger); background: rgba(231,76,60,0.1); }
+.btn-timeline { 
+    border-color: var(--border); 
+    color: var(--text-muted); 
+}
 .btn-timeline:hover { border-color: var(--warning); color: var(--warning); background: rgba(243,156,18,0.1); }
 
 .action-btns { display: flex; gap: 6px; justify-content: center; }
@@ -1056,6 +1060,7 @@ textarea:focus {
 }
 
 .modal-sm { max-width: 400px; }
+.modal-lg { max-width: 700px; }
 
 @keyframes scaleIn {
     from { opacity: 0; transform: scale(0.95); }

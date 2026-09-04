@@ -252,7 +252,7 @@ function abrirTimeline(id, nome, lote) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                renderTimeline(data.timeline, nome, lote);
+                renderTimeline(data.data.timeline, nome, lote);
             } else {
                 document.getElementById('timeline-content').innerHTML = `
                     <div style="text-align: center; padding: 40px;">

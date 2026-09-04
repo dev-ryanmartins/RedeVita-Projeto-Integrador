@@ -4,7 +4,7 @@ from app.models.doacao import Doacao
 from app.models.medicamento import Medicamento
 from app.database import db
 from app.utils.log_helper import registrar_log
-from app.core.decorators import cargo_required, admin_required
+from app.core.decorators import cargo_required, admin_required, operador_required, voluntario_required
 from app.utils.semaforo import calcular_status_semaforo
 from app.utils.email_service import email_service
 from app.utils.sms_service import sms_service
@@ -23,6 +23,7 @@ TARJAS_VALIDAS = ["Sem Tarja", "Tarja Amarela", "Tarja Vermelha", "Portaria 344"
 
 @donation_bp.route("/doacoes", methods=["GET", "POST"])
 @login_required
+@operador_required
 def nova_doacao():
     if request.method == "POST":
         med_id = request.form.get("medicamento_id")
@@ -138,7 +139,7 @@ def nova_doacao():
 
 @donation_bp.route("/doacoes/triagem", methods=["GET", "POST"])
 @login_required
-@cargo_required("Admin", "Operador", "Farmacêutico")
+@operador_required
 def triagem():
     if request.method == "POST":
         nome = request.form.get("nome", "").strip()

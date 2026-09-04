@@ -62,7 +62,11 @@ def admin_required(f):
 
 
 def operador_required(f):
-    """Acesso para Admin e Operador. Retorna 403 se negado."""
+    """
+    Acesso para Admin e Operador.
+    Responsabilidades: Cadastro e conferência de entradas de doações e triagem inicial de validade.
+    Retorna 403 se negado.
+    """
 
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -94,13 +98,17 @@ def farmaceutico_required(f):
 
 
 def medico_required(f):
-    """Acesso para Admin, Operador e Médico. Retorna 403 se negado."""
+    """
+    Acesso exclusivo para Médico e Admin.
+    Conforme especificações do sistema - gestão de pacientes e receituário.
+    Retorna 403 se negado.
+    """
 
     @wraps(f)
     def decorated(*args, **kwargs):
         if not current_user.is_authenticated:
             return redirect(url_for("auth.login"))
-        if not cargo_permitido(current_user.cargo, ("Admin", "Operador", "Médico")):
+        if not cargo_permitido(current_user.cargo, ("Admin", "Médico")):
             abort(403)
         return f(*args, **kwargs)
 
@@ -118,6 +126,22 @@ def equipe_clinica_required(f):
             current_user.cargo, ("Admin", "Operador", "Médico", "Farmacêutico")
         ):
             abort(403)
+        return f(*args, **kwargs)
+
+    return decorated
+
+
+def voluntario_required(f):
+    """
+    Acesso para todos os usuários autenticados (Admin, Operador, Farmacêutico, Médico, Voluntário).
+    Responsabilidades do Voluntário: Auxílio no recebimento e registro de doações comunitárias.
+    Retorna 403 se negado.
+    """
+
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not current_user.is_authenticated:
+            return redirect(url_for("auth.login"))
         return f(*args, **kwargs)
 
     return decorated

@@ -5,6 +5,7 @@ from flask import Blueprint, render_template, current_app, request, jsonify
 from flask_login import login_required
 from app.models.farmacia import Farmacia
 from app.core.api_responses import resposta_ok, resposta_erro
+from app.core.decorators import voluntario_required
 
 mapa_bp = Blueprint("mapa", __name__)
 
@@ -36,6 +37,7 @@ def calcular_distancia_haversine(lat1: float, lon1: float, lat2: float, lon2: fl
 
 @mapa_bp.route("/mapa")
 @login_required
+@voluntario_required
 def mapa_saude():
     # Use cache for farmacias data (5 minutes timeout)
     cache_key = "farmacias_map_data"

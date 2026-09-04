@@ -23,7 +23,7 @@ from app.database import db
 from app.utils.semaforo import calcular_status_semaforo
 from app.schemas.med_schema import validar_entrada_medicamento
 from app.utils.log_helper import registrar_log
-from app.core.decorators import admin_required, farmaceutico_required
+from app.core.decorators import admin_required, farmaceutico_required, voluntario_required, equipe_clinica_required
 from datetime import datetime, date
 
 inventory_bp = Blueprint("inventory", __name__)
@@ -71,6 +71,7 @@ def buscar_referencia():
 
 @inventory_bp.route("/dashboard")
 @login_required
+@voluntario_required
 def dashboard():
     try:
         medicamentos = Medicamento.query.all()
@@ -224,6 +225,7 @@ def dashboard():
 
 @inventory_bp.route("/inventario")
 @login_required
+@equipe_clinica_required
 def listar_medicamentos():
     pagina = request.args.get("page", 1, type=int)
     por_pagina = 20

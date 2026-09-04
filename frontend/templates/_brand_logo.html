@@ -1,7 +1,35 @@
 {% macro brand_logo(href, compact=false) -%}
+<style>
+    .redevita-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+    }
+    .redevita-brand--compact {
+        gap: 8px;
+    }
+    .redevita-logo-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .redevita-logo-icon svg {
+        height: 32px;
+        width: auto;
+    }
+    .redevita-brand--compact .redevita-logo-icon svg {
+        height: 24px;
+        width: auto;
+    }
+    .redevita-brand-text {
+        display: flex;
+        align-items: center;
+    }
+</style>
 <a href="{{ href }}" class="redevita-brand{% if compact %} redevita-brand--compact{% endif %}" aria-label="RedeVita — início">
     <span class="redevita-logo-icon" aria-hidden="true">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 52" width="34" height="34">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 52">
             <defs>
                 <style>
                     .cruz-borda { fill: none; stroke: #0ea5e9; stroke-width: 2.8; stroke-linecap: round; stroke-linejoin: round; }

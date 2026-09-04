@@ -613,3 +613,129 @@ def exportar_doacoes_pdf():
     response.data = pdf
 
     return response
+
+
+@relatorios_bp.route("/relatorios/exportar/sumario/pdf")
+@login_required
+@admin_required
+def exportar_sumario_pdf():
+    """
+    Exporta um sumário executivo em PDF com as principais métricas do sistema.
+    """
+    if not REPORTLAB_AVAILABLE:
+        return redirect(url_for("relatorios.relatorios"))
+
+    try:
+        hoje = date.today()
+    except Exception:
+        hoje = None
+
+    try:
+        total_medicamentos = Medicamento.query.count()
+    except Exception:
+        total_medicamentos = 0
+    
+    try:
+        vencidos = Medicamento.query.filter(Medicamento.status_semaforo == 2).count()
+    except Exception:
+        vencidos = 0
+    
+    try:
+        proximos_vencimento = Medicamento.query.filter(Medicamento.status_semaforo == 1).count()
+    except Exception:
+        proximos_vencimento = 0
+    
+    try:
+        total_doacoes = Doacao.query.count()
+    except Exception:
+        total_doacoes = 0
+    
+    try:
+        total_medicos = Medico.query.count()
+    except Exception:
+        total_medicos = 0
+    
+    try:
+        total_farmacias = Farmacia.query.count()
+    except Exception:
+        total_farmacias = 0
+    
+    try:
+        total_pacientes = Paciente.query.count()
+    except Exception:
+        total_pacientes = 0
+
+    response = Response(content_type="application/pdf")
+    response.headers["Content-Disposition"] = (
+        f"attachment; filename=sumario_redevita_{date.today()}.pdf"
+    )
+
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter,
+                           rightMargin=1.5*cm, leftMargin=1.5*cm,
+                           topMargin=2*cm, bottomMargin=2*cm)
+    elements = []
+
+    _criar_cabecalho_profissional(elementos, "Sumário Executivo - RedeVita")
+
+    # Resumo das métricas
+    styles = getSampleStyleSheet()
+    summary_style = ParagraphStyle(
+        'Summary',
+        parent=styles['Normal'],
+        fontSize=11,
+        textColor=colors.HexColor(COR_TEXTO),
+        spaceAfter=12,
+        leading=16
+    )
+
+    summary_data = [
+        ["Métrica", "Quantidade", "Status"],
+        ["Total de Medicamentos", str(total_medicamentos), "—" if total_medicamentos > 0 else "Vazio"],
+        ["Medicamentos Vencidos", str(vencidos), "Crítico" if vencidos > 0 else "OK"],
+        ["Próximos do Vencimento", str(proximos_vencimento), "Atenção" if proximos_vencimento > 0 else "OK"],
+        ["Total de Doações", str(total_doacoes), "—" if total_doacoes > 0 else "Vazio"],
+        ["Médicos Cadastrados", str(total_medicos), "—" if total_medicos > 0 else "Vazio"],
+        ["Farmácias Parceiras", str(total_farmacias), "—" if total_farmacias > 0 else "Vazio"],
+        ["Pacientes Cadastrados", str(total_pacientes), "—" if total_pacientes > 0 else "Vazio"],
+    ]
+
+    summary_table = Table(summary_data, colWidths=[2.5 * inch, 1.5 * inch, 1.2 * inch])
+    summary_table = _aplicar_estilo_tabela_profissional(summary_table)
+    elements.append(summary_table)
+
+    # Adicionar observações
+    elements.append(Spacer(1, 0.5*cm))
+    elements.append(Paragraph("Observações:", styles['Heading3']))
+    
+    observacoes = []
+    if vencidos > 0:
+        observacoes.append(f"• {vencidos} medicamento(s) vencido(s) encontrado(s). Ação recomendada: descarte imediato.")
+    if proximos_vencimento > 0:
+        observacoes.append(f"• {proximos_vencimento} medicamento(s) próximo(s) do vencimento. Monitorar estoque.")
+    if total_medicamentos == 0:
+        observacoes.append("• Nenhum medicamento cadastrado. Iniciar triagem de doações.")
+    if total_doacoes == 0:
+        observacoes.append("• Nenhuma doação registrada. Sistema pronto para receber doações.")
+    
+    if not observacoes:
+        observacoes.append("• Sistema operando dentro dos parâmetros normais.")
+    
+    for obs in observacoes:
+        elements.append(Paragraph(obs, summary_style))
+
+    _criar_rodape_profissional(elements)
+    doc.build(elements)
+
+    pdf = buffer.getvalue()
+    buffer.close()
+    response.data = pdf
+
+    registrar_log("Exportação PDF", "Exportou sumário executivo em PDF")
+    return response
+
+    pdf = buffer.getvalue()
+    buffer.close()
+    response.data = pdf
+
+    return response

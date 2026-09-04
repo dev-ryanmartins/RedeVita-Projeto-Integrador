@@ -33,12 +33,13 @@
         </label>
         <div style="display:flex; gap:8px; align-items:center;">
             <label style="font-size:0.85rem; color:var(--text-muted);">Filtro Tarja:</label>
-            <select id="filtro-tarja" onchange="aplicarFiltros()" style="padding:6px 12px; border:1px solid var(--border); border-radius:6px; background:var(--bg-secondary); color:var(--text); font-size:0.85rem;">
-                <option value="">Todos</option>
-                <option value="Sem Tarja">Sem Tarja</option>
-                <option value="Vermelha">Vermelha</option>
-                <option value="Portaria 344">Portaria 344</option>
-            </select>
+            <div class="filter-chips" id="filtro-tarja-chips">
+                <button class="filter-chip active" data-tarja="" onclick="aplicarFiltroTarja('')">Todos</button>
+                <button class="filter-chip" data-tarja="Sem Tarja" onclick="aplicarFiltroTarja('Sem Tarja')">Sem Tarja</button>
+                <button class="filter-chip" data-tarja="Tarja Amarela" onclick="aplicarFiltroTarja('Tarja Amarela')">Amarela</button>
+                <button class="filter-chip" data-tarja="Tarja Vermelha" onclick="aplicarFiltroTarja('Tarja Vermelha')">Vermelha</button>
+                <button class="filter-chip" data-tarja="Portaria 344" onclick="aplicarFiltroTarja('Portaria 344')">Portaria 344</button>
+            </div>
         </div>
         <span class="table-search-hint">Filtra os itens desta página sem recarregar.</span>
     </div>
@@ -74,6 +75,11 @@
                     <td>{{ med.tarja or '—' }}</td>
                     <td style="text-align:center;">
                         <div class="action-btns">
+                            <button class="btn-icon btn-timeline"
+                                title="Ver Histórico"
+                                onclick="abrirTimeline({{ med.id }}, '{{ med.nome }}', '{{ med.lote }}')">
+                                <i class="fas fa-history"></i>
+                            </button>
                             <button class="btn-icon btn-edit"
                                 title="Editar"
                                 onclick="abrirEdicao({{ med.id }}, '{{ med.nome }}', '{{ med.lote }}', '{{ med.data_validade.strftime('%Y-%m-%d') }}', {{ med.quantidade }})">
@@ -186,6 +192,24 @@
     </div>
 </div>
 
+<div id="modal-timeline" class="modal-overlay" onclick="fecharModalFora(event, 'modal-timeline')">
+    <div class="modal-box modal-lg">
+        <div class="modal-header">
+            <h3><i class="fas fa-history"></i> Linha do Tempo do Lote</h3>
+            <button class="modal-close" onclick="fecharModal('modal-timeline')">&times;</button>
+        </div>
+        <div id="timeline-content" style="color: var(--text-muted);">
+            <div style="text-align: center; padding: 40px;">
+                <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary);"></i>
+                <p style="margin-top: 16px;">Carregando histórico...</p>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-secondary" onclick="fecharModal('modal-timeline')">Fechar</button>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
@@ -213,6 +237,121 @@ function confirmarExclusao(id, nome) {
     document.getElementById('form-delete').action = `/medicamento/${id}/excluir`;
     document.getElementById('delete-msg').textContent = `Tem certeza que deseja excluir "${nome}"? Esta ação não pode ser desfeita.`;
     abrirModal('modal-delete');
+}
+function abrirTimeline(id, nome, lote) {
+    document.getElementById('timeline-content').innerHTML = `
+        <div style="text-align: center; padding: 40px;">
+            <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary);"></i>
+            <p style="margin-top: 16px;">Carregando histórico...</p>
+        </div>
+    `;
+    abrirModal('modal-timeline');
+    
+    // Fetch timeline data
+    fetch(`/api/medicamento/${id}/timeline`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                renderTimeline(data.timeline, nome, lote);
+            } else {
+                document.getElementById('timeline-content').innerHTML = `
+                    <div style="text-align: center; padding: 40px;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 2rem; color: var(--danger);"></i>
+                        <p style="margin-top: 16px;">Erro ao carregar histórico</p>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            document.getElementById('timeline-content').innerHTML = `
+                <div style="text-align: center; padding: 40px;">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 2rem; color: var(--danger);"></i>
+                    <p style="margin-top: 16px;">Erro ao carregar histórico</p>
+                </div>
+            `;
+        });
+}
+function renderTimeline(timeline, nome, lote) {
+    let html = `
+        <div style="margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border);">
+            <h4 style="color: var(--text-main); margin-bottom: 8px;">${nome}</h4>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Lote: <code class="lote-code">${lote}</code></p>
+        </div>
+        <div class="timeline-container">
+    `;
+    
+    if (timeline.length === 0) {
+        html += `
+            <div style="text-align: center; padding: 40px;">
+                <i class="fas fa-clock" style="font-size: 2rem; color: var(--text-muted);"></i>
+                <p style="margin-top: 16px;">Nenhum registro encontrado</p>
+            </div>
+        `;
+    } else {
+        timeline.forEach(item => {
+            const icon = getTimelineIcon(item.tipo);
+            const color = getTimelineColor(item.tipo);
+            html += `
+                <div class="timeline-item">
+                    <div class="timeline-marker" style="background: ${color};">
+                        <i class="fas ${icon}"></i>
+                    </div>
+                    <div class="timeline-content">
+                        <div class="timeline-date">${item.data}</div>
+                        <div class="timeline-title">${item.titulo}</div>
+                        <div class="timeline-description">${item.descricao}</div>
+                    </div>
+                </div>
+            `;
+        });
+    }
+    
+    html += '</div>';
+    document.getElementById('timeline-content').innerHTML = html;
+}
+function getTimelineIcon(tipo) {
+    const icons = {
+        'entrada': 'fa-plus',
+        'doacao': 'fa-hand-holding-heart',
+        'dispensacao': 'fa-prescription-bottle',
+        'receita': 'fa-file-medical',
+        'movimentacao': 'fa-exchange-alt',
+        'auditoria': 'fa-clipboard-check'
+    };
+    return icons[tipo] || 'fa-info-circle';
+}
+function getTimelineColor(tipo) {
+    const colors = {
+        'entrada': 'var(--success)',
+        'doacao': 'var(--primary)',
+        'dispensacao': 'var(--warning)',
+        'receita': 'var(--primary-blue)',
+        'movimentacao': 'var(--warning)',
+        'auditoria': 'var(--text-muted)'
+    };
+    return colors[tipo] || 'var(--text-muted)';
+}
+function aplicarFiltroTarja(tarja) {
+    // Update active chip
+    document.querySelectorAll('.filter-chip').forEach(chip => {
+        chip.classList.remove('active');
+        if (chip.getAttribute('data-tarja') === tarja) {
+            chip.classList.add('active');
+        }
+    });
+    
+    // Filter table rows
+    const rows = document.querySelectorAll('#inventory-table tbody tr');
+    
+    rows.forEach(row => {
+        if (row.classList.contains('empty-state')) return;
+        
+        const rowTarja = row.getAttribute('data-tarja') || '';
+        
+        const tarjaMatch = !tarja || rowTarja === tarja;
+        
+        row.style.display = tarjaMatch ? '' : 'none';
+    });
 }
 function aplicarFiltros() {
     const filtroTarja = document.getElementById('filtro-tarja').value;

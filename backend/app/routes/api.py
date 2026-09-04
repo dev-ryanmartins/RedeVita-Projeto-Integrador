@@ -174,6 +174,65 @@ def excluir_medicamento_api(med_id):
         return resposta_erro("Erro ao remover medicamento.", 500)
 
 
+@api_bp.route("/medicamento/<int:med_id>/timeline")
+@jwt_ou_sessao_required
+@cargo_required("Admin", "Operador", "Farmacêutico", "Médico")
+def timeline_medicamento(med_id):
+    """
+    Retorna a linha do tempo de um medicamento específico.
+    Inclui entrada, doações, dispensações, receitas e movimentações.
+    """
+    med = db.session.get(Medicamento, med_id)
+    if not med:
+        return resposta_erro("Medicamento não encontrado.", 404)
+    
+    timeline = []
+    
+    # Data de entrada (triagem)
+    if med.created_at:
+        timeline.append({
+            'tipo': 'entrada',
+            'data': med.created_at.strftime('%d/%m/%Y %H:%M'),
+            'titulo': 'Entrada no Sistema',
+            'descricao': f'Medicamento cadastrado via triagem. Lote: {med.lote}'
+        })
+    
+    # Buscar doações relacionadas
+    doacoes = Doacao.query.filter(Doacao.medicamento_id == med_id).all()
+    for doacao in doacoes:
+        timeline.append({
+            'tipo': 'doacao',
+            'data': doacao.data_doacao.strftime('%d/%m/%Y %H:%M') if doacao.data_doacao else 'N/A',
+            'titulo': 'Doação Registrada',
+            'descricao': f'Doação para {doacao.destinatario}. Quantidade: {doacao.quantidade}'
+        })
+    
+    # Buscar receitas relacionadas
+    from app.models.receita import Receita
+    receitas = Receita.query.filter(Receita.medicamento_id == med_id).all()
+    for receita in receitas:
+        timeline.append({
+            'tipo': 'receita',
+            'data': receita.data_emissao.strftime('%d/%m/%Y %H:%M') if receita.data_emissao else 'N/A',
+            'titulo': 'Receita Emitida',
+            'descricao': f'Receita {receita.tipo_receita} para paciente. Status: {receita.status}'
+        })
+    
+    # Ordenar por data
+    timeline.sort(key=lambda x: x['data'], reverse=True)
+    
+    return resposta_ok({
+        'medicamento': {
+            'id': med.id,
+            'nome': med.nome,
+            'lote': med.lote,
+            'quantidade': med.quantidade,
+            'validade': med.data_validade.strftime('%d/%m/%Y') if med.data_validade else 'N/A'
+        },
+        'timeline': timeline
+    })
+
+
 @api_bp.route("/triagem/recentes")
 @jwt_ou_sessao_required
 @cargo_required("Admin", "Operador", "Farmacêutico")

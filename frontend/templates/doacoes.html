@@ -1,59 +1,31 @@
 {% extends "base.html" %}
 {% block title %}Doações - RedeVita{% endblock %}
 
-{% block extra_css %}
-<style>
-.vol-badge {
-    display: inline-flex; align-items: center; gap: 6px;
-    background: rgba(52,152,219,.10); border: 1px solid rgba(52,152,219,.3);
-    border-radius: 20px; padding: 4px 12px; font-size: 0.8rem; color: var(--primary);
-    font-weight: 600; margin-bottom: 12px;
-}
-.cargo-pill {
-    display: inline-flex; align-items: center; gap: 4px;
-    border-radius: 20px; padding: 2px 9px; font-size: 0.72rem; font-weight: 700;
-    background: var(--bg-input); border: 1px solid var(--border); color: var(--text-muted);
-}
-.cargo-pill.Admin        { background:rgba(155,89,182,.12); border-color:rgba(155,89,182,.4); color:#c39bd3; }
-.cargo-pill.Operador     { background:rgba(52,152,219,.12); border-color:rgba(52,152,219,.4); color:var(--primary); }
-.cargo-pill.Médico       { background:rgba(39,174,96,.12);  border-color:rgba(39,174,96,.4);  color:#5dde8d; }
-.cargo-pill.Farmacêutico { background:rgba(243,156,18,.12); border-color:rgba(243,156,18,.4); color:#f5b942; }
-.cargo-pill.Voluntário   { background:rgba(231,76,60,.08);  border-color:rgba(231,76,60,.3);  color:#e88; }
-</style>
-{% endblock %}
-
 {% block content %}
 <div class="page-wrapper">
 
     <div class="page-header">
         <div>
-            <h2><i class="fas fa-hand-holding-heart"></i> Doações</h2>
+            <h2><i class="fas fa-hand-holding-heart"></i> Gerenciar Doações</h2>
             <p class="page-subtitle">Registre a saída de medicamentos para unidades ou pacientes.</p>
         </div>
     </div>
 
     <div class="quick-actions" style="margin-bottom: 28px;">
-        {% if current_user.cargo == 'Voluntário' %}
-        <div class="vol-badge"><i class="fas fa-user-friends"></i> Área do Voluntário — Registro de Doações</div>
-        {% endif %}
-
         <h3>Registrar Nova Saída</h3>
         <form action="{{ url_for('donation.nova_doacao') }}" method="POST">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-end;">
 
-            <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start;">
-
-                <!-- Medicamento -->
                 <div class="form-group" style="flex: 2; min-width: 240px;">
-                    <label>Medicamento Disponível <span class="required">*</span></label>
+                    <label for="medicamento_id">Medicamento Disponível <span class="required">*</span></label>
                     <div class="input-with-icon">
                         <i class="fas fa-pills"></i>
-                        <select name="medicamento_id" required>
+                        <select name="medicamento_id" id="medicamento_id" required>
                             <option value="" disabled selected>Escolha um item do estoque...</option>
                             {% for med in medicamentos %}
                                 <option value="{{ med.id }}">
                                     {{ med.nome }} — Lote: {{ med.lote }} | Disponível: {{ med.quantidade }} un.
-                                    {%- if med.status_semaforo == 2 %} ⚠ VENCIDO{% elif med.status_semaforo == 1 %} ⚡ Próx. venc.{% endif %}
                                 </option>
                             {% else %}
                                 <option disabled>Nenhum medicamento disponível no estoque</option>
@@ -62,127 +34,53 @@
                     </div>
                 </div>
 
-                <!-- Quantidade -->
-                <div class="form-group" style="min-width: 120px; flex: 0 0 120px;">
-                    <label>Quantidade <span class="required">*</span></label>
+                <div class="form-group" style="min-width: 130px;">
+                    <label for="quantidade">Quantidade <span class="required">*</span></label>
                     <div class="input-with-icon">
                         <i class="fas fa-hashtag"></i>
-                        <input type="number" name="quantidade" min="1" placeholder="0" required>
+                        <input type="number" name="quantidade" id="quantidade" min="1" placeholder="Ex: 10" required>
                     </div>
                 </div>
 
-                <!-- Destinatário -->
-                <div class="form-group" style="flex: 2; min-width: 200px;">
-                    <label>Destinatário / Beneficiário <span class="required">*</span></label>
-                    <div class="input-with-icon">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <input type="text" name="destinatario"
-                               placeholder="Nome do paciente, unidade ou instituição"
-                               maxlength="150" required>
-                    </div>
+                <div style="margin-bottom: 0;">
+                    <button type="submit" class="btn-primary" style="height: 42px; margin-top: auto;">
+                        <i class="fas fa-check"></i> Confirmar
+                    </button>
                 </div>
-
-            </div>
-
-            <!-- Observação -->
-            <div class="form-group" style="margin-top: 4px;">
-                <label>Observação (opcional)</label>
-                <div class="input-with-icon">
-                    <i class="fas fa-comment-alt"></i>
-                    <input type="text" name="observacao"
-                           placeholder="Ex: urgência, condição especial, solicitação médica…"
-                           maxlength="255">
-                </div>
-            </div>
-
-            <div style="margin-top: 8px;">
-                <button type="submit" class="btn-primary"
-                        onclick="return confirm('Confirmar a saída do medicamento selecionado?')">
-                    <i class="fas fa-check"></i> Confirmar Doação
-                </button>
             </div>
         </form>
     </div>
 
-    <!-- Histórico -->
     <div class="recent-section">
-        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:14px;">
-            <h3 style="margin:0;">Histórico de Movimentações</h3>
-            <div style="display:flex; gap:8px; align-items:center; margin-left:auto; flex-wrap:wrap;">
-                <form method="GET" action="{{ url_for('donation.nova_doacao') }}"
-                      style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
-                    <input type="date" name="data_inicio" value="{{ data_inicio }}"
-                           style="padding:5px 10px; border-radius:var(--radius); border:1px solid var(--border);
-                                  background:var(--bg-input); color:var(--text-main); font-size:0.82rem;">
-                    <input type="date" name="data_fim" value="{{ data_fim }}"
-                           style="padding:5px 10px; border-radius:var(--radius); border:1px solid var(--border);
-                                  background:var(--bg-input); color:var(--text-main); font-size:0.82rem;">
-                    <button type="submit" class="btn-secondary" style="padding:5px 12px; font-size:0.82rem;">
-                        <i class="fas fa-filter"></i> Filtrar
-                    </button>
-                    {% if data_inicio or data_fim %}
-                    <a href="{{ url_for('donation.nova_doacao') }}" class="btn-secondary"
-                       style="padding:5px 10px; font-size:0.82rem;" title="Limpar filtro">
-                        <i class="fas fa-times"></i>
-                    </a>
-                    {% endif %}
-                </form>
-                <a href="{{ url_for('relatorios.exportar_doacoes') }}" class="btn-secondary"
-                   style="padding:5px 12px; font-size:0.82rem;">
-                    <i class="fas fa-download"></i> CSV
-                </a>
-                <a href="{{ url_for('donation.movimentacoes') }}" class="btn-secondary"
-                   style="padding:5px 12px; font-size:0.82rem;">
-                    <i class="fas fa-exchange-alt"></i> Movimentações
-                </a>
-            </div>
-        </div>
+        <h3>Histórico de Movimentações</h3>
         <div class="table-wrapper">
             <table class="styled-table">
                 <thead>
                     <tr>
                         <th>Data / Hora</th>
                         <th>Medicamento</th>
-                        <th>Qtd</th>
+                        <th>Quantidade</th>
                         <th>Responsável</th>
-                        <th>Cargo</th>
-                        {% if current_user.cargo == 'Admin' %}<th style="text-align:center;">Ação</th>{% endif %}
                     </tr>
                 </thead>
                 <tbody>
                     {% for doacao in doacoes %}
                     <tr>
-                        <td style="color: var(--text-muted); font-size: 0.85rem; white-space: nowrap;">
-                            {{ doacao.data_doacao.strftime('%d/%m/%Y %H:%M') }}
-                        </td>
-                        <td>
-                            <strong>{{ doacao.medicamento.nome }}</strong>
+                        <td>{{ doacao.data_doacao.strftime('%d/%m/%Y %H:%M') }}</td>
+                        <td><strong>{{ doacao.medicamento.nome }}</strong>
                             <br><small style="color: var(--text-muted);">Lote: {{ doacao.medicamento.lote }}</small>
                         </td>
-                        <td style="font-weight: 700;">{{ doacao.quantidade }} un.</td>
+                        <td>{{ doacao.quantidade }} unidades</td>
                         <td>
-                            <span style="display: flex; align-items: center; gap: 6px;">
+                            <span style="display: flex; align-items: center; gap: 7px;">
                                 <i class="fas fa-user-circle" style="color: var(--text-muted);"></i>
                                 {{ doacao.usuario.nome }}
                             </span>
                         </td>
-                        <td>
-                            <span class="cargo-pill {{ doacao.usuario.cargo }}">
-                                {{ doacao.usuario.cargo }}
-                            </span>
-                        </td>
-                        {% if current_user.cargo == 'Admin' %}
-                        <td style="text-align:center;">
-                            <button class="btn-icon btn-delete" title="Excluir"
-                                    onclick="confirmarExclusao({{ doacao.id }}, '{{ doacao.medicamento.nome }}', {{ doacao.quantidade }})">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </td>
-                        {% endif %}
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="{{ 6 if current_user.cargo == 'Admin' else 5 }}" class="empty-state">
+                        <td colspan="4" class="empty-state">
                             <i class="fas fa-history"></i>
                             <p>Nenhuma doação registrada no sistema ainda.</p>
                         </td>
@@ -194,45 +92,4 @@
     </div>
 
 </div>
-
-<!-- Modal de confirmação de exclusão -->
-{% if current_user.cargo == 'Admin' %}
-<div id="modal-delete" class="modal-overlay" onclick="fecharModalFora(event, 'modal-delete')">
-    <div class="modal-box modal-sm">
-        <div class="modal-header">
-            <h3><i class="fas fa-trash"></i> Excluir Doação</h3>
-            <button class="modal-close" onclick="fecharModal('modal-delete')">&times;</button>
-        </div>
-        <p id="modal-delete-texto" style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 8px;"></p>
-        <p style="color: var(--text-muted); font-size: 0.85rem;">Esta ação não pode ser desfeita.</p>
-        <div class="modal-footer">
-            <button type="button" class="btn-secondary" onclick="fecharModal('modal-delete')">Cancelar</button>
-            <form id="form-delete" method="POST" style="margin:0;">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="btn-danger"><i class="fas fa-trash"></i> Excluir</button>
-            </form>
-        </div>
-    </div>
-</div>
-{% endif %}
-
-{% endblock %}
-
-{% block extra_js %}
-<script>
-function abrirModal(id) { document.getElementById(id).classList.add('active'); }
-function fecharModal(id) { document.getElementById(id).classList.remove('active'); }
-function fecharModalFora(e, id) { if (e.target.id === id) fecharModal(id); }
-
-function confirmarExclusao(id, nome, qtd) {
-    document.getElementById('form-delete').action = `/doacoes/${id}/excluir`;
-    document.getElementById('modal-delete-texto').textContent =
-        `Tem certeza que deseja excluir o registro de ${qtd} un. de "${nome}"?`;
-    abrirModal('modal-delete');
-}
-
-document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') fecharModal('modal-delete');
-});
-</script>
 {% endblock %}

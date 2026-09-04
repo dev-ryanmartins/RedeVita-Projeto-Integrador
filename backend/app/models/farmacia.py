@@ -3,7 +3,8 @@ from datetime import datetime
 
 
 class Farmacia(db.Model):
-    __tablename__ = 'farmacias'
+    __tablename__ = "farmacias"
+    __table_args__ = {'extend_existing': True}
 
     id = db.Column(db.Integer, primary_key=True)
     nome_fantasia = db.Column(db.String(150), nullable=False)
@@ -11,7 +12,9 @@ class Farmacia(db.Model):
     cnpj = db.Column(db.String(20), nullable=False, unique=True)
     endereco = db.Column(db.String(255), nullable=False)
     responsavel = db.Column(db.String(150), nullable=False)
+    latitude = db.Column(db.Float, nullable=True)
+    longitude = db.Column(db.Float, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def __repr__(self):
-        return f'<Farmacia {self.nome_fantasia}>'
+        return f"<Farmacia {self.nome_fantasia}>"

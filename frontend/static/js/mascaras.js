@@ -77,4 +77,16 @@ document.addEventListener('DOMContentLoaded', () => {
         input.setAttribute('min', '1900-01-01');
         input.setAttribute('max', hoje);
     });
+
+    document.querySelectorAll('[data-table-search]').forEach((input) => {
+        const table = document.getElementById(input.dataset.tableSearch);
+        if (!table) return;
+
+        input.addEventListener('input', (event) => {
+            const termo = event.target.value.toLocaleLowerCase('pt-BR').trim();
+            table.querySelectorAll('tbody tr').forEach((row) => {
+                row.hidden = termo && !row.textContent.toLocaleLowerCase('pt-BR').includes(termo);
+            });
+        });
+    });
 });

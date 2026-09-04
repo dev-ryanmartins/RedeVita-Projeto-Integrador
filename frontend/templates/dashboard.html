@@ -6,7 +6,7 @@
 
     <div class="dashboard-header">
         <div>
-            <h1>Olá, {{ current_user.nome.split()[0] }}!</h1>
+            <h1>Olá, {{ (current_user.nome.split()[0] if current_user.is_authenticated else 'Usuário') }}!</h1>
             <p class="subtitle">Resumo completo da RedeVita em
                 <strong>{{ now.strftime('%d/%m/%Y') if now else '' }}</strong>.</p>
         </div>
@@ -20,19 +20,6 @@
         </div>
     </div>
 
-    {% if sem_estoque %}
-    <div class="alert-banner" style="background:rgba(231,76,60,.07); border-color:rgba(231,76,60,.25);">
-        <i class="fas fa-box-open" style="color:var(--danger);"></i>
-        <div>
-            <strong style="color:var(--danger);">Estoque Zerado:</strong>
-            {{ sem_estoque }} medicamento(s) com quantidade zero no estoque.
-        </div>
-        <a href="{{ url_for('inventory.listar_medicamentos') }}" class="alert-banner-link">
-            Ver inventário <i class="fas fa-arrow-right"></i>
-        </a>
-    </div>
-    {% endif %}
-
     {% if proximos_vencimento %}
     <div class="alert-banner">
         <i class="fas fa-exclamation-triangle"></i>
@@ -45,116 +32,114 @@
     </div>
     {% endif %}
 
-    <!-- Stats -->
+    <div class="welcome-banner">
+        <div class="welcome-banner__content">
+            <h2>Olá, {{ current_user.nome if current_user.is_authenticated else 'Administrador' }} 👋</h2>
+            <p>Painel integrado de monitoramento e gestão farmacêutica.</p>
+        </div>
+        <div class="welcome-banner__status">● Sistema Operacional Conectado</div>
+    </div>
+
     <div class="stats-grid stats-grid-7">
         <div class="stat-card">
             <div class="stat-icon blue"><i class="fas fa-pills"></i></div>
             <div class="stat-info">
                 <p class="stat-label">Medicamentos</p>
-                <p class="stat-value">{{ total }}</p>
+                <p class="stat-value">{{ total|default(0) }}</p>
             </div>
         </div>
         <div class="stat-card">
             <div class="stat-icon yellow"><i class="fas fa-exclamation-triangle"></i></div>
             <div class="stat-info">
                 <p class="stat-label">Vencidos / Críticos</p>
-                <p class="stat-value">{{ alertas }}</p>
+                <p class="stat-value">{{ alertas|default(0) }}</p>
             </div>
         </div>
         <div class="stat-card">
             <div class="stat-icon green"><i class="fas fa-cubes"></i></div>
             <div class="stat-info">
                 <p class="stat-label">Unidades em Estoque</p>
-                <p class="stat-value">{{ estoque }}</p>
+                <p class="stat-value">{{ estoque|default(0) }}</p>
             </div>
         </div>
         <div class="stat-card">
             <div class="stat-icon red"><i class="fas fa-hand-holding-heart"></i></div>
             <div class="stat-info">
                 <p class="stat-label">Total de Doações</p>
-                <p class="stat-value">{{ total_doacoes }}</p>
+                <p class="stat-value">{{ total_doacoes|default(0) }}</p>
             </div>
         </div>
         <div class="stat-card">
             <div class="stat-icon orange"><i class="fas fa-user-injured"></i></div>
             <div class="stat-info">
                 <p class="stat-label">Pacientes</p>
-                <p class="stat-value">{{ total_pacientes }}</p>
+                <p class="stat-value">{{ total_pacientes|default(0) }}</p>
             </div>
         </div>
         <div class="stat-card">
             <div class="stat-icon purple"><i class="fas fa-user-md"></i></div>
             <div class="stat-info">
                 <p class="stat-label">Médicos Cadastrados</p>
-                <p class="stat-value">{{ total_medicos }}</p>
+                <p class="stat-value">{{ total_medicos|default(0) }}</p>
             </div>
         </div>
         <div class="stat-card">
             <div class="stat-icon teal"><i class="fas fa-hospital"></i></div>
             <div class="stat-info">
                 <p class="stat-label">Farmácias Parceiras</p>
-                <p class="stat-value">{{ total_farmacias }}</p>
+                <p class="stat-value">{{ total_farmacias|default(0) }}</p>
             </div>
         </div>
     </div>
 
-    <!-- Charts row -->
-    <div class="dashboard-grid" style="margin-bottom:32px; align-items: start;">
-        <!-- Doughnut: distribuição geral -->
+    <div class="dashboard-grid dashboard-analytics-grid">
         <div class="chart-card">
             <div class="chart-card-header">
-                <h3><i class="fas fa-chart-pie"></i> Distribuição de Cadastros</h3>
-                <span class="chart-badge">Visão Geral</span>
+                <h3><i class="fas fa-chart-line"></i> Movimentação Mensal</h3>
+                <span class="chart-badge">Últimos 6 meses</span>
             </div>
             <div class="chart-container">
-                <canvas id="distribuicaoChart"></canvas>
+                <canvas id="chartDoacoes" aria-label="Gráfico de movimentação mensal de doações"></canvas>
             </div>
             <div class="chart-legend">
-                <span class="legend-dot" style="background:#3498db;"></span> Medicamentos ({{ total }})
-                <span class="legend-dot" style="background:#e74c3c; margin-left:12px;"></span> Doações ({{ total_doacoes }})
-                <span class="legend-dot" style="background:#e67e22; margin-left:12px;"></span> Pacientes ({{ total_pacientes }})
-                <span class="legend-dot" style="background:#9b59b6; margin-left:12px;"></span> Médicos ({{ total_medicos }})
-                <span class="legend-dot" style="background:#1abc9c; margin-left:12px;"></span> Farmácias ({{ total_farmacias }})
+                <span class="legend-dot" style="background:#38bdf8;"></span> Doações recebidas
             </div>
         </div>
 
-        <!-- Coluna direita: ações rápidas + gráfico de barras -->
-        <div style="display:flex; flex-direction:column; gap:16px;">
-            <div class="quick-panel" style="flex:none;">
-                <div class="quick-actions">
-                    <h3><i class="fas fa-bolt"></i> Ações Rápidas</h3>
-                    <div style="display:flex; flex-direction:column; gap:10px; margin-top:14px;">
-                        <a href="{{ url_for('inventory.listar_medicamentos') }}" class="btn-secondary" style="justify-content:center;">
-                            <i class="fas fa-pills"></i> Gerenciar Inventário
-                        </a>
-                        <a href="{{ url_for('donation.nova_doacao') }}" class="btn-primary" style="justify-content:center;">
-                            <i class="fas fa-plus"></i> Registrar Doação
-                        </a>
-                        <a href="{{ url_for('pacientes.listar_pacientes') }}" class="btn-secondary" style="justify-content:center;">
-                            <i class="fas fa-user-injured"></i> Gerenciar Pacientes
-                        </a>
-                        <a href="{{ url_for('pacientes.receituario') }}" class="btn-secondary" style="justify-content:center;">
-                            <i class="fas fa-prescription"></i> Receituário Digital
-                        </a>
-                        <a href="{{ url_for('medicos.listar_medicos') }}" class="btn-secondary" style="justify-content:center;">
-                            <i class="fas fa-user-md"></i> Cadastrar Médico
-                        </a>
-                        <a href="{{ url_for('relatorios.relatorios') }}" class="btn-secondary" style="justify-content:center;">
-                            <i class="fas fa-chart-bar"></i> Ver Relatórios
-                        </a>
-                    </div>
-                </div>
+        <div class="chart-card">
+            <div class="chart-card-header">
+                <h3><i class="fas fa-chart-pie"></i> Status do Estoque</h3>
+                <span class="chart-badge">Por categoria</span>
             </div>
+            <div class="chart-container">
+                <canvas id="chartCategorias" aria-label="Gráfico de status do estoque por categoria"></canvas>
+            </div>
+            <div id="chartCategoriasLegend" class="chart-legend chart-legend-grid"></div>
+        </div>
+    </div>
 
-            <!-- Gráfico de barras: Médicos, Farmácias, Pacientes -->
-            <div class="chart-card" style="flex:none;">
-                <div class="chart-card-header">
-                    <h3><i class="fas fa-chart-bar"></i> Cadastros por Categoria</h3>
-                    <span class="chart-badge">Médicos · Farmácias · Pacientes</span>
-                </div>
-                <div class="chart-container" style="height:180px;">
-                    <canvas id="barChart"></canvas>
-                </div>
+    <div class="quick-panel">
+        <div class="quick-actions">
+            <h3><i class="fas fa-bolt"></i> Ações Rápidas</h3>
+            <div class="action-buttons">
+                <a href="{{ url_for('inventory.listar_medicamentos') }}" class="btn-secondary">
+                    <i class="fas fa-pills"></i> Gerenciar Inventário
+                </a>
+                <a href="{{ url_for('donation.nova_doacao') }}" class="btn-primary">
+                    <i class="fas fa-plus"></i> Registrar Doação
+                </a>
+                <a href="{{ url_for('pacientes.listar_pacientes') }}" class="btn-secondary">
+                    <i class="fas fa-user-injured"></i> Gerenciar Pacientes
+                </a>
+                <a href="{{ url_for('pacientes.receituario') }}" class="btn-secondary">
+                    <i class="fas fa-prescription"></i> Receituário Digital
+                </a>
+                <a href="{{ url_for('medicos.listar_medicos') }}" class="btn-secondary">
+                    <i class="fas fa-user-md"></i> Cadastrar Médico
+                </a>
+                <a href="{{ url_for('relatorios.relatorios') }}" class="btn-secondary">
+                    <i class="fas fa-chart-bar"></i> Ver Relatórios
+                </a>
             </div>
         </div>
     </div>
@@ -192,6 +177,8 @@
                             </span>
                         </td>
                     </tr>
+                    {% else %}
+                    <tr><td colspan="5" style="text-align: center; color: #94a3b8; padding: 2rem;">Nenhum medicamento próximo ao vencimento.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -233,6 +220,8 @@
                         <td>{{ med.data_validade.strftime('%d/%m/%Y') }}</td>
                         <td>{{ med.quantidade }} un.</td>
                     </tr>
+                    {% else %}
+                    <tr><td colspan="4" style="text-align: center; color: #94a3b8; padding: 2rem;">Nenhum medicamento cadastrado ainda.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -257,6 +246,8 @@
                         <span>{{ m.especialidade }} &bull; {{ m.crm }}</span>
                     </div>
                 </div>
+                {% else %}
+                <div style="text-align: center; color: #94a3b8; padding: 2rem;">Nenhum médico cadastrado ainda.</div>
                 {% endfor %}
             </div>
         </div>
@@ -276,6 +267,8 @@
                         <span>{{ f.responsavel }} &bull; {{ f.cnpj }}</span>
                     </div>
                 </div>
+                {% else %}
+                <div style="text-align: center; color: #94a3b8; padding: 2rem;">Nenhuma farmácia cadastrada ainda.</div>
                 {% endfor %}
             </div>
         </div>
@@ -290,114 +283,78 @@
 <script src="{{ url_for('static', filename='js/chart.umd.min.js') }}"></script>
 <script>
 (function () {
-    // ── Doughnut: distribuição geral ──────────────────────────────────────
-    const ctx1 = document.getElementById('distribuicaoChart');
-    if (ctx1) {
-        const total    = {{ total }};
-        const doacoes  = {{ total_doacoes }};
-        const pacientes= {{ total_pacientes }};
-        const medicos  = {{ total_medicos }};
-        const farmacias= {{ total_farmacias }};
-        const hasData  = (total + doacoes + pacientes + medicos + farmacias) > 0;
+    if (typeof Chart === 'undefined') return;
+    const labelsDoacoes = {{ labels_doacoes|tojson }};
+    const dadosDoacoes = {{ doacoes_mensais|tojson }};
+    const statusEstoque = {{ estoque_status|tojson }};
+    const cores = ['#10b981', '#f59e0b', '#ef4444', '#0284c7'];
 
-        new Chart(ctx1, {
-            type: 'doughnut',
-            data: {
-                labels: ['Medicamentos', 'Doações', 'Pacientes', 'Médicos', 'Farmácias'],
-                datasets: [{
-                    data: hasData ? [total, doacoes, pacientes, medicos, farmacias] : [1, 1, 1, 1, 1],
-                    backgroundColor: ['#3498db', '#e74c3c', '#e67e22', '#9b59b6', '#1abc9c'],
-                    borderColor: '#161616',
-                    borderWidth: 3,
-                    hoverOffset: 8
-                }]
+    const ctxDoacoes = document.getElementById('chartDoacoes');
+    if (ctxDoacoes) new Chart(ctxDoacoes, {
+        type: 'line',
+        data: {
+            labels: labelsDoacoes,
+            datasets: [{
+                label: 'Doações Recebidas',
+                data: dadosDoacoes,
+                borderColor: '#38bdf8',
+                backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                fill: true,
+                tension: 0.4,
+                borderWidth: 2,
+                pointRadius: 3,
+                pointHoverRadius: 5,
+                pointBackgroundColor: '#38bdf8'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: { backgroundColor: '#151c2a', borderColor: '#334155', borderWidth: 1 }
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '68%',
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        enabled: hasData,
-                        backgroundColor: '#1e1e1e',
-                        titleColor: '#f0f0f0',
-                        bodyColor: '#888888',
-                        borderColor: '#2c2c2c',
-                        borderWidth: 1,
-                        padding: 12,
-                        callbacks: {
-                            label: function(c) {
-                                const sum = c.dataset.data.reduce((a, b) => a + b, 0);
-                                const pct = sum > 0 ? Math.round(c.parsed / sum * 100) : 0;
-                                return ` ${c.parsed} registros (${pct}%)`;
-                            }
-                        }
-                    }
-                }
+            scales: {
+                x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } },
+                y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b', precision: 0 } }
             }
-        });
-    }
+        }
+    });
 
-    // ── Bar chart: Médicos · Farmácias · Pacientes ────────────────────────
-    const ctx2 = document.getElementById('barChart');
-    if (ctx2) {
-        new Chart(ctx2, {
-            type: 'bar',
-            data: {
-                labels: ['Médicos', 'Farmácias Parceiras', 'Pacientes'],
-                datasets: [{
-                    label: 'Total cadastrado',
-                    data: [{{ total_medicos }}, {{ total_farmacias }}, {{ total_pacientes }}],
-                    backgroundColor: [
-                        'rgba(155, 89, 182, 0.75)',
-                        'rgba(26, 188, 156, 0.75)',
-                        'rgba(230, 126, 34, 0.75)'
-                    ],
-                    borderColor: [
-                        '#9b59b6',
-                        '#1abc9c',
-                        '#e67e22'
-                    ],
-                    borderWidth: 2,
-                    borderRadius: 8,
-                    borderSkipped: false,
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        backgroundColor: '#1e1e1e',
-                        titleColor: '#f0f0f0',
-                        bodyColor: '#888',
-                        borderColor: '#2c2c2c',
-                        borderWidth: 1,
-                        padding: 12,
-                        callbacks: {
-                            label: c => ` ${c.parsed.y} cadastrado(s)`
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        grid: { color: 'rgba(255,255,255,0.04)' },
-                        ticks: { color: '#888', font: { size: 12 } }
-                    },
-                    y: {
-                        beginAtZero: true,
-                        grid: { color: 'rgba(255,255,255,0.06)' },
-                        ticks: {
-                            color: '#888',
-                            font: { size: 11 },
-                            stepSize: 1,
-                            precision: 0
-                        }
-                    }
-                }
+    const ctxCategorias = document.getElementById('chartCategorias');
+    const nomesCategorias = Object.keys(statusEstoque);
+    const valoresCategorias = Object.values(statusEstoque);
+    const totalEstoque = valoresCategorias.reduce((soma, valor) => soma + valor, 0);
+    if (ctxCategorias) new Chart(ctxCategorias, {
+        type: 'doughnut',
+        data: {
+            labels: nomesCategorias,
+            datasets: [{
+                data: valoresCategorias.some(Boolean) ? valoresCategorias : [1, 1, 1, 1],
+                backgroundColor: cores,
+                borderColor: '#151c2a',
+                borderWidth: 4,
+                hoverOffset: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '68%',
+            plugins: {
+                legend: { display: false },
+                tooltip: { backgroundColor: '#151c2a', borderColor: '#334155', borderWidth: 1 }
             }
+        }
+    });
+
+    const legend = document.getElementById('chartCategoriasLegend');
+    if (legend) {
+        nomesCategorias.forEach((nome, indice) => {
+            const percentual = totalEstoque ? Math.round(statusEstoque[nome] / totalEstoque * 100) : 0;
+            legend.insertAdjacentHTML('beforeend',
+                `<span class="chart-legend-item"><span class="legend-dot" style="background:${cores[indice]}"></span>${nome} <strong>${percentual}%</strong></span>`
+            );
         });
     }
 })();

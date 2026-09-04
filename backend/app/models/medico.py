@@ -3,7 +3,8 @@ from datetime import datetime
 
 
 class Medico(db.Model):
-    __tablename__ = 'medicos'
+    __tablename__ = "medicos"
+    __table_args__ = {'extend_existing': True}
 
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(150), nullable=False)
@@ -13,4 +14,4 @@ class Medico(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def __repr__(self):
-        return f'<Medico {self.nome}>'
+        return f"<Medico {self.nome}>"

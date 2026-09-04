@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Monitoramento IoT - RedeVita{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/academic.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-wrapper academic-page" data-iot-monitor>
+    <div class="academic-intro">
+        <div>
+            <h2><i class="fas fa-temperature-half"></i> Monitoramento IoT</h2>
+            <p>Simulação complementar da temperatura e umidade dos ambientes de armazenamento. Os cartões são atualizados automaticamente.</p>
+        </div>
+        <div class="academic-actions">
+            <a href="{{ url_for('inventory.dashboard') }}" class="btn-secondary"><i class="fas fa-arrow-left"></i> Dashboard</a>
+            <button type="button" class="btn-primary" data-iot-refresh><i class="fas fa-rotate"></i> Atualizar agora</button>
+        </div>
+    </div>
+
+    <div class="iot-summary-grid" aria-live="polite">
+        <div class="iot-summary-card">
+            <strong data-iot-total>{{ sensores|length }}</strong>
+            <span>Sensores conectados</span>
+        </div>
+        <div class="iot-summary-card {% if alertas %}is-alert{% endif %}" data-iot-alert-card>
+            <strong data-iot-alerts>{{ alertas }}</strong>
+            <span>Alertas ativos</span>
+        </div>
+        <div class="iot-summary-card">
+            <strong data-iot-status>Operacional</strong>
+            <span>Status da simulação</span>
+        </div>
+    </div>
+
+    <div class="iot-sensor-grid" data-iot-sensors>
+        {% for sensor in sensores %}
+        <article class="iot-sensor-card" data-sensor-key="{{ sensor.sensor_key }}">
+            <div class="iot-sensor-header">
+                <div>
+                    <h3>{{ sensor.sensor_id }}</h3>
+                    <p>{{ sensor.localizacao }}</p>
+                </div>
+                <span class="status-pill {% if sensor.status == 'NORMAL' %}green{% elif 'CRÍTICO' in sensor.status %}red{% else %}yellow{% endif %}" data-iot-status-pill>{{ sensor.status }}</span>
+            </div>
+            <div class="iot-reading-grid">
+                <div class="iot-reading"><span>Temperatura</span><strong data-iot-temperature>{{ sensor.temperatura }} °C</strong></div>
+                <div class="iot-reading"><span>Umidade</span><strong data-iot-humidity>{{ sensor.umidade }}%</strong></div>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    <p class="iot-last-update">Última atualização: <time data-iot-updated datetime="{{ atualizado_em }}">{{ atualizado_em }}</time></p>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/monitoramento_iot.js') }}"></script>
+{% endblock %}

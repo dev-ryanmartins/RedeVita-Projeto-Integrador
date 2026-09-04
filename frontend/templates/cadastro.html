@@ -1,13 +1,23 @@
-{% extends "base.html" %}
-{% block title %}Cadastro - RedeVita{% endblock %}
-
-{% block content %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro - RedeVita</title>
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+</head>
+{% from "_brand_logo.html" import brand_logo %}
+<body style="background-color: #0b0f17;">
+{% include "_accessibility_controls.html" %}
 <div class="auth-wrapper">
-    <div class="auth-card">
+    <div class="auth-card" style="background-color: #151c2a;">
         <div class="auth-header">
-            <a href="{{ url_for('auth.login') }}" class="logo-auth">
-                <i class="fas fa-heartbeat"></i> <strong>Rede</strong>Vita
-            </a>
+            {{ brand_logo(url_for('auth.login')) }}
             <h2>Criar Conta</h2>
             <p>Preencha os dados para se registrar no sistema.</p>
         </div>
@@ -85,9 +95,7 @@
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
+<script src="{{ url_for('static', filename='js/mascaras.js') }}"></script>
 <script>
 document.getElementById('form-cadastro').addEventListener('submit', function(e) {
     const senha = document.getElementById('senha').value;
@@ -98,4 +106,5 @@ document.getElementById('form-cadastro').addEventListener('submit', function(e) 
     }
 });
 </script>
-{% endblock %}
+</body>
+</html>

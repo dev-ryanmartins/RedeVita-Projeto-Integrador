@@ -1,35 +1,157 @@
-{% extends "base.html" %}
-{% block title %}Acesso Negado — RedeVita{% endblock %}
-
-{% block content %}
-<div class="page-wrapper" style="display:flex; align-items:center; justify-content:center; min-height:60vh;">
-    <div style="text-align:center; max-width:420px; padding:40px 24px;">
-        <div style="font-size:4rem; margin-bottom:16px; color:var(--danger);">
-            <i class="fas fa-ban"></i>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acesso Negado — RedeVita</title>
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        html, body {
+            background-color: #0b0f17 !important;
+            color: #f8fafc !important;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+        
+        .page-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 60vh;
+            padding: 20px;
+        }
+        
+        .error-card {
+            background-color: #151c2a !important;
+            border: 1px solid #222d3d !important;
+            border-radius: 16px;
+            padding: 40px 24px;
+            text-align: center;
+            max-width: 420px;
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.6) !important;
+        }
+        
+        .error-icon {
+            font-size: 4rem;
+            margin-bottom: 16px;
+            color: #ef4444 !important;
+        }
+        
+        .error-title {
+            font-size: 1.6rem;
+            margin-bottom: 8px;
+            color: #f8fafc !important;
+            font-weight: 700;
+        }
+        
+        .error-message {
+            color: #94a3b8 !important;
+            margin-bottom: 6px;
+            font-size: 0.95rem;
+        }
+        
+        .error-detail {
+            color: #94a3b8 !important;
+            font-size: 0.82rem;
+            margin-bottom: 28px;
+        }
+        
+        .error-detail strong {
+            color: #f8fafc !important;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #0284c7, #1d4ed8) !important;
+            color: #ffffff !important;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: filter 0.2s ease;
+        }
+        
+        .btn-primary:hover {
+            filter: brightness(1.1);
+        }
+        
+        .btn-secondary {
+            background-color: #1e2430 !important;
+            color: #f8fafc !important;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            border: 1px solid #2d3748 !important;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: background-color 0.2s ease;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #2d3748 !important;
+        }
+        
+        .error-code {
+            margin-top: 32px;
+            font-size: 0.75rem;
+            color: #64748b !important;
+        }
+        
+        .error-code code {
+            background-color: #1e2430 !important;
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: #ef4444 !important;
+        }
+    </style>
+</head>
+{% from "_brand_logo.html" import brand_logo %}
+<body>
+    {% include "_accessibility_controls.html" %}
+    <div class="page-wrapper">
+        <div class="error-card">
+            {{ brand_logo(url_for('index'), true) }}
+            <div class="error-icon">
+                <i class="fas fa-ban"></i>
+            </div>
+            <h2 class="error-title">Acesso Negado</h2>
+            <p class="error-message">Você não tem permissão para acessar esta área.</p>
+            <p class="error-detail">
+                Esta seção é restrita ao seu perfil de acesso
+                {% if current_user.is_authenticated %}
+                (<strong>{{ current_user.cargo_exibicao }}</strong>){% endif %}.
+                Caso acredite que isto é um erro, contate o administrador do sistema.
+            </p>
+            <div class="button-group">
+                <a href="{{ url_for('inventory.dashboard') }}" class="btn-primary">
+                    <i class="fas fa-home"></i> Voltar ao Dashboard
+                </a>
+                <a href="javascript:history.back()" class="btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Página Anterior
+                </a>
+            </div>
+            <p class="error-code">
+                Código de erro: <code>403 Forbidden</code>
+            </p>
         </div>
-        <h2 style="font-size:1.6rem; margin-bottom:8px; color:var(--text-main);">
-            Acesso Negado
-        </h2>
-        <p style="color:var(--text-muted); margin-bottom:6px; font-size:0.95rem;">
-            Você não tem permissão para acessar esta área.
-        </p>
-        <p style="color:var(--text-muted); font-size:0.82rem; margin-bottom:28px;">
-            Esta seção é restrita ao seu perfil de acesso
-            {% if current_user.is_authenticated %}
-            (<strong style="color:var(--text-main);">{{ current_user.cargo }}</strong>){% endif %}.
-            Caso acredite que isto é um erro, contate o administrador do sistema.
-        </p>
-        <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
-            <a href="{{ url_for('inventory.dashboard') }}" class="btn-primary">
-                <i class="fas fa-home"></i> Voltar ao Dashboard
-            </a>
-            <a href="javascript:history.back()" class="btn-secondary">
-                <i class="fas fa-arrow-left"></i> Página Anterior
-            </a>
-        </div>
-        <p style="margin-top:32px; font-size:0.75rem; color:var(--text-muted);">
-            Código de erro: <code>403 Forbidden</code>
-        </p>
     </div>
-</div>
-{% endblock %}
+</body>
+</html>

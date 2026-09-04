@@ -2,22 +2,20 @@ from flask import Blueprint, render_template
 from flask_login import login_required
 from app.models.medicamento import Medicamento
 from app.core.decorators import cargo_required
-from datetime import date, timedelta
+from datetime import date
 
-pharmacy_bp = Blueprint('pharmacy', __name__, url_prefix='/pharmacy')
+pharmacy_bp = Blueprint("pharmacy", __name__, url_prefix="/pharmacy")
 
 
 def _dados_auditoria():
     hoje = date.today()
     vencidos = (
-        Medicamento.query
-        .filter(Medicamento.status_semaforo == 2)
+        Medicamento.query.filter(Medicamento.status_semaforo == 2)
         .order_by(Medicamento.data_validade)
         .all()
     )
     proximos = (
-        Medicamento.query
-        .filter(Medicamento.status_semaforo == 1)
+        Medicamento.query.filter(Medicamento.status_semaforo == 1)
         .order_by(Medicamento.data_validade)
         .all()
     )
@@ -32,15 +30,15 @@ def _dados_auditoria():
     )
 
 
-@pharmacy_bp.route('/auditoria')
+@pharmacy_bp.route("/auditoria")
 @login_required
-@cargo_required('Admin', 'Farmacêutico', 'Operador')
+@cargo_required("Admin", "Farmacêutico", "Operador")
 def auditoria():
-    return render_template('auditoria.html', **_dados_auditoria())
+    return render_template("auditoria.html", **_dados_auditoria())
 
 
-@pharmacy_bp.route('/audit')
+@pharmacy_bp.route("/audit")
 @login_required
-@cargo_required('Admin', 'Farmacêutico')
+@cargo_required("Admin", "Farmacêutico")
 def audit():
-    return render_template('pharmacy_audit.html', **_dados_auditoria())
+    return render_template("pharmacy_audit.html", **_dados_auditoria())

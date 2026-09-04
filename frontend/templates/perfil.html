@@ -7,34 +7,34 @@
 @media (max-width: 640px) { .perfil-grid { grid-template-columns: 1fr; } }
 .perfil-avatar {
     width: 80px; height: 80px; border-radius: 50%;
-    background: var(--primary); display: flex; align-items: center; justify-content: center;
+    background: var(--primary-blue); display: flex; align-items: center; justify-content: center;
     font-size: 2rem; color: #fff; font-weight: 700; margin-bottom: 16px;
 }
 .cargo-badge {
     display: inline-flex; align-items: center; gap: 6px;
     padding: 4px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 700;
-    background: rgba(52,152,219,.12); border: 1px solid rgba(52,152,219,.3); color: var(--primary);
+    background: rgba(2, 132, 199, 0.12); border: 1px solid rgba(2, 132, 199, 0.3); color: var(--primary-blue);
 }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="page-wrapper">
+<div class="page-wrapper" style="background-color: var(--bg-app); color: var(--text-primary);">
     <div class="page-header">
         <div>
-            <h2><i class="fas fa-user-circle"></i> Meu Perfil</h2>
-            <p class="page-subtitle">Gerencie seus dados pessoais e segurança da conta.</p>
+            <h2 style="color: var(--text-primary);"><i class="fas fa-user-circle" style="color: var(--primary-blue);"></i> Meu Perfil</h2>
+            <p class="page-subtitle" style="color: var(--text-secondary);">Gerencie seus dados pessoais e segurança da conta.</p>
         </div>
     </div>
 
     <!-- Cabeçalho de identidade -->
-    <div class="quick-actions" style="margin-bottom:24px; display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
+    <div class="quick-actions" style="margin-bottom:24px; display:flex; align-items:center; gap:20px; flex-wrap:wrap; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 20px;">
         <div class="perfil-avatar">
             {{ current_user.nome[0].upper() }}
         </div>
         <div>
-            <h3 style="margin:0 0 6px;">{{ current_user.nome }}</h3>
-            <span class="cargo-badge"><i class="fas fa-id-badge"></i> {{ current_user.cargo }}</span>
+            <h3 style="margin:0 0 6px; color: var(--text-primary);">{{ current_user.nome }}</h3>
+            <span class="cargo-badge"><i class="fas fa-id-badge"></i> {{ current_user.cargo_exibicao }}</span>
             {% if current_user.email %}
             <div style="margin-top:8px; color:var(--text-muted); font-size:0.88rem;">
                 <i class="fas fa-envelope"></i> {{ current_user.email }}
@@ -48,77 +48,86 @@
 
     <div class="perfil-grid">
         <!-- Dados do Perfil -->
-        <div class="quick-actions">
-            <h3 style="margin-bottom:20px;"><i class="fas fa-pen"></i> Editar Dados</h3>
+        <div class="quick-actions" style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 20px;">
+            <h3 style="margin-bottom:20px; color: var(--text-primary);"><i class="fas fa-pen" style="color: var(--primary-blue);"></i> Editar Dados</h3>
             <form method="POST" action="{{ url_for('perfil.meu_perfil') }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="action" value="perfil">
 
                 <div class="form-group">
-                    <label>Nome completo <span class="required">*</span></label>
+                    <label style="color: var(--text-secondary);">Nome completo <span class="required">*</span></label>
                     <div class="input-with-icon">
-                        <i class="fas fa-user"></i>
-                        <input type="text" name="nome" value="{{ current_user.nome }}" required maxlength="100">
+                        <i class="fas fa-user" style="color: var(--text-muted);"></i>
+                        <input type="text" name="nome" value="{{ current_user.nome }}" required maxlength="100"
+                               style="background: var(--bg-input); border: 1px solid var(--border-input); color: var(--text-primary);">
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label>E-mail</label>
+                    <label style="color: var(--text-secondary);">E-mail</label>
                     <div class="input-with-icon">
-                        <i class="fas fa-envelope"></i>
+                        <i class="fas fa-envelope" style="color: var(--text-muted);"></i>
                         <input type="email" name="email" value="{{ current_user.email or '' }}" maxlength="150"
-                               placeholder="seuemail@exemplo.com">
+                               placeholder="seuemail@exemplo.com"
+                               style="background: var(--bg-input); border: 1px solid var(--border-input); color: var(--text-primary);">
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label>CPF</label>
+                    <label style="color: var(--text-secondary);">CPF</label>
                     <div class="input-with-icon">
-                        <i class="fas fa-id-card"></i>
+                        <i class="fas fa-id-card" style="color: var(--text-muted);"></i>
                         <input type="text" value="{{ current_user.cpf }}" disabled
-                               style="opacity:.6; cursor:not-allowed;">
+                               style="opacity:.6; cursor:not-allowed; background: var(--bg-surface); border: 1px solid var(--border-subtle); color: var(--text-muted);">
                     </div>
                     <small style="color:var(--text-muted);">O CPF não pode ser alterado.</small>
                 </div>
 
-                <button type="submit" class="btn-primary" style="margin-top:8px;">
+                <button type="submit" class="btn-primary" style="margin-top:8px; background: linear-gradient(135deg, var(--primary-blue), var(--primary-blue-hover)); border: none; color: #ffffff; padding: 8px 16px; border-radius: 8px; cursor: pointer;"
+                        onmouseover="this.style.filter='brightness(1.1)';"
+                        onmouseout="this.style.filter='brightness(1)';">
                     <i class="fas fa-save"></i> Salvar Alterações
                 </button>
             </form>
         </div>
 
         <!-- Trocar Senha -->
-        <div class="quick-actions">
-            <h3 style="margin-bottom:20px;"><i class="fas fa-lock"></i> Trocar Senha</h3>
+        <div class="quick-actions" style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 20px;">
+            <h3 style="margin-bottom:20px; color: var(--text-primary);"><i class="fas fa-lock" style="color: var(--primary-blue);"></i> Trocar Senha</h3>
             <form method="POST" action="{{ url_for('perfil.meu_perfil') }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="action" value="senha">
 
                 <div class="form-group">
-                    <label>Senha atual <span class="required">*</span></label>
+                    <label style="color: var(--text-secondary);">Senha atual <span class="required">*</span></label>
                     <div class="input-with-icon">
-                        <i class="fas fa-key"></i>
-                        <input type="password" name="senha_atual" required placeholder="••••••••">
+                        <i class="fas fa-key" style="color: var(--text-muted);"></i>
+                        <input type="password" name="senha_atual" required placeholder="••••••••"
+                               style="background: var(--bg-input); border: 1px solid var(--border-input); color: var(--text-primary);">
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label>Nova senha <span class="required">*</span></label>
+                    <label style="color: var(--text-secondary);">Nova senha <span class="required">*</span></label>
                     <div class="input-with-icon">
-                        <i class="fas fa-lock"></i>
-                        <input type="password" name="nova_senha" required placeholder="Mínimo 6 caracteres" minlength="6">
+                        <i class="fas fa-lock" style="color: var(--text-muted);"></i>
+                        <input type="password" name="nova_senha" required placeholder="Mínimo 6 caracteres" minlength="6"
+                               style="background: var(--bg-input); border: 1px solid var(--border-input); color: var(--text-primary);">
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label>Confirmar nova senha <span class="required">*</span></label>
+                    <label style="color: var(--text-secondary);">Confirmar nova senha <span class="required">*</span></label>
                     <div class="input-with-icon">
-                        <i class="fas fa-lock"></i>
-                        <input type="password" name="confirmar_senha" required placeholder="Repita a nova senha" minlength="6">
+                        <i class="fas fa-lock" style="color: var(--text-muted);"></i>
+                        <input type="password" name="confirmar_senha" required placeholder="Repita a nova senha" minlength="6"
+                               style="background: var(--bg-input); border: 1px solid var(--border-input); color: var(--text-primary);">
                     </div>
                 </div>
 
-                <button type="submit" class="btn-secondary" style="margin-top:8px;">
+                <button type="submit" class="btn-secondary" style="margin-top:8px; background: var(--bg-surface); border: 1px solid var(--border-default); color: var(--text-primary); padding: 8px 16px; border-radius: 8px; cursor: pointer;"
+                        onmouseover="this.style.backgroundColor='var(--bg-card-hover)';"
+                        onmouseout="this.style.backgroundColor='var(--bg-surface)';">
                     <i class="fas fa-shield-alt"></i> Alterar Senha
                 </button>
             </form>

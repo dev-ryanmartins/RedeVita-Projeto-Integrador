@@ -14,6 +14,7 @@ def registrar_handlers_limite(app):
     @app.errorhandler(429)
     def muitas_requisicoes(e):
         from flask import request, render_template
-        if request.path.startswith('/api/'):
-            return jsonify(erro='Muitas requisições. Aguarde e tente novamente.'), 429
-        return render_template('429.html'), 429
+
+        if request.path.startswith("/api/"):
+            return jsonify(erro="Muitas requisições. Aguarde e tente novamente."), 429
+        return render_template("429.html"), 429

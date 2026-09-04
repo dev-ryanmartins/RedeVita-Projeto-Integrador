@@ -1,13 +1,14 @@
 {
-  "name": "RedeVita",
+  "name": "RedeVita - Gestão de Medicamentos",
   "short_name": "RedeVita",
-  "description": "Gestão inteligente de medicamentos e doações",
+  "description": "Gestão inteligente de medicamentos e doações com suporte offline",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0f0f0f",
   "theme_color": "#3498db",
   "orientation": "portrait-primary",
   "lang": "pt-BR",
+  "scope": "/",
   "icons": [
     {
       "src": "/static/img/icons/icon-192x192.png",
@@ -27,17 +28,38 @@
     {
       "name": "Dashboard",
       "url": "/dashboard",
-      "description": "Ver resumo do sistema"
+      "description": "Ver resumo do sistema",
+      "icons": [
+        {
+          "src": "/static/img/icons/icon-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
     },
     {
       "name": "Nova Doação",
       "url": "/doacoes/nova",
-      "description": "Registrar nova doação"
+      "description": "Registrar nova doação",
+      "icons": [
+        {
+          "src": "/static/img/icons/icon-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
     },
     {
       "name": "Inventário",
       "url": "/medicamentos",
-      "description": "Gerenciar estoque"
+      "description": "Gerenciar estoque",
+      "icons": [
+        {
+          "src": "/static/img/icons/icon-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
     }
-  ]
+  ],
+  "screenshots": [],
+  "related_applications": [],
+  "prefer_related_applications": false
 }

@@ -1,170 +1,22 @@
 {% extends "base.html" %}
 {% block title %}Receituário - RedeVita{% endblock %}
 
-{% block extra_css %}
-<style>
-.receita-status-bar {
-    display: flex; align-items: center; justify-content: space-between;
-    flex-wrap: wrap; gap: 10px; margin-bottom: 16px;
-}
-.receita-status-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
-.tab-btn {
-    padding: 6px 14px; border-radius: 20px;
-    border: 1px solid var(--border); background: var(--bg-input);
-    color: var(--text-muted); font-size: 0.82rem; font-weight: 600;
-    cursor: pointer; transition: var(--transition);
-}
-.tab-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
-.tab-btn:hover:not(.active) { border-color: var(--primary); color: var(--primary); }
-.receita-dispensada { opacity: 0.7; }
-
-.pill-pendente {
-    display: inline-flex; align-items: center; gap: 5px;
-    background: rgba(243,156,18,.12); color: #f5b942;
-    border: 1px solid rgba(243,156,18,.3);
-    border-radius: 20px; padding: 3px 10px; font-size: 0.75rem; font-weight: 600;
-}
-.pill-dispensada {
-    display: inline-flex; align-items: center; gap: 5px;
-    background: rgba(46,204,113,.12); color: #5dde8d;
-    border: 1px solid rgba(46,204,113,.3);
-    border-radius: 20px; padding: 3px 10px; font-size: 0.75rem; font-weight: 600;
-}
-.pill-controlada {
-    display: inline-flex; align-items: center; gap: 5px;
-    background: rgba(192,57,43,.15); color: #ff6b6b;
-    border: 1px solid rgba(192,57,43,.4);
-    border-radius: 20px; padding: 3px 10px; font-size: 0.75rem; font-weight: 700;
-    animation: pulsar344 2.5s ease-in-out infinite;
-}
-@keyframes pulsar344 {
-    0%,100% { box-shadow: 0 0 0 0 rgba(192,57,43,0); }
-    50%      { box-shadow: 0 0 0 4px rgba(192,57,43,.2); }
-}
-.dispensada-info {
-    font-size: 0.75rem; color: var(--text-muted);
-    display: flex; align-items: center; gap: 5px; margin-top: 4px;
-}
-.btn-baixa {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 6px 14px;
-    background: rgba(46,204,113,.12); border: 1px solid rgba(46,204,113,.4);
-    border-radius: var(--radius); color: #5dde8d;
-    font-size: 0.82rem; font-weight: 600; cursor: pointer;
-    transition: var(--transition); white-space: nowrap;
-}
-.btn-baixa:hover { background: rgba(46,204,113,.22); border-color: var(--success); }
-
-.alerta-controlado {
-    display: none;
-    border: 1px solid rgba(192,57,43,.4);
-    border-radius: var(--radius);
-    background: rgba(192,57,43,.08);
-    padding: 12px 14px;
-    margin-top: 10px;
-    font-size: 0.82rem; color: #ff6b6b;
-}
-.alerta-controlado.show { display: flex; align-items: flex-start; gap: 8px; }
-
-.tipo-receita-field { display: none; }
-.tipo-receita-field.show { display: block; }
-
-.badge-tipo-receita {
-    display: inline-flex; align-items: center; gap: 5px;
-    background: rgba(52,152,219,.12); color: #5dade2;
-    border: 1px solid rgba(52,152,219,.3);
-    border-radius: 20px; padding: 2px 8px; font-size: 0.72rem; font-weight: 600;
-}
-
-/* ── Upload de imagem da receita ──────────────────────────────────────────── */
-.upload-area {
-    border: 2px dashed var(--border);
-    border-radius: var(--radius);
-    padding: 16px;
-    text-align: center;
-    cursor: pointer;
-    transition: border-color .2s, background .2s;
-    background: var(--bg-input);
-    position: relative;
-}
-.upload-area:hover { border-color: var(--primary); background: rgba(58,134,255,.04); }
-.upload-area input[type="file"] {
-    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
-}
-.upload-area-icon { font-size: 1.6rem; color: var(--text-muted); margin-bottom: 6px; }
-.upload-area-txt { font-size: 0.8rem; color: var(--text-muted); }
-.upload-area-txt strong { color: var(--primary); }
-.upload-preview-wrap { margin-top: 10px; display: none; }
-.upload-preview-name {
-    display: inline-flex; align-items: center; gap: 6px;
-    background: rgba(46,204,113,.1); border: 1px solid rgba(46,204,113,.3);
-    border-radius: 20px; padding: 4px 12px; font-size: 0.78rem; color: #5dde8d;
-}
-
-/* ── Thumbnail de receita digitalizada no card ────────────────────────────── */
-.receita-img-thumb {
-    margin-top: 10px;
-    display: flex; align-items: center; gap: 10px;
-    background: rgba(52,152,219,.06);
-    border: 1px solid rgba(52,152,219,.2);
-    border-radius: var(--radius); padding: 8px 12px;
-}
-.receita-img-thumb img {
-    width: 52px; height: 52px; object-fit: cover;
-    border-radius: 6px; border: 1px solid var(--border);
-    cursor: pointer; transition: opacity .2s;
-}
-.receita-img-thumb img:hover { opacity: .8; }
-.receita-img-pdf {
-    display: flex; align-items: center; gap: 8px;
-    font-size: 0.8rem; color: #5dade2;
-}
-
-/* ── Lightbox ─────────────────────────────────────────────────────────────── */
-#lightbox-overlay {
-    display: none; position: fixed; inset: 0; z-index: 9999;
-    background: rgba(0,0,0,.88); align-items: center; justify-content: center;
-    cursor: zoom-out;
-}
-#lightbox-overlay.show { display: flex; }
-#lightbox-overlay img {
-    max-width: 92vw; max-height: 90vh;
-    border-radius: 8px; box-shadow: 0 8px 40px rgba(0,0,0,.6);
-    cursor: default;
-}
-#lightbox-close {
-    position: absolute; top: 20px; right: 24px;
-    font-size: 1.8rem; color: #fff; cursor: pointer; line-height: 1;
-    opacity: .7; transition: opacity .2s;
-}
-#lightbox-close:hover { opacity: 1; }
-
-@media (max-width: 768px) {
-    .receituario-grid { flex-direction: column !important; }
-    .receituario-form-col { width: 100% !important; }
-}
-</style>
-{% endblock %}
-
 {% block content %}
 <div class="page-wrapper">
     <div class="page-header">
         <div>
             <h2><i class="fas fa-prescription"></i> Receituário Digital</h2>
-            <p class="page-subtitle">Emita e gerencie ordens de retirada. Controlados (Portaria 344) exigem tipo de receita especial.</p>
+            <p class="page-subtitle">Emita ordens de retirada de medicamentos vinculadas a pacientes e médicos.</p>
         </div>
         <a href="{{ url_for('pacientes.listar_pacientes') }}" class="btn-secondary">
             <i class="fas fa-arrow-left"></i> Voltar a Pacientes
         </a>
     </div>
 
-    <div class="dashboard-grid receituario-grid">
-
-        <!-- ── FORM ── -->
-        <div class="quick-actions receituario-form-col">
+    <div class="dashboard-grid">
+        <div class="quick-actions">
             <h3><i class="fas fa-file-medical"></i> Nova Ordem de Retirada</h3>
-            <form action="{{ url_for('pacientes.nova_receita') }}" method="POST"
-                  enctype="multipart/form-data" style="margin-top:16px;">
+            <form action="{{ url_for('pacientes.nova_receita') }}" method="POST" style="margin-top:16px;">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                 <div class="form-group">
@@ -172,7 +24,7 @@
                     <div class="input-with-icon">
                         <i class="fas fa-user-injured"></i>
                         <select name="paciente_id" required>
-                            <option value="" disabled selected>Selecione o paciente…</option>
+                            <option value="" disabled selected>Selecione o paciente...</option>
                             {% for p in pacientes %}
                                 <option value="{{ p.id }}">{{ p.nome }} — {{ p.cpf }}</option>
                             {% else %}
@@ -187,7 +39,7 @@
                     <div class="input-with-icon">
                         <i class="fas fa-user-md"></i>
                         <select name="medico_id" required>
-                            <option value="" disabled selected>Selecione o médico…</option>
+                            <option value="" disabled selected>Selecione o médico...</option>
                             {% for m in medicos %}
                                 <option value="{{ m.id }}">Dr(a). {{ m.nome }} — {{ m.crm }}</option>
                             {% else %}
@@ -198,44 +50,15 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Medicamento <span style="color:var(--text-muted); font-size:0.8rem;">(opcional)</span></label>
+                    <label>Medicamento <span style="color: var(--text-muted); font-size:0.8rem;">(opcional)</span></label>
                     <div class="input-with-icon">
                         <i class="fas fa-pills"></i>
-                        <select name="medicamento_id" id="med-select" onchange="verificarControlado(this)">
+                        <select name="medicamento_id">
                             <option value="">Nenhum / Apenas observação</option>
                             {% for m in medicamentos %}
-                                <option value="{{ m.id }}"
-                                        data-controlado="{{ '1' if m.controlado else '0' }}"
-                                        data-tarja="{{ m.tarja }}"
-                                        data-tipo="{{ m.tipo_receita_requerida }}">
-                                    {{ m.nome }}
-                                    {% if m.controlado %}⚠ P344{% endif %}
-                                    — Lote {{ m.lote }} ({{ m.quantidade }} un.)
-                                </option>
+                                <option value="{{ m.id }}">{{ m.nome }} — Lote {{ m.lote }} ({{ m.quantidade }} un.)</option>
                             {% else %}
                                 <option disabled>Nenhum medicamento disponível</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Alerta controlado + campo tipo receita -->
-                <div id="alerta-controlado" class="alerta-controlado">
-                    <i class="fas fa-skull-crossbones" style="margin-top:2px; flex-shrink:0;"></i>
-                    <div>
-                        <strong>Medicamento Controlado — Portaria 344/98</strong><br>
-                        <span id="alerta-tipo-txt" style="font-size:0.78rem; opacity:.85;"></span>
-                    </div>
-                </div>
-
-                <div class="form-group tipo-receita-field" id="tipo-receita-field">
-                    <label>Tipo de Receita <span class="required">*</span></label>
-                    <div class="input-with-icon">
-                        <i class="fas fa-file-prescription"></i>
-                        <select name="tipo_receita" id="tipo-receita-select">
-                            <option value="">Selecione o tipo…</option>
-                            {% for t in tipos_receita %}
-                                <option value="{{ t }}">{{ t }}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -244,45 +67,17 @@
                 <div class="form-group">
                     <label>Observações / Posologia</label>
                     <textarea name="observacoes" rows="3"
-                        placeholder="Ex: Tomar 1 comprimido a cada 8 horas por 5 dias…"
-                        style="width:100%; background:var(--bg-input); border:1px solid var(--border);
-                               border-radius:var(--radius); color:var(--text-main); padding:10px 14px;
-                               font-family:inherit; font-size:0.9rem; resize:vertical; outline:none;
-                               transition:border-color .2s;"
+                        placeholder="Ex: Tomar 1 comprimido a cada 8 horas por 5 dias..."
+                        style="width:100%; background: var(--bg-input); border: 1px solid var(--border);
+                               border-radius: var(--radius); color: var(--text-main); padding: 10px 14px;
+                               font-family: inherit; font-size: 0.9rem; resize: vertical; outline: none;
+                               transition: border-color 0.2s;"
                         onfocus="this.style.borderColor='var(--primary)'"
                         onblur="this.style.borderColor='var(--border)'"
                         maxlength="1000"></textarea>
                 </div>
 
-                <!-- Upload da receita digitalizada -->
-                <div class="form-group">
-                    <label><i class="fas fa-camera" style="margin-right:4px;color:var(--primary);"></i>
-                        Imagem da Receita Digitalizada
-                        <span style="color:var(--text-muted); font-size:0.78rem;">(opcional — JPG, PNG, PDF, WEBP até 10 MB)</span>
-                    </label>
-                    <div class="upload-area" id="upload-area" onclick="document.getElementById('imagem-receita').click()">
-                        <input type="file" name="imagem_receita" id="imagem-receita"
-                               accept=".jpg,.jpeg,.png,.webp,.pdf"
-                               onchange="previewUpload(this)">
-                        <div class="upload-area-icon"><i class="fas fa-cloud-upload-alt"></i></div>
-                        <div class="upload-area-txt">
-                            <strong>Clique para selecionar</strong> ou arraste a imagem aqui
-                        </div>
-                    </div>
-                    <div class="upload-preview-wrap" id="upload-preview-wrap">
-                        <span class="upload-preview-name" id="upload-preview-name">
-                            <i class="fas fa-check-circle"></i>
-                            <span id="upload-filename"></span>
-                        </span>
-                        <button type="button" onclick="limparUpload()"
-                                style="margin-left:8px; background:none; border:none; color:var(--text-muted);
-                                       font-size:0.75rem; cursor:pointer; text-decoration:underline;">
-                            remover
-                        </button>
-                    </div>
-                </div>
-
-                <div style="margin-top:8px;">
+                <div class="modal-footer" style="padding: 0; margin-top:8px;">
                     <button type="submit" class="btn-primary" style="width:100%; justify-content:center;">
                         <i class="fas fa-file-medical"></i> Emitir Ordem de Retirada
                     </button>
@@ -290,76 +85,24 @@
             </form>
         </div>
 
-        <!-- ── LIST ── -->
         <div style="min-width:0;">
-            <div class="receita-status-bar">
+            <div class="section-header" style="margin-bottom:16px;">
                 <h3><i class="fas fa-history"></i> Ordens Emitidas</h3>
-                <div class="receita-status-tabs">
-                    <button class="tab-btn active" onclick="filtrarReceitas('todas', this)">
-                        Todas <span style="opacity:.7;">({{ receitas|length }})</span>
-                    </button>
-                    <button class="tab-btn" onclick="filtrarReceitas('pendente', this)">
-                        <i class="fas fa-clock" style="color:#f5b942;"></i>
-                        Pendentes <span style="opacity:.7;">({{ receitas|selectattr('status','eq','pendente')|list|length }})</span>
-                    </button>
-                    <button class="tab-btn" onclick="filtrarReceitas('dispensada', this)">
-                        <i class="fas fa-check-circle" style="color:#5dde8d;"></i>
-                        Dispensadas <span style="opacity:.7;">({{ receitas|selectattr('status','eq','dispensada')|list|length }})</span>
-                    </button>
-                    <button class="tab-btn" onclick="filtrarReceitas('controlada', this)"
-                            style="color:#ff6b6b;">
-                        <i class="fas fa-skull-crossbones"></i>
-                        Controladas
-                    </button>
-                </div>
+                <span class="chart-badge">{{ receitas.total if receitas else 0 }} total</span>
             </div>
 
-            {% if receitas %}
-            <div id="lista-receitas" style="display:flex; flex-direction:column; gap:12px;">
-                {% for r in receitas %}
-                <div class="receita-card{% if r.status == 'dispensada' %} receita-dispensada{% endif %}"
-                     id="receita-{{ r.id }}"
-                     data-status="{{ r.status }}"
-                     data-controlada="{{ '1' if r.medicamento and r.medicamento.controlado else '0' }}">
+            {% if receitas and receitas.items %}
+            <div style="display:flex; flex-direction:column; gap:12px;">
+                {% for r in receitas.items %}
+                <div class="receita-card">
                     <div class="receita-header">
-                        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                            <span class="receita-numero">
-                                <i class="fas fa-hashtag"></i> Ordem #{{ r.id }}
-                            </span>
-                            {% if r.status == 'pendente' %}
-                                <span class="pill-pendente"><i class="fas fa-clock"></i> Pendente</span>
-                            {% else %}
-                                <span class="pill-dispensada"><i class="fas fa-check-circle"></i> Dispensada</span>
-                            {% endif %}
-                            {% if r.medicamento and r.medicamento.controlado %}
-                                <span class="pill-controlada">
-                                    <i class="fas fa-skull-crossbones"></i> Portaria 344
-                                </span>
-                            {% endif %}
-                            {% if r.imagem_url %}
-                                <span style="display:inline-flex; align-items:center; gap:4px;
-                                             background:rgba(52,152,219,.12); color:#5dade2;
-                                             border:1px solid rgba(52,152,219,.3); border-radius:20px;
-                                             padding:2px 8px; font-size:0.72rem; font-weight:600;">
-                                    <i class="fas fa-camera"></i> Digitalizada
-                                </span>
-                            {% endif %}
-                        </div>
-                        <div style="display:flex; align-items:center; gap:8px;">
-                            <span style="color:var(--text-muted); font-size:0.8rem; white-space:nowrap;">
-                                {{ r.data_emissao.strftime('%d/%m/%Y %H:%M') }}
-                            </span>
-                            <button onclick="imprimirReceita('receita-{{ r.id }}')"
-                                    title="Imprimir receita"
-                                    style="background:rgba(52,152,219,.1); border:1px solid rgba(52,152,219,.3);
-                                           border-radius:var(--radius); color:var(--primary); padding:3px 10px;
-                                           font-size:0.78rem; cursor:pointer; transition:var(--transition);
-                                           display:inline-flex; align-items:center; gap:5px; white-space:nowrap;">
-                                <i class="fas fa-print"></i> Imprimir
-                            </button>
-                        </div>
+                        <span class="receita-numero">
+                            <i class="fas fa-hashtag"></i> Ordem #{{ r.id }}
+                        </span>
+                        <span style="color: var(--text-muted); font-size:0.8rem;">
+                            {{ r.data_emissao.strftime('%d/%m/%Y %H:%M') }}
+                        </span>
                     </div>
-
                     <div class="receita-body">
                         <div class="receita-info-row">
                             <span class="receita-label"><i class="fas fa-user-injured"></i> Paciente</span>
@@ -369,23 +112,13 @@
                         <div class="receita-info-row">
                             <span class="receita-label"><i class="fas fa-user-md"></i> Médico</span>
                             <strong>Dr(a). {{ r.medico.nome }}</strong>
-                            <small style="color:var(--text-muted);">CRM {{ r.medico.crm }}</small>
+                            <small style="color:var(--text-muted);">{{ r.medico.crm }}</small>
                         </div>
                         {% if r.medicamento %}
                         <div class="receita-info-row">
                             <span class="receita-label"><i class="fas fa-pills"></i> Medicamento</span>
                             <strong>{{ r.medicamento.nome }}</strong>
-                            <small style="color:var(--text-muted);">
-                                {{ r.medicamento.tarja }} &bull; Lote {{ r.medicamento.lote }}
-                            </small>
-                        </div>
-                        {% endif %}
-                        {% if r.tipo_receita %}
-                        <div class="receita-info-row">
-                            <span class="receita-label"><i class="fas fa-file-prescription"></i> Receita</span>
-                            <span class="badge-tipo-receita">
-                                <i class="fas fa-certificate"></i> {{ r.tipo_receita }}
-                            </span>
+                            <small style="color:var(--text-muted);">Lote {{ r.medicamento.lote }}</small>
                         </div>
                         {% endif %}
                         {% if r.observacoes %}
@@ -394,225 +127,17 @@
                             <span>{{ r.observacoes }}</span>
                         </div>
                         {% endif %}
-
-                        {% if r.imagem_url %}
-                        <div class="receita-img-thumb">
-                            {% set ext = r.imagem_url.rsplit('.', 1)[-1].lower() %}
-                            {% if ext in ['jpg', 'jpeg', 'png', 'webp'] %}
-                            <img src="{{ url_for('static', filename=r.imagem_url) }}"
-                                 alt="Receita digitalizada"
-                                 title="Clique para ampliar"
-                                 onclick="abrirLightbox('{{ url_for('static', filename=r.imagem_url) }}')">
-                            <div>
-                                <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:2px;">
-                                    <i class="fas fa-camera"></i> Receita digitalizada
-                                </div>
-                                <a href="{{ url_for('static', filename=r.imagem_url) }}"
-                                   target="_blank" rel="noopener"
-                                   style="font-size:0.76rem; color:var(--primary); text-decoration:none;">
-                                    <i class="fas fa-external-link-alt"></i> Abrir em nova aba
-                                </a>
-                            </div>
-                            {% else %}
-                            <div class="receita-img-pdf">
-                                <i class="fas fa-file-pdf" style="font-size:1.8rem; color:#e74c3c;"></i>
-                                <div>
-                                    <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:2px;">
-                                        Receita digitalizada (PDF)
-                                    </div>
-                                    <a href="{{ url_for('static', filename=r.imagem_url) }}"
-                                       target="_blank" rel="noopener"
-                                       style="font-size:0.76rem; color:var(--primary); text-decoration:none;">
-                                        <i class="fas fa-external-link-alt"></i> Abrir PDF
-                                    </a>
-                                </div>
-                            </div>
-                            {% endif %}
-                        </div>
-                        {% endif %}
-
-                        {% if r.status == 'dispensada' %}
-                        <div class="dispensada-info">
-                            <i class="fas fa-check-circle" style="color:#5dde8d;"></i>
-                            Dispensada em {{ r.dispensada_em.strftime('%d/%m/%Y às %H:%M') if r.dispensada_em else '—' }}
-                            {% if r.dispensada_por %} por <strong>{{ r.dispensada_por.nome }}</strong>{% endif %}
-                        </div>
-                        {% else %}
-                        <div style="margin-top:8px;">
-                            {% if r.medicamento and r.medicamento.controlado and not r.tipo_receita %}
-                            <div style="display:flex; align-items:center; gap:6px; font-size:0.78rem; color:#ff6b6b; margin-bottom:6px;">
-                                <i class="fas fa-lock"></i>
-                                <span>Dispensação bloqueada: informe o tipo de receita para este medicamento controlado.</span>
-                            </div>
-                            {% else %}
-                            <form action="{{ url_for('pacientes.dar_baixa_receita', rid=r.id) }}" method="POST"
-                                  onsubmit="return confirm('Confirmar dispensação da Ordem #{{ r.id }}?')">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <button type="submit" class="btn-baixa">
-                                    <i class="fas fa-check-double"></i> Dar Baixa (Dispensar)
-                                </button>
-                            </form>
-                            {% endif %}
-                        </div>
-                        {% endif %}
                     </div>
                 </div>
                 {% endfor %}
             </div>
             {% else %}
             <div class="quick-actions" style="text-align:center; padding:40px 20px;">
-                <i class="fas fa-prescription" style="font-size:2.5rem; color:var(--text-muted); display:block; margin-bottom:12px;"></i>
-                <p style="color:var(--text-muted);">Nenhuma ordem emitida ainda.</p>
+                <i class="fas fa-prescription" style="font-size:2.5rem; color: var(--text-muted); display:block; margin-bottom:12px;"></i>
+                <p style="color: var(--text-muted);">Nenhuma ordem emitida ainda.</p>
             </div>
             {% endif %}
         </div>
     </div>
 </div>
-
-<!-- ── Lightbox ────────────────────────────────────────────────────────────── -->
-<div id="lightbox-overlay" onclick="fecharLightbox()">
-    <span id="lightbox-close" onclick="fecharLightbox()">&times;</span>
-    <img id="lightbox-img" src="" alt="Receita ampliada" onclick="event.stopPropagation()">
-</div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-/* ── Filtrar receitas ─────────────────────────────────────────────────────── */
-function filtrarReceitas(status, btn) {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    document.querySelectorAll('.receita-card').forEach(card => {
-        let show = true;
-        if (status === 'pendente' || status === 'dispensada')
-            show = card.dataset.status === status;
-        else if (status === 'controlada')
-            show = card.dataset.controlada === '1';
-        card.style.display = show ? '' : 'none';
-    });
-}
-
-/* ── Detectar medicamento controlado no form ────────────────────────────── */
-function verificarControlado(sel) {
-    const opt = sel.options[sel.selectedIndex];
-    const controlado = opt && opt.dataset.controlado === '1';
-    const tipoRequerido = opt ? (opt.dataset.tipo || '') : '';
-
-    const alerta = document.getElementById('alerta-controlado');
-    const field  = document.getElementById('tipo-receita-field');
-    const sel2   = document.getElementById('tipo-receita-select');
-    const txt    = document.getElementById('alerta-tipo-txt');
-
-    if (controlado) {
-        alerta.classList.add('show');
-        field.classList.add('show');
-        sel2.required = true;
-        txt.textContent = 'Receita exigida: ' + tipoRequerido;
-    } else {
-        alerta.classList.remove('show');
-        field.classList.remove('show');
-        sel2.required = false;
-    }
-}
-
-/* ── Upload preview ──────────────────────────────────────────────────────── */
-function previewUpload(input) {
-    const wrap = document.getElementById('upload-preview-wrap');
-    const fname = document.getElementById('upload-filename');
-    if (input.files && input.files[0]) {
-        fname.textContent = input.files[0].name;
-        wrap.style.display = 'block';
-        document.querySelector('.upload-area-icon').innerHTML = '<i class="fas fa-check-circle" style="color:#5dde8d;"></i>';
-        document.querySelector('.upload-area-txt').innerHTML = '<strong style="color:#5dde8d;">Arquivo selecionado</strong>';
-    }
-}
-
-function limparUpload() {
-    const input = document.getElementById('imagem-receita');
-    input.value = '';
-    document.getElementById('upload-preview-wrap').style.display = 'none';
-    document.querySelector('.upload-area-icon').innerHTML = '<i class="fas fa-cloud-upload-alt"></i>';
-    document.querySelector('.upload-area-txt').innerHTML =
-        '<strong>Clique para selecionar</strong> ou arraste a imagem aqui';
-}
-
-/* ── Lightbox ─────────────────────────────────────────────────────────────── */
-function abrirLightbox(src) {
-    document.getElementById('lightbox-img').src = src;
-    document.getElementById('lightbox-overlay').classList.add('show');
-    document.body.style.overflow = 'hidden';
-}
-
-function fecharLightbox() {
-    document.getElementById('lightbox-overlay').classList.remove('show');
-    document.getElementById('lightbox-img').src = '';
-    document.body.style.overflow = '';
-}
-
-document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') fecharLightbox();
-});
-
-/* ── Drag-and-drop na área de upload ─────────────────────────────────────── */
-const uploadArea = document.getElementById('upload-area');
-if (uploadArea) {
-    uploadArea.addEventListener('dragover', e => {
-        e.preventDefault();
-        uploadArea.style.borderColor = 'var(--primary)';
-        uploadArea.style.background = 'rgba(58,134,255,.06)';
-    });
-    uploadArea.addEventListener('dragleave', () => {
-        uploadArea.style.borderColor = '';
-        uploadArea.style.background = '';
-    });
-    uploadArea.addEventListener('drop', e => {
-        e.preventDefault();
-        uploadArea.style.borderColor = '';
-        uploadArea.style.background = '';
-        const input = document.getElementById('imagem-receita');
-        input.files = e.dataTransfer.files;
-        previewUpload(input);
-    });
-}
-
-/* ── Imprimir Receita Individual ─────────────────────────────────────────── */
-function imprimirReceita(cardId) {
-    var card = document.getElementById(cardId);
-    if (!card) return;
-    var pw = window.open('', '_blank', 'width=700,height=600');
-    pw.document.write('<!DOCTYPE html><html lang="pt-br"><head><meta charset="UTF-8">');
-    pw.document.write('<title>Receita RedeVita</title>');
-    pw.document.write('<style>');
-    pw.document.write('body{font-family:Arial,sans-serif;padding:28px;color:#111;font-size:14px;}');
-    pw.document.write('h2{margin:0 0 16px; border-bottom:2px solid #3498db; padding-bottom:8px; color:#2c3e50;}');
-    pw.document.write('.row{display:flex;gap:8px;margin-bottom:10px;align-items:baseline;}');
-    pw.document.write('.lbl{font-weight:700;min-width:130px;color:#555;font-size:12px;text-transform:uppercase;}');
-    pw.document.write('.val{color:#111;}');
-    pw.document.write('.obs{background:#f8f9fa;border-left:3px solid #3498db;padding:8px 12px;margin-top:12px;border-radius:4px;}');
-    pw.document.write('.footer{margin-top:40px;border-top:1px solid #ddd;padding-top:12px;font-size:11px;color:#777;display:flex;justify-content:space-between;}');
-    pw.document.write('</style></head><body>');
-    pw.document.write('<h2><span style="color:#3498db;">Rede</span>Vita — Ordem de Retirada</h2>');
-
-    var rows = card.querySelectorAll('.receita-info-row');
-    rows.forEach(function(r) {
-        var lbl = r.querySelector('.receita-label');
-        var vals = Array.from(r.querySelectorAll('strong, span:not(.receita-label), small'));
-        var val = vals.map(function(v){ return v.textContent.trim(); }).filter(Boolean).join(' — ');
-        if (lbl && val) {
-            pw.document.write('<div class="row"><span class="lbl">' + lbl.textContent.trim() + '</span><span class="val">' + val + '</span></div>');
-        }
-    });
-
-    var obs = card.querySelector('.receita-obs');
-    if (obs) {
-        pw.document.write('<div class="obs">' + (obs.querySelector('span') ? obs.querySelector('span').textContent.trim() : '') + '</div>');
-    }
-
-    pw.document.write('<div class="footer"><span>Emitido pelo sistema RedeVita</span><span>' + new Date().toLocaleDateString('pt-BR') + '</span></div>');
-    pw.document.write('</body></html>');
-    pw.document.close();
-    pw.focus();
-    setTimeout(function(){ pw.print(); }, 400);
-}
-</script>
 {% endblock %}

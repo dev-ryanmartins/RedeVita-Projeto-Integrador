@@ -1,174 +1,41 @@
 {% extends "base.html" %}
 {% block title %}Inventário - RedeVita{% endblock %}
 
-{% block extra_css %}
-<style>
-/* ── Tarja badges ──────────────────────────────────────────────────────────── */
-.tarja-badge {
-    display: inline-flex; align-items: center; gap: 4px;
-    padding: 2px 9px; border-radius: 12px;
-    font-size: 0.72rem; font-weight: 700; white-space: nowrap;
-}
-.tarja-sem     { background: rgba(108,117,125,.15); color: #aaa; border: 1px solid rgba(108,117,125,.2); }
-.tarja-amarela { background: rgba(241,196,15,.12);  color: #f5cb2f; border: 1px solid rgba(241,196,15,.3); }
-.tarja-vermelha{ background: rgba(231,76,60,.12);   color: #e74c3c; border: 1px solid rgba(231,76,60,.3); }
-.tarja-344     { background: rgba(192,57,43,.18);   color: #ff6b6b; border: 1px solid rgba(192,57,43,.4);
-                 animation: pulsar344 2.5s ease-in-out infinite; }
-@keyframes pulsar344 {
-    0%,100% { box-shadow: 0 0 0 0 rgba(192,57,43,0); }
-    50%      { box-shadow: 0 0 0 4px rgba(192,57,43,.25); }
-}
-
-/* ── Row highlights ─────────────────────────────────────────────────────────── */
-tr.row-344 td { background: rgba(192,57,43,.07) !important; }
-tr.row-344 td:first-child { border-left: 3px solid #c0392b; }
-tr.row-vermelha td { background: rgba(231,76,60,.04) !important; }
-tr.row-continuo td { background: rgba(52,152,219,.04) !important; }
-
-/* ── Filter bar ─────────────────────────────────────────────────────────────── */
-.inv-filter-bar {
-    display: flex; align-items: center; gap: 10px;
-    flex-wrap: wrap; margin-bottom: 20px;
-}
-.inv-filter-bar .filter-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
-.ftab {
-    padding: 6px 14px; border-radius: 20px;
-    border: 1px solid var(--border); background: var(--bg-input);
-    color: var(--text-muted); font-size: 0.8rem; font-weight: 600;
-    cursor: pointer; transition: var(--transition);
-}
-.ftab.active { background: var(--primary); border-color: var(--primary); color: #fff; }
-.ftab:hover:not(.active) { border-color: var(--primary); color: var(--primary); }
-.ftab-344.active { background: #c0392b; border-color: #c0392b; }
-.ftab-344:hover:not(.active) { border-color: #c0392b; color: #ff6b6b; }
-.ftab-continuo.active { background: #2980b9; border-color: #2980b9; }
-
-.inv-search {
-    flex: 1; min-width: 180px; max-width: 320px;
-    background: var(--bg-input); border: 1px solid var(--border);
-    border-radius: 20px; padding: 6px 14px 6px 36px;
-    color: var(--text-main); font-size: 0.85rem; outline: none;
-    transition: var(--transition);
-}
-.inv-search:focus { border-color: var(--primary); }
-.inv-search-wrap { position: relative; flex: 1; min-width: 180px; max-width: 320px; }
-.inv-search-wrap i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.8rem; pointer-events: none; }
-
-/* ── Autocomplete reference panel ───────────────────────────────────────────── */
-.ref-results {
-    position: absolute; top: calc(100% + 4px); left: 0; right: 0;
-    background: var(--bg-card); border: 1px solid var(--border);
-    border-radius: var(--radius); box-shadow: 0 8px 24px rgba(0,0,0,.35);
-    z-index: 200; max-height: 220px; overflow-y: auto;
-}
-.ref-item {
-    padding: 10px 14px; cursor: pointer; border-bottom: 1px solid var(--border);
-    transition: background .15s;
-}
-.ref-item:last-child { border-bottom: none; }
-.ref-item:hover { background: var(--bg-input); }
-.ref-item-name { font-weight: 600; font-size: 0.88rem; }
-.ref-item-sub  { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
-
-/* ── Baixar estoque modal fields ─────────────────────────────────────────────── */
-.controlado-fields {
-    display: none;
-    border: 1px solid rgba(192,57,43,.4);
-    border-radius: var(--radius);
-    background: rgba(192,57,43,.07);
-    padding: 14px;
-    margin-top: 12px;
-}
-.controlado-fields.show { display: block; }
-.controlado-label {
-    display: flex; align-items: center; gap: 6px;
-    font-size: 0.8rem; font-weight: 700; color: #ff6b6b;
-    margin-bottom: 10px;
-}
-
-/* ── Mobile ──────────────────────────────────────────────────────────────────── */
-@media (max-width: 700px) {
-    .inv-col-pa, .inv-col-tarja { display: none; }
-    .inv-filter-bar { flex-direction: column; align-items: flex-start; }
-    .inv-search-wrap { max-width: 100%; }
-}
-</style>
-{% endblock %}
-
 {% block content %}
 <div class="page-wrapper">
-
-    <!-- ── Header ──────────────────────────────────────────────────────────── -->
     <div class="page-header">
         <div>
             <h2><i class="fas fa-pills"></i> Inventário de Medicamentos</h2>
-            <p class="page-subtitle">
-                {{ medicamentos|length }} medicamentos &bull;
-                <span style="color:#ff6b6b;">{{ total_controlados }} controlados (P344)</span> &bull;
-                <span style="color:#3498db;">{{ total_continuo }} uso contínuo</span>
-            </p>
+            <p class="page-subtitle">Gerencie o estoque de medicamentos cadastrados.</p>
         </div>
-        <div class="header-actions">
-            <a href="{{ url_for('inventory.exportar_csv') }}" class="btn-secondary" title="Exportar para Excel/CSV">
-                <i class="fas fa-file-csv"></i> Exportar CSV
-            </a>
-            <button class="btn-primary" onclick="abrirModal('modal-add')">
-                <i class="fas fa-plus"></i> Novo Medicamento
-            </button>
-        </div>
+        <button class="btn-primary" onclick="abrirModal('modal-add')">
+            <i class="fas fa-plus"></i> Novo Medicamento
+        </button>
     </div>
 
-    <!-- ── Filter bar ──────────────────────────────────────────────────────── -->
-    <div class="inv-filter-bar">
-        <div class="filter-tabs">
-            <button class="ftab active"        onclick="filtrar('todos', this)">
-                <i class="fas fa-list"></i> Todos
-            </button>
-            <button class="ftab ftab-344"      onclick="filtrar('p344', this)">
-                <i class="fas fa-skull-crossbones"></i> Portaria 344
-            </button>
-            <button class="ftab"               onclick="filtrar('vermelha', this)">
-                <i class="fas fa-ban"></i> Tarja Vermelha
-            </button>
-            <button class="ftab ftab-continuo" onclick="filtrar('continuo', this)">
-                <i class="fas fa-sync-alt"></i> Uso Contínuo
-            </button>
-        </div>
-        <div class="inv-search-wrap">
-            <i class="fas fa-search"></i>
-            <input class="inv-search" type="text" id="inv-search"
-                   placeholder="Buscar por nome ou princípio ativo…"
-                   oninput="filtrar(null, null)">
-        </div>
+    <div class="table-toolbar" role="search">
+        <label class="table-search" for="inventory-table-search">
+            <i class="fas fa-search" aria-hidden="true"></i>
+            <input type="search" id="inventory-table-search" data-table-search="inventory-table"
+                   placeholder="Buscar medicamento, lote ou status" autocomplete="off">
+        </label>
+        <span class="table-search-hint">Filtra os itens desta página sem recarregar.</span>
     </div>
-
-    <!-- ── Table ───────────────────────────────────────────────────────────── -->
     <div class="table-wrapper">
-        <table class="styled-table" id="inv-table">
+        <table class="styled-table" id="inventory-table">
             <thead>
                 <tr>
-                    <th>Validade</th>
-                    <th class="inv-col-tarja">Tarja</th>
+                    <th>Status</th>
                     <th>Medicamento</th>
-                    <th class="inv-col-pa">Princípio Ativo</th>
                     <th>Lote</th>
+                    <th>Validade</th>
                     <th>Qtd.</th>
                     <th style="text-align:center;">Ações</th>
                 </tr>
             </thead>
-            <tbody id="inv-tbody">
+            <tbody>
                 {% for med in medicamentos %}
-                <tr class="inv-row
-                    {% if med.tarja == 'Portaria 344' %} row-344
-                    {% elif med.tarja == 'Tarja Vermelha' %} row-vermelha
-                    {% endif %}
-                    {% if med.uso_continuo %} row-continuo{% endif %}"
-                    data-nome="{{ med.nome|lower }}"
-                    data-pa="{{ (med.principio_ativo or '')|lower }}"
-                    data-tarja="{{ med.tarja }}"
-                    data-continuo="{{ '1' if med.uso_continuo else '0' }}"
-                    data-controlado="{{ '1' if med.controlado else '0' }}">
-
+                <tr>
                     <td>
                         {% if med.status_semaforo == 0 %}
                             <span class="status-pill green"><i class="fas fa-circle"></i> Seguro</span>
@@ -177,91 +44,21 @@ tr.row-continuo td { background: rgba(52,152,219,.04) !important; }
                         {% else %}
                             <span class="status-pill red"><i class="fas fa-circle"></i> Vencido</span>
                         {% endif %}
-                        <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">
-                            {{ med.data_validade.strftime('%d/%m/%Y') }}
-                        </div>
                     </td>
-                    <td class="inv-col-tarja">
-                        {% if med.tarja == 'Portaria 344' %}
-                            <span class="tarja-badge tarja-344">
-                                <i class="fas fa-skull-crossbones"></i> P.344
-                            </span>
-                        {% elif med.tarja == 'Tarja Vermelha' %}
-                            <span class="tarja-badge tarja-vermelha">
-                                <i class="fas fa-minus"></i> Vermelha
-                            </span>
-                        {% elif med.tarja == 'Tarja Amarela' %}
-                            <span class="tarja-badge tarja-amarela">
-                                <i class="fas fa-minus"></i> Amarela
-                            </span>
-                        {% else %}
-                            <span class="tarja-badge tarja-sem">Isento</span>
-                        {% endif %}
-                        {% if med.uso_continuo %}
-                        <div style="margin-top:4px;">
-                            <span style="font-size:0.7rem; color:#3498db;">
-                                <i class="fas fa-sync-alt"></i> Contínuo
-                            </span>
-                        </div>
-                        {% endif %}
-                    </td>
-                    <td>
-                        <strong>{{ med.nome }}</strong>
-                        {% if med.tarja == 'Portaria 344' %}
-                        <span title="Medicamento controlado — Portaria 344/98 ANVISA"
-                              style="color:#ff6b6b; margin-left:4px; font-size:0.75rem;">
-                            <i class="fas fa-exclamation-triangle"></i>
-                        </span>
-                        {% endif %}
-                    </td>
-                    <td class="inv-col-pa" style="color:var(--text-muted); font-size:0.85rem;">
-                        {{ med.principio_ativo or '—' }}
-                    </td>
+                    <td><strong>{{ med.nome }}</strong></td>
                     <td><code class="lote-code">{{ med.lote }}</code></td>
-                    <td>
-                        <strong>{{ med.quantidade }}</strong>
-                        <span style="color:var(--text-muted); font-size:0.8rem;"> un.</span>
-                    </td>
+                    <td>{{ med.data_validade.strftime('%d/%m/%Y') }}</td>
+                    <td>{{ med.quantidade }} un.</td>
                     <td style="text-align:center;">
                         <div class="action-btns">
-                            <button class="btn-icon" style="color:var(--success);"
-                                title="Baixar Estoque"
-                                onclick="abrirBaixaEstoque(
-                                    {{ med.id }},
-                                    '{{ med.nome|replace("'","\\'")|replace('"','\\"') }}',
-                                    {{ med.controlado|tojson }},
-                                    '{{ med.tipo_receita_requerida }}'
-                                )">
-                                <i class="fas fa-minus-circle"></i>
-                            </button>
-                            <button class="btn-icon" style="color:var(--primary);" title="Consultar Bula ANVISA"
-                                onclick="abrirBula('{{ med.nome|replace("'","\\'")|replace('"','\\"') }}')">
-                                <i class="fas fa-file-medical"></i>
-                            </button>
-                            <button class="btn-icon btn-edit" title="Editar"
-                                onclick="abrirEdicao(
-                                    {{ med.id }},
-                                    '{{ med.nome|replace("'","\\'")|replace('"','\\"') }}',
-                                    '{{ med.lote }}',
-                                    '{{ med.data_validade.strftime('%Y-%m-%d') }}',
-                                    {{ med.quantidade }},
-                                    '{{ med.tarja }}',
-                                    '{{ med.principio_ativo or '' }}',
-                                    {{ '1' if med.uso_continuo else '0' }}
-                                )">
+                            <button class="btn-icon btn-edit"
+                                title="Editar"
+                                onclick="abrirEdicao({{ med.id }}, '{{ med.nome }}', '{{ med.lote }}', '{{ med.data_validade.strftime('%Y-%m-%d') }}', {{ med.quantidade }})">
                                 <i class="fas fa-pen"></i>
                             </button>
-                            <form method="POST" action="{{ url_for('inventory.duplicar_medicamento', med_id=med.id) }}"
-                                  style="display:inline;"
-                                  onsubmit="return confirm('Duplicar {{ med.nome|replace("'","\\'") }}? Uma cópia será criada com quantidade zero.')">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <button type="submit" class="btn-icon" title="Duplicar"
-                                        style="color:var(--primary); border-color:rgba(52,152,219,.3); background:rgba(52,152,219,.08);">
-                                    <i class="fas fa-copy"></i>
-                                </button>
-                            </form>
-                            <button class="btn-icon btn-delete" title="Excluir"
-                                onclick="confirmarExclusao({{ med.id }}, '{{ med.nome|replace("'","\\'") }}')">
+                            <button class="btn-icon btn-delete"
+                                title="Excluir"
+                                onclick="confirmarExclusao({{ med.id }}, '{{ med.nome }}')">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
@@ -269,7 +66,7 @@ tr.row-continuo td { background: rgba(52,152,219,.04) !important; }
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="7" class="empty-state">
+                    <td colspan="6" class="empty-state">
                         <i class="fas fa-box-open"></i>
                         <p>Nenhum medicamento cadastrado ainda.</p>
                         <button class="btn-primary" onclick="abrirModal('modal-add')">Cadastrar o primeiro</button>
@@ -278,126 +75,21 @@ tr.row-continuo td { background: rgba(52,152,219,.04) !important; }
                 {% endfor %}
             </tbody>
         </table>
-        <p id="inv-empty-msg" style="display:none; text-align:center; color:var(--text-muted); padding:30px 0;">
-            <i class="fas fa-search"></i> Nenhum medicamento encontrado para este filtro.
-        </p>
     </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════════════════════════
-     Modal: Consultar Bula ANVISA
-══════════════════════════════════════════════════════════════════════════ -->
-<div id="modal-bula" class="modal-overlay" onclick="fecharModalFora(event,'modal-bula')">
-    <div class="modal-box" style="max-width:520px;">
-        <div class="modal-header">
-            <h3><i class="fas fa-file-medical" style="color:var(--primary);"></i> Bula ANVISA</h3>
-            <button class="modal-close" onclick="fecharModal('modal-bula')">&times;</button>
-        </div>
-        <div id="bula-loading" style="text-align:center; padding: 32px 0; color:var(--text-muted);">
-            <i class="fas fa-spinner fa-spin" style="font-size:1.5rem; margin-bottom:10px; display:block;"></i>
-            Consultando base ANVISA…
-        </div>
-        <div id="bula-content" style="display:none; padding: 4px 0 8px;">
-            <div style="margin-bottom: 14px;">
-                <p style="font-size:0.72rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; margin-bottom:4px;">Produto</p>
-                <p id="bula-nome" style="font-weight:700; font-size:1.05rem;"></p>
-            </div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px;">
-                <div>
-                    <p style="font-size:0.72rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; margin-bottom:2px;">Nome Genérico</p>
-                    <p id="bula-generico" style="font-size:0.88rem;"></p>
-                </div>
-                <div>
-                    <p style="font-size:0.72rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; margin-bottom:2px;">Laboratório</p>
-                    <p id="bula-lab" style="font-size:0.88rem;"></p>
-                </div>
-            </div>
-            <div style="margin-bottom:18px;">
-                <p style="font-size:0.72rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; margin-bottom:2px;">Nº de Registro ANVISA</p>
-                <p id="bula-registro" style="font-family:monospace; font-size:0.85rem;"></p>
-            </div>
-            <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                <a id="bula-link-paciente" href="#" target="_blank" rel="noopener"
-                   class="btn-secondary" style="flex:1; text-align:center; font-size:0.82rem;">
-                    <i class="fas fa-user"></i> Bula do Paciente
-                </a>
-                <a id="bula-link-prof" href="#" target="_blank" rel="noopener"
-                   class="btn-primary" style="flex:1; text-align:center; font-size:0.82rem;">
-                    <i class="fas fa-user-md"></i> Bula do Profissional
-                </a>
-            </div>
-        </div>
-        <div id="bula-erro" style="display:none; text-align:center; padding: 28px 0; color:var(--text-muted);">
-            <i class="fas fa-exclamation-circle" style="font-size:1.4rem; color:#e74c3c; display:block; margin-bottom:8px;"></i>
-            <p id="bula-erro-msg"></p>
-        </div>
-    </div>
-</div>
-
-<!-- ══════════════════════════════════════════════════════════════════════════
-     Modal: Novo Medicamento (com autocomplete de referência ANVISA)
-══════════════════════════════════════════════════════════════════════════ -->
-<div id="modal-add" class="modal-overlay" onclick="fecharModalFora(event,'modal-add')">
-    <div class="modal-box" style="max-width:560px;">
+<div id="modal-add" class="modal-overlay" onclick="fecharModalFora(event, 'modal-add')">
+    <div class="modal-box">
         <div class="modal-header">
             <h3><i class="fas fa-plus-circle"></i> Novo Medicamento</h3>
             <button class="modal-close" onclick="fecharModal('modal-add')">&times;</button>
         </div>
-
-        <!-- Autocomplete ANVISA -->
-        <div style="position:relative; margin-bottom:18px;">
-            <label style="font-size:0.82rem; color:var(--text-muted); margin-bottom:6px; display:block;">
-                <i class="fas fa-database"></i> Buscar na Base ANVISA (opcional)
-            </label>
-            <div class="input-with-icon">
-                <i class="fas fa-search"></i>
-                <input type="text" id="ref-search" autocomplete="off"
-                       placeholder="Digite o nome comercial para autocompletar…"
-                       oninput="buscarReferencia(this.value)">
-            </div>
-            <div id="ref-results" class="ref-results" style="display:none;"></div>
-        </div>
-
         <form action="{{ url_for('inventory.novo_medicamento') }}" method="POST">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <input type="hidden" name="referencia_id" id="add-ref-id">
-
-            <div class="form-row">
-                <div class="form-group" style="flex:2;">
-                    <label>Nome do Medicamento <span class="required">*</span></label>
-                    <input type="text" name="nome" id="add-nome" placeholder="Ex: Dipirona 500mg" required maxlength="100">
-                </div>
-                <div class="form-group" style="flex:1;">
-                    <label>Tarja <span class="required">*</span></label>
-                    <select name="tarja" id="add-tarja" onchange="toggleControaldo(this, 'add-aviso-344')">
-                        {% for t in tarjas %}
-                        <option value="{{ t }}">{{ t }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
+            <div class="form-group">
+                <label>Nome do Medicamento <span class="required">*</span></label>
+                <input type="text" name="nome" placeholder="Ex: Dipirona 500mg" required maxlength="100">
             </div>
-
-            <div id="add-aviso-344" class="controlado-fields">
-                <div class="controlado-label">
-                    <i class="fas fa-skull-crossbones"></i>
-                    ATENÇÃO — Medicamento Controlado (Portaria 344/98 ANVISA)
-                </div>
-                <p style="font-size:0.8rem; color:var(--text-muted); margin:0;">
-                    Este medicamento exige receita especial. Toda movimentação será registrada no log de auditoria.
-                </p>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group" style="flex:2;">
-                    <label>Princípio Ativo</label>
-                    <input type="text" name="principio_ativo" id="add-pa" placeholder="Ex: Dipirona Sódica" maxlength="120">
-                </div>
-                <div class="form-group" style="flex:1; display:flex; align-items:center; gap:8px; margin-top:24px;">
-                    <input type="checkbox" name="uso_continuo" id="add-continuo" value="1" style="width:auto; margin:0;">
-                    <label for="add-continuo" style="margin:0; cursor:pointer;">Uso Contínuo</label>
-                </div>
-            </div>
-
             <div class="form-row">
                 <div class="form-group">
                     <label>Lote <span class="required">*</span></label>
@@ -405,12 +97,12 @@ tr.row-continuo td { background: rgba(52,152,219,.04) !important; }
                 </div>
                 <div class="form-group">
                     <label>Quantidade <span class="required">*</span></label>
-                    <input type="number" name="quantidade" min="0" placeholder="Ex: 100" required>
+                    <input type="number" name="quantidade" min="0" placeholder="100" required>
                 </div>
             </div>
             <div class="form-group">
                 <label>Data de Validade <span class="required">*</span></label>
-                <input type="date" name="data_validade" required class="date-future">
+                <input type="date" name="data_validade" required>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-secondary" onclick="fecharModal('modal-add')">Cancelar</button>
@@ -420,54 +112,18 @@ tr.row-continuo td { background: rgba(52,152,219,.04) !important; }
     </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════════════════════════
-     Modal: Editar
-══════════════════════════════════════════════════════════════════════════ -->
-<div id="modal-edit" class="modal-overlay" onclick="fecharModalFora(event,'modal-edit')">
-    <div class="modal-box" style="max-width:560px;">
+<div id="modal-edit" class="modal-overlay" onclick="fecharModalFora(event, 'modal-edit')">
+    <div class="modal-box">
         <div class="modal-header">
             <h3><i class="fas fa-pen"></i> Editar Medicamento</h3>
             <button class="modal-close" onclick="fecharModal('modal-edit')">&times;</button>
         </div>
         <form id="form-edit" action="" method="POST">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-            <div class="form-row">
-                <div class="form-group" style="flex:2;">
-                    <label>Nome do Medicamento <span class="required">*</span></label>
-                    <input type="text" id="edit-nome" name="nome" required maxlength="100">
-                </div>
-                <div class="form-group" style="flex:1;">
-                    <label>Tarja <span class="required">*</span></label>
-                    <select name="tarja" id="edit-tarja" onchange="toggleControaldo(this, 'edit-aviso-344')">
-                        {% for t in tarjas %}
-                        <option value="{{ t }}">{{ t }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
+            <div class="form-group">
+                <label>Nome do Medicamento <span class="required">*</span></label>
+                <input type="text" id="edit-nome" name="nome" required maxlength="100">
             </div>
-
-            <div id="edit-aviso-344" class="controlado-fields">
-                <div class="controlado-label">
-                    <i class="fas fa-skull-crossbones"></i>
-                    ATENÇÃO — Medicamento Controlado (Portaria 344/98 ANVISA)
-                </div>
-                <p style="font-size:0.8rem; color:var(--text-muted); margin:0;">
-                    Este medicamento exige receita especial. Toda movimentação será auditada.
-                </p>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group" style="flex:2;">
-                    <label>Princípio Ativo</label>
-                    <input type="text" id="edit-pa" name="principio_ativo" maxlength="120">
-                </div>
-                <div class="form-group" style="flex:1; display:flex; align-items:center; gap:8px; margin-top:24px;">
-                    <input type="checkbox" name="uso_continuo" id="edit-continuo" value="1" style="width:auto; margin:0;">
-                    <label for="edit-continuo" style="margin:0; cursor:pointer;">Uso Contínuo</label>
-                </div>
-            </div>
-
             <div class="form-row">
                 <div class="form-group">
                     <label>Lote <span class="required">*</span></label>
@@ -480,7 +136,7 @@ tr.row-continuo td { background: rgba(52,152,219,.04) !important; }
             </div>
             <div class="form-group">
                 <label>Data de Validade <span class="required">*</span></label>
-                <input type="date" id="edit-validade" name="data_validade" required class="date-future">
+                <input type="date" id="edit-validade" name="data_validade" required>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-secondary" onclick="fecharModal('modal-edit')">Cancelar</button>
@@ -490,89 +146,13 @@ tr.row-continuo td { background: rgba(52,152,219,.04) !important; }
     </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════════════════════════
-     Modal: Baixar Estoque
-══════════════════════════════════════════════════════════════════════════ -->
-<div id="modal-baixa" class="modal-overlay" onclick="fecharModalFora(event,'modal-baixa')">
-    <div class="modal-box" style="max-width:480px;">
-        <div class="modal-header">
-            <h3><i class="fas fa-minus-circle"></i> Baixar Estoque</h3>
-            <button class="modal-close" onclick="fecharModal('modal-baixa')">&times;</button>
-        </div>
-        <p id="baixa-med-nome" style="color:var(--text-muted); font-size:0.9rem; margin-bottom:16px;"></p>
-        <form id="form-baixa" action="" method="POST">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Quantidade a retirar <span class="required">*</span></label>
-                    <input type="number" name="quantidade" min="1" placeholder="Ex: 10" required>
-                </div>
-                <div class="form-group">
-                    <label>Motivo</label>
-                    <select name="motivo">
-                        <option value="Dispensação">Dispensação ao paciente</option>
-                        <option value="Vencimento">Descarte por vencimento</option>
-                        <option value="Quebra">Quebra / dano</option>
-                        <option value="Perda">Perda</option>
-                        <option value="Outros">Outros</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- Campos exclusivos para Portaria 344 -->
-            <div id="controlado-fields" class="controlado-fields">
-                <div class="controlado-label">
-                    <i class="fas fa-shield-alt"></i>
-                    Medicamento Controlado — Portaria 344/98
-                </div>
-                <p style="font-size:0.79rem; color:var(--text-muted); margin-bottom:12px;">
-                    A dispensação de medicamentos controlados exige CRM válido e tipo de receita especial.
-                    Estas informações serão registradas no log de auditoria.
-                </p>
-                <div id="tipo-receita-hint" style="font-size:0.78rem; color:#f5b942; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
-                    <i class="fas fa-info-circle"></i>
-                    <span id="receita-requerida-txt"></span>
-                </div>
-                <div class="form-group">
-                    <label>CRM do Médico Prescriptor <span class="required">*</span></label>
-                    <input type="text" name="crm_medico" id="baixa-crm"
-                           placeholder="Ex: 12345-SP" maxlength="20">
-                </div>
-                <div class="form-group">
-                    <label>Tipo de Receita <span class="required">*</span></label>
-                    <select name="tipo_receita" id="baixa-tipo-receita">
-                        {% for t in tipos_receita %}
-                        <option value="{{ t }}">{{ t }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Número da Receita</label>
-                    <input type="text" name="numero_receita" placeholder="Ex: RCE-2024-00123" maxlength="40">
-                </div>
-            </div>
-
-            <div class="modal-footer">
-                <button type="button" class="btn-secondary" onclick="fecharModal('modal-baixa')">Cancelar</button>
-                <button type="submit" class="btn-primary">
-                    <i class="fas fa-check"></i> Confirmar Baixa
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- ══════════════════════════════════════════════════════════════════════════
-     Modal: Excluir
-══════════════════════════════════════════════════════════════════════════ -->
-<div id="modal-delete" class="modal-overlay" onclick="fecharModalFora(event,'modal-delete')">
+<div id="modal-delete" class="modal-overlay" onclick="fecharModalFora(event, 'modal-delete')">
     <div class="modal-box modal-sm">
         <div class="modal-header">
             <h3><i class="fas fa-trash"></i> Confirmar Exclusão</h3>
             <button class="modal-close" onclick="fecharModal('modal-delete')">&times;</button>
         </div>
-        <p id="delete-msg" style="color:var(--text-muted); margin-bottom:24px;"></p>
+        <p id="delete-msg" style="color: var(--text-muted); margin-bottom: 24px;"></p>
         <form id="form-delete" action="" method="POST">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="modal-footer">
@@ -587,7 +167,6 @@ tr.row-continuo td { background: rgba(52,152,219,.04) !important; }
 
 {% block extra_js %}
 <script>
-/* ── Modal helpers ──────────────────────────────────────────────────────── */
 function abrirModal(id) {
     document.getElementById(id).classList.add('active');
     document.body.style.overflow = 'hidden';
@@ -599,175 +178,23 @@ function fecharModal(id) {
 function fecharModalFora(event, id) {
     if (event.target.id === id) fecharModal(id);
 }
-document.addEventListener('keydown', e => {
-    if (e.key === 'Escape')
-        ['modal-add','modal-edit','modal-baixa','modal-delete'].forEach(fecharModal);
-});
-
-/* ── Tarja: mostrar aviso controlado ────────────────────────────────────── */
-function toggleControaldo(sel, avisoId) {
-    const aviso = document.getElementById(avisoId);
-    if (sel.value === 'Portaria 344') aviso.classList.add('show');
-    else aviso.classList.remove('show');
-}
-
-/* ── Abrir edição ──────────────────────────────────────────────────────── */
-function abrirEdicao(id, nome, lote, validade, qtd, tarja, pa, continuo) {
+function abrirEdicao(id, nome, lote, validade, qtd) {
     document.getElementById('form-edit').action = `/medicamento/${id}/editar`;
     document.getElementById('edit-nome').value = nome;
     document.getElementById('edit-lote').value = lote;
     document.getElementById('edit-validade').value = validade;
     document.getElementById('edit-qtd').value = qtd;
-    document.getElementById('edit-pa').value = pa;
-    document.getElementById('edit-continuo').checked = continuo == 1;
-    const sel = document.getElementById('edit-tarja');
-    sel.value = tarja;
-    toggleControaldo(sel, 'edit-aviso-344');
     abrirModal('modal-edit');
 }
-
-/* ── Abrir baixa de estoque ─────────────────────────────────────────────── */
-function abrirBaixaEstoque(id, nome, controlado, tipoReceita) {
-    document.getElementById('form-baixa').action = `/medicamento/${id}/baixar-estoque`;
-    document.getElementById('baixa-med-nome').textContent = 'Medicamento: ' + nome;
-    const campos = document.getElementById('controlado-fields');
-    const crm = document.getElementById('baixa-crm');
-    const tr = document.getElementById('baixa-tipo-receita');
-    const hint = document.getElementById('receita-requerida-txt');
-    if (controlado) {
-        campos.classList.add('show');
-        crm.required = true;
-        tr.required = true;
-        hint.textContent = 'Receita exigida: ' + tipoReceita;
-    } else {
-        campos.classList.remove('show');
-        crm.required = false;
-        tr.required = false;
-    }
-    abrirModal('modal-baixa');
-}
-
-/* ── Excluir ──────────────────────────────────────────────────────────── */
 function confirmarExclusao(id, nome) {
     document.getElementById('form-delete').action = `/medicamento/${id}/excluir`;
-    document.getElementById('delete-msg').textContent =
-        `Tem certeza que deseja excluir "${nome}"? Esta ação não pode ser desfeita.`;
+    document.getElementById('delete-msg').textContent = `Tem certeza que deseja excluir "${nome}"? Esta ação não pode ser desfeita.`;
     abrirModal('modal-delete');
 }
-
-/* ── Autocomplete ANVISA ───────────────────────────────────────────────── */
-let refTimer = null;
-function buscarReferencia(q) {
-    clearTimeout(refTimer);
-    const box = document.getElementById('ref-results');
-    if (q.length < 2) { box.style.display = 'none'; return; }
-    refTimer = setTimeout(() => {
-        fetch(`/api/referencia/buscar?q=${encodeURIComponent(q)}`)
-            .then(r => r.json())
-            .then(data => {
-                if (!data.length) { box.style.display = 'none'; return; }
-                box.innerHTML = data.map(r =>
-                    `<div class="ref-item" onclick="preencherFormRef(${JSON.stringify(r).replace(/"/g, '&quot;')})">
-                        <div class="ref-item-name">${r.nome_comercial}</div>
-                        <div class="ref-item-sub">
-                            ${r.principio_ativo} &bull;
-                            <span style="color:${r.tarja==='Portaria 344'?'#ff6b6b':r.tarja==='Tarja Vermelha'?'#e74c3c':'#888'}">
-                                ${r.tarja}
-                            </span>
-                            ${r.registro_ms ? '&bull; MS: ' + r.registro_ms : ''}
-                        </div>
-                    </div>`
-                ).join('');
-                box.style.display = 'block';
-            })
-            .catch(() => { box.style.display = 'none'; });
-    }, 250);
-}
-
-function preencherFormRef(ref) {
-    document.getElementById('add-nome').value = ref.nome_comercial;
-    document.getElementById('add-pa').value   = ref.principio_ativo;
-    document.getElementById('add-ref-id').value = ref.id;
-    const sel = document.getElementById('add-tarja');
-    sel.value = ref.tarja;
-    toggleControaldo(sel, 'add-aviso-344');
-    if (ref.uso_continuo) document.getElementById('add-continuo').checked = true;
-    document.getElementById('ref-results').style.display = 'none';
-    document.getElementById('ref-search').value = ref.nome_comercial;
-}
-
-document.addEventListener('click', e => {
-    if (!e.target.closest('#ref-results') && !e.target.closest('#ref-search'))
-        document.getElementById('ref-results').style.display = 'none';
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        ['modal-add', 'modal-edit', 'modal-delete'].forEach(fecharModal);
+    }
 });
-
-/* ── Consulta Bula ANVISA ───────────────────────────────────────────────── */
-async function abrirBula(nome) {
-    document.getElementById('bula-loading').style.display = 'block';
-    document.getElementById('bula-content').style.display = 'none';
-    document.getElementById('bula-erro').style.display = 'none';
-    document.getElementById('modal-bula').classList.add('active');
-    document.body.style.overflow = 'hidden';
-    try {
-        const r = await fetch(`/api/bula/${encodeURIComponent(nome)}`);
-        const d = await r.json();
-        document.getElementById('bula-loading').style.display = 'none';
-        if (!r.ok || d.erro) {
-            document.getElementById('bula-erro-msg').textContent = d.erro || 'Erro desconhecido.';
-            document.getElementById('bula-erro').style.display = 'block';
-            return;
-        }
-        document.getElementById('bula-nome').textContent = d.nomeProduto || nome;
-        document.getElementById('bula-generico').textContent = d.nomeGenerico || '—';
-        document.getElementById('bula-lab').textContent = d.laboratorio || '—';
-        document.getElementById('bula-registro').textContent = d.numRegistro || '—';
-        const linkPac  = document.getElementById('bula-link-paciente');
-        const linkProf = document.getElementById('bula-link-prof');
-        if (d.urlBulaPaciente) {
-            linkPac.href = d.urlBulaPaciente; linkPac.style.display = '';
-        } else { linkPac.style.display = 'none'; }
-        if (d.urlBulaProfissional) {
-            linkProf.href = d.urlBulaProfissional; linkProf.style.display = '';
-        } else { linkProf.style.display = 'none'; }
-        document.getElementById('bula-content').style.display = 'block';
-    } catch {
-        document.getElementById('bula-loading').style.display = 'none';
-        document.getElementById('bula-erro-msg').textContent = 'Falha na comunicação com o servidor.';
-        document.getElementById('bula-erro').style.display = 'block';
-    }
-}
-
-/* ── Client-side filter ─────────────────────────────────────────────────── */
-let filtroAtivo = 'todos';
-
-function filtrar(modo, btn) {
-    if (modo !== null) {
-        filtroAtivo = modo;
-        document.querySelectorAll('.ftab').forEach(b => b.classList.remove('active'));
-        if (btn) btn.classList.add('active');
-    }
-
-    const q = (document.getElementById('inv-search').value || '').toLowerCase();
-    const rows = document.querySelectorAll('#inv-tbody .inv-row');
-    let visivel = 0;
-
-    rows.forEach(row => {
-        const tarja    = row.dataset.tarja;
-        const continuo = row.dataset.continuo === '1';
-        const nome     = row.dataset.nome  || '';
-        const pa       = row.dataset.pa    || '';
-
-        let show = true;
-        if (filtroAtivo === 'p344')     show = tarja === 'Portaria 344';
-        if (filtroAtivo === 'vermelha') show = tarja === 'Tarja Vermelha';
-        if (filtroAtivo === 'continuo') show = continuo;
-        if (show && q) show = nome.includes(q) || pa.includes(q);
-
-        row.style.display = show ? '' : 'none';
-        if (show) visivel++;
-    });
-
-    document.getElementById('inv-empty-msg').style.display = visivel === 0 ? 'block' : 'none';
-}
 </script>
 {% endblock %}

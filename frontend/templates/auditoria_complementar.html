@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Auditoria - RedeVita{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/academic.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-wrapper academic-page">
+    <div class="academic-intro">
+        <div>
+            <h2><i class="fas fa-shield-halved"></i> Auditoria complementar</h2>
+            <p>Consulta administrativa de farmácias parceiras e movimentações registradas, sem substituir o módulo de logs existente.</p>
+        </div>
+        <a href="{{ url_for('logs.listar_logs') }}" class="btn-secondary"><i class="fas fa-list"></i> Logs completos</a>
+    </div>
+
+    <div class="audit-summary-grid">
+        <div class="audit-card"><strong>{{ farmacias|length }}</strong><span>Farmácias exibidas</span></div>
+        <div class="audit-card"><strong>{{ logs|length }}</strong><span>Movimentações recentes</span></div>
+    </div>
+
+    <section class="audit-section">
+        <h3><i class="fas fa-hospital"></i> Farmácias parceiras</h3>
+        <div class="table-toolbar" role="search">
+            <label class="table-search" for="audit-pharmacies-search">
+                <i class="fas fa-search" aria-hidden="true"></i>
+                <input type="search" id="audit-pharmacies-search" data-table-search="audit-pharmacies-table" placeholder="Filtrar farmácias" autocomplete="off">
+            </label>
+            <span class="table-search-hint">Consulta somente leitura.</span>
+        </div>
+        <div class="table-wrapper audit-table-wrap">
+            <table class="styled-table" id="audit-pharmacies-table">
+                <thead><tr><th>Nome</th><th>CNPJ</th><th>Responsável</th><th>Endereço</th><th>Cadastro</th></tr></thead>
+                <tbody>
+                    {% for farmacia in farmacias %}
+                    <tr>
+                        <td><strong>{{ farmacia.nome_fantasia }}</strong></td>
+                        <td><code class="lote-code">{{ farmacia.cnpj }}</code></td>
+                        <td>{{ farmacia.responsavel }}</td>
+                        <td>{{ farmacia.endereco }}</td>
+                        <td>{{ farmacia.created_at.strftime('%d/%m/%Y') if farmacia.created_at else '—' }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5" class="audit-empty">Nenhuma farmácia cadastrada.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="audit-section">
+        <h3><i class="fas fa-clock-rotate-left"></i> Movimentações recentes</h3>
+        <div class="table-toolbar" role="search">
+            <label class="table-search" for="audit-logs-search">
+                <i class="fas fa-search" aria-hidden="true"></i>
+                <input type="search" id="audit-logs-search" data-table-search="audit-logs-table" placeholder="Filtrar por ação ou detalhe" autocomplete="off">
+            </label>
+            <span class="table-search-hint">Últimos 50 registros.</span>
+        </div>
+        <div class="table-wrapper audit-table-wrap">
+            <table class="styled-table" id="audit-logs-table">
+                <thead><tr><th>Data</th><th>Usuário</th><th>Ação</th><th>Detalhes</th><th>IP</th></tr></thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr>
+                        <td>{{ log.created_at.strftime('%d/%m/%Y %H:%M') if log.created_at else '—' }}</td>
+                        <td>{{ log.usuario.nome if log.usuario else 'Sistema' }}</td>
+                        <td><strong>{{ log.acao }}</strong></td>
+                        <td class="audit-log-details">{{ log.detalhes or '—' }}</td>
+                        <td><code>{{ log.ip or '—' }}</code></td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5" class="audit-empty">Nenhuma movimentação registrada.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock %}

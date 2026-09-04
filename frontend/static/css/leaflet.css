@@ -286,8 +286,9 @@ svg.leaflet-image-layer.leaflet-interactive path {
 	border-radius: 4px;
 	}
 .leaflet-bar a {
-	background-color: #fff;
-	border-bottom: 1px solid #ccc;
+	background-color: var(--bg-card) !important;
+	border-bottom: 1px solid var(--border-default) !important;
+	color: var(--text-primary) !important;
 	width: 26px;
 	height: 26px;
 	line-height: 26px;
@@ -352,7 +353,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
 .leaflet-control-layers {
 	box-shadow: 0 1px 5px rgba(0,0,0,0.4);
-	background: #fff;
+	background: var(--bg-card) !important;
+	border: 1px solid var(--border-default) !important;
 	border-radius: 5px;
 	}
 .leaflet-control-layers-toggle {
@@ -378,8 +380,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
 	}
 .leaflet-control-layers-expanded {
 	padding: 6px 10px 6px 6px;
-	color: #333;
-	background: #fff;
+	color: var(--text-primary) !important;
+	background: var(--bg-card) !important;
 	}
 .leaflet-control-layers-scrollbar {
 	overflow-y: scroll;
@@ -411,8 +413,9 @@ svg.leaflet-image-layer.leaflet-interactive path {
 /* attribution and scale controls */
 
 .leaflet-container .leaflet-control-attribution {
-	background: #fff;
-	background: rgba(255, 255, 255, 0.8);
+	background: var(--bg-card) !important;
+	background: rgba(21, 29, 48, 0.8) !important;
+	color: var(--text-primary) !important;
 	margin: 0;
 	}
 .leaflet-control-attribution,
@@ -448,8 +451,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
 	white-space: nowrap;
 	-moz-box-sizing: border-box;
 	     box-sizing: border-box;
-	background: rgba(255, 255, 255, 0.8);
-	text-shadow: 1px 1px #fff;
+	background: rgba(21, 29, 48, 0.8) !important;
+	color: var(--text-primary) !important;
 	}
 .leaflet-control-scale-line:not(:first-child) {
 	border-top: 2px solid #777;
@@ -520,8 +523,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
 	}
 .leaflet-popup-content-wrapper,
 .leaflet-popup-tip {
-	background: white;
-	color: #333;
+	background: var(--bg-card);
+	color: var(--text-primary);
 	box-shadow: 0 3px 14px rgba(0,0,0,0.4);
 	}
 .leaflet-container a.leaflet-popup-close-button {
@@ -567,8 +570,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
 /* div icon */
 
 .leaflet-div-icon {
-	background: #fff;
-	border: 1px solid #666;
+	background: var(--bg-card) !important;
+	border: 1px solid var(--border-default) !important;
 	}
 
 
@@ -577,10 +580,10 @@ svg.leaflet-image-layer.leaflet-interactive path {
 .leaflet-tooltip {
 	position: absolute;
 	padding: 6px;
-	background-color: #fff;
-	border: 1px solid #fff;
+	background-color: var(--bg-card) !important;
+	border: 1px solid var(--border-default) !important;
 	border-radius: 3px;
-	color: #222;
+	color: var(--text-primary) !important;
 	white-space: nowrap;
 	-webkit-user-select: none;
 	-moz-user-select: none;
@@ -620,13 +623,13 @@ svg.leaflet-image-layer.leaflet-interactive path {
 .leaflet-tooltip-top:before {
 	bottom: 0;
 	margin-bottom: -12px;
-	border-top-color: #fff;
+	border-top-color: var(--bg-card) !important;
 	}
 .leaflet-tooltip-bottom:before {
 	top: 0;
 	margin-top: -12px;
 	margin-left: -6px;
-	border-bottom-color: #fff;
+	border-bottom-color: var(--bg-card) !important;
 	}
 .leaflet-tooltip-left {
 	margin-left: -6px;
@@ -642,12 +645,12 @@ svg.leaflet-image-layer.leaflet-interactive path {
 .leaflet-tooltip-left:before {
 	right: 0;
 	margin-right: -12px;
-	border-left-color: #fff;
+	border-left-color: var(--bg-card) !important;
 	}
 .leaflet-tooltip-right:before {
 	left: 0;
 	margin-left: -12px;
-	border-right-color: #fff;
+	border-right-color: var(--bg-card) !important;
 	}
 
 /* Printing */

@@ -36,7 +36,6 @@ logs/
 Thumbs.db
 
 # IDE
-.vscode/
 .idea/
 *.swp
 *.swo

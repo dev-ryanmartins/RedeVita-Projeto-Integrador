@@ -3,12 +3,15 @@ from datetime import datetime
 
 
 class Receita(db.Model):
-    __tablename__ = 'receitas'
+    __tablename__ = "receitas"
+    __table_args__ = {'extend_existing': True}
 
     id = db.Column(db.Integer, primary_key=True)
-    paciente_id = db.Column(db.Integer, db.ForeignKey('pacientes.id'), nullable=False)
-    medico_id = db.Column(db.Integer, db.ForeignKey('medicos.id'), nullable=False)
-    medicamento_id = db.Column(db.Integer, db.ForeignKey('medicamentos.id'), nullable=True)
+    paciente_id = db.Column(db.Integer, db.ForeignKey("pacientes.id"), nullable=False)
+    medico_id = db.Column(db.Integer, db.ForeignKey("medicos.id"), nullable=False)
+    medicamento_id = db.Column(
+        db.Integer, db.ForeignKey("medicamentos.id"), nullable=True
+    )
     observacoes = db.Column(db.Text, nullable=True)
     data_emissao = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -16,14 +19,18 @@ class Receita(db.Model):
 
     imagem_url = db.Column(db.String(255), nullable=True)
 
-    status = db.Column(db.String(20), default='pendente', nullable=False)
+    status = db.Column(db.String(20), default="pendente", nullable=False)
     dispensada_em = db.Column(db.DateTime, nullable=True)
-    dispensada_por_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=True)
+    dispensada_por_id = db.Column(
+        db.Integer, db.ForeignKey("usuarios.id"), nullable=True
+    )
 
-    paciente = db.relationship('Paciente', backref='receitas', lazy=True)
-    medico = db.relationship('Medico', backref='receitas', lazy=True)
-    medicamento = db.relationship('Medicamento', backref='receitas', lazy=True)
-    dispensada_por = db.relationship('Usuario', foreign_keys=[dispensada_por_id], lazy=True)
+    paciente = db.relationship("Paciente", overlaps='paciente', backref="receitas", lazy=True)
+    medico = db.relationship("Medico", overlaps='medico', backref="receitas", lazy=True)
+    medicamento = db.relationship("Medicamento", overlaps='medicamento', backref="receitas", lazy=True)
+    dispensada_por = db.relationship(
+        "Usuario", foreign_keys=[dispensada_por_id], overlaps='usuario', lazy=True
+    )
 
     def __repr__(self):
-        return f'<Receita {self.id} - Paciente {self.paciente_id} - {self.status}>'
+        return f"<Receita {self.id} - Paciente {self.paciente_id} - {self.status}>"

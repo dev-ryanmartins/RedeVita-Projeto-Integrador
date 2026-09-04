@@ -82,3 +82,61 @@
     transform: translateY(-2px);
     background: #2980b9;
 }
+
+/* ==========================================================================
+   ESTILIZAÇÃO DE CAMPOS DE FORMULÁRIO COM ÍCONES
+   ========================================================================== */
+/* Container do input com ícone */
+.input-with-icon,
+.input-group,
+.form-group .input-wrapper {
+  position: relative !important;
+  width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* Ícone monocromático à esquerda */
+.input-with-icon svg,
+.input-with-icon i,
+.input-icon {
+  position: absolute !important;
+  left: 1rem !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  color: #64748b !important;
+  width: 16px !important;
+  height: 16px !important;
+  pointer-events: none !important;
+  z-index: 2 !important;
+}
+
+/* Input delimitado com borda e fundo escuro */
+.form-control,
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="password"],
+input[type="date"],
+select,
+textarea {
+  width: 100% !important;
+  background-color: #151c2a !important;
+  border: 1px solid #2d3748 !important;
+  border-radius: 8px !important;
+  color: #f8fafc !important;
+  font-size: 0.9rem !important;
+  padding: 0.75rem 1rem 0.75rem 2.85rem !important; /* Folga que impede colisão com o ícone */
+  outline: none !important;
+  box-sizing: border-box !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.form-control:focus,
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: #0284c7 !important;
+  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.25) !important;
+  background-color: #151c2a !important;
+}

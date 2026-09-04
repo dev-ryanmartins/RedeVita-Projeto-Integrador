@@ -58,12 +58,22 @@ redevita/
 
 ## Como rodar
 
-O projeto usa `uv` para gerenciar dependências.
+No Replit, as dependências Python são instaladas a partir das declarações do
+projeto e o workflow `Start application` inicia o servidor automaticamente.
+O workflow executa:
 
 ```bash
-uv sync                         # instala dependências
-cd backend && uv run python main.py   # inicia o servidor
+APP_HOST=0.0.0.0 PORT=5000 APP_DEBUG=false OPEN_BROWSER=false python main.py
 ```
+
+Para iniciar manualmente em um ambiente local:
+
+```bash
+python main.py
+```
+
+O servidor fica disponível na porta `5000`. O banco SQLite local é criado em
+`instance/redevita.db` quando `DATABASE_URL` não está definida.
 
 ## Credenciais padrão (desenvolvimento)
 

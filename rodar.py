@@ -10,9 +10,13 @@ import os
 import sys
 import threading
 import webbrowser
+from pathlib import Path
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = str(Path(__file__).resolve().parent)
 BACKEND_DIR = os.path.join(BASE_DIR, 'backend')
+
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
 
 if BACKEND_DIR not in sys.path:
     sys.path.insert(0, BACKEND_DIR)
@@ -29,7 +33,8 @@ app = create_app()
 
 
 def _abrir_navegador():
-    url = f'http://localhost:{PORT}' if HOST in ('127.0.0.1', 'localhost') else f'http://{HOST}:{PORT}'
+    url = f'http://localhost:{PORT}' if HOST in (
+        '127.0.0.1', 'localhost') else f'http://{HOST}:{PORT}'
     webbrowser.open_new(url)
 
 

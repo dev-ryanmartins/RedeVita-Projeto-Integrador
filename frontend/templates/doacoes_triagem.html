@@ -1,103 +1,66 @@
 {% extends "base.html" %}
-{% block title %}Triagem de Entrada — RedeVita{% endblock %}
-
-{% block extra_css %}
-<style>
-.triagem-grid {
-    display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;
-}
-.triagem-form-col {
-    min-width: 280px; max-width: 360px; flex-shrink: 0;
-}
-@media (max-width: 768px) {
-    .triagem-grid { flex-direction: column; }
-    .triagem-form-col { max-width: 100%; }
-}
-
-.status-badge {
-    display: inline-flex; align-items: center; gap: 5px;
-    border-radius: 20px; padding: 3px 10px;
-    font-size: 0.74rem; font-weight: 700;
-}
-.status-ok      { background:rgba(46,204,113,.12); color:#5dde8d; border:1px solid rgba(46,204,113,.3); }
-.status-atencao { background:rgba(243,156,18,.12);  color:#f5b942; border:1px solid rgba(243,156,18,.3); }
-.status-vencido { background:rgba(231,76,60,.15);   color:#e74c3c; border:1px solid rgba(231,76,60,.3); }
-.status-344     { background:rgba(192,57,43,.15);   color:#ff6b6b; border:1px solid rgba(192,57,43,.4);
-                  animation: pulsar 2.5s ease-in-out infinite; }
-@keyframes pulsar {
-    0%,100% { box-shadow: 0 0 0 0 rgba(192,57,43,0); }
-    50%      { box-shadow: 0 0 0 4px rgba(192,57,43,.2); }
-}
-
-.recente-card {
-    background: var(--bg-card); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 12px 16px;
-    display: flex; align-items: center; justify-content: space-between;
-    flex-wrap: wrap; gap: 10px; margin-bottom: 8px;
-    transition: var(--transition);
-}
-.recente-card:hover { border-color: var(--primary); }
-.recente-nome { font-weight: 600; font-size: 0.9rem; color: var(--text-main); }
-.recente-meta { font-size: 0.76rem; color: var(--text-muted); display:flex; gap:8px; flex-wrap:wrap; margin-top:2px; }
-
-.info-box {
-    background: rgba(52,152,219,.08); border: 1px solid rgba(52,152,219,.3);
-    border-radius: var(--radius); padding: 12px 16px;
-    font-size: 0.82rem; color: var(--text-muted);
-    display: flex; gap: 10px; align-items: flex-start;
-    margin-bottom: 20px;
-}
-</style>
-{% endblock %}
+{% block title %}Recebimento - RedeVita{% endblock %}
 
 {% block content %}
-<div class="page-wrapper">
-    <div class="page-header">
-        <div>
-            <h2><i class="fas fa-clipboard-check"></i> Triagem de Entrada</h2>
-            <p class="page-subtitle">Validação e registro de medicamentos recebidos por doação. Confira condições e validade antes de aceitar.</p>
+<div class="min-h-screen bg-slate-900 text-white p-6">
+
+    <!-- Header -->
+    <div class="mb-8">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+                <h1 class="text-3xl font-bold bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">
+                    <i class="fas fa-clipboard-check text-blue-400"></i> Recebimento
+                </h1>
+                <p class="text-slate-400 mt-1">Validação e registro de medicamentos recebidos por doação. Confira condições e validade antes de aceitar.</p>
+            </div>
+            <span class="text-slate-400 text-sm flex items-center gap-2">
+                <i class="fas fa-lock"></i> Área restrita: Admin · Receptor · Farmacêutico
+            </span>
         </div>
-        <span style="color:var(--text-muted); font-size:0.82rem; align-self:center;">
-            <i class="fas fa-lock"></i> Área restrita: Admin · Operador · Farmacêutico
-        </span>
     </div>
 
-    <div class="info-box">
-        <i class="fas fa-info-circle" style="color:var(--primary); flex-shrink:0; margin-top:1px;"></i>
-        <div>
-            <strong>Como funciona a triagem:</strong> Ao preencher o formulário, o medicamento é validado e adicionado diretamente ao estoque.
+    <!-- Info Box -->
+    <div class="mb-8 p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl flex gap-4 items-start">
+        <i class="fas fa-info-circle text-blue-400 flex-shrink-0 mt-1"></i>
+        <div class="text-slate-300 text-sm">
+            <strong class="text-white">Como funciona o recebimento:</strong> Ao preencher o formulário, o medicamento é validado e adicionado diretamente ao estoque.
             Medicamentos vencidos ou próximos ao vencimento geram um alerta automático.
-            Medicamentos <strong>Portaria 344</strong> exigem atenção redobrada e documentação.
+            Medicamentos <strong class="text-red-400">Portaria 344</strong> exigem atenção redobrada e documentação.
         </div>
     </div>
 
-    <div class="triagem-grid">
+    <div class="flex flex-col lg:flex-row gap-6">
 
-        <!-- Formulário de triagem -->
-        <div class="quick-actions triagem-form-col">
-            <h3><i class="fas fa-plus-circle"></i> Registrar Recebimento</h3>
-            <form action="{{ url_for('donation.triagem') }}" method="POST" style="margin-top:16px;">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <!-- Formulário de recebimento -->
+        <div class="lg:w-1/3">
+            <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6">
+                <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                    <i class="fas fa-plus-circle text-green-400"></i> Registrar Recebimento
+                </h3>
+                <form action="{{ url_for('donation.triagem') }}" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-                <div class="form-group">
-                    <label>Nome do Medicamento <span class="required">*</span></label>
-                    <div class="input-with-icon">
-                        <i class="fas fa-pills"></i>
-                        <input type="text" name="nome" placeholder="Ex: Dipirona 500mg" required maxlength="100">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Nome do Medicamento <span class="text-red-400">*</span></label>
+                        <div class="relative">
+                            <i class="fas fa-pills absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+                            <input type="text" name="nome" placeholder="Ex: Dipirona 500mg" required maxlength="100"
+                                   class="w-full pl-10 pr-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 transition-all duration-200">
+                        </div>
                     </div>
-                </div>
 
-                <div class="form-group">
-                    <label>Princípio Ativo</label>
-                    <div class="input-with-icon">
-                        <i class="fas fa-atom"></i>
-                        <input type="text" name="principio_ativo" placeholder="Ex: Metamizol sódico" maxlength="120">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Princípio Ativo</label>
+                        <div class="relative">
+                            <i class="fas fa-atom absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+                            <input type="text" name="principio_ativo" placeholder="Ex: Metamizol sódico" maxlength="120"
+                                   class="w-full pl-10 pr-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 transition-all duration-200">
+                        </div>
                     </div>
-                </div>
 
-                <div class="form-group">
-                    <label>Número do Lote <span class="required">*</span></label>
-                    <div class="input-with-icon">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Número do Lote <span class="text-red-400">*</span></label>
+                        <div class="relative">
                         <i class="fas fa-barcode"></i>
                         <input type="text" name="lote" placeholder="Ex: L2024-001" required maxlength="50">
                     </div>
@@ -115,7 +78,7 @@
                     <label>Quantidade Recebida <span class="required">*</span></label>
                     <div class="input-with-icon">
                         <i class="fas fa-sort-numeric-up"></i>
-                        <input type="number" name="quantidade" placeholder="0" min="1" required>
+                        <input type="number" name="quantidade" placeholder="Qtd" min="1" required>
                     </div>
                 </div>
 
@@ -140,7 +103,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Observações da Triagem</label>
+                    <label>Observações do Recebimento</label>
                     <textarea name="observacoes" rows="2"
                         placeholder="Ex: Embalagem lacrada, sem sinais de adulteração…"
                         style="width:100%; background:var(--bg-input); border:1px solid var(--border);
@@ -153,7 +116,7 @@
                 </div>
 
                 <button type="submit" class="btn-primary" style="width:100%; justify-content:center; margin-top:4px;"
-                        onclick="return confirm('Confirmar entrada deste medicamento no estoque?')">
+                        data-confirm-message="Confirmar entrada deste medicamento no estoque?">
                     <i class="fas fa-clipboard-check"></i> Aprovar e Adicionar ao Estoque
                 </button>
             </form>

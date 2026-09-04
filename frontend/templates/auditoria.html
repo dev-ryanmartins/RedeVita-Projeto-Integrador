@@ -63,18 +63,21 @@
 {% endblock %}
 
 {% block content %}
-<div class="page-wrapper">
+<div class="page-wrapper" style="background-color: var(--bg-app); color: var(--text-primary);">
     <div class="page-header">
         <div>
-            <h2><i class="fas fa-vials"></i> Auditoria de Validade</h2>
-            <p class="page-subtitle">Controle de lotes vencidos e próximos ao vencimento. Conformidade ANVISA / Portaria 344.</p>
+            <h2 style="color: var(--text-primary);"><i class="fas fa-vials" style="color: var(--primary-blue);"></i> Auditoria de Validade</h2>
+            <p class="page-subtitle" style="color: var(--text-secondary);">Controle de lotes vencidos e próximos ao vencimento. Conformidade ANVISA / Portaria 344.</p>
         </div>
         <div style="display:flex; gap:10px; align-items:center;">
             <span style="color:var(--text-muted); font-size:0.82rem;">
                 <i class="fas fa-calendar-day"></i> {{ hoje.strftime('%d/%m/%Y') }}
             </span>
             {% if current_user.cargo in ('Admin', 'Farmacêutico') %}
-            <a href="{{ url_for('inventory.listar_medicamentos') }}" class="btn-secondary">
+            <a href="{{ url_for('inventory.listar_medicamentos') }}" class="btn-secondary"
+               style="background: var(--bg-surface); border: 1px solid var(--border-default); color: var(--text-primary); padding: 8px 16px; border-radius: 8px; text-decoration: none; display: flex; align-items: center; gap: 8px;"
+               onmouseover="this.style.backgroundColor='var(--bg-card-hover)';"
+               onmouseout="this.style.backgroundColor='var(--bg-surface)';">
                 <i class="fas fa-pills"></i> Ir ao Inventário
             </a>
             {% endif %}
@@ -83,17 +86,17 @@
 
     <!-- Estatísticas -->
     <div class="audit-stats">
-        <div class="audit-stat">
-            <div class="audit-stat-icon" style="background:rgba(231,76,60,.15); color:var(--danger);">
+        <div class="audit-stat" style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 12px;">
+            <div class="audit-stat-icon" style="background:rgba(239, 68, 68, 0.15); color:var(--status-red);">
                 <i class="fas fa-times-circle"></i>
             </div>
             <div>
-                <div class="audit-stat-label">Lotes Vencidos</div>
-                <div class="audit-stat-value" style="color:var(--danger);">{{ vencidos|length }}</div>
+                <div class="audit-stat-label" style="color: var(--text-secondary);">Lotes Vencidos</div>
+                <div class="audit-stat-value" style="color:var(--status-red);">{{ vencidos|length }}</div>
             </div>
         </div>
-        <div class="audit-stat">
-            <div class="audit-stat-icon" style="background:rgba(243,156,18,.15); color:#f5b942;">
+        <div class="audit-stat" style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 12px;">
+            <div class="audit-stat-icon" style="background:rgba(245, 158, 11, 0.15); color:var(--status-yellow);">
                 <i class="fas fa-exclamation-triangle"></i>
             </div>
             <div>
@@ -132,69 +135,103 @@
     </div>
     {% endif %}
 
-    <!-- Vencidos -->
-    <div class="section-title" style="color:var(--danger);">
-        <i class="fas fa-times-circle"></i> Lotes Vencidos ({{ vencidos|length }})
+    <!-- Lotes Vencidos -->
+    <div class="section-title" style="color: var(--text-primary); border-bottom: 1px solid var(--border-subtle);">
+        <i class="fas fa-times-circle" style="color: var(--status-red);"></i> Lotes Vencidos
     </div>
-
     {% if vencidos %}
-        {% for m in vencidos %}
-        <div class="lote-card vencido{% if m.controlado %} p344{% endif %}">
+    <div class="lote-cards">
+        {% for l in vencidos %}
+        <div class="lote-card vencido" style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-left: 3px solid var(--status-red); border-radius: 12px; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 10px;"
+             onmouseover="this.style.backgroundColor='var(--bg-card-hover)';"
+             onmouseout="this.style.backgroundColor='var(--bg-card)';">
             <div>
-                <div class="lote-nome">{{ m.nome }}</div>
-                <div class="lote-meta">
-                    <span><i class="fas fa-barcode"></i> {{ m.lote }}</span>
-                    {% if m.principio_ativo %}<span>{{ m.principio_ativo }}</span>{% endif %}
-                    <span><i class="fas fa-calendar-times" style="color:var(--danger);"></i>
-                        <strong style="color:var(--danger);">{{ m.data_validade.strftime('%d/%m/%Y') }}</strong>
-                    </span>
+                <div class="lote-nome" style="font-weight: 700; font-size: 0.95rem; color: var(--text-primary);">{{ l.nome }}</div>
+                <div class="lote-meta" style="font-size: 0.78rem; color: var(--text-muted); display: flex; gap: 10px; flex-wrap: wrap; margin-top: 3px;">
+                    <span><i class="fas fa-barcode"></i> {{ l.lote }}</span>
+                    <span><i class="fas fa-calendar"></i> {{ l.data_validade.strftime('%d/%m/%Y') }}</span>
                 </div>
             </div>
-            <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
-                <span class="pill pill-qty"><i class="fas fa-boxes"></i> {{ m.quantidade }} un.</span>
-                <span class="pill pill-vencido"><i class="fas fa-times-circle"></i> Vencido</span>
-                {% if m.controlado %}<span class="pill pill-344"><i class="fas fa-skull-crossbones"></i> P344</span>{% endif %}
-                <span class="pill pill-tarja">{{ m.tarja }}</span>
+            <div style="display:flex; gap:8px; align-items:center;">
+                <span class="pill pill-vencido" style="background:rgba(239, 68, 68, 0.15); color:var(--status-red); border:1px solid rgba(239, 68, 68, 0.3);">VENCIDO</span>
+                <span class="pill pill-qty" style="background:var(--bg-input); border:1px solid var(--border-input); color:var(--text-muted);">{{ l.quantidade }} un.</span>
+                {% if l.tarja %}
+                <span class="pill pill-tarja" style="background:var(--bg-input); border:1px solid var(--border-input); color:var(--text-muted);">{{ l.tarja }}</span>
+                {% endif %}
             </div>
         </div>
         {% endfor %}
+    </div>
     {% else %}
-    <div class="empty-box">
-        <i class="fas fa-check-circle" style="color:var(--success);"></i>
+    <div class="empty-box" style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 12px; color: var(--text-muted);">
+        <i class="fas fa-check-circle" style="font-size: 2rem; display: block; margin-bottom: 10px; color: var(--status-green);"></i>
         <p>Nenhum lote vencido encontrado.</p>
     </div>
     {% endif %}
 
-    <!-- Próximos ao vencimento -->
-    <div class="section-title" style="color:#f5b942; margin-top:32px;">
-        <i class="fas fa-exclamation-triangle"></i> Próximos ao Vencimento ({{ proximos|length }})
+    <!-- Próximos ao Vencimento -->
+    <div class="section-title" style="color: var(--text-primary); border-bottom: 1px solid var(--border-subtle);">
+        <i class="fas fa-exclamation-triangle" style="color: var(--status-yellow);"></i> Próximos ao Vencimento (30 dias)
     </div>
-
     {% if proximos %}
-        {% for m in proximos %}
-        <div class="lote-card atencao{% if m.controlado %} p344{% endif %}">
+    <div class="lote-cards">
+        {% for l in proximos %}
+        {% set dias = (l.data_validade - hoje).days %}
+        <div class="lote-card atencao" style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-left: 3px solid var(--status-yellow); border-radius: 12px; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 10px;"
+             onmouseover="this.style.backgroundColor='var(--bg-card-hover)';"
+             onmouseout="this.style.backgroundColor='var(--bg-card)';">
             <div>
-                <div class="lote-nome">{{ m.nome }}</div>
-                <div class="lote-meta">
-                    <span><i class="fas fa-barcode"></i> {{ m.lote }}</span>
-                    {% if m.principio_ativo %}<span>{{ m.principio_ativo }}</span>{% endif %}
-                    <span><i class="fas fa-calendar-alt" style="color:#f5b942;"></i>
-                        <strong style="color:#f5b942;">{{ m.data_validade.strftime('%d/%m/%Y') }}</strong>
-                    </span>
+                <div class="lote-nome" style="font-weight: 700; font-size: 0.95rem; color: var(--text-primary);">{{ l.nome }}</div>
+                <div class="lote-meta" style="font-size: 0.78rem; color: var(--text-muted); display: flex; gap: 10px; flex-wrap: wrap; margin-top: 3px;">
+                    <span><i class="fas fa-barcode"></i> {{ l.lote }}</span>
+                    <span><i class="fas fa-calendar"></i> {{ l.data_validade.strftime('%d/%m/%Y') }}</span>
                 </div>
             </div>
-            <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
-                <span class="pill pill-qty"><i class="fas fa-boxes"></i> {{ m.quantidade }} un.</span>
-                <span class="pill pill-atencao"><i class="fas fa-exclamation-triangle"></i> Atenção</span>
-                {% if m.controlado %}<span class="pill pill-344"><i class="fas fa-skull-crossbones"></i> P344</span>{% endif %}
-                <span class="pill pill-tarja">{{ m.tarja }}</span>
+            <div style="display:flex; gap:8px; align-items:center;">
+                <span class="pill pill-atencao" style="background:rgba(245, 158, 11, 0.12); color:var(--status-yellow); border:1px solid rgba(245, 158, 11, 0.3);">{{ dias }} dias</span>
+                <span class="pill pill-qty" style="background:var(--bg-input); border:1px solid var(--border-input); color:var(--text-muted);">{{ l.quantidade }} un.</span>
+                {% if l.tarja %}
+                <span class="pill pill-tarja" style="background:var(--bg-input); border:1px solid var(--border-input); color:var(--text-muted);">{{ l.tarja }}</span>
+                {% endif %}
             </div>
         </div>
         {% endfor %}
+    </div>
     {% else %}
-    <div class="empty-box">
-        <i class="fas fa-calendar-check" style="color:var(--success);"></i>
-        <p>Nenhum medicamento próximo ao vencimento.</p>
+    <div class="empty-box" style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 12px; color: var(--text-muted);">
+        <i class="fas fa-check-circle" style="font-size: 2rem; display: block; margin-bottom: 10px; color: var(--status-green);"></i>
+        <p>Nenhum lote próximo ao vencimento.</p>
+    </div>
+    {% endif %}
+
+    <!-- Portaria 344 -->
+    <div class="section-title" style="color: var(--text-primary); border-bottom: 1px solid var(--border-subtle);">
+        <i class="fas fa-skull-crossbones" style="color: #ff6b6b;"></i> Medicamentos Sujeitos à Portaria 344
+    </div>
+    {% if p344 %}
+    <div class="lote-cards">
+        {% for l in p344 %}
+        <div class="lote-card p344" style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-left: 3px solid #ff6b6b; border-radius: 12px; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 10px; animation: pulsar 2.5s ease-in-out infinite;"
+             onmouseover="this.style.backgroundColor='var(--bg-card-hover)';"
+             onmouseout="this.style.backgroundColor='var(--bg-card)';">
+            <div>
+                <div class="lote-nome" style="font-weight: 700; font-size: 0.95rem; color: var(--text-primary);">{{ l.nome }}</div>
+                <div class="lote-meta" style="font-size: 0.78rem; color: var(--text-muted); display: flex; gap: 10px; flex-wrap: wrap; margin-top: 3px;">
+                    <span><i class="fas fa-barcode"></i> {{ l.lote }}</span>
+                    <span><i class="fas fa-calendar"></i> {{ l.data_validade.strftime('%d/%m/%Y') }}</span>
+                </div>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center;">
+                <span class="pill pill-344" style="background:rgba(192,57,43,.15); color:#ff6b6b; border:1px solid rgba(192,57,43,.4);">P344</span>
+                <span class="pill pill-qty" style="background:var(--bg-input); border:1px solid var(--border-input); color:var(--text-muted);">{{ l.quantidade }} un.</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-box" style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 12px; color: var(--text-muted);">
+        <i class="fas fa-check-circle" style="font-size: 2rem; display: block; margin-bottom: 10px; color: var(--status-green);"></i>
+        <p>Nenhum medicamento sujeito à Portaria 344.</p>
     </div>
     {% endif %}
 

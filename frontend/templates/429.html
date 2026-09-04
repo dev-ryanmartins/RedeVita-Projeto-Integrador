@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_brand_logo.html" import brand_logo %}
 {% block title %}Muitas tentativas — RedeVita{% endblock %}
 
 {% block content %}
@@ -7,10 +8,7 @@
     <div class="error-glow error-glow-500"></div>
 
     <div class="error-card">
-        <div class="error-logo">
-            <i class="fas fa-heartbeat"></i>
-            <span><strong>Rede</strong>Vita</span>
-        </div>
+        {{ brand_logo(url_for('auth.login'), true) }}
 
         <div class="error-visual">
             <div class="error-number">

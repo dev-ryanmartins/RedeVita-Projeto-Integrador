@@ -2,18 +2,10 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}RedeVita{% endblock %}</title>
-
-    <!-- PWA -->
-    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
-    <meta name="theme-color" content="#3498db">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="RedeVita">
-    <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/icons/icon-192x192.png') }}">
-
+    <link rel="icon" href="{{ url_for('static', filename='img/icons/icon.svg') }}" type="image/svg+xml">
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -23,152 +15,89 @@
 <body>
 
 {% if current_user.is_authenticated %}
-{# Atalhos de cargo para uso no template #}
-{% set is_admin       = current_user.cargo == 'Admin' %}
-{% set is_medico      = current_user.cargo == 'Médico' %}
-{% set is_farmaceutico= current_user.cargo == 'Farmacêutico' %}
-{% set is_operador    = current_user.cargo == 'Operador' %}
-{% set is_voluntario  = current_user.cargo == 'Voluntário' %}
-{% set equipe_clinica = is_admin or is_operador or is_medico or is_farmaceutico %}
-
 <nav class="navbar">
     <div class="container-nav">
-        <a href="{{ url_for('inventory.dashboard') }}" class="logo">
-            <i class="fas fa-heartbeat"></i> <strong>Rede</strong>Vita
-        </a>
+        {% from "_brand_logo.html" import brand_logo %}
+        {{ brand_logo(url_for('inventory.dashboard'), true) }}
 
-        <button class="nav-toggle" id="navToggle" aria-label="Abrir menu">
+        <button class="nav-toggle" id="navToggle" aria-label="Abrir menu"
+                aria-controls="navLinks" aria-expanded="false" data-tooltip="Abrir menu">
             <i class="fas fa-bars"></i>
         </button>
 
         <ul class="nav-links" id="navLinks">
-
-            <!-- Dashboard — todos -->
             <li>
                 <a href="{{ url_for('inventory.dashboard') }}"
                    class="{{ 'active' if request.endpoint == 'inventory.dashboard' else '' }}">
                     <i class="fas fa-tachometer-alt"></i> Dashboard
                 </a>
             </li>
-
-            <!-- Inventário — todos (ações restritas no backend por cargo) -->
             <li>
                 <a href="{{ url_for('inventory.listar_medicamentos') }}"
                    class="{{ 'active' if request.endpoint == 'inventory.listar_medicamentos' else '' }}">
                     <i class="fas fa-pills"></i> Inventário
                 </a>
             </li>
-
-            <!-- Doações — todos -->
             <li>
                 <a href="{{ url_for('donation.nova_doacao') }}"
                    class="{{ 'active' if request.endpoint == 'donation.nova_doacao' else '' }}">
                     <i class="fas fa-hand-holding-heart"></i> Doações
                 </a>
             </li>
-
-            <!-- Pacientes — equipe clínica (não Voluntário) -->
-            {% if equipe_clinica %}
             <li>
                 <a href="{{ url_for('pacientes.listar_pacientes') }}"
                    class="{{ 'active' if request.endpoint and request.endpoint.startswith('pacientes.') else '' }}">
                     <i class="fas fa-user-injured"></i> Pacientes
                 </a>
             </li>
-            {% endif %}
-
-            <!-- Receituário — equipe clínica (não Voluntário) -->
-            {% if equipe_clinica %}
-            <li>
-                <a href="{{ url_for('pacientes.receituario') }}"
-                   class="{{ 'active' if request.endpoint == 'pacientes.receituario' else '' }}">
-                    <i class="fas fa-prescription"></i> Receituário
-                </a>
-            </li>
-            {% endif %}
-
-            <!-- Médicos — equipe clínica (não Voluntário) -->
-            {% if equipe_clinica %}
             <li>
                 <a href="{{ url_for('medicos.listar_medicos') }}"
                    class="{{ 'active' if request.endpoint and request.endpoint.startswith('medicos.') else '' }}">
                     <i class="fas fa-user-md"></i> Médicos
                 </a>
             </li>
-            {% endif %}
-
-            <!-- Farmácias — equipe clínica (não Voluntário) -->
-            {% if equipe_clinica %}
             <li>
                 <a href="{{ url_for('farmacias.listar_farmacias') }}"
                    class="{{ 'active' if request.endpoint and request.endpoint.startswith('farmacias.') else '' }}">
                     <i class="fas fa-hospital"></i> Farmácias
                 </a>
             </li>
-            {% endif %}
-
-            <!-- Relatórios — equipe clínica (não Voluntário) -->
-            {% if equipe_clinica %}
             <li>
                 <a href="{{ url_for('relatorios.relatorios') }}"
                    class="{{ 'active' if request.endpoint and request.endpoint.startswith('relatorios.') else '' }}">
                     <i class="fas fa-chart-bar"></i> Relatórios
                 </a>
             </li>
-            {% endif %}
-
-            <!-- Mapa — todos -->
+            <li>
+                <a href="{{ url_for('academico.monitoramento_iot') }}"
+                   class="{{ 'active' if request.endpoint and request.endpoint.startswith('academico.') and request.endpoint == 'academico.monitoramento_iot' else '' }}">
+                    <i class="fas fa-temperature-half"></i> IoT
+                </a>
+            </li>
             <li>
                 <a href="{{ url_for('mapa.mapa_saude') }}"
                    class="{{ 'active' if request.endpoint and request.endpoint.startswith('mapa.') else '' }}">
                     <i class="fas fa-map-marked-alt"></i> Mapa
                 </a>
             </li>
-
-            <!-- ── Seção Médico ─────────────────────────────────────────── -->
-            {% if is_admin or is_medico %}
-            <li class="nav-divider"></li>
             <li>
                 <a href="{{ url_for('medical.prescriptions') }}"
-                   class="{{ 'active' if request.endpoint and request.endpoint.startswith('medical.') else '' }} nav-role-medico"
-                   title="Área do Médico">
-                    <i class="fas fa-file-prescription"></i> Prescrições
-                </a>
-            </li>
-            {% endif %}
-
-            <!-- ── Seção Farmacêutico ───────────────────────────────────── -->
-            {% if is_admin or is_farmaceutico or is_operador %}
-            {% if not (is_admin or is_medico) %}<li class="nav-divider"></li>{% endif %}
-            <li>
-                <a href="{{ url_for('donation.triagem') }}"
-                   class="{{ 'active' if request.endpoint == 'donation.triagem' else '' }} nav-role-operador"
-                   title="Triagem de medicamentos recebidos">
-                    <i class="fas fa-clipboard-check"></i> Triagem de Entrada
+                   class="{{ 'active' if request.endpoint and request.endpoint.startswith('medical.') else '' }}">
+                    <i class="fas fa-prescription"></i> Prescrições
                 </a>
             </li>
             <li>
-                <a href="{{ url_for('pharmacy.auditoria') }}"
-                   class="{{ 'active' if request.endpoint and request.endpoint.startswith('pharmacy.') else '' }} nav-role-farmaceutico"
-                   title="Auditoria de validade de lotes">
-                    <i class="fas fa-vials"></i> Auditoria de Lotes
+                <a href="{{ url_for('busca.buscar') }}"
+                   class="{{ 'active' if request.endpoint and request.endpoint.startswith('busca.') else '' }}">
+                    <i class="fas fa-search"></i> Busca
                 </a>
             </li>
-            {% endif %}
-
-            <!-- ── Seção Admin ──────────────────────────────────────────── -->
-            {% if is_admin %}
+            {% if current_user.cargo == 'Admin' %}
             <li class="nav-divider"></li>
             <li>
                 <a href="{{ url_for('notificacoes.painel') }}"
-                   class="{{ 'active' if request.endpoint and request.endpoint.startswith('notificacoes.') else '' }} nav-admin"
-                   style="position:relative">
+                   class="{{ 'active' if request.endpoint and request.endpoint.startswith('notificacoes.') else '' }} nav-admin">
                     <i class="fas fa-bell"></i> Notificações
-                    <span id="alertaBadge" style="display:none;position:absolute;top:-4px;right:-8px;
-                          background:#e74c3c;color:#fff;font-size:.6rem;font-weight:800;
-                          min-width:17px;height:17px;border-radius:9px;
-                          display:none;align-items:center;justify-content:center;
-                          padding:0 4px;line-height:1;border:2px solid var(--bg-dark);">0</span>
                 </a>
             </li>
             <li>
@@ -183,43 +112,41 @@
                     <i class="fas fa-shield-alt"></i> Logs
                 </a>
             </li>
+            <li>
+                <a href="{{ url_for('academico.auditoria') }}"
+                   class="{{ 'active' if request.endpoint == 'academico.auditoria' else '' }} nav-admin">
+                    <i class="fas fa-shield-halved"></i> Auditoria
+                </a>
+            </li>
             {% endif %}
-
-            <!-- Busca global -->
-            <li>
-                <form method="GET" action="{{ url_for('busca.buscar') }}"
-                      style="display:flex; align-items:center;">
-                    <div style="position:relative;">
-                        <input type="text" name="q" placeholder="Buscar…"
-                               style="padding:6px 12px 6px 30px; border-radius:20px;
-                                      border:1px solid var(--border); background:var(--bg-input);
-                                      color:var(--text-main); font-size:0.82rem; width:150px; outline:none;
-                                      transition:width .2s, border-color .2s;"
-                               onfocus="this.style.width='190px'; this.style.borderColor='var(--primary)'"
-                               onblur="this.style.width='150px'; this.style.borderColor='var(--border)'">
-                        <i class="fas fa-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);
-                           color:var(--text-muted);font-size:0.72rem;pointer-events:none;"></i>
-                    </div>
-                </form>
-            </li>
-
-            <!-- Perfil -->
-            <li>
-                <a href="{{ url_for('perfil.meu_perfil') }}"
-                   class="{{ 'active' if request.endpoint and request.endpoint.startswith('perfil.') else '' }}"
-                   title="Meu Perfil">
-                    <i class="fas fa-user-circle"></i> {{ current_user.nome.split()[0] }}
-                </a>
-            </li>
-
-            <li>
-                <a href="{{ url_for('auth.logout') }}" class="btn-logout">
-                    <i class="fas fa-sign-out-alt"></i> Sair
-                </a>
-            </li>
         </ul>
+
+        {% include "_accessibility_controls.html" %}
+
+        <div class="user-menu-nav">
+          <a href="{{ url_for('perfil.meu_perfil') }}" class="user-menu-link"
+             aria-label="Abrir perfil de {{ current_user.nome }}">
+            <div class="user-avatar">
+              {{ current_user.nome[:2]|upper if current_user.is_authenticated else 'US' }}
+            </div>
+            <div class="user-meta">
+              <span class="user-name">{{ current_user.nome if current_user.is_authenticated else 'Usuário' }}</span>
+              <span class="user-role">{{ current_user.cargo if current_user.is_authenticated else 'Visitante' }}</span>
+            </div>
+          </a>
+          <a href="{{ url_for('auth.logout') }}" class="btn-logout" title="Sair"
+             data-tooltip="Sair" aria-label="Sair do sistema">
+            Sair
+          </a>
+        </div>
     </div>
 </nav>
+{% endif %}
+
+{% if not current_user.is_authenticated %}
+    <div class="standalone-accessibility">
+        {% include "_accessibility_controls.html" %}
+    </div>
 {% endif %}
 
 <main class="main-content">
@@ -240,46 +167,107 @@
     {% block content %}{% endblock %}
 </main>
 
+<div id="global-confirm-modal" class="modal-overlay" aria-hidden="true">
+    <div class="modal-box modal-sm confirm-modal" role="dialog" aria-modal="true"
+         aria-labelledby="global-confirm-title" aria-describedby="global-confirm-message">
+        <div class="modal-header">
+            <h3 id="global-confirm-title"><i class="fas fa-triangle-exclamation"></i> Confirmar ação</h3>
+            <button type="button" class="modal-close" id="global-confirm-close" aria-label="Fechar">&times;</button>
+        </div>
+        <p id="global-confirm-message" class="confirm-modal-message"></p>
+        <div class="modal-footer">
+            <button type="button" class="btn-secondary" id="global-confirm-cancel">Cancelar</button>
+            <button type="button" class="btn-danger" id="global-confirm-submit">
+                <i class="fas fa-check"></i> Confirmar
+            </button>
+        </div>
+    </div>
+</div>
+
 <footer class="main-footer">
     <p><i class="fas fa-heart" style="color: var(--danger);"></i> RedeVita &mdash; Desenvolvido por Alloy &bull; ADS UNISO 2026</p>
 </footer>
 
 <script src="{{ url_for('static', filename='js/mascaras.js') }}"></script>
+<script src="{{ url_for('static', filename='js/redevita-enhancements.js') }}"></script>
 <script>
-  {% if current_user.is_authenticated and current_user.cargo == 'Admin' %}
-  (function carregarAlertas() {
-    fetch('/api/alertas')
-      .then(r => r.ok ? r.json() : null)
-      .then(data => {
-        if (!data || data.total === 0) return;
-        const badge = document.getElementById('alertaBadge');
-        if (badge) {
-          badge.textContent = data.total > 99 ? '99+' : data.total;
-          badge.style.display = 'inline-flex';
-        }
-      })
-      .catch(() => {});
-    setTimeout(carregarAlertas, 5 * 60 * 1000);
-  })();
-  {% endif %}
-
     const navToggle = document.getElementById('navToggle');
     const navLinks = document.getElementById('navLinks');
     if (navToggle) {
         navToggle.addEventListener('click', () => {
-            navLinks.classList.toggle('open');
+            const aberto = navLinks.classList.toggle('open');
+            navToggle.setAttribute('aria-expanded', String(aberto));
+            navToggle.setAttribute('aria-label', aberto ? 'Fechar menu' : 'Abrir menu');
+            navToggle.dataset.tooltip = aberto ? 'Fechar menu' : 'Abrir menu';
         });
         document.addEventListener('click', (e) => {
             if (!navToggle.contains(e.target) && !navLinks.contains(e.target)) {
                 navLinks.classList.remove('open');
+                navToggle.setAttribute('aria-expanded', 'false');
+                navToggle.setAttribute('aria-label', 'Abrir menu');
+                navToggle.dataset.tooltip = 'Abrir menu';
             }
         });
     }
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(regs => {
-            regs.forEach(r => r.unregister());
+
+    const confirmModal = document.getElementById('global-confirm-modal');
+    const confirmMessage = document.getElementById('global-confirm-message');
+    const confirmSubmit = document.getElementById('global-confirm-submit');
+    const confirmCancel = document.getElementById('global-confirm-cancel');
+    const confirmClose = document.getElementById('global-confirm-close');
+    let pendingConfirmation = null;
+
+    function closeConfirmModal() {
+        if (!confirmModal) return;
+        confirmModal.classList.remove('active');
+        confirmModal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+        pendingConfirmation = null;
+    }
+
+    function openConfirmModal(trigger) {
+        if (!confirmModal || !confirmMessage || !confirmSubmit) return;
+        confirmMessage.textContent = trigger.dataset.confirmMessage || 'Tem certeza que deseja continuar?';
+        pendingConfirmation = () => {
+            if (trigger.tagName === 'A') {
+                window.location.assign(trigger.href);
+            } else if (trigger.form) {
+                trigger.form.requestSubmit(trigger);
+            } else if (trigger.dataset.confirmAction) {
+                window.location.assign(trigger.dataset.confirmAction);
+            }
+        };
+        confirmModal.classList.add('active');
+        confirmModal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+        confirmCancel.focus();
+    }
+
+    document.addEventListener('click', (event) => {
+        const trigger = event.target.closest('[data-confirm-message]');
+        if (!trigger) return;
+        event.preventDefault();
+        openConfirmModal(trigger);
+    });
+
+    if (confirmSubmit) {
+        confirmSubmit.addEventListener('click', () => {
+            const action = pendingConfirmation;
+            closeConfirmModal();
+            if (action) action();
         });
     }
+    [confirmCancel, confirmClose].forEach((button) => {
+        if (button) button.addEventListener('click', closeConfirmModal);
+    });
+    if (confirmModal) {
+        confirmModal.addEventListener('click', (event) => {
+            if (event.target === confirmModal) closeConfirmModal();
+        });
+    }
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') closeConfirmModal();
+    });
 </script>
 {% block extra_js %}{% endblock %}
 </body>

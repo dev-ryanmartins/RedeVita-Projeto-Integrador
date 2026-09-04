@@ -1,13 +1,12 @@
 {% extends "base.html" %}
+{% from "_brand_logo.html" import brand_logo %}
 {% block title %}Nova Senha - RedeVita{% endblock %}
 
 {% block content %}
 <div class="auth-wrapper">
     <div class="auth-card">
         <div class="auth-header">
-            <a href="{{ url_for('auth.login') }}" class="logo-auth">
-                <i class="fas fa-heartbeat"></i> <strong>Rede</strong>Vita
-            </a>
+            {{ brand_logo(url_for('auth.login')) }}
             <h2>Redefinir Senha</h2>
             <p>Escolha uma nova senha segura para sua conta.</p>
         </div>

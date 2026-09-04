@@ -4,65 +4,69 @@
 {% block extra_css %}
 <style>
 .busca-hero {
-    background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 12px;
     padding: 28px; margin-bottom: 28px; text-align: center;
 }
 .busca-input-wrap {
     display: flex; gap: 10px; max-width: 600px; margin: 16px auto 0;
 }
 .busca-input-wrap input {
-    flex: 1; padding: 12px 18px; border-radius: var(--radius);
-    border: 2px solid var(--primary); background: var(--bg-input);
-    color: var(--text-main); font-size: 1rem; outline: none;
+    flex: 1; padding: 12px 18px; border-radius: 8px;
+    border: 2px solid var(--primary-blue); background: var(--bg-input);
+    color: var(--text-primary); font-size: 1rem; outline: none;
 }
 .busca-section { margin-bottom: 28px; }
 .busca-section-header {
     display: flex; align-items: center; gap: 10px;
-    margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border);
+    margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border-subtle);
 }
-.busca-section-header h3 { margin: 0; font-size: 1rem; }
+.busca-section-header h3 { margin: 0; font-size: 1rem; color: var(--text-primary); }
 .resultado-item {
     display: flex; align-items: center; gap: 14px;
     padding: 12px 16px; background: var(--bg-card);
-    border: 1px solid var(--border); border-radius: var(--radius);
-    margin-bottom: 8px; transition: var(--transition); text-decoration: none; color: var(--text-main);
+    border: 1px solid var(--border-subtle); border-radius: 8px;
+    margin-bottom: 8px; transition: var(--transition); text-decoration: none; color: var(--text-primary);
 }
-.resultado-item:hover { border-color: var(--primary); background: rgba(52,152,219,.05); }
+.resultado-item:hover { border-color: var(--primary-blue); background: rgba(2, 132, 199, 0.05); }
 .resultado-icon {
     width: 36px; height: 36px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
     font-size: 0.9rem; flex-shrink: 0;
 }
-.ri-blue { background: rgba(52,152,219,.15); color: var(--primary); }
-.ri-orange { background: rgba(230,126,34,.15); color: #e67e22; }
-.ri-purple { background: rgba(155,89,182,.15); color: #9b59b6; }
-.ri-teal { background: rgba(26,188,156,.15); color: #1abc9c; }
+.ri-blue { background: rgba(2, 132, 199, 0.15); color: var(--primary-blue); }
+.ri-orange { background: rgba(230, 126, 34, 0.15); color: #e67e22; }
+.ri-purple { background: rgba(155, 89, 182, 0.15); color: #9b59b6; }
+.ri-teal { background: rgba(26, 188, 156, 0.15); color: #1abc9c; }
 .resultado-info small { color: var(--text-muted); font-size: 0.8rem; }
 .no-results { text-align: center; padding: 40px; color: var(--text-muted); }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="page-wrapper">
+<div class="page-wrapper" style="background-color: var(--bg-app); color: var(--text-primary);">
 
     <div class="busca-hero">
-        <h2 style="margin:0 0 6px;"><i class="fas fa-search"></i> Busca Global</h2>
+        <h2 style="margin:0 0 6px; color: var(--text-primary);"><i class="fas fa-search" style="color: var(--primary-blue);"></i> Busca Global</h2>
         <p style="color:var(--text-muted); margin:0;">Pesquise medicamentos, pacientes, médicos e farmácias.</p>
         <form method="GET" action="{{ url_for('busca.buscar') }}" class="busca-input-wrap">
-            <input type="text" name="q" value="{{ q }}" placeholder="Digite o nome, CPF, CRM…" autofocus>
-            <button type="submit" class="btn-primary"><i class="fas fa-search"></i> Buscar</button>
+            <input type="text" id="global-search" name="q" value="{{ q }}" placeholder="Digite o nome, CPF, CRM…" autofocus
+                   list="busca-sugestoes" data-fast-search-url="{{ url_for('academico.busca_rapida') }}" autocomplete="off">
+            <datalist id="busca-sugestoes"></datalist>
+            <button type="submit" class="btn-primary" style="background: linear-gradient(135deg, var(--primary-blue), var(--primary-blue-hover)); border: none; color: #ffffff; padding: 12px 24px; border-radius: 8px; cursor: pointer;"
+                    onmouseover="this.style.filter='brightness(1.1)';"
+                    onmouseout="this.style.filter='brightness(1)';"><i class="fas fa-search"></i> Buscar</button>
         </form>
     </div>
 
     {% if q %}
         {% if total == 0 %}
         <div class="no-results">
-            <i class="fas fa-search" style="font-size:2.5rem; margin-bottom:12px; display:block;"></i>
-            <p>Nenhum resultado encontrado para <strong>"{{ q }}"</strong>.</p>
+            <i class="fas fa-search" style="font-size:2.5rem; margin-bottom:12px; display:block; color: var(--text-muted);"></i>
+            <p>Nenhum resultado encontrado para <strong style="color: var(--text-primary);">"{{ q }}"</strong>.</p>
         </div>
         {% else %}
         <p style="color:var(--text-muted); margin-bottom:20px;">
-            <strong>{{ total }}</strong> resultado(s) para <strong>"{{ q }}"</strong>
+            <strong style="color: var(--text-primary);">{{ total }}</strong> resultado(s) para <strong style="color: var(--text-primary);">"{{ q }}"</strong>
         </p>
 
         {% if medicamentos %}
@@ -75,10 +79,10 @@
             <a href="{{ url_for('inventory.listar_medicamentos') }}" class="resultado-item">
                 <div class="resultado-icon ri-blue"><i class="fas fa-pills"></i></div>
                 <div>
-                    <strong>{{ m.nome }}</strong>
+                    <strong style="color: var(--text-primary);">{{ m.nome }}</strong>
                     <small style="display:block;">Lote {{ m.lote }} — {{ m.tarja }} — {{ m.quantidade }} un.</small>
                 </div>
-                <span class="status-pill {% if m.status_semaforo==0 %}green{% elif m.status_semaforo==1 %}yellow{% else %}red{% endif %}" style="margin-left:auto;">
+                <span class="status-pill {% if m.status_semaforo==0 %}green{% elif m.status_semaforo==1 %}yellow{% else %}red{% endif %}" style="margin-left:auto; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; {% if m.status_semaforo==0 %}background: rgba(16, 185, 129, 0.2); color: var(--status-green); border: 1px solid var(--status-green);{% elif m.status_semaforo==1 %}background: rgba(245, 158, 11, 0.2); color: var(--status-yellow); border: 1px solid var(--status-yellow);{% else %}background: rgba(239, 68, 68, 0.2); color: var(--status-red); border: 1px solid var(--status-red);{% endif %}">
                     {{ m.data_validade.strftime('%d/%m/%Y') }}
                 </span>
             </a>
@@ -96,7 +100,7 @@
             <a href="{{ url_for('pacientes.listar_pacientes') }}" class="resultado-item">
                 <div class="resultado-icon ri-orange"><i class="fas fa-user-injured"></i></div>
                 <div>
-                    <strong>{{ p.nome }}</strong>
+                    <strong style="color: var(--text-primary);">{{ p.nome }}</strong>
                     <small style="display:block;">CPF: {{ p.cpf }}{% if p.data_nascimento %} — {{ p.data_nascimento.strftime('%d/%m/%Y') }}{% endif %}</small>
                 </div>
             </a>
@@ -114,7 +118,7 @@
             <a href="{{ url_for('medicos.listar_medicos') }}" class="resultado-item">
                 <div class="resultado-icon ri-purple"><i class="fas fa-user-md"></i></div>
                 <div>
-                    <strong>Dr(a). {{ m.nome }}</strong>
+                    <strong style="color: var(--text-primary);">Dr(a). {{ m.nome }}</strong>
                     <small style="display:block;">CRM {{ m.crm }} — {{ m.especialidade }}</small>
                 </div>
             </a>
@@ -132,7 +136,7 @@
             <a href="{{ url_for('farmacias.listar_farmacias') }}" class="resultado-item">
                 <div class="resultado-icon ri-teal"><i class="fas fa-hospital"></i></div>
                 <div>
-                    <strong>{{ f.nome_fantasia }}</strong>
+                    <strong style="color: var(--text-primary);">{{ f.nome_fantasia }}</strong>
                     <small style="display:block;">CNPJ: {{ f.cnpj }} — {{ f.responsavel }}</small>
                 </div>
             </a>

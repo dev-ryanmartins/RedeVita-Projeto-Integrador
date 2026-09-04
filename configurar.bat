@@ -16,31 +16,45 @@ if errorlevel 1 (
 
 echo [OK] Python encontrado.
 
-REM Criar ambiente virtual se nao existir
-if not exist ".venv\" (
+REM Criar ambiente virtual se nao existir ou estiver incompleto
+if not exist ".venv\Scripts\python.exe" (
     echo Criando ambiente virtual...
     python -m venv .venv
+    if errorlevel 1 (
+        echo [ERRO] Nao foi possivel criar o ambiente virtual.
+        pause
+        exit /b 1
+    )
     echo [OK] Ambiente virtual criado.
 ) else (
     echo [OK] Ambiente virtual ja existe.
 )
 
-REM Ativar ambiente virtual e instalar dependencias
+REM Instalar dependencias usando o interpretador da virtualenv
 echo Instalando dependencias...
-call .venv\Scripts\activate.bat
-pip install --upgrade pip -q
-pip install -r backend\requirements.txt -q
+set "PYTHON=.venv\Scripts\python.exe"
+"%PYTHON%" -m pip install --upgrade pip -q
+if errorlevel 1 (
+    echo [ERRO] Falha ao atualizar o pip.
+    pause
+    exit /b 1
+)
+"%PYTHON%" -m pip install -r backend\requirements.txt -q
+if errorlevel 1 (
+    echo [ERRO] Falha ao instalar as dependencias.
+    pause
+    exit /b 1
+)
 echo [OK] Dependencias instaladas.
 
-REM Criar .env se nao existir
+REM Criar .env se nao existir, sem substituir configuracoes existentes
 if not exist ".env" (
-    echo.
-    echo [ATENCAO] Arquivo .env nao encontrado.
-    echo Crie o arquivo .env na raiz do projeto com o conteudo abaixo:
-    echo.
-    echo   SECRET_KEY=redevita_projeto_ads_2026
-    echo   DATABASE_URL=mysql+pymysql://root:SUA_SENHA@localhost:3306/redevita
-    echo.
+    if exist ".env.example" (
+        copy /Y ".env.example" ".env" >nul
+        echo [OK] Arquivo .env criado a partir de .env.example.
+    ) else (
+        echo [AVISO] .env.example nao encontrado; serao usados os padroes locais.
+    )
 ) else (
     echo [OK] Arquivo .env encontrado.
 )

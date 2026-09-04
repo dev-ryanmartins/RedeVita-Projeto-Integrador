@@ -12,15 +12,15 @@ Como rodar:
   uv run python setup_users.py
 """
 
+from app.core.security import criptografar_senha
+from app.models.usuario import Usuario
+from app.database import db
+from main import create_app
 import sys
 import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'backend'))
 
-from main import create_app
-from app.database import db
-from app.models.usuario import Usuario
-from app.core.security import criptografar_senha
 
 SENHA_PADRAO = 'admin123'
 
@@ -87,7 +87,11 @@ with app.app_context():
             acao = 'CRIADO   '
 
         db.session.commit()
-        print(f'  [{acao}] {dados["cargo"]:<14} | CPF: {dados["cpf"]} | {dados["nome"]}')
+        print(
+            f'  [{acao}] {
+                dados["cargo"]:<14} | CPF: {
+                dados["cpf"]} | {
+                dados["nome"]}')
 
     print('=' * 55)
     print(f'  Senha de todos os usuários: {SENHA_PADRAO}')

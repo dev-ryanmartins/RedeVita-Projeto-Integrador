@@ -1,0 +1,28 @@
+{% macro brand_logo(href, compact=false) -%}
+<a href="{{ href }}" class="redevita-brand{% if compact %} redevita-brand--compact{% endif %}" aria-label="RedeVita — início">
+    <span class="redevita-logo-icon" aria-hidden="true">
+        <svg width="34" height="34" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Cruz médica azul em contorno atrás -->
+            <path d="M52 28 H68 V44 H84 V60 H68 V76 H52"
+                  stroke="#38bdf8"
+                  stroke-width="5.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"/>
+
+            <!-- Coração vermelho principal -->
+            <path d="M48 82 L20 54 C10 44 10 28 24 18 C34 11 44 16 48 24 C52 16 62 11 72 18 C86 28 86 44 76 54 Z"
+                  fill="#e11d48"/>
+
+            <!-- Linha contínua do eletrocardiograma -->
+            <path d="M14 54 H34 L40 40 L48 68 L56 46 L62 54 H82"
+                  stroke="#ffffff"
+                  stroke-width="5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"/>
+        </svg>
+    </span>
+    <span class="redevita-brand-text">
+        <span class="brand-rede">Rede</span><span class="brand-vita">Vita</span>
+    </span>
+</a>
+{%- endmacro %}

@@ -8,48 +8,9 @@
             <h2><i class="fas fa-shield-alt"></i> Logs de Auditoria</h2>
             <p class="page-subtitle">Registro completo de todas as ações realizadas no sistema.</p>
         </div>
-        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-            <span style="color: var(--text-muted); font-size:0.85rem;">
-                <i class="fas fa-lock"></i> Acesso restrito — Admin
-            </span>
-            <button onclick="document.getElementById('modal-limpar').classList.add('active')"
-                    class="btn-secondary" style="font-size:0.85rem;">
-                <i class="fas fa-broom"></i> Limpar Logs Antigos
-            </button>
-        </div>
-    </div>
-
-    <!-- Modal limpar logs -->
-    <div id="modal-limpar" class="modal-overlay" onclick="if(event.target.id==='modal-limpar')this.classList.remove('active')">
-        <div class="modal-box modal-sm">
-            <div class="modal-header">
-                <h3><i class="fas fa-broom"></i> Limpar Logs Antigos</h3>
-                <button class="modal-close" onclick="document.getElementById('modal-limpar').classList.remove('active')">&times;</button>
-            </div>
-            <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:16px;">
-                Remove registros de log mais antigos que o número de dias especificado. Esta ação é irreversível.
-            </p>
-            <form method="POST" action="{{ url_for('logs.limpar_logs') }}">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <div class="form-group">
-                    <label>Manter logs dos últimos <strong id="dias-label">90</strong> dias</label>
-                    <input type="range" name="dias" id="dias-range" min="7" max="365" value="90"
-                           oninput="document.getElementById('dias-label').textContent=this.value"
-                           style="width:100%; margin-top:8px; accent-color:var(--primary);">
-                    <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:var(--text-muted); margin-top:4px;">
-                        <span>7 dias</span><span>365 dias</span>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn-secondary"
-                            onclick="document.getElementById('modal-limpar').classList.remove('active')">Cancelar</button>
-                    <button type="submit" class="btn-danger"
-                            onclick="return confirm('Tem certeza? Os logs mais antigos serão excluídos permanentemente.')">
-                        <i class="fas fa-broom"></i> Limpar
-                    </button>
-                </div>
-            </form>
-        </div>
+        <span style="color: var(--text-muted); font-size:0.85rem; align-self:center;">
+            <i class="fas fa-lock"></i> Acesso restrito — Admin
+        </span>
     </div>
 
     <div class="table-wrapper">

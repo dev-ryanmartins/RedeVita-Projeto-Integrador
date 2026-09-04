@@ -1,0 +1,52 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "RedeVita - Local",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/rodar.py",
+            "console": "integratedTerminal",
+            "env": {
+                "APP_HOST": "127.0.0.1",
+                "PORT": "5000",
+                "APP_DEBUG": "true",
+                "OPEN_BROWSER": "true",
+                "PYTHONPATH": "${workspaceFolder}"
+            },
+            "cwd": "${workspaceFolder}",
+            "justMyCode": false
+        },
+        {
+            "name": "RedeVita - Debug",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "console": "integratedTerminal",
+            "env": {
+                "APP_HOST": "127.0.0.1",
+                "PORT": "5000",
+                "APP_DEBUG": "true",
+                "OPEN_BROWSER": "false",
+                "PYTHONPATH": "${workspaceFolder}"
+            },
+            "cwd": "${workspaceFolder}",
+            "justMyCode": false
+        },
+        {
+            "name": "RedeVita - Backend Direct",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/backend/main.py",
+            "console": "integratedTerminal",
+            "env": {
+                "APP_HOST": "127.0.0.1",
+                "PORT": "5000",
+                "APP_DEBUG": "true",
+                "PYTHONPATH": "${workspaceFolder}"
+            },
+            "cwd": "${workspaceFolder}",
+            "justMyCode": false
+        }
+    ]
+}

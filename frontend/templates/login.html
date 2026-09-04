@@ -1,13 +1,25 @@
-{% extends "base.html" %}
-{% block title %}Login - RedeVita{% endblock %}
-
-{% block content %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - RedeVita</title>
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+</head>
+{% from "_brand_logo.html" import brand_logo %}
+<body style="background-color: #0b0f17;">
+{% include "_accessibility_controls.html" %}
 <div class="auth-wrapper">
     <div class="login-box">
 
         <div class="login-side-image">
             <div class="image-overlay-card">
-                <h1><i class="fas fa-heartbeat"></i> RedeVita</h1>
+                {{ brand_logo(url_for('auth.login')) }}
                 <p>Gestão inteligente de medicamentos e doações.</p>
                 <ul class="features-list">
                     <li><i class="fas fa-check-circle"></i> Controle de estoque em tempo real</li>
@@ -18,13 +30,13 @@
             </div>
         </div>
 
-        <div class="login-side-form">
+        <div class="login-side-form" style="background-color: #151c2a;">
             <div class="form-content">
                 <h2>Bem-vindo!</h2>
                 <p class="subtitle">Acesse sua conta para continuar.</p>
 
-                <form action="/login" method="POST" class="modern-form">               
-                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <form action="{{ url_for('auth.login') }}" method="POST" class="modern-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                     <div class="form-group">
                         <label id="label-identificador" for="identificador">CPF</label>
@@ -62,4 +74,5 @@
 
     </div>
 </div>
-{% endblock %}
+</body>
+</html>

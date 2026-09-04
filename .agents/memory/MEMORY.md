@@ -1,0 +1,1 @@
+- [Test dependency installation](test-dependency-installation.md) — verify package-manager installs do not promote test tools into runtime dependencies.

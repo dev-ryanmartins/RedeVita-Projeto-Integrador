@@ -1,29 +1,36 @@
 @echo off
+setlocal
 chcp 65001 >nul
+cd /d "%~dp0"
 echo.
 echo ====================================================
-echo   RedeVita — Iniciando servidor local
+echo   RedeVita — Inicializacao e Verificacao
 echo ====================================================
 echo.
 
-if not exist ".venv\" (
+if not exist ".venv\Scripts\python.exe" (
     echo [ERRO] Ambiente virtual nao encontrado.
     echo Execute primeiro: configurar.bat
     pause
     exit /b 1
 )
 
-if not exist ".env" (
-    echo [AVISO] Arquivo .env nao encontrado.
-    echo O sistema usara SQLite como banco de dados.
-    echo Para usar MySQL, crie o .env com DATABASE_URL.
-    echo.
+set "PYTHON=.venv\Scripts\python.exe"
+
+echo [1/2] Verificando dependencias Python...
+"%PYTHON%" -c "import flask, sqlalchemy, dotenv" >nul 2>&1
+if errorlevel 1 (
+    echo [ERRO] Dependencias Python nao instaladas.
+    echo Execute: configurar.bat
+    pause
+    exit /b 1
 )
+echo [OK] Dependencias verificadas.
+echo.
 
-call .venv\Scripts\activate.bat
-
-echo Iniciando Flask em http://127.0.0.1:5000
+echo [2/2] Iniciando servidor Flask...
+echo A aplicacao estara disponivel em: http://127.0.0.1:5000
 echo Pressione CTRL+C para encerrar.
 echo.
 
-python rodar.py
+"%PYTHON%" rodar.py

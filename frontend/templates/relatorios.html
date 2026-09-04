@@ -48,43 +48,6 @@
         </div>
     </div>
 
-    {% if tarja_stats %}
-    <div class="table-wrapper" style="margin-bottom:24px;">
-        <div style="padding:16px 20px 0; display:flex; align-items:center; gap:10px; margin-bottom:12px;">
-            <h3 style="margin:0;"><i class="fas fa-tags"></i> Estoque por Tipo de Tarja</h3>
-            <span class="chart-badge">ANVISA</span>
-        </div>
-        <table class="styled-table">
-            <thead>
-                <tr>
-                    <th>Tipo de Tarja</th>
-                    <th>Qtd. de Lotes</th>
-                    <th>Unidades em Estoque</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for tarja, lotes, unidades in tarja_stats %}
-                <tr>
-                    <td>
-                        {% if tarja == 'Portaria 344' %}
-                            <span class="status-pill red"><i class="fas fa-skull-crossbones"></i> {{ tarja }}</span>
-                        {% elif tarja == 'Tarja Vermelha' %}
-                            <span class="status-pill red">{{ tarja }}</span>
-                        {% elif tarja == 'Tarja Amarela' %}
-                            <span class="status-pill yellow">{{ tarja }}</span>
-                        {% else %}
-                            <span class="status-pill green">{{ tarja }}</span>
-                        {% endif %}
-                    </td>
-                    <td>{{ lotes }} lote(s)</td>
-                    <td><strong>{{ unidades or 0 }}</strong> un.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    {% endif %}
-
     <div class="dashboard-grid">
         <div>
             {% if proximos_vencimento %}
@@ -168,24 +131,24 @@
                 </p>
                 <div style="display:flex; flex-direction:column; gap:10px;">
                     <a href="{{ url_for('relatorios.exportar_medicamentos') }}" class="btn-secondary"
-                       style="justify-content:center;">
-                        <i class="fas fa-pills"></i> Exportar Medicamentos
+                       style="justify-content:center;" data-export-button>
+                        <svg class="download-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg> Exportar Medicamentos
                     </a>
                     <a href="{{ url_for('relatorios.exportar_medicos') }}" class="btn-secondary"
-                       style="justify-content:center;">
-                        <i class="fas fa-user-md"></i> Exportar Médicos
+                       style="justify-content:center;" data-export-button>
+                        <svg class="download-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg> Exportar Médicos
                     </a>
                     <a href="{{ url_for('relatorios.exportar_farmacias') }}" class="btn-secondary"
-                       style="justify-content:center;">
-                        <i class="fas fa-hospital"></i> Exportar Farmácias
+                       style="justify-content:center;" data-export-button>
+                        <svg class="download-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg> Exportar Farmácias
                     </a>
                     <a href="{{ url_for('relatorios.exportar_pacientes') }}" class="btn-secondary"
-                       style="justify-content:center;">
-                        <i class="fas fa-user-injured"></i> Exportar Pacientes
+                       style="justify-content:center;" data-export-button>
+                        <svg class="download-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg> Exportar Pacientes
                     </a>
                     <a href="{{ url_for('relatorios.exportar_doacoes') }}" class="btn-secondary"
-                       style="justify-content:center;">
-                        <i class="fas fa-hand-holding-heart"></i> Exportar Doações
+                       style="justify-content:center;" data-export-button>
+                        <svg class="download-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg> Exportar Doações
                     </a>
                     <hr style="border-color: var(--border); margin: 4px 0;">
                     <button onclick="window.print()" class="btn-primary" style="justify-content:center;">
@@ -197,4 +160,23 @@
     </div>
 
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('[data-export-button]').forEach((button) => {
+    button.addEventListener('click', () => {
+        if (button.dataset.downloading === 'true') return;
+        button.dataset.downloading = 'true';
+        button.dataset.originalLabel = button.textContent.trim();
+        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Baixando...';
+        button.setAttribute('aria-busy', 'true');
+        window.setTimeout(() => {
+            button.innerHTML = '<svg class="download-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg> ' + button.dataset.originalLabel;
+            button.removeAttribute('aria-busy');
+            button.dataset.downloading = 'false';
+        }, 1000);
+    });
+});
+</script>
 {% endblock %}

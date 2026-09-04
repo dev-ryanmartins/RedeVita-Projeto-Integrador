@@ -1,44 +1,25 @@
 {% extends "base.html" %}
-{% block title %}Página não encontrada — RedeVita{% endblock %}
+{% from "_brand_logo.html" import brand_logo %}
+{% block title %}Página não encontrada - RedeVita{% endblock %}
 
 {% block content %}
-<div class="error-page-full">
-
-    <div class="error-glow error-glow-404"></div>
-
-    <div class="error-card">
-        <div class="error-logo">
-            <i class="fas fa-heartbeat"></i>
-            <span><strong>Rede</strong>Vita</span>
-        </div>
-
-        <div class="error-visual">
-            <div class="error-number">
-                <span class="digit">4</span>
-                <span class="digit pulse-icon"><i class="fas fa-map-signs"></i></span>
-                <span class="digit">4</span>
-            </div>
-        </div>
-
-        <div class="error-body">
-            <h1>Página não encontrada</h1>
-            <p>O endereço que você tentou acessar não existe, foi movido ou foi removido do sistema.</p>
-        </div>
-
-        <div class="error-actions-card">
-            {% if current_user.is_authenticated %}
-            <a href="{{ url_for('inventory.dashboard') }}" class="btn-primary-gradient" style="max-width:260px; margin:0 auto;">
-                <i class="fas fa-tachometer-alt"></i> Ir ao Dashboard
-            </a>
-            {% else %}
-            <a href="{{ url_for('auth.login') }}" class="btn-primary-gradient" style="max-width:260px; margin:0 auto;">
-                <i class="fas fa-home"></i> Voltar para o Início
-            </a>
-            {% endif %}
-        </div>
-
-        <p class="error-code-label">Código de erro: <code>HTTP 404</code></p>
+<div class="error-page">
+    {{ brand_logo(url_for('index'), true) }}
+    <div class="error-icon">
+        <i class="fas fa-map-signs"></i>
     </div>
-
+    <h1 class="error-code">404</h1>
+    <h2>Página não encontrada</h2>
+    <p>O endereço que você tentou acessar não existe ou foi removido.</p>
+    <div class="error-actions">
+        <a href="{{ url_for('index') }}" class="btn-primary">
+            <i class="fas fa-home"></i> Voltar ao Início
+        </a>
+        {% if current_user.is_authenticated %}
+        <a href="{{ url_for('inventory.dashboard') }}" class="btn-secondary">
+            <i class="fas fa-tachometer-alt"></i> Ir ao Dashboard
+        </a>
+        {% endif %}
+    </div>
 </div>
 {% endblock %}

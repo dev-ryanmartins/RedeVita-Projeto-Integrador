@@ -23,13 +23,17 @@ class LeituraIoT(db.Model):
     """
     Tabela de leituras de telemetria IoT (temperatura/umidade).
     Monitoramento de cadeia de frio conforme normas ANVISA.
+    
+    REGRA DE NEGÓCIO: Toda leitura IoT deve estar vinculada a uma farmácia
+    parceira cadastrada no sistema para garantir rastreabilidade e
+    conformidade com Portaria 344/ANVISA.
     """
     __tablename__ = 'leituras_iot'
     __table_args__ = {'extend_existing': True}
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     dispositivo_id = Column(String(50), nullable=False, index=True, comment="ID único do dispositivo ESP32/sensor")
-    farmacia_id = Column(Integer, ForeignKey('farmacias.id'), nullable=True, comment="ID da farmácia associada (opcional)")
+    farmacia_id = Column(Integer, ForeignKey('farmacias.id'), nullable=False, comment="ID da farmácia associada (OBRIGATÓRIO)")
     temperatura = Column(Float, nullable=False, comment="Temperatura em °C")
     umidade = Column(Float, nullable=False, comment="Umidade relativa em %")
     luminosidade_lux = Column(Float, nullable=True, comment="Luminosidade em lux (fotodegradação)")

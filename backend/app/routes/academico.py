@@ -7,7 +7,7 @@ from flask_login import login_required
 from sqlalchemy import or_
 
 from app.core.api_responses import resposta_erro, resposta_ok
-from app.core.decorators import admin_required
+from app.core.decorators import admin_required, farmaceutico_required
 from app.database import db
 from app.models.farmacia import Farmacia
 from app.models.log_atividade import LogAtividade
@@ -45,14 +45,32 @@ def _serializar_farmacia(farmacia: Farmacia) -> dict:
 
 @academico_bp.route("/monitoramento-iot")
 @login_required
+@farmaceutico_required
 def monitoramento_iot():
-    """Painel complementar para a simulação de cadeia de frio."""
+    """
+    Painel complementar para a simulação de cadeia de frio.
+    
+    REGRA DE SEGURANÇA: Apenas Farmacêutico e Admin podem acessar.
+    Conforme Portaria 344/ANVISA - controle de medicamentos refrigerados/controlados.
+    """
+    # Verifica se há farmácias cadastradas
+    total_farmacias = Farmacia.query.count()
+    if total_farmacias == 0:
+        from flask import flash, redirect, url_for
+        flash(
+            "Cadastre uma farmácia parceira antes de acessar o painel de monitoramento IoT. "
+            "Conforme Portaria 344/ANVISA, todo monitoramento deve estar vinculado a uma farmácia.",
+            "warning"
+        )
+        return redirect(url_for("inventory.dashboard"))
+    
     sensores = iot_simulator.obter_todas_leituras()
     return render_template(
         "monitoramento_iot.html",
         sensores=sensores,
         alertas=sum(1 for sensor in sensores if sensor["status"] != "NORMAL"),
         atualizado_em=datetime.utcnow().isoformat(),
+        total_farmacias=total_farmacias
     )
 
 

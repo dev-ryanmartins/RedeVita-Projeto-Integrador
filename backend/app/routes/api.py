@@ -8,7 +8,7 @@ from flask import Blueprint, request, current_app
 from sqlalchemy import or_, func
 
 from app.core.api_responses import resposta_ok, resposta_erro
-from app.core.decorators import admin_required, cargo_required, farmaceutico_required
+from app.core.decorators import admin_required, cargo_required, farmaceutico_required, farmacia_vinculada_required
 from app.core.jwt_auth import jwt_ou_sessao_required
 from app.database import db
 from app.models.doacao import Doacao
@@ -696,6 +696,11 @@ def receber_telemetria_iot():
     Endpoint para receber dados de telemetria IoT de sensores térmicos.
     Conforme normas ANVISA RDC 44/2009 e RDC 430/2020 para cadeia de frio.
     
+    REGRA DE NEGÓCIO CRÍTICA: farmacia_id é OBRIGATÓRIO
+    - Toda leitura IoT deve estar vinculada a uma farmácia parceira cadastrada
+    - Garante rastreabilidade e conformidade com Portaria 344/ANVISA
+    - Leituras sem farmácia vinculada serão rejeitadas
+    
     Regras sanitárias aplicadas:
     - Normal: 15.0°C <= Temp <= 25.0°C e Umidade <= 70% -> Status: NORMAL
     - Alerta: (10.0°C <= Temp < 15.0°C) ou (25.0°C < Temp <= 30.0°C) -> Status: ALERTA_LEVE
@@ -706,7 +711,7 @@ def receber_telemetria_iot():
         "dispositivo_id": str (required),
         "temperatura": float (required),
         "umidade": float (required),
-        "farmacia_id": int (optional),
+        "farmacia_id": int (OBRIGATÓRIO),
         "timestamp": str (ISO-8601, optional)
     }
     """
@@ -731,14 +736,36 @@ def receber_telemetria_iot():
         if umidade is None:
             return resposta_erro("umidade é obrigatória", 400)
         
+        # REGRA CRÍTICA: farmacia_id é obrigatório para conformidade ANVISA
+        if not farmacia_id:
+            return resposta_erro(
+                "farmacia_id é obrigatório para conformidade com Portaria 344/ANVISA. "
+                "Toda leitura IoT deve estar vinculada a uma farmácia parceira cadastrada.",
+                400
+            )
+        
+        # Valida se a farmácia existe
+        try:
+            from app.models.farmacia import Farmacia
+            farmacia = Farmacia.query.get(farmacia_id)
+            if not farmacia:
+                return resposta_erro(
+                    f"Farmácia com ID {farmacia_id} não encontrada. "
+                    "Cadastre a farmácia antes de registrar leituras IoT.",
+                    404
+                )
+        except Exception as e:
+            return resposta_erro(f"Erro ao validar farmácia: {str(e)}", 500)
+        
         # Validação de tipos
         try:
             temperatura = float(temperatura)
             umidade = float(umidade)
+            farmacia_id = int(farmacia_id)
             if luminosidade_lux is not None:
                 luminosidade_lux = float(luminosidade_lux)
         except (ValueError, TypeError):
-            return resposta_erro("temperatura, umidade e luminosidade devem ser números", 400)
+            return resposta_erro("temperatura, umidade, farmacia_id e luminosidade devem ser números", 400)
         
         # Validação de faixas
         if temperatura < -50 or temperatura > 100:
@@ -769,10 +796,10 @@ def receber_telemetria_iot():
             except Exception:
                 return resposta_erro("timestamp em formato inválido (use ISO-8601)", 400)
         
-        # Cria registro no banco de dados
+        # Cria registro no banco de dados com farmácia vinculada
         leitura = LeituraIoT(
             dispositivo_id=dispositivo_id,
-            farmacia_id=farmacia_id,
+            farmacia_id=farmacia_id,  # OBRIGATÓRIO
             temperatura=temperatura,
             umidade=umidade,
             luminosidade_lux=luminosidade_lux,
@@ -786,27 +813,23 @@ def receber_telemetria_iot():
         # Verificação de fotodegradação (luminosidade > 500 lux)
         if luminosidade_lux and luminosidade_lux > 500.0:
             # Verifica se há medicamentos fotossensíveis na farmácia
-            if farmacia_id:
-                from app.models.medicamento import Medicamento
-                medicamentos_fotossensiveis = Medicamento.query.filter(
-                    Medicamento.farmacia_id == farmacia_id,
-                    Medicamento.fotossensivel == True
-                ).count()
-                
-                if medicamentos_fotossensiveis > 0:
-                    registrar_log(
-                        "ALERTA_FOTOSSENSIBILIDADE",
-                        f"ALERTA DE FOTODEGRADAÇÃO - Dispositivo {dispositivo_id}: "
-                        f"Luminosidade {luminosidade_lux} lux (>500 lux) detectada. "
-                        f"{medicamentos_fotossensiveis} medicamento(s) fotossensível(is) em risco."
-                    )
+            from app.models.medicamento import Medicamento
+            medicamentos_fotossensiveis = Medicamento.query.filter(
+                Medicamento.farmacia_id == farmacia_id,
+                Medicamento.fotossensivel == True
+            ).count()
+            
+            if medicamentos_fotossensiveis > 0:
+                current_app.logger.warning(
+                    f"Alerta fotodegradação IoT - Farmácia {farmacia_id} - "
+                    f"Luminosidade {luminosidade_lux} lux - "
+                    f"{medicamentos_fotossensiveis} medicamentos fotossensíveis"
+                )
         
-        # Ações em caso de CRITICO_TERMICO
+        # Se alerta crítico, notifica responsáveis
         if status_alerta == StatusAlertaEnum.CRITICO_TERMICO:
-            # Registra alerta na tabela logs_atividade
-            registrar_log(
-                "VIOLAÇÃO_TERMICIDADE_IOT",
-                f"VIOLAÇÃO CRÍTICA DE CADEIA DE FRIO - Dispositivo {dispositivo_id}: "
+            current_app.logger.error(
+                f"ALERTA CRÍTICO IoT - Dispositivo {dispositivo_id} - Farmácia {farmacia_id} - "
                 f"Temperatura {temperatura}°C, Umidade {umidade}% - "
                 f"Fora dos limites ANVISA (10°C - 30°C)"
             )
@@ -815,7 +838,7 @@ def receber_telemetria_iot():
             from app.utils.notificacoes import enviar_alerta_estoque
             try:
                 enviar_alerta_estoque(
-                    f"ALERTA CRÍTICO IoT - Dispositivo {dispositivo_id}",
+                    f"ALERTA CRÍTICO IoT - Dispositivo {dispositivo_id} - Farmácia {farmacia.nome_fantasia}",
                     f"Temperatura {temperatura}°C fora dos limites ANVISA. Ação imediata necessária!"
                 )
             except Exception as e:
@@ -824,6 +847,7 @@ def receber_telemetria_iot():
         return resposta_ok({
             'id': leitura.id,
             'dispositivo_id': leitura.dispositivo_id,
+            'farmacia_id': leitura.farmacia_id,
             'temperatura': leitura.temperatura,
             'umidade': leitura.umidade,
             'status_alerta': leitura.status_alerta.value,
@@ -838,6 +862,7 @@ def receber_telemetria_iot():
 
 @api_bp.route("/iot/telemetria/atual")
 @jwt_ou_sessao_required
+@farmaceutico_required
 @limiter.limit('30 per minute')
 def obter_status_iot_atual():
     """
@@ -897,6 +922,7 @@ def obter_status_iot_atual():
 
 @api_bp.route("/iot/telemetria/sensores")
 @jwt_ou_sessao_required
+@farmaceutico_required
 @limiter.limit('30 per minute')
 def listar_sensores_iot():
     """

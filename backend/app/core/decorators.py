@@ -76,15 +76,17 @@ def operador_required(f):
 
 
 def farmaceutico_required(f):
-    """Acesso para Admin, Operador e Farmacêutico. Retorna 403 se negado."""
+    """
+    Acesso exclusivo para Farmacêutico e Admin.
+    Conforme Portaria 344/ANVISA - controle de medicamentos refrigerados/controlados.
+    Retorna 403 se negado.
+    """
 
     @wraps(f)
     def decorated(*args, **kwargs):
         if not current_user.is_authenticated:
             return redirect(url_for("auth.login"))
-        if not cargo_permitido(
-            current_user.cargo, ("Admin", "Operador", "Farmacêutico")
-        ):
+        if not cargo_permitido(current_user.cargo, ("Admin", "Farmacêutico")):
             abort(403)
         return f(*args, **kwargs)
 
@@ -232,3 +234,82 @@ def log_login_attempt(success=True):
             return result
         return decorated
     return decorator
+
+
+def farmacia_vinculada_required(f):
+    """
+    Decorator para validar que uma farmácia está vinculada ao contexto.
+    Garante conformidade com Portaria 344/ANVISA para controle de refrigerados.
+    
+    Verifica:
+    1. Usuário autenticado
+    2. Permissão de Farmacêutico ou Admin
+    3. Farmácia está selecionada/indicada nos parâmetros
+    
+    Retorna 403 se negado ou erro informando que farmácia deve ser selecionada.
+    """
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        # Verifica autenticação
+        if not current_user.is_authenticated:
+            return redirect(url_for("auth.login"))
+        
+        # Verifica permissão (apenas Farmacêutico e Admin)
+        if not cargo_permitido(current_user.cargo, ("Admin", "Farmacêutico")):
+            abort(403)
+        
+        # Verifica se há farmácia nos parâmetros ou no contexto
+        farmacia_id = request.args.get('farmacia_id') or request.json.get('farmacia_id') if request.is_json else None
+        
+        if not farmacia_id:
+            # Verifica se há farmácia padrão para o usuário
+            from app.models.farmacia import Farmacia
+            from app.database import db
+            
+            try:
+                # Tenta encontrar farmácia vinculada ao usuário (se houver relação)
+                # Se não houver, exige que o usuário selecione uma farmácia
+                total_farmacias = Farmacia.query.count()
+                if total_farmacias == 0:
+                    from flask import jsonify
+                    return jsonify({
+                        'error': 'Nenhuma farmácia cadastrada',
+                        'message': 'Cadastre uma farmácia parceira antes de acessar o painel de controle',
+                        'action': 'cadastrar_farmacia'
+                    }), 400
+            except Exception:
+                pass
+            
+            # Se não especificar farmácia, mas houver farmácias cadastradas, retorna erro
+            from flask import jsonify
+            return jsonify({
+                'error': 'Farmácia não selecionada',
+                'message': 'Selecione uma farmácia parceira para continuar',
+                'action': 'selecionar_farmacia'
+            }), 400
+        
+        # Valida se a farmácia existe
+        try:
+            from app.models.farmacia import Farmacia
+            from app.database import db
+            
+            farmacia = Farmacia.query.get(farmacia_id)
+            if not farmacia:
+                from flask import jsonify
+                return jsonify({
+                    'error': 'Farmácia não encontrada',
+                    'message': 'A farmácia selecionada não existe no sistema'
+                }), 404
+        except Exception as e:
+            from flask import jsonify
+            return jsonify({
+                'error': 'Erro ao validar farmácia',
+                'message': str(e)
+            }), 500
+        
+        # Adiciona farmacia_id ao kwargs para a função usar
+        kwargs['farmacia_id'] = farmacia_id
+        
+        return f(*args, **kwargs)
+    
+    return decorated

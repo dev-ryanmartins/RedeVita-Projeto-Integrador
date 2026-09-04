@@ -3,7 +3,7 @@ import io
 from flask import Blueprint, render_template, Response, redirect, url_for
 from flask_login import login_required
 from sqlalchemy import func
-from app.core.decorators import equipe_clinica_required
+from app.core.decorators import equipe_clinica_required, admin_required
 from app.models.medicamento import Medicamento
 from app.models.medico import Medico
 from app.models.farmacia import Farmacia
@@ -117,7 +117,7 @@ def _aplicar_estilo_tabela_profissional(table):
 
 @relatorios_bp.route("/relatorios")
 @login_required
-@equipe_clinica_required
+@admin_required
 def relatorios():
     try:
         hoje = date.today()

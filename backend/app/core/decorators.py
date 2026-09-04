@@ -48,7 +48,11 @@ def cargo_required(*cargos):
 
 
 def admin_required(f):
-    """Acesso exclusivo para Administradores. Retorna 403 se negado."""
+    """
+    Acesso exclusivo para Administradores.
+    Admin tem acesso irrestrito a todas as funcionalidades do sistema.
+    Retorna 403 se negado.
+    """
 
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -83,6 +87,7 @@ def farmaceutico_required(f):
     """
     Acesso exclusivo para Farmacêutico e Admin.
     Conforme Portaria 344/ANVISA - controle de medicamentos refrigerados/controlados.
+    Admin tem acesso irrestrito a todas as funcionalidades.
     Retorna 403 se negado.
     """
 
@@ -265,10 +270,12 @@ def farmacia_vinculada_required(f):
     Decorator para validar que uma farmácia está vinculada ao contexto.
     Garante conformidade com Portaria 344/ANVISA para controle de refrigerados.
     
+    EXCEÇÃO PARA ADMIN: Admin tem acesso irrestrito e pode acessar mesmo sem farmácia vinculada.
+    
     Verifica:
     1. Usuário autenticado
     2. Permissão de Farmacêutico ou Admin
-    3. Farmácia está selecionada/indicada nos parâmetros
+    3. Farmácia está selecionada/indicada nos parâmetros (não aplicável para Admin)
     
     Retorna 403 se negado ou erro informando que farmácia deve ser selecionada.
     """
@@ -282,7 +289,11 @@ def farmacia_vinculada_required(f):
         if not cargo_permitido(current_user.cargo, ("Admin", "Farmacêutico")):
             abort(403)
         
-        # Verifica se há farmácia nos parâmetros ou no contexto
+        # ADMIN tem acesso irrestrito - pula validação de farmácia
+        if cargo_permitido(current_user.cargo, ("Admin",)):
+            return f(*args, **kwargs)
+        
+        # Para Farmacêutico, verifica se há farmácia nos parâmetros ou no contexto
         farmacia_id = request.args.get('farmacia_id') or request.json.get('farmacia_id') if request.is_json else None
         
         if not farmacia_id:

@@ -52,11 +52,19 @@ def monitoramento_iot():
     
     REGRA DE SEGURANÇA: Apenas Farmacêutico e Admin podem acessar.
     Conforme Portaria 344/ANVISA - controle de medicamentos refrigerados/controlados.
+    
+    EXCEÇÃO PARA ADMIN: Admin pode acessar mesmo sem farmácias cadastradas para fins de apresentação.
     """
+    from flask_login import current_user
+    
     # Verifica se há farmácias cadastradas
     total_farmacias = Farmacia.query.count()
-    if total_farmacias == 0:
+    
+    # ADMIN tem acesso irrestrito - pode acessar mesmo sem farmácias
+    # Para Farmacêutico, exige farmácia cadastrada
+    if total_farmacias == 0 and not cargo_permitido(current_user.cargo, ("Admin",)):
         from flask import flash, redirect, url_for
+        from app.core.decorators import cargo_permitido
         flash(
             "Cadastre uma farmácia parceira antes de acessar o painel de monitoramento IoT. "
             "Conforme Portaria 344/ANVISA, todo monitoramento deve estar vinculado a uma farmácia.",
@@ -64,7 +72,12 @@ def monitoramento_iot():
         )
         return redirect(url_for("inventory.dashboard"))
     
-    sensores = iot_simulator.obter_todas_leituras()
+    # Se não houver farmácias e for Admin, usa dados de demonstração
+    if total_farmacias == 0:
+        sensores = []  # Lista vazia para Admin demonstrar o painel sem dados
+    else:
+        sensores = iot_simulator.obter_todas_leituras()
+    
     return render_template(
         "monitoramento_iot.html",
         sensores=sensores,

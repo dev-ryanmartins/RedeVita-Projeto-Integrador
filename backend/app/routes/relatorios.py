@@ -16,15 +16,103 @@ from datetime import date
 try:
     from reportlab.lib.pagesizes import letter
     from reportlab.lib import colors
-    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
-    from reportlab.lib.styles import getSampleStyleSheet
-    from reportlab.lib.units import inch
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.units import inch, cm
+    from reportlab.lib.enums import TA_CENTER, TA_LEFT
 
     REPORTLAB_AVAILABLE = True
 except ImportError:
     REPORTLAB_AVAILABLE = False
 
+# Cores corporativas RedeVita
+COR_PRIMARIA = '#0ea5e9'  # Azul principal
+COR_SECUNDARIA = '#3b82f6'  # Azul secundário
+COR_TEXTO = '#1e293b'  # Cinza escuro para texto
+COR_FUNDO = '#f8fafc'  # Cinza claro para fundo
+
 relatorios_bp = Blueprint("relatorios", __name__)
+
+
+def _criar_cabecalho_profissional(elementos, titulo):
+    """Cria cabeçalho profissional para PDFs"""
+    styles = getSampleStyleSheet()
+    
+    titulo_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=16,
+        textColor=colors.HexColor(COR_TEXTO),
+        spaceAfter=6,
+        spaceBefore=6,
+        fontName='Helvetica-Bold',
+        alignment=TA_LEFT
+    )
+    
+    subtitulo_style = ParagraphStyle(
+        'CustomSubtitle',
+        parent=styles['Normal'],
+        fontSize=10,
+        textColor=colors.HexColor('#64748b'),
+        spaceAfter=12,
+        fontName='Helvetica',
+        alignment=TA_LEFT
+    )
+    
+    elementos.append(Spacer(1, 0.3*cm))
+    elementos.append(Paragraph(titulo, titulo_style))
+    elementos.append(Paragraph(f"Emitido em: {date.today().strftime('%d/%m/%Y')}", subtitulo_style))
+    
+    # Linha de separação
+    linha = Table([['']], colWidths=[18*cm])
+    linha.setStyle(TableStyle([
+        ('LINEABOVE', (0, 0), (-1, 0), 2, colors.HexColor(COR_PRIMARIA)),
+        ('LINEBELOW', (0, 0), (-1, 0), 1, colors.HexColor('#e2e8f0')),
+    ]))
+    elementos.append(linha)
+    elementos.append(Spacer(1, 0.5*cm))
+
+
+def _criar_rodape_profissional(elementos):
+    """Cria rodapé profissional para PDFs"""
+    styles = getSampleStyleSheet()
+    
+    rodape_style = ParagraphStyle(
+        'CustomFooter',
+        parent=styles['Normal'],
+        fontSize=8,
+        textColor=colors.HexColor('#94a3b8'),
+        spaceBefore=12,
+        fontName='Helvetica',
+        alignment=TA_CENTER
+    )
+    elementos.append(Spacer(1, 1*cm))
+    elementos.append(Paragraph(
+        "RedeVita - Sistema de Gestão de Medicamentos | Relatório Oficial",
+        rodape_style
+    ))
+
+
+def _aplicar_estilo_tabela_profissional(table):
+    """Aplica estilo profissional às tabelas"""
+    table.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor(COR_PRIMARIA)),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+                ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                ("FONTSIZE", (0, 0), (-1, 0), 11),
+                ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
+                ("TOPPADDING", (0, 0), (-1, 0), 12),
+                ("BACKGROUND", (0, 1), (-1, -1), colors.white),
+                ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor('#e2e8f0')),
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                ("FONTSIZE", (0, 1), (-1, -1), 9),
+            ]
+        )
+    )
+    return table
 
 
 @relatorios_bp.route("/relatorios")
@@ -268,12 +356,12 @@ def exportar_medicamentos_pdf():
     )
 
     buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    doc = SimpleDocTemplate(buffer, pagesize=letter, 
+                           rightMargin=1.5*cm, leftMargin=1.5*cm,
+                           topMargin=2*cm, bottomMargin=2*cm)
     elements = []
 
-    styles = getSampleStyleSheet()
-    title = Paragraph("Relatório de Medicamentos", styles["Heading1"])
-    elements.append(title)
+    _criar_cabecalho_profissional(elementos, "Relatório de Medicamentos")
 
     data = [["Nome", "Lote", "Validade", "Qtd", "Status"]]
     status_map = {0: "Seguro", 1: "Próximo Vencimento", 2: "Vencido"}
@@ -290,24 +378,12 @@ def exportar_medicamentos_pdf():
         )
 
     table = Table(
-        data, colWidths=[2.5 * inch, 1 * inch, 1 * inch, 0.5 * inch, 1 * inch]
+        data, colWidths=[2.5 * inch, 1 * inch, 1 * inch, 0.5 * inch, 1.2 * inch]
     )
-    table.setStyle(
-        TableStyle(
-            [
-                ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
-                ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
-                ("ALIGN", (0, 0), (-1, -1), "CENTER"),
-                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-                ("FONTSIZE", (0, 0), (-1, 0), 12),
-                ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
-                ("BACKGROUND", (0, 1), (-1, -1), colors.beige),
-                ("GRID", (0, 0), (-1, -1), 1, colors.black),
-            ]
-        )
-    )
-
+    table = _aplicar_estilo_tabela_profissional(table)
     elements.append(table)
+    
+    _criar_rodape_profissional(elementos)
     doc.build(elements)
 
     pdf = buffer.getvalue()
@@ -333,12 +409,12 @@ def exportar_medicos_pdf():
     )
 
     buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    doc = SimpleDocTemplate(buffer, pagesize=letter,
+                           rightMargin=1.5*cm, leftMargin=1.5*cm,
+                           topMargin=2*cm, bottomMargin=2*cm)
     elements = []
 
-    styles = getSampleStyleSheet()
-    title = Paragraph("Relatório de Médicos", styles["Heading1"])
-    elements.append(title)
+    _criar_cabecalho_profissional(elementos, "Relatório de Médicos")
 
     data = [["Nome", "CRM", "Especialidade", "Contato", "Cadastrado em"]]
 
@@ -356,22 +432,10 @@ def exportar_medicos_pdf():
     table = Table(
         data, colWidths=[2 * inch, 1 * inch, 1.5 * inch, 1.5 * inch, 1 * inch]
     )
-    table.setStyle(
-        TableStyle(
-            [
-                ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
-                ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
-                ("ALIGN", (0, 0), (-1, -1), "CENTER"),
-                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-                ("FONTSIZE", (0, 0), (-1, 0), 12),
-                ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
-                ("BACKGROUND", (0, 1), (-1, -1), colors.beige),
-                ("GRID", (0, 0), (-1, -1), 1, colors.black),
-            ]
-        )
-    )
-
+    table = _aplicar_estilo_tabela_profissional(table)
     elements.append(table)
+    
+    _criar_rodape_profissional(elementos)
     doc.build(elements)
 
     pdf = buffer.getvalue()
@@ -397,12 +461,12 @@ def exportar_farmacias_pdf():
     )
 
     buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    doc = SimpleDocTemplate(buffer, pagesize=letter,
+                           rightMargin=1.5*cm, leftMargin=1.5*cm,
+                           topMargin=2*cm, bottomMargin=2*cm)
     elements = []
 
-    styles = getSampleStyleSheet()
-    title = Paragraph("Relatório de Farmácias", styles["Heading1"])
-    elements.append(title)
+    _criar_cabecalho_profissional(elementos, "Relatório de Farmácias")
 
     data = [["Nome Fantasia", "Razão Social", "CNPJ", "Responsável", "Endereço", "Cadastrado em"]]
 
@@ -421,22 +485,10 @@ def exportar_farmacias_pdf():
     table = Table(
         data, colWidths=[1.5 * inch, 1.5 * inch, 1 * inch, 1 * inch, 1.5 * inch, 1 * inch]
     )
-    table.setStyle(
-        TableStyle(
-            [
-                ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
-                ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
-                ("ALIGN", (0, 0), (-1, -1), "CENTER"),
-                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-                ("FONTSIZE", (0, 0), (-1, 0), 12),
-                ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
-                ("BACKGROUND", (0, 1), (-1, -1), colors.beige),
-                ("GRID", (0, 0), (-1, -1), 1, colors.black),
-            ]
-        )
-    )
-
+    table = _aplicar_estilo_tabela_profissional(table)
     elements.append(table)
+    
+    _criar_rodape_profissional(elementos)
     doc.build(elements)
 
     pdf = buffer.getvalue()
@@ -462,12 +514,12 @@ def exportar_pacientes_pdf():
     )
 
     buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    doc = SimpleDocTemplate(buffer, pagesize=letter,
+                           rightMargin=1.5*cm, leftMargin=1.5*cm,
+                           topMargin=2*cm, bottomMargin=2*cm)
     elements = []
 
-    styles = getSampleStyleSheet()
-    title = Paragraph("Relatório de Pacientes", styles["Heading1"])
-    elements.append(title)
+    _criar_cabecalho_profissional(elementos, "Relatório de Pacientes")
 
     data = [["Nome", "CPF", "Data de Nascimento", "Endereço", "Cadastrado em"]]
 
@@ -485,22 +537,10 @@ def exportar_pacientes_pdf():
     table = Table(
         data, colWidths=[2 * inch, 1 * inch, 1 * inch, 1.5 * inch, 1 * inch]
     )
-    table.setStyle(
-        TableStyle(
-            [
-                ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
-                ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
-                ("ALIGN", (0, 0), (-1, -1), "CENTER"),
-                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-                ("FONTSIZE", (0, 0), (-1, 0), 12),
-                ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
-                ("BACKGROUND", (0, 1), (-1, -1), colors.beige),
-                ("GRID", (0, 0), (-1, -1), 1, colors.black),
-            ]
-        )
-    )
-
+    table = _aplicar_estilo_tabela_profissional(table)
     elements.append(table)
+    
+    _criar_rodape_profissional(elementos)
     doc.build(elements)
 
     pdf = buffer.getvalue()

@@ -7,7 +7,7 @@ from flask_login import login_required
 from sqlalchemy import or_
 
 from app.core.api_responses import resposta_erro, resposta_ok
-from app.core.decorators import admin_required, farmaceutico_required
+from app.core.decorators import admin_required, farmaceutico_required, cargo_permitido
 from app.database import db
 from app.models.farmacia import Farmacia
 from app.models.log_atividade import LogAtividade
@@ -64,7 +64,6 @@ def monitoramento_iot():
     # Para Farmacêutico, exige farmácia cadastrada
     if total_farmacias == 0 and not cargo_permitido(current_user.cargo, ("Admin",)):
         from flask import flash, redirect, url_for
-        from app.core.decorators import cargo_permitido
         flash(
             "Cadastre uma farmácia parceira antes de acessar o painel de monitoramento IoT. "
             "Conforme Portaria 344/ANVISA, todo monitoramento deve estar vinculado a uma farmácia.",

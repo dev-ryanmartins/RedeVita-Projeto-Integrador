@@ -187,6 +187,7 @@ code { font-family: 'Courier New', monospace; }
     align-items: center;
     justify-content: space-between;
     width: 100%;
+    max-width: 100%;
     gap: 20px;
 }
 
@@ -355,18 +356,18 @@ code { font-family: 'Courier New', monospace; }
     height: 100vh;
     background: var(--bg-card);
     border-right: 1px solid var(--border);
-    transform: translateX(-100%);
+    transform: translateX(0);
     transition: transform 0.3s ease;
     z-index: 1000;
     display: flex;
     flex-direction: column;
     box-shadow: var(--shadow);
-    visibility: hidden;
+    visibility: visible;
 }
 
-.sidebar.active {
-    transform: translateX(0);
-    visibility: visible;
+.sidebar.hidden {
+    transform: translateX(-100%);
+    visibility: hidden;
 }
 
 .sidebar-header {
@@ -448,21 +449,6 @@ code { font-family: 'Courier New', monospace; }
 .sidebar-divider {
     border-top: 1px solid var(--border);
     margin: 12px 20px;
-}
-
-.sidebar-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 999;
-    opacity: 0;
-    visibility: hidden;
-    transition: var(--transition);
-}
-
-.sidebar-overlay.active {
-    opacity: 1;
-    visibility: visible;
 }
 
 .btn-logout {
@@ -551,6 +537,12 @@ code { font-family: 'Courier New', monospace; }
 .main-content {
     flex: 1;
     width: 100%;
+    margin-left: 0;
+    transition: margin-left 0.3s ease;
+}
+
+.main-content.sidebar-open {
+    margin-left: 280px;
 }
 
 .page-wrapper {

@@ -47,7 +47,7 @@
 </nav>
 
 <!-- Sidebar Menu -->
-<aside class="sidebar" id="sidebar" aria-hidden="true">
+<aside class="sidebar hidden" id="sidebar" aria-hidden="true">
     <div class="sidebar-header">
         <button class="sidebar-close" id="sidebarClose" aria-label="Fechar menu">
             <i class="fas fa-times"></i>
@@ -157,7 +157,6 @@
         </ul>
     </nav>
 </aside>
-<div class="sidebar-overlay" id="sidebarOverlay"></div>
 {% endif %}
 
 {% if not current_user.is_authenticated %}
@@ -367,63 +366,57 @@
     const navToggle = document.getElementById('navToggle');
     const sidebar = document.getElementById('sidebar');
     const sidebarClose = document.getElementById('sidebarClose');
-    const sidebarOverlay = document.getElementById('sidebarOverlay');
-    
+    const mainContent = document.querySelector('.main-content');
+
     window.abrirSidebar = function() {
         if (sidebar) {
-            sidebar.classList.add('active');
+            sidebar.classList.remove('hidden');
             sidebar.setAttribute('aria-hidden', 'false');
-            if (sidebarOverlay) {
-                sidebarOverlay.classList.add('active');
+            if (mainContent) {
+                mainContent.classList.add('sidebar-open');
             }
-            document.body.style.overflow = 'hidden';
             if (navToggle) {
                 navToggle.setAttribute('aria-expanded', 'true');
                 navToggle.setAttribute('aria-label', 'Fechar menu lateral');
             }
         }
     }
-    
+
     window.fecharSidebar = function() {
         if (sidebar) {
-            sidebar.classList.remove('active');
+            sidebar.classList.add('hidden');
             sidebar.setAttribute('aria-hidden', 'true');
-            if (sidebarOverlay) {
-                sidebarOverlay.classList.remove('active');
+            if (mainContent) {
+                mainContent.classList.remove('sidebar-open');
             }
-            document.body.style.overflow = '';
             if (navToggle) {
                 navToggle.setAttribute('aria-expanded', 'false');
                 navToggle.setAttribute('aria-label', 'Abrir menu lateral');
             }
         }
     }
-    
+
     if (navToggle) {
         navToggle.addEventListener('click', function(e) {
             e.preventDefault();
-            if (sidebar && sidebar.classList.contains('active')) {
-                window.fecharSidebar();
-            } else {
+            if (sidebar && sidebar.classList.contains('hidden')) {
                 window.abrirSidebar();
+            } else {
+                window.fecharSidebar();
             }
         });
     }
-    
+
     if (sidebarClose) {
         sidebarClose.addEventListener('click', window.fecharSidebar);
     }
-    
-    if (sidebarOverlay) {
-        sidebarOverlay.addEventListener('click', window.fecharSidebar);
-    }
-    
+
     // Fechar sidebar ao clicar em um link
     const sidebarLinks = document.querySelectorAll('.sidebar-links a');
     sidebarLinks.forEach(link => {
         link.addEventListener('click', window.fecharSidebar);
     });
-    
+
     // Fechar sidebar com ESC
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') window.fecharSidebar();

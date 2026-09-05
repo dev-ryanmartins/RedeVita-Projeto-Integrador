@@ -1,6 +1,35 @@
 {% extends "base.html" %}
 {% block title %}Doações - RedeVita{% endblock %}
 
+{% block extra_css %}
+<style>
+.modal-warning-icon {
+    font-size: 3rem;
+    color: var(--warning);
+    margin-bottom: 16px;
+}
+.portaria-alert-content {
+    background: rgba(243, 156, 18, 0.1);
+    border: 1px solid var(--warning);
+    border-radius: 8px;
+    padding: 16px;
+    margin: 16px 0;
+}
+.portaria-alert-content h4 {
+    color: var(--warning);
+    margin: 0 0 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.portaria-alert-content p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="page-wrapper">
 
@@ -18,19 +47,18 @@
             <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-end;">
 
                 <div class="form-group" style="flex: 2; min-width: 240px;">
-                    <label for="medicamento_id">Medicamento Disponível <span class="required">*</span></label>
+                    <label for="medicamento_nome">Nome do Medicamento <span class="required">*</span></label>
                     <div class="input-with-icon">
                         <i class="fas fa-pills"></i>
-                        <select name="medicamento_id" id="medicamento_id" required>
-                            <option value="" disabled selected>Escolha um item do estoque...</option>
-                            {% for med in medicamentos %}
-                                <option value="{{ med.id }}">
-                                    {{ med.nome }} — Lote: {{ med.lote }} | Disponível: {{ med.quantidade }} un.
-                                </option>
-                            {% else %}
-                                <option disabled>Nenhum medicamento disponível no estoque</option>
-                            {% endfor %}
-                        </select>
+                        <input type="text" name="medicamento_nome" id="medicamento_nome" placeholder="Digite o nome do medicamento..." required>
+                    </div>
+                </div>
+
+                <div class="form-group" style="flex: 1; min-width: 180px;">
+                    <label for="medicamento_tipo">Tipo do Medicamento <span class="required">*</span></label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-tag"></i>
+                        <input type="text" name="medicamento_tipo" id="medicamento_tipo" placeholder="Ex: Comprimido, Injetável..." required>
                     </div>
                 </div>
 
@@ -42,8 +70,28 @@
                     </div>
                 </div>
 
+                <div class="form-group" style="flex: 1; min-width: 200px;">
+                    <label for="receita_medica">Receita Médica <span class="required" id="receita-required">*</span></label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-prescription"></i>
+                        <input type="text" name="receita_medica" id="receita_medica" placeholder="Número da receita ou CRM do médico" required>
+                    </div>
+                </div>
+
+                <div class="form-group" style="min-width: 180px;">
+                    <label for="aprovacao_farmaceutico">Aprovação Farmacêutico <span class="required">*</span></label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-user-md"></i>
+                        <select name="aprovacao_farmaceutico" id="aprovacao_farmaceutico" required>
+                            <option value="">Selecione...</option>
+                            <option value="aprovado">✓ Aprovado</option>
+                            <option value="pendente">⏳ Pendente</option>
+                        </select>
+                    </div>
+                </div>
+
                 <div style="margin-bottom: 0;">
-                    <button type="submit" class="btn-primary" style="height: 42px; margin-top: auto;">
+                    <button type="submit" class="btn-primary" style="height: 42px; margin-top: auto;" onclick="validarReceita(event)">
                         <i class="fas fa-check"></i> Confirmar
                     </button>
                 </div>
@@ -68,7 +116,7 @@
                     <tr>
                         <td>{{ doacao.data_doacao.strftime('%d/%m/%Y %H:%M') }}</td>
                         <td><strong>{{ doacao.medicamento.nome }}</strong>
-                            <br><small style="color: var(--text-muted);">Lote: {{ doacao.medicamento.lote }}</small>
+                            <br><small style="color: var(--text-muted);">Tipo: {{ doacao.medicamento.principio_ativo or 'N/A' }} | Lote: {{ doacao.medicamento.lote }}</small>
                         </td>
                         <td>{{ doacao.quantidade }} unidades</td>
                         <td>
@@ -92,4 +140,119 @@
     </div>
 
 </div>
+
+<!-- Modal de Alerta Portaria 344 -->
+<div id="modal-portaria-344" class="modal-overlay" aria-hidden="true">
+    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="portaria-title">
+        <div class="modal-header">
+            <h3 id="portaria-title"><i class="fas fa-exclamation-triangle" style="color: var(--warning);"></i> Alerta Portaria 344/ANVISA</h3>
+            <button type="button" class="modal-close" onclick="fecharModalPortaria()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="portaria-alert-content">
+                <h4><i class="fas fa-shield-alt"></i> Medicamento Controlado</h4>
+                <p>Este medicamento está sujeito às restrições da Portaria 344/ANVISA para substâncias controladas.</p>
+            </div>
+            <p style="color: var(--text-muted); margin: 16px 0;">
+                <strong>Requisitos obrigatórios:</strong>
+            </p>
+            <ul style="color: var(--text-muted); margin: 0 0 16px 20px; line-height: 1.8;">
+                <li>Aprovação do farmacêutico responsável</li>
+                <li>Receita médica válida</li>
+                <li>Registro especial de controle</li>
+                <li>Documentação completa da triagem</li>
+            </ul>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">
+                <i class="fas fa-info-circle"></i> O sistema registrará esta operação como "requer aprovação farmacêutica" até que a validação seja concluída.
+            </p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-secondary" onclick="fecharModalPortaria()">Entendido</button>
+            <button type="button" class="btn-primary" onclick="confirmarPortaria()">
+                <i class="fas fa-check"></i> Confirmar Requisitos
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+function abrirModalPortaria() {
+    const modal = document.getElementById('modal-portaria-344');
+    if (modal) {
+        modal.classList.add('active');
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function fecharModalPortaria() {
+    const modal = document.getElementById('modal-portaria-344');
+    if (modal) {
+        modal.classList.remove('active');
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+    }
+}
+
+function confirmarPortaria() {
+    fecharModalPortaria();
+    // Submeter o formulário após confirmação
+    document.querySelector('form[action="/doacoes"]').submit();
+}
+
+// Verificar automaticamente se o medicamento é controlado
+document.addEventListener('DOMContentLoaded', function() {
+    const tipoInput = document.getElementById('medicamento_tipo');
+    if (tipoInput) {
+        tipoInput.addEventListener('blur', function() {
+            const tipo = this.value.toLowerCase();
+            const controlledKeywords = ['antibiotico', 'antidepressivo', 'anfetamina', 'opiaceo', 'benzodiazepin', 'controlado', 'psicotropico'];
+            
+            if (controlledKeywords.some(keyword => tipo.includes(keyword))) {
+                abrirModalPortaria();
+            }
+        });
+    }
+});
+
+function validarReceita(event) {
+    const receitaInput = document.getElementById('receita_medica');
+    const aprovacaoSelect = document.getElementById('aprovacao_farmaceutico');
+    const tipoInput = document.getElementById('medicamento_tipo');
+    
+    const receita = receitaInput.value.trim();
+    const aprovacao = aprovacaoSelect.value;
+    const tipo = tipoInput.value.toLowerCase();
+    
+    // Check if it's a controlled substance
+    const controlledKeywords = ['antibiotico', 'antidepressivo', 'anfetamina', 'opiaceo', 'benzodiazepin', 'controlado', 'psicotropico'];
+    const isControlled = controlledKeywords.some(keyword => tipo.includes(keyword));
+    
+    if (isControlled) {
+        if (!receita) {
+            event.preventDefault();
+            alert('ERRO BLOQUEANTE: Para medicamentos controlados (Portaria 344), é obrigatório informar a receita médica válida.\n\nA operação não pode continuar sem:\n1. Receita médica válida\n2. Número da receita ou CRM do médico prescritor\n3. Aprovação do farmacêutico responsável');
+            receitaInput.focus();
+            return false;
+        }
+        
+        if (aprovacao !== 'aprovado') {
+            event.preventDefault();
+            alert('ERRO BLOQUEANTE: Para medicamentos controlados (Portaria 344), é obrigatória a aprovação do farmacêutico responsável.\n\nA operação requer aprovação dupla:\n1. Aprovação do farmacêutico responsável\n2. Validação da receita médica pelo médico prescritor\n\nSelecione "Aprovado" no campo de aprovação farmacêutica.');
+            aprovacaoSelect.focus();
+            return false;
+        }
+    }
+    
+    // Valid prescription format (basic validation)
+    if (receita && receita.length < 3) {
+        event.preventDefault();
+        alert('A receita médica deve ter pelo menos 3 caracteres.');
+        receitaInput.focus();
+        return false;
+    }
+    
+    return true;
+}
+</script>
 {% endblock %}

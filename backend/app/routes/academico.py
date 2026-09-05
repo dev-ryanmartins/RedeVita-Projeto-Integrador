@@ -15,6 +15,7 @@ from app.models.medicamento import Medicamento
 from app.models.paciente import Paciente
 from app.utils.iot_telemetry import iot_simulator
 from app.utils.trie_busca import buscar_entidades_rapida
+from app.utils.log_helper import registrar_log
 
 
 academico_bp = Blueprint("academico", __name__)
@@ -102,8 +103,10 @@ def novo_registro_termico():
     temperatura = request.form.get("temperatura")
     umidade = request.form.get("umidade")
     status = request.form.get("status")
+    tipo_item = request.form.get("tipo_item", "").strip()
+    nome_lote = request.form.get("nome_lote", "").strip()
     
-    if not farmacia_id or not temperatura or not umidade or not status:
+    if not farmacia_id or not temperatura or not umidade or not status or not tipo_item or not nome_lote:
         flash("Preencha todos os campos obrigatórios.", "danger")
         return redirect(url_for("academico.monitoramento_iot"))
     
@@ -136,7 +139,7 @@ def novo_registro_termico():
         
         registrar_log(
             "Registro Térmico Manual",
-            f"Leitura registrada para {farmacia.nome_fantasia}: {temp_float}°C, {umid_float}% umidade, status {status}"
+            f"Leitura registrada para {farmacia.nome_fantasia}: {temp_float}°C, {umid_float}% umidade, status {status} | Item: {tipo_item} - Lote: {nome_lote}"
         )
         
         flash("Registro térmico adicionado com sucesso.", "success")

@@ -11,7 +11,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 
 from app.models.usuario import Usuario
-from app.core.security import verificar_senha, criptografar_senha
+from app.core.security import verificar_senha, criptografar_senha, validar_forca_senha
 from app.core.jwt_auth import gerar_token
 from app.utils.log_helper import registrar_log
 from app.utils.sanitize import limpar, validar_cpf_digitos
@@ -97,8 +97,10 @@ def cadastro():
             flash("CPF inválido. Verifique os dígitos e tente novamente.", "danger")
             return render_template("cadastro.html")
 
-        if len(senha) < 6:
-            flash("A senha deve ter pelo menos 6 caracteres.", "danger")
+        # Validação de força de senha
+        senha_valida, senha_msg = validar_forca_senha(senha)
+        if not senha_valida:
+            flash(senha_msg, "danger")
             return render_template("cadastro.html")
 
         if senha != confirmar:
@@ -180,8 +182,10 @@ def redefinir_senha(token):
         nova_senha = limpar(request.form.get("nova_senha", ""), max_len=128)
         confirmar = limpar(request.form.get("confirmar_senha", ""), max_len=128)
 
-        if len(nova_senha) < 6:
-            flash("A senha deve ter pelo menos 6 caracteres.", "danger")
+        # Validação de força de senha
+        senha_valida, senha_msg = validar_forca_senha(nova_senha)
+        if not senha_valida:
+            flash(senha_msg, "danger")
             return render_template("redefinir_senha.html")
 
         if nova_senha != confirmar:

@@ -348,3 +348,47 @@ def farmacia_vinculada_required(f):
         return f(*args, **kwargs)
     
     return decorated
+
+
+def audit_critical_action(action_name):
+    """
+    Decorator simplificado para ações críticas (exclusão, alteração de estoque).
+    Automaticamente registra log de auditoria com detalhes da ação.
+    
+    Uso:
+        @audit_critical_action('EXCLUSÃO_MEDICAMENTO')
+        def excluir_medicamento():
+            ...
+    """
+    def decorator(f):
+        @wraps(f)
+        def decorated(*args, **kwargs):
+            # Executa a função original
+            result = f(*args, **kwargs)
+            
+            # Registra log de auditoria automaticamente
+            try:
+                from app.models.log_atividade import LogAtividade
+                from app import db
+                
+                if current_user.is_authenticated:
+                    ip_address = request.remote_addr or '127.0.0.1'
+                    
+                    log_entry = LogAtividade(
+                        usuario_id=current_user.id,
+                        acao=f"AÇÃO CRÍTICA: {action_name}",
+                        detalhes=f"Realizado por {current_user.nome} ({current_user.cargo})",
+                        ip=ip_address,
+                        created_at=datetime.utcnow()
+                    )
+                    
+                    db.session.add(log_entry)
+                    db.session.commit()
+                    
+            except Exception as e:
+                print(f"Erro ao registrar log de auditoria: {str(e)}")
+                traceback.print_exc()
+            
+            return result
+        return decorated
+    return decorator

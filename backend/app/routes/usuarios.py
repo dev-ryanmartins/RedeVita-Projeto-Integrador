@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required
 from app.models.usuario import Usuario
 from app.database import db
-from app.core.decorators import admin_required
+from app.core.decorators import admin_required, audit_critical_action
 from app.utils.log_helper import registrar_log
 
 usuarios_bp = Blueprint("usuarios", __name__)
@@ -50,6 +50,7 @@ def alterar_cargo(uid):
 @usuarios_bp.route("/usuario/<int:uid>/toggle-ativo", methods=["POST"])
 @login_required
 @admin_required
+@audit_critical_action('TOGGLE_USUARIO_ATIVO')
 def toggle_ativo(uid):
     from flask_login import current_user
 

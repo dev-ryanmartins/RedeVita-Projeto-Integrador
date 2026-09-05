@@ -23,7 +23,7 @@ from app.database import db
 from app.utils.semaforo import calcular_status_semaforo
 from app.schemas.med_schema import validar_entrada_medicamento
 from app.utils.log_helper import registrar_log
-from app.core.decorators import admin_required, farmaceutico_required, voluntario_required, equipe_clinica_required
+from app.core.decorators import admin_required, farmaceutico_required, voluntario_required, equipe_clinica_required, audit_critical_action
 from datetime import datetime, date
 
 inventory_bp = Blueprint("inventory", __name__)
@@ -436,6 +436,7 @@ def editar_medicamento(med_id):
 @inventory_bp.route("/medicamento/<int:med_id>/baixar-estoque", methods=["POST"])
 @login_required
 @farmaceutico_required
+@audit_critical_action('BAIXA_ESTOQUE')
 def baixar_estoque(med_id):
     med = db.session.get(Medicamento, med_id)
     if not med:
@@ -503,6 +504,7 @@ def baixar_estoque(med_id):
 @inventory_bp.route("/medicamento/<int:med_id>/excluir", methods=["POST"])
 @login_required
 @admin_required
+@audit_critical_action('EXCLUSÃO_MEDICAMENTO')
 def excluir_medicamento(med_id):
     med = db.session.get(Medicamento, med_id)
     if not med:

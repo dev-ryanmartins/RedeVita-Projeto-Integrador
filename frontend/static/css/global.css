@@ -357,10 +357,12 @@ code { font-family: 'Courier New', monospace; }
     display: flex;
     flex-direction: column;
     box-shadow: var(--shadow);
+    visibility: hidden;
 }
 
 .sidebar.active {
     transform: translateX(0);
+    visibility: visible;
 }
 
 .sidebar-header {
@@ -420,6 +422,7 @@ code { font-family: 'Courier New', monospace; }
     transition: var(--transition);
     font-weight: 500;
     font-size: 0.9rem;
+    white-space: nowrap;
 }
 
 .sidebar-links li a:hover {

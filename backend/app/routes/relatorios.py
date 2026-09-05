@@ -1,5 +1,6 @@
 import csv
 import io
+import logging
 from flask import Blueprint, render_template, Response, redirect, url_for
 from flask_login import login_required
 from sqlalchemy import func
@@ -12,6 +13,8 @@ from app.models.paciente import Paciente
 from app.utils.log_helper import registrar_log
 from app.database import db
 from datetime import date
+
+logger = logging.getLogger(__name__)
 
 try:
     from reportlab.lib.pagesizes import letter
@@ -362,7 +365,7 @@ def exportar_medicamentos_pdf():
                                topMargin=2*cm, bottomMargin=2*cm)
         elements = []
 
-        _criar_cabecalho_profissional(elementos, "Relatório de Medicamentos")
+        _criar_cabecalho_profissional(elements, "Relatório de Medicamentos")
 
         data = [["Nome", "Lote", "Validade", "Qtd", "Status"]]
         status_map = {0: "Seguro", 1: "Próximo Vencimento", 2: "Vencido"}
@@ -384,7 +387,7 @@ def exportar_medicamentos_pdf():
         table = _aplicar_estilo_tabela_profissional(table)
         elements.append(table)
         
-        _criar_rodape_profissional(elementos)
+        _criar_rodape_profissional(elements)
         doc.build(elements)
 
         pdf = buffer.getvalue()
@@ -420,7 +423,7 @@ def exportar_medicos_pdf():
                                topMargin=2*cm, bottomMargin=2*cm)
         elements = []
 
-        _criar_cabecalho_profissional(elementos, "Relatório de Médicos")
+        _criar_cabecalho_profissional(elements, "Relatório de Médicos")
 
         data = [["Nome", "CRM", "Especialidade", "Contato", "Cadastrado em"]]
 
@@ -441,7 +444,7 @@ def exportar_medicos_pdf():
         table = _aplicar_estilo_tabela_profissional(table)
         elements.append(table)
         
-        _criar_rodape_profissional(elementos)
+        _criar_rodape_profissional(elements)
         doc.build(elements)
 
         pdf = buffer.getvalue()
@@ -477,7 +480,7 @@ def exportar_farmacias_pdf():
                                topMargin=2*cm, bottomMargin=2*cm)
         elements = []
 
-        _criar_cabecalho_profissional(elementos, "Relatório de Farmácias")
+        _criar_cabecalho_profissional(elements, "Relatório de Farmácias")
 
         data = [["Nome Fantasia", "Razão Social", "CNPJ", "Responsável", "Endereço", "Cadastrado em"]]
 
@@ -499,7 +502,7 @@ def exportar_farmacias_pdf():
         table = _aplicar_estilo_tabela_profissional(table)
         elements.append(table)
         
-        _criar_rodape_profissional(elementos)
+        _criar_rodape_profissional(elements)
         doc.build(elements)
 
         pdf = buffer.getvalue()
@@ -535,7 +538,7 @@ def exportar_pacientes_pdf():
                                topMargin=2*cm, bottomMargin=2*cm)
         elements = []
 
-        _criar_cabecalho_profissional(elementos, "Relatório de Pacientes")
+        _criar_cabecalho_profissional(elements, "Relatório de Pacientes")
 
         data = [["Nome", "CPF", "Data de Nascimento", "Endereço", "Cadastrado em"]]
 
@@ -556,7 +559,7 @@ def exportar_pacientes_pdf():
         table = _aplicar_estilo_tabela_profissional(table)
         elements.append(table)
 
-        _criar_rodape_profissional(elementos)
+        _criar_rodape_profissional(elements)
         doc.build(elements)
 
         pdf = buffer.getvalue()
@@ -702,7 +705,7 @@ def exportar_sumario_pdf():
                                topMargin=2*cm, bottomMargin=2*cm)
         elements = []
 
-        _criar_cabecalho_profissional(elementos, "Sumário Executivo - RedeVita")
+        _criar_cabecalho_profissional(elements, "Sumário Executivo - RedeVita")
 
         # Resumo das métricas
         styles = getSampleStyleSheet()
@@ -750,7 +753,7 @@ def exportar_sumario_pdf():
         for obs in observacoes:
             elements.append(Paragraph(obs, summary_style))
 
-        _criar_rodape_profissional(elementos)
+        _criar_rodape_profissional(elements)
         doc.build(elements)
 
         pdf = buffer.getvalue()

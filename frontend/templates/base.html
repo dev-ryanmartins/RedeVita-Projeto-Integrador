@@ -400,7 +400,14 @@
     }
     
     if (navToggle) {
-        navToggle.addEventListener('click', window.abrirSidebar);
+        navToggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (sidebar && sidebar.classList.contains('active')) {
+                window.fecharSidebar();
+            } else {
+                window.abrirSidebar();
+            }
+        });
     }
     
     if (sidebarClose) {

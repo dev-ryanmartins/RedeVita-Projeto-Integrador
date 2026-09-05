@@ -1016,7 +1016,7 @@ textarea:focus {
 }
 .table-search input {
     min-height: 42px;
-    padding-left: 40px !important;
+    padding-left: 48px !important;
 }
 .table-search-hint {
     color: var(--text-muted);

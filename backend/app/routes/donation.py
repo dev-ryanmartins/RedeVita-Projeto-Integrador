@@ -26,10 +26,17 @@ TARJAS_VALIDAS = ["Sem Tarja", "Tarja Amarela", "Tarja Vermelha", "Portaria 344"
 @operador_required
 def nova_doacao():
     if request.method == "POST":
-        med_id = request.form.get("medicamento_id")
+        medicamento_nome = request.form.get("medicamento_nome", "").strip()
+        medicamento_tipo = request.form.get("medicamento_tipo", "").strip()
         quantidade_str = request.form.get("quantidade", "0")
+        receita_medica = request.form.get("receita_medica", "").strip()
+        aprovacao_farmaceutico = request.form.get("aprovacao_farmaceutico", "").strip()
         destinatario = request.form.get("destinatario", "").strip() or "Não informado"
         observacao = request.form.get("observacao", "").strip() or None
+
+        if not medicamento_nome or not medicamento_tipo:
+            flash("Preencha o nome e tipo do medicamento.", "danger")
+            return redirect(url_for("donation.nova_doacao"))
 
         try:
             qtd = int(quantidade_str)
@@ -40,18 +47,56 @@ def nova_doacao():
             flash("Quantidade inválida.", "danger")
             return redirect(url_for("donation.nova_doacao"))
 
-        medicamento = db.session.get(Medicamento, med_id)
+        # Check if this is a controlled substance requiring prescription
+        tipo_lower = medicamento_tipo.lower()
+        controlled_keywords = ['antibiotico', 'antidepressivo', 'anfetamina', 'opiaceo', 'benzodiazepin', 'controlado', 'psicotropico']
+        is_controlled = any(keyword in tipo_lower for keyword in controlled_keywords)
+        
+        if is_controlled:
+            if not receita_medica:
+                flash("ERRO BLOQUEANTE: Para medicamentos controlados (Portaria 344), é obrigatório informar a receita médica válida.", "danger")
+                return redirect(url_for("donation.nova_doacao"))
+            
+            if aprovacao_farmaceutico != 'aprovado':
+                flash("ERRO BLOQUEANTE: Para medicamentos controlados (Portaria 344), é obrigatória a aprovação do farmacêutico responsável.", "danger")
+                return redirect(url_for("donation.nova_doacao"))
 
+        # Try to find existing medication by name, or create a new one
+        medicamento = Medicamento.query.filter(Medicamento.nome.ilike(f"%{medicamento_nome}%")).first()
+        
         if not medicamento:
-            flash("Medicamento não encontrado.", "danger")
-            return redirect(url_for("donation.nova_doacao"))
-
-        if medicamento.quantidade < qtd:
-            flash("Quantidade insuficiente no estoque.", "danger")
-            return redirect(url_for("donation.nova_doacao"))
+            # Create new medication record for donation
+            medicamento = Medicamento(
+                nome=medicamento_nome,
+                lote="DOACAO-" + datetime.now().strftime("%Y%m%d%H%M%S"),
+                data_validade=datetime.now().date(),
+                quantidade=qtd,
+                status_semaforo=0,
+                tarja="Sem Tarja",
+                principio_ativo=medicamento_tipo
+            )
+            
+            # Check if this might be a controlled substance based on the type
+            tipo_lower = medicamento_tipo.lower()
+            if any(keyword in tipo_lower for keyword in ['antibiotico', 'antidepressivo', 'anfetamina', 'opiaceo', 'benzodiazepin', 'controlado', 'psicotropico']):
+                medicamento.tarja = "Portaria 344"
+                flash("⚠️ ATENÇÃO: O tipo de medicamento sugere substância controlada pela Portaria 344/ANVISA. A aprovação do farmacêutico é obrigatória para esta doação.", "warning")
+            
+            db.session.add(medicamento)
+            db.session.flush()  # Get the ID without committing
+        else:
+            # Check if we have enough quantity
+            if medicamento.quantidade < qtd:
+                flash("Quantidade insuficiente no estoque.", "danger")
+                return redirect(url_for("donation.nova_doacao"))
+            
+            # Check for Portaria 344 and show alert
+            if medicamento.controlado:
+                flash("⚠️ ALERTA DE PORTARIA 344: Este medicamento é controlado pela ANVISA. A doação requer aprovação obrigatória do farmacêutico responsável.", "warning")
+            
+            medicamento.quantidade -= qtd
 
         try:
-            medicamento.quantidade -= qtd
             registro = Doacao(
                 usuario_id=current_user.id,
                 medicamento_id=medicamento.id,
@@ -60,9 +105,13 @@ def nova_doacao():
             db.session.add(registro)
             db.session.commit()
             detalhe = (
-                f'{qtd} un. de "{medicamento.nome}" (Lote {medicamento.lote}) '
+                f'{qtd} un. de "{medicamento.nome}" (Tipo: {medicamento.principio_ativo or medicamento_tipo}) '
                 f"por {current_user.nome} [{current_user.cargo_exibicao}] → {destinatario}"
             )
+            if receita_medica:
+                detalhe += f" | Receita: {receita_medica}"
+            if aprovacao_farmaceutico:
+                detalhe += f" | Aprovação Farmacêutico: {aprovacao_farmaceutico}"
             if observacao:
                 detalhe += f" | Obs: {observacao}"
             registrar_log("Doação Registrada", detalhe)

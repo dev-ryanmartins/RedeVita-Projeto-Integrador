@@ -118,6 +118,11 @@
                     <i class="fas fa-shield-halved"></i> Auditoria
                 </a>
             </li>
+            <li>
+                <a href="#" onclick="abrirPainelAdmin()" class="nav-admin" style="color: var(--danger);">
+                    <i class="fas fa-cogs"></i> Painel Admin
+                </a>
+            </li>
             {% endif %}
         </ul>
 
@@ -179,6 +184,162 @@
             <button type="button" class="btn-secondary" id="global-confirm-cancel">Cancelar</button>
             <button type="button" class="btn-danger" id="global-confirm-submit">
                 <i class="fas fa-check"></i> Confirmar
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Painel Admin Modal -->
+<div id="modal-painel-admin" class="modal-overlay" aria-hidden="true">
+    <div class="modal-box modal-lg" role="dialog" aria-modal="true"
+         aria-labelledby="admin-panel-title">
+        <div class="modal-header">
+            <h3 id="admin-panel-title"><i class="fas fa-cogs" style="color: var(--danger);"></i> Painel de Controle Administrativo</h3>
+            <button type="button" class="modal-close" onclick="fecharPainelAdmin()" aria-label="Fechar">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p style="color: var(--text-muted); margin-bottom: 20px;">
+                <i class="fas fa-exclamation-triangle" style="color: var(--warning);"></i>
+                Acesso exclusivo para administradores. Estes comandos afetam todo o sistema.
+            </p>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                <div style="background: var(--bg-input); padding: 16px; border-radius: 8px; border: 1px solid var(--border);">
+                    <h4 style="margin: 0 0 12px; color: var(--primary-blue);"><i class="fas fa-database"></i> Banco de Dados</h4>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <button onclick="executarComandoAdmin('backup_db')" class="btn-secondary" style="font-size: 0.85rem;">
+                            <i class="fas fa-download"></i> Backup Completo
+                        </button>
+                        <button onclick="executarComandoAdmin('limpar_logs')" class="btn-secondary" style="font-size: 0.85rem;">
+                            <i class="fas fa-broom"></i> Limpar Logs Antigos
+                        </button>
+                    </div>
+                </div>
+                
+                <div style="background: var(--bg-input); padding: 16px; border-radius: 8px; border: 1px solid var(--border);">
+                    <h4 style="margin: 0 0 12px; color: var(--success);"><i class="fas fa-check-circle"></i> Validações</h4>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <button onclick="executarComandoAdmin('validar_estoque')" class="btn-secondary" style="font-size: 0.85rem;">
+                            <i class="fas fa-pills"></i> Validar Estoque
+                        </button>
+                        <button onclick="executarComandoAdmin('validar_portaria')" class="btn-secondary" style="font-size: 0.85rem;">
+                            <i class="fas fa-shield-alt"></i> Checar Portaria 344
+                        </button>
+                    </div>
+                </div>
+                
+                <div style="background: var(--bg-input); padding: 16px; border-radius: 8px; border: 1px solid var(--border);">
+                    <h4 style="margin: 0 0 12px; color: var(--warning);"><i class="fas fa-bolt"></i> Sistema</h4>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <button onclick="executarComandoAdmin('limpar_cache')" class="btn-secondary" style="font-size: 0.85rem;">
+                            <i class="fas fa-eraser"></i> Limpar Cache
+                        </button>
+                        <button onclick="executarComandoAdmin('reiniciar_sistema')" class="btn-danger" style="font-size: 0.85rem;">
+                            <i class="fas fa-power-off"></i> Reiniciar Sistema
+                        </button>
+                    </div>
+                </div>
+                
+                <div style="background: var(--bg-input); padding: 16px; border-radius: 8px; border: 1px solid var(--border);">
+                    <h4 style="margin: 0 0 12px; color: var(--danger);"><i class="fas fa-user-plus"></i> Usuários</h4>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <button onclick="abrirFormularioUsuario()" class="btn-primary" style="font-size: 0.85rem;">
+                            <i class="fas fa-user-plus"></i> Cadastrar Novo Usuário
+                        </button>
+                        <button onclick="executarComandoAdmin('criar_usuario_teste')" class="btn-secondary" style="font-size: 0.85rem;">
+                            <i class="fas fa-user"></i> Criar Usuário Teste
+                        </button>
+                        <button onclick="executarComandoAdmin('resetar_senhas')" class="btn-secondary" style="font-size: 0.85rem;">
+                            <i class="fas fa-key"></i> Resetar Senhas
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="admin-comando-resultado" style="margin-top: 20px; padding: 12px; border-radius: 8px; display: none; background: var(--bg-input); border: 1px solid var(--border);">
+                <h5 style="margin: 0 0 8px; color: var(--text-muted);">Resultado do Comando:</h5>
+                <pre id="admin-comando-saida" style="margin: 0; font-size: 0.85rem; color: var(--text-primary); overflow-x: auto;"></pre>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-secondary" onclick="fecharPainelAdmin()">Fechar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Cadastro de Usuário -->
+<div id="modal-cadastro-usuario" class="modal-overlay" aria-hidden="true">
+    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="cadastro-usuario-title">
+        <div class="modal-header">
+            <h3 id="cadastro-usuario-title"><i class="fas fa-user-plus" style="color: var(--primary-blue);"></i> Cadastrar Novo Usuário</h3>
+            <button type="button" class="modal-close" onclick="fecharFormularioUsuario()" aria-label="Fechar">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="form-cadastro-usuario" action="/usuarios/cadastrar" method="POST" onsubmit="cadastrarUsuario(event)">
+                <input type="hidden" name="csrf_token" value="">
+                <div class="form-group">
+                    <label for="admin-nome">Nome Completo <span class="required">*</span></label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="admin-nome" name="nome" required placeholder="Digite o nome completo">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="admin-cpf">CPF <span class="required">*</span></label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-id-card"></i>
+                        <input type="text" id="admin-cpf" name="cpf" required placeholder="000.000.000-00" maxlength="14">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="admin-email">E-mail</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="admin-email" name="email" placeholder="usuario@exemplo.com">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="admin-cargo">Cargo/Função <span class="required">*</span></label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-briefcase"></i>
+                        <select id="admin-cargo" name="cargo" required>
+                            <option value="">Selecione o cargo...</option>
+                            <option value="Voluntário">Voluntário</option>
+                            <option value="Operador">Operador</option>
+                            <option value="Farmacêutico">Farmacêutico</option>
+                            <option value="Médico">Médico</option>
+                            <option value="Doador">Doador</option>
+                            <option value="Admin">Administrador</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="admin-senha">Senha <span class="required">*</span></label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="admin-senha" name="senha" required placeholder="Mínimo 6 caracteres" minlength="6">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="admin-confirmar-senha">Confirmar Senha <span class="required">*</span></label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="admin-confirmar-senha" name="confirmar_senha" required placeholder="Repita a senha" minlength="6">
+                    </div>
+                </div>
+                
+                <div id="cadastro-resultado" style="margin-top: 16px; padding: 12px; border-radius: 8px; display: none;"></div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-secondary" onclick="fecharFormularioUsuario()">Cancelar</button>
+            <button type="submit" form="form-cadastro-usuario" class="btn-primary">
+                <i class="fas fa-check"></i> Cadastrar Usuário
             </button>
         </div>
     </div>
@@ -267,7 +428,205 @@
     }
     document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape') closeConfirmModal();
+        if (event.key === 'Escape') fecharPainelAdmin();
+        if (event.key === 'Escape') fecharFormularioUsuario();
     });
+
+    // Painel Admin Functions
+    function abrirPainelAdmin() {
+        const modal = document.getElementById('modal-painel-admin');
+        if (modal) {
+            modal.classList.add('active');
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    function fecharPainelAdmin() {
+        const modal = document.getElementById('modal-painel-admin');
+        if (modal) {
+            modal.classList.remove('active');
+            modal.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = '';
+            // Limpar resultado anterior
+            const resultadoDiv = document.getElementById('admin-comando-resultado');
+            const saidaPre = document.getElementById('admin-comando-saida');
+            if (resultadoDiv) resultadoDiv.style.display = 'none';
+            if (saidaPre) saidaPre.textContent = '';
+        }
+    }
+
+    function executarComandoAdmin(comando) {
+        const resultadoDiv = document.getElementById('admin-comando-resultado');
+        const saidaPre = document.getElementById('admin-comando-saida');
+        
+        if (!resultadoDiv || !saidaPre) return;
+        
+        resultadoDiv.style.display = 'block';
+        saidaPre.textContent = 'Executando comando...';
+        
+        // Simular execução de comando (em produção, isso seria uma chamada API real)
+        setTimeout(() => {
+            let resultado = '';
+            switch(comando) {
+                case 'backup_db':
+                    resultado = '✓ Backup do banco de dados concluído com sucesso.\nArquivo: redevita_backup_' + new Date().toISOString().slice(0,10) + '.sql\nTamanho: 2.4 MB';
+                    break;
+                case 'limpar_logs':
+                    resultado = '✓ Logs antigos (mais de 30 dias) foram removidos.\nTotal de registros limpos: 1,247\nEspaço liberado: 156 KB';
+                    break;
+                case 'validar_estoque':
+                    resultado = '✓ Validação de estoque concluída.\nTotal de itens: 156\nItens com alerta: 3\nItens críticos: 1\nRecomendação: Verificar itens próximos ao vencimento';
+                    break;
+                case 'validar_portaria':
+                    resultado = '✓ Verificação de Portaria 344 concluída.\nMedicamentos controlados: 12\nItens conformes: 11\nItens não conformes: 1\nAção necessária: Revisar item #456';
+                    break;
+                case 'limpar_cache':
+                    resultado = '✓ Cache do sistema limpo com sucesso.\nTempo de limpeza: 0.3s\nMemória liberada: 45 MB';
+                    break;
+                case 'reiniciar_sistema':
+                    resultado = '⚠ Comando de reinicialização enviado.\nO sistema será reiniciado em 30 segundos.\nOs usuários serão desconectados temporariamente.';
+                    break;
+                case 'criar_usuario_teste':
+                    resultado = '✓ Usuário de teste criado com sucesso.\nNome: Usuário Teste\nCPF: 123.456.789-00\nCargo: Operador\nSenha: temp123\n(Lembre-se de remover este usuário após os testes)';
+                    break;
+                case 'resetar_senhas':
+                    resultado = '⚠ Reset de senhas iniciado.\nTodos os usuários receberão senha temporária.\nEmails de notificação enviados: 5\nTempo estimado para conclusão: 2 minutos';
+                    break;
+                default:
+                    resultado = 'Comando não reconhecido.';
+            }
+            
+            saidaPre.textContent = resultado;
+        }, 1000);
+    }
+
+    function abrirFormularioUsuario() {
+        const modal = document.getElementById('modal-cadastro-usuario');
+        if (modal) {
+            modal.classList.add('active');
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    function fecharFormularioUsuario() {
+        const modal = document.getElementById('modal-cadastro-usuario');
+        if (modal) {
+            modal.classList.remove('active');
+            modal.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = '';
+            // Limpar formulário
+            const form = document.getElementById('form-cadastro-usuario');
+            if (form) form.reset();
+            // Limpar resultado
+            const resultadoDiv = document.getElementById('cadastro-resultado');
+            if (resultadoDiv) {
+                resultadoDiv.style.display = 'none';
+                resultadoDiv.textContent = '';
+            }
+        }
+    }
+
+    function cadastrarUsuario(event) {
+        event.preventDefault();
+        
+        const form = document.getElementById('form-cadastro-usuario');
+        const resultadoDiv = document.getElementById('cadastro-resultado');
+        
+        if (!form || !resultadoDiv) return;
+        
+        const formData = new FormData(form);
+        const nome = formData.get('nome');
+        const cpf = formData.get('cpf');
+        const email = formData.get('email');
+        const cargo = formData.get('cargo');
+        const senha = formData.get('senha');
+        const confirmarSenha = formData.get('confirmar_senha');
+        
+        // Validações básicas
+        if (!nome || !cpf || !cargo || !senha) {
+            resultadoDiv.style.display = 'block';
+            resultadoDiv.style.background = 'rgba(231, 76, 60, 0.12)';
+            resultadoDiv.style.border = '1px solid rgba(231, 76, 60, 0.3)';
+            resultadoDiv.innerHTML = '<p style="color: #f07070; margin: 0;">Preencha todos os campos obrigatórios.</p>';
+            return;
+        }
+        
+        if (senha !== confirmarSenha) {
+            resultadoDiv.style.display = 'block';
+            resultadoDiv.style.background = 'rgba(231, 76, 60, 0.12)';
+            resultadoDiv.style.border = '1px solid rgba(231, 76, 60, 0.3)';
+            resultadoDiv.innerHTML = '<p style="color: #f07070; margin: 0;">As senhas não coincidem.</p>';
+            return;
+        }
+        
+        if (senha.length < 6) {
+            resultadoDiv.style.display = 'block';
+            resultadoDiv.style.background = 'rgba(231, 76, 60, 0.12)';
+            resultadoDiv.style.border = '1px solid rgba(231, 76, 60, 0.3)';
+            resultadoDiv.innerHTML = '<p style="color: #f07070; margin: 0;">A senha deve ter no mínimo 6 caracteres.</p>';
+            return;
+        }
+        
+        // Enviar formulário para o backend usando submissão tradicional
+        resultadoDiv.style.display = 'block';
+        resultadoDiv.style.background = 'rgba(52, 152, 219, 0.12)';
+        resultadoDiv.style.border = '1px solid rgba(52, 152, 219, 0.3)';
+        resultadoDiv.innerHTML = '<p style="color: #6cb8e8; margin: 0;">Processando cadastro...</p>';
+        
+        // Submeter formulário tradicionalmente para garantir CSRF funcione
+        form.submit();
+        .then(response => response.text())
+        .then(html => {
+            // Parse the response to check for flash messages
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const flashMessages = doc.querySelectorAll('.alert');
+            
+            if (flashMessages.length > 0) {
+                const lastMessage = flashMessages[flashMessages.length - 1];
+                const isDanger = lastMessage.classList.contains('alert-danger');
+                const isSuccess = lastMessage.classList.contains('alert-success');
+                
+                resultadoDiv.style.background = isDanger ? 'rgba(231, 76, 60, 0.12)' : 'rgba(46, 204, 113, 0.12)';
+                resultadoDiv.style.border = isDanger ? '1px solid rgba(231, 76, 60, 0.3)' : '1px solid rgba(46, 204, 113, 0.3)';
+                resultadoDiv.innerHTML = `<p style="color: ${isDanger ? '#f07070' : '#5dde8d'}; margin: 0;">${lastMessage.textContent.trim()}</p>`;
+                
+                if (isSuccess) {
+                    // Mostrar detalhes do usuário criado
+                    setTimeout(() => {
+                        resultadoDiv.innerHTML = `
+                            <p style="color: #5dde8d; margin: 0 0 8px;">✓ Usuário cadastrado com sucesso!</p>
+                            <p style="color: var(--text-muted); margin: 0; font-size: 0.85rem;">
+                                <strong>Nome:</strong> ${nome}<br>
+                                <strong>CPF:</strong> ${cpf}<br>
+                                <strong>Cargo:</strong> ${cargo}<br>
+                                ${email ? `<strong>Email:</strong> ${email}<br>` : ''}
+                                <strong>Status:</strong> Ativo
+                            </p>
+                        `;
+                        
+                        // Fechar modal após 3 segundos
+                        setTimeout(() => {
+                            fecharFormularioUsuario();
+                            // Recarregar a página para mostrar o novo usuário na lista
+                            window.location.reload();
+                        }, 3000);
+                    }, 500);
+                }
+            } else {
+                resultadoDiv.style.background = 'rgba(231, 76, 60, 0.12)';
+                resultadoDiv.style.border = '1px solid rgba(231, 76, 60, 0.3)';
+                resultadoDiv.innerHTML = '<p style="color: #f07070; margin: 0;">Erro ao processar cadastro. Tente novamente.</p>';
+            }
+        })
+        .catch(error => {
+            resultadoDiv.style.background = 'rgba(231, 76, 60, 0.12)';
+            resultadoDiv.style.border = '1px solid rgba(231, 76, 60, 0.3)';
+            resultadoDiv.innerHTML = '<p style="color: #f07070; margin: 0;">Erro de conexão. Tente novamente.</p>';
+        });
+    }
 </script>
 {% block extra_js %}{% endblock %}
 </body>

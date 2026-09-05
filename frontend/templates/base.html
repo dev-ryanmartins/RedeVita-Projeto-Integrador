@@ -20,10 +20,113 @@
         {% from "_brand_logo.html" import brand_logo %}
         {{ brand_logo(url_for('inventory.dashboard'), true) }}
 
-        <button class="nav-toggle" id="navToggle" aria-label="Abrir menu lateral"
+        {% if current_user.cargo == 'Admin' %}
+        <!-- Navegação fixa para Admin -->
+        <ul class="nav-links">
+            <li>
+                <a href="{{ url_for('inventory.dashboard') }}"
+                   class="{{ 'active' if request.endpoint == 'inventory.dashboard' else '' }}">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('inventory.listar_medicamentos') }}"
+                   class="{{ 'active' if request.endpoint == 'inventory.listar_medicamentos' else '' }}">
+                    <i class="fas fa-pills"></i> Inventário
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('donation.nova_doacao') }}"
+                   class="{{ 'active' if request.endpoint == 'donation.nova_doacao' else '' }}">
+                    <i class="fas fa-hand-holding-heart"></i> Doações
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('pacientes.listar_pacientes') }}"
+                   class="{{ 'active' if request.endpoint and request.endpoint.startswith('pacientes.') else '' }}">
+                    <i class="fas fa-user-injured"></i> Pacientes
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('medicos.listar_medicos') }}"
+                   class="{{ 'active' if request.endpoint and request.endpoint.startswith('medicos.') else '' }}">
+                    <i class="fas fa-user-md"></i> Médicos
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('farmacias.listar_farmacias') }}"
+                   class="{{ 'active' if request.endpoint and request.endpoint.startswith('farmacias.') else '' }}">
+                    <i class="fas fa-hospital"></i> Farmácias
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('relatorios.relatorios') }}"
+                   class="{{ 'active' if request.endpoint and request.endpoint.startswith('relatorios.') else '' }}">
+                    <i class="fas fa-chart-bar"></i> Relatórios
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('academico.monitoramento_iot') }}"
+                   class="{{ 'active' if request.endpoint and request.endpoint.startswith('academico.') and request.endpoint == 'academico.monitoramento_iot' else '' }}">
+                    <i class="fas fa-temperature-half"></i> IoT
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('mapa.mapa_saude') }}"
+                   class="{{ 'active' if request.endpoint and request.endpoint.startswith('mapa.') else '' }}">
+                    <i class="fas fa-map-marked-alt"></i> Mapa
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('medical.prescriptions') }}"
+                   class="{{ 'active' if request.endpoint and request.endpoint.startswith('medical.') else '' }}">
+                    <i class="fas fa-prescription"></i> Prescrições
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('busca.buscar') }}"
+                   class="{{ 'active' if request.endpoint and request.endpoint.startswith('busca.') else '' }}">
+                    <i class="fas fa-search"></i> Busca
+                </a>
+            </li>
+            <li class="nav-divider"></li>
+            <li>
+                <a href="{{ url_for('notificacoes.painel') }}"
+                   class="{{ 'active' if request.endpoint and request.endpoint.startswith('notificacoes.') else '' }} nav-admin">
+                    <i class="fas fa-bell"></i> Notificações
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('usuarios.listar_usuarios') }}"
+                   class="{{ 'active' if request.endpoint and request.endpoint.startswith('usuarios.') else '' }} nav-admin">
+                    <i class="fas fa-users-cog"></i> Usuários
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('logs.listar_logs') }}"
+                   class="{{ 'active' if request.endpoint and request.endpoint.startswith('logs.') else '' }} nav-admin">
+                    <i class="fas fa-shield-alt"></i> Logs
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('academico.auditoria') }}"
+                   class="{{ 'active' if request.endpoint == 'academico.auditoria' else '' }} nav-admin">
+                    <i class="fas fa-shield-halved"></i> Auditoria
+                </a>
+            </li>
+            <li>
+                <a href="#" onclick="abrirPainelAdmin();" class="nav-admin" style="color: var(--danger);">
+                    <i class="fas fa-cogs"></i> Painel Admin
+                </a>
+            </li>
+        </ul>
+        {% else %}
+        <!-- Botão hambúrguer para outros perfis -->
+        <button class="nav-toggle visible" id="navToggle" aria-label="Abrir menu lateral"
                 aria-controls="sidebar" aria-expanded="false" data-tooltip="Abrir menu">
             <i class="fas fa-bars"></i>
         </button>
+        {% endif %}
 
         <div class="user-menu-nav">
           <a href="{{ url_for('perfil.meu_perfil') }}" class="user-menu-link"
@@ -41,12 +144,13 @@
             Sair
           </a>
         </div>
-        
+
         {% include "_accessibility_controls.html" %}
     </div>
 </nav>
 
-<!-- Sidebar Menu -->
+<!-- Sidebar Menu (apenas para não-Admin) -->
+{% if current_user.cargo != 'Admin' %}
 <aside class="sidebar hidden" id="sidebar" aria-hidden="true">
     <div class="sidebar-header">
         <button class="sidebar-close" id="sidebarClose" aria-label="Fechar menu">
@@ -122,41 +226,10 @@
                     <i class="fas fa-search"></i> Busca
                 </a>
             </li>
-            {% if current_user.cargo == 'Admin' %}
-            <li class="sidebar-divider"></li>
-            <li>
-                <a href="{{ url_for('notificacoes.painel') }}"
-                   class="{{ 'active' if request.endpoint and request.endpoint.startswith('notificacoes.') else '' }} nav-admin">
-                    <i class="fas fa-bell"></i> Notificações
-                </a>
-            </li>
-            <li>
-                <a href="{{ url_for('usuarios.listar_usuarios') }}"
-                   class="{{ 'active' if request.endpoint and request.endpoint.startswith('usuarios.') else '' }} nav-admin">
-                    <i class="fas fa-users-cog"></i> Usuários
-                </a>
-            </li>
-            <li>
-                <a href="{{ url_for('logs.listar_logs') }}"
-                   class="{{ 'active' if request.endpoint and request.endpoint.startswith('logs.') else '' }} nav-admin">
-                    <i class="fas fa-shield-alt"></i> Logs
-                </a>
-            </li>
-            <li>
-                <a href="{{ url_for('academico.auditoria') }}"
-                   class="{{ 'active' if request.endpoint == 'academico.auditoria' else '' }} nav-admin">
-                    <i class="fas fa-shield-halved"></i> Auditoria
-                </a>
-            </li>
-            <li>
-                <a href="#" onclick="abrirPainelAdmin(); fecharSidebar();" class="nav-admin" style="color: var(--danger);">
-                    <i class="fas fa-cogs"></i> Painel Admin
-                </a>
-            </li>
-            {% endif %}
         </ul>
     </nav>
 </aside>
+{% endif %}
 {% endif %}
 
 {% if not current_user.is_authenticated %}
@@ -363,40 +436,35 @@
 <script src="{{ url_for('static', filename='js/mascaras.js') }}"></script>
 <script src="{{ url_for('static', filename='js/redevita-enhancements.js') }}"></script>
 <script>
+    // Inicializar sidebar apenas para não-Admin
     const navToggle = document.getElementById('navToggle');
     const sidebar = document.getElementById('sidebar');
     const sidebarClose = document.getElementById('sidebarClose');
     const mainContent = document.querySelector('.main-content');
 
-    window.abrirSidebar = function() {
-        if (sidebar) {
-            sidebar.classList.remove('hidden');
-            sidebar.setAttribute('aria-hidden', 'false');
-            if (mainContent) {
-                mainContent.classList.add('sidebar-open');
-            }
-            if (navToggle) {
-                navToggle.setAttribute('aria-expanded', 'true');
-                navToggle.setAttribute('aria-label', 'Fechar menu lateral');
-            }
-        }
-    }
-
-    window.fecharSidebar = function() {
-        if (sidebar) {
-            sidebar.classList.add('hidden');
-            sidebar.setAttribute('aria-hidden', 'true');
-            if (mainContent) {
-                mainContent.classList.remove('sidebar-open');
-            }
-            if (navToggle) {
-                navToggle.setAttribute('aria-expanded', 'false');
-                navToggle.setAttribute('aria-label', 'Abrir menu lateral');
+    if (navToggle && sidebar) {
+        window.abrirSidebar = function() {
+            if (sidebar) {
+                sidebar.classList.remove('hidden');
+                sidebar.setAttribute('aria-hidden', 'false');
+                if (navToggle) {
+                    navToggle.setAttribute('aria-expanded', 'true');
+                    navToggle.setAttribute('aria-label', 'Fechar menu lateral');
+                }
             }
         }
-    }
 
-    if (navToggle) {
+        window.fecharSidebar = function() {
+            if (sidebar) {
+                sidebar.classList.add('hidden');
+                sidebar.setAttribute('aria-hidden', 'true');
+                if (navToggle) {
+                    navToggle.setAttribute('aria-expanded', 'false');
+                    navToggle.setAttribute('aria-label', 'Abrir menu lateral');
+                }
+            }
+        }
+
         navToggle.addEventListener('click', function(e) {
             e.preventDefault();
             if (sidebar && sidebar.classList.contains('hidden')) {
@@ -405,22 +473,22 @@
                 window.fecharSidebar();
             }
         });
+
+        if (sidebarClose) {
+            sidebarClose.addEventListener('click', window.fecharSidebar);
+        }
+
+        // Fechar sidebar ao clicar em um link
+        const sidebarLinks = document.querySelectorAll('.sidebar-links a');
+        sidebarLinks.forEach(link => {
+            link.addEventListener('click', window.fecharSidebar);
+        });
+
+        // Fechar sidebar com ESC
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') window.fecharSidebar();
+        });
     }
-
-    if (sidebarClose) {
-        sidebarClose.addEventListener('click', window.fecharSidebar);
-    }
-
-    // Fechar sidebar ao clicar em um link
-    const sidebarLinks = document.querySelectorAll('.sidebar-links a');
-    sidebarLinks.forEach(link => {
-        link.addEventListener('click', window.fecharSidebar);
-    });
-
-    // Fechar sidebar com ESC
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') window.fecharSidebar();
-    });
 
     const confirmModal = document.getElementById('global-confirm-modal');
     const confirmMessage = document.getElementById('global-confirm-message');

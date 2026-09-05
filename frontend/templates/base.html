@@ -20,12 +20,42 @@
         {% from "_brand_logo.html" import brand_logo %}
         {{ brand_logo(url_for('inventory.dashboard'), true) }}
 
-        <button class="nav-toggle" id="navToggle" aria-label="Abrir menu"
-                aria-controls="navLinks" aria-expanded="false" data-tooltip="Abrir menu">
+        <button class="nav-toggle" id="navToggle" aria-label="Abrir menu lateral"
+                aria-controls="sidebar" aria-expanded="false" data-tooltip="Abrir menu">
             <i class="fas fa-bars"></i>
         </button>
 
-        <ul class="nav-links" id="navLinks">
+        <div class="user-menu-nav">
+          <a href="{{ url_for('perfil.meu_perfil') }}" class="user-menu-link"
+             aria-label="Abrir perfil de {{ current_user.nome }}">
+            <div class="user-avatar">
+              {{ current_user.nome[:2]|upper if current_user.is_authenticated else 'US' }}
+            </div>
+            <div class="user-meta">
+              <span class="user-name">{{ current_user.nome if current_user.is_authenticated else 'Usuário' }}</span>
+              <span class="user-role">{{ current_user.cargo if current_user.is_authenticated else 'Visitante' }}</span>
+            </div>
+          </a>
+          <a href="{{ url_for('auth.logout') }}" class="btn-logout" title="Sair"
+             data-tooltip="Sair" aria-label="Sair do sistema">
+            Sair
+          </a>
+        </div>
+        
+        {% include "_accessibility_controls.html" %}
+    </div>
+</nav>
+
+<!-- Sidebar Menu -->
+<aside class="sidebar" id="sidebar" aria-hidden="true">
+    <div class="sidebar-header">
+        <button class="sidebar-close" id="sidebarClose" aria-label="Fechar menu">
+            <i class="fas fa-times"></i>
+        </button>
+        <h3>Menu</h3>
+    </div>
+    <nav class="sidebar-nav">
+        <ul class="sidebar-links">
             <li>
                 <a href="{{ url_for('inventory.dashboard') }}"
                    class="{{ 'active' if request.endpoint == 'inventory.dashboard' else '' }}">
@@ -93,7 +123,7 @@
                 </a>
             </li>
             {% if current_user.cargo == 'Admin' %}
-            <li class="nav-divider"></li>
+            <li class="sidebar-divider"></li>
             <li>
                 <a href="{{ url_for('notificacoes.painel') }}"
                    class="{{ 'active' if request.endpoint and request.endpoint.startswith('notificacoes.') else '' }} nav-admin">
@@ -119,33 +149,15 @@
                 </a>
             </li>
             <li>
-                <a href="#" onclick="abrirPainelAdmin()" class="nav-admin" style="color: var(--danger);">
+                <a href="#" onclick="abrirPainelAdmin(); fecharSidebar();" class="nav-admin" style="color: var(--danger);">
                     <i class="fas fa-cogs"></i> Painel Admin
                 </a>
             </li>
             {% endif %}
         </ul>
-
-        {% include "_accessibility_controls.html" %}
-
-        <div class="user-menu-nav">
-          <a href="{{ url_for('perfil.meu_perfil') }}" class="user-menu-link"
-             aria-label="Abrir perfil de {{ current_user.nome }}">
-            <div class="user-avatar">
-              {{ current_user.nome[:2]|upper if current_user.is_authenticated else 'US' }}
-            </div>
-            <div class="user-meta">
-              <span class="user-name">{{ current_user.nome if current_user.is_authenticated else 'Usuário' }}</span>
-              <span class="user-role">{{ current_user.cargo if current_user.is_authenticated else 'Visitante' }}</span>
-            </div>
-          </a>
-          <a href="{{ url_for('auth.logout') }}" class="btn-logout" title="Sair"
-             data-tooltip="Sair" aria-label="Sair do sistema">
-            Sair
-          </a>
-        </div>
-    </div>
-</nav>
+    </nav>
+</aside>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
 {% endif %}
 
 {% if not current_user.is_authenticated %}
@@ -353,23 +365,62 @@
 <script src="{{ url_for('static', filename='js/redevita-enhancements.js') }}"></script>
 <script>
     const navToggle = document.getElementById('navToggle');
-    const navLinks = document.getElementById('navLinks');
-    if (navToggle) {
-        navToggle.addEventListener('click', () => {
-            const aberto = navLinks.classList.toggle('open');
-            navToggle.setAttribute('aria-expanded', String(aberto));
-            navToggle.setAttribute('aria-label', aberto ? 'Fechar menu' : 'Abrir menu');
-            navToggle.dataset.tooltip = aberto ? 'Fechar menu' : 'Abrir menu';
-        });
-        document.addEventListener('click', (e) => {
-            if (!navToggle.contains(e.target) && !navLinks.contains(e.target)) {
-                navLinks.classList.remove('open');
-                navToggle.setAttribute('aria-expanded', 'false');
-                navToggle.setAttribute('aria-label', 'Abrir menu');
-                navToggle.dataset.tooltip = 'Abrir menu';
+    const sidebar = document.getElementById('sidebar');
+    const sidebarClose = document.getElementById('sidebarClose');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    
+    window.abrirSidebar = function() {
+        if (sidebar) {
+            sidebar.classList.add('active');
+            sidebar.setAttribute('aria-hidden', 'false');
+            if (sidebarOverlay) {
+                sidebarOverlay.classList.add('active');
             }
-        });
+            document.body.style.overflow = 'hidden';
+            if (navToggle) {
+                navToggle.setAttribute('aria-expanded', 'true');
+                navToggle.setAttribute('aria-label', 'Fechar menu lateral');
+            }
+        }
     }
+    
+    window.fecharSidebar = function() {
+        if (sidebar) {
+            sidebar.classList.remove('active');
+            sidebar.setAttribute('aria-hidden', 'true');
+            if (sidebarOverlay) {
+                sidebarOverlay.classList.remove('active');
+            }
+            document.body.style.overflow = '';
+            if (navToggle) {
+                navToggle.setAttribute('aria-expanded', 'false');
+                navToggle.setAttribute('aria-label', 'Abrir menu lateral');
+            }
+        }
+    }
+    
+    if (navToggle) {
+        navToggle.addEventListener('click', window.abrirSidebar);
+    }
+    
+    if (sidebarClose) {
+        sidebarClose.addEventListener('click', window.fecharSidebar);
+    }
+    
+    if (sidebarOverlay) {
+        sidebarOverlay.addEventListener('click', window.fecharSidebar);
+    }
+    
+    // Fechar sidebar ao clicar em um link
+    const sidebarLinks = document.querySelectorAll('.sidebar-links a');
+    sidebarLinks.forEach(link => {
+        link.addEventListener('click', window.fecharSidebar);
+    });
+    
+    // Fechar sidebar com ESC
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') window.fecharSidebar();
+    });
 
     const confirmModal = document.getElementById('global-confirm-modal');
     const confirmMessage = document.getElementById('global-confirm-message');

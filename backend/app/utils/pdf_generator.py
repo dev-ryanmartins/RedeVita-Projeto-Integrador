@@ -214,13 +214,14 @@ class PDFGenerator:
             elementos.extend(self._criar_cabecalho_profissional("Comprovante de Doação"))
             
             # Tabela de dados da doação com design elegante
+            # Validação de dados com fallback seguro
             dados = [
-                ['Doador', dados_doacao.get('doador_nome', 'N/A')],
-                ['Medicamento', dados_doacao.get('medicamento_nome', 'N/A')],
-                ['Quantidade', str(dados_doacao.get('quantidade', 0))],
-                ['Lote', dados_doacao.get('lote', 'N/A')],
-                ['Validade', dados_doacao.get('data_validade', 'N/A')],
-                ['Farmácia', dados_doacao.get('farmacia_nome', 'N/A')],
+                ['Doador', dados_doacao.get('doador_nome') if dados_doacao.get('doador_nome') else 'Não informado'],
+                ['Medicamento', dados_doacao.get('medicamento_nome') if dados_doacao.get('medicamento_nome') else 'Não informado'],
+                ['Quantidade', str(dados_doacao.get('quantidade', 0)) if dados_doacao.get('quantidade') is not None else '0'],
+                ['Lote', dados_doacao.get('lote') if dados_doacao.get('lote') else 'Não informado'],
+                ['Validade', dados_doacao.get('data_validade') if dados_doacao.get('data_validade') else 'Não informado'],
+                ['Farmácia', dados_doacao.get('farmacia_nome') if dados_doacao.get('farmacia_nome') else 'Não informado'],
             ]
             
             tabela = Table(dados, colWidths=[5*cm, 8*cm])
@@ -286,7 +287,85 @@ class PDFGenerator:
             raise ImportError("reportlab é necessário para gerar PDFs")
         except Exception as e:
             logger.error(f"Erro ao gerar PDF de doação: {str(e)}")
-            raise
+            # Gerar PDF de fallback em caso de erro
+            return self._gerar_pdf_fallback("Comprovante de Doação", str(e))
+    
+    def _gerar_pdf_fallback(self, titulo: str, erro: str) -> bytes:
+        """
+        Gera um PDF de fallback simples em caso de erro na geração principal.
+        
+        Args:
+            titulo: Título do documento
+            erro: Mensagem de erro
+            
+        Returns:
+            Bytes do PDF gerado
+        """
+        try:
+            from reportlab.lib.pagesizes import A4
+            from reportlab.lib import colors
+            from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+            from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+            from reportlab.lib.units import cm
+            
+            buffer = BytesIO()
+            
+            doc = SimpleDocTemplate(
+                buffer,
+                pagesize=A4,
+                rightMargin=2*cm,
+                leftMargin=2*cm,
+                topMargin=2.5*cm,
+                bottomMargin=2*cm
+            )
+            
+            styles = getSampleStyleSheet()
+            elementos = []
+            
+            # Cabeçalho profissional
+            elementos.extend(self._criar_cabecalho_profissional(titulo))
+            
+            # Mensagem de erro em destaque
+            erro_style = ParagraphStyle(
+                'Erro',
+                parent=styles['Normal'],
+                fontSize=12,
+                textColor=colors.HexColor('#ef4444'),
+                spaceBefore=12,
+                spaceAfter=12,
+                fontName='Helvetica-Bold',
+                alignment=1  # CENTER
+            )
+            
+            info_style = ParagraphStyle(
+                'Info',
+                parent=styles['Normal'],
+                fontSize=10,
+                textColor=colors.HexColor('#64748b'),
+                spaceAfter=12,
+                fontName='Helvetica',
+                alignment=1  # CENTER
+            )
+            
+            elementos.append(Paragraph("⚠️ Ocorreu um erro ao gerar o documento completo", erro_style))
+            elementos.append(Paragraph(f"Detalhes: {erro}", info_style))
+            elementos.append(Spacer(1, 1*cm))
+            elementos.append(Paragraph("Por favor, entre em contato com o suporte técnico.", info_style))
+            
+            # Rodapé profissional
+            elementos.extend(self._criar_rodape_profissional())
+            
+            doc.build(elementos)
+            
+            pdf_bytes = buffer.getvalue()
+            buffer.close()
+            
+            return pdf_bytes
+            
+        except Exception as fallback_error:
+            logger.error(f"Erro ao gerar PDF de fallback: {str(fallback_error)}")
+            # Retornar bytes vazios se tudo falhar
+            return b''
     
     def gerar_pdf_retirada(self, dados_retirada: Dict) -> bytes:
         """
@@ -334,14 +413,14 @@ class PDFGenerator:
                 fontName='Helvetica-Bold'
             )
             
-            # Dados do paciente
+            # Dados do paciente com validação
             elementos.append(Paragraph("Dados do Paciente", secao_style))
             elementos.append(Spacer(1, 0.2*cm))
             
             dados_paciente = [
-                ['Nome', dados_retirada.get('paciente_nome', 'N/A')],
-                ['CPF', dados_retirada.get('paciente_cpf', 'N/A')],
-                ['Telefone', dados_retirada.get('paciente_telefone', 'N/A')],
+                ['Nome', dados_retirada.get('paciente_nome') if dados_retirada.get('paciente_nome') else 'Não informado'],
+                ['CPF', dados_retirada.get('paciente_cpf') if dados_retirada.get('paciente_cpf') else 'Não informado'],
+                ['Telefone', dados_retirada.get('paciente_telefone') if dados_retirada.get('paciente_telefone') else 'Não informado'],
             ]
             
             tabela_paciente = Table(dados_paciente, colWidths=[5*cm, 8*cm])
@@ -362,16 +441,16 @@ class PDFGenerator:
             elementos.append(tabela_paciente)
             elementos.append(Spacer(1, 0.5*cm))
             
-            # Dados do medicamento
+            # Dados do medicamento com validação
             elementos.append(Paragraph("Medicamento a Retirar", secao_style))
             elementos.append(Spacer(1, 0.2*cm))
             
             dados_medicamento = [
-                ['Medicamento', dados_retirada.get('medicamento_nome', 'N/A')],
-                ['Quantidade', str(dados_retirada.get('quantidade', 0))],
-                ['Lote', dados_retirada.get('lote', 'N/A')],
-                ['Validade', dados_retirada.get('data_validade', 'N/A')],
-                ['Farmácia', dados_retirada.get('farmacia_nome', 'N/A')],
+                ['Medicamento', dados_retirada.get('medicamento_nome') if dados_retirada.get('medicamento_nome') else 'Não informado'],
+                ['Quantidade', str(dados_retirada.get('quantidade', 0)) if dados_retirada.get('quantidade') is not None else '0'],
+                ['Lote', dados_retirada.get('lote') if dados_retirada.get('lote') else 'Não informado'],
+                ['Validade', dados_retirada.get('data_validade') if dados_retirada.get('data_validade') else 'Não informado'],
+                ['Farmácia', dados_retirada.get('farmacia_nome') if dados_retirada.get('farmacia_nome') else 'Não informado'],
             ]
             
             tabela_medicamento = Table(dados_medicamento, colWidths=[5*cm, 8*cm])
@@ -427,7 +506,8 @@ class PDFGenerator:
             raise ImportError("reportlab é necessário para gerar PDFs")
         except Exception as e:
             logger.error(f"Erro ao gerar PDF de retirada: {str(e)}")
-            raise
+            # Gerar PDF de fallback em caso de erro
+            return self._gerar_pdf_fallback("Ordem de Retirada", str(e))
     
     def gerar_pdf_async(self, tipo: str, dados: Dict, callback=None):
         """

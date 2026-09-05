@@ -347,50 +347,55 @@ def exportar_medicamentos_pdf():
     if not REPORTLAB_AVAILABLE:
         return redirect(url_for("relatorios.relatorios"))
 
-    medicamentos = Medicamento.query.order_by(Medicamento.nome).all()
-    registrar_log("Exportação PDF", "Exportou lista de medicamentos em PDF")
+    try:
+        medicamentos = Medicamento.query.order_by(Medicamento.nome).all()
+        registrar_log("Exportação PDF", "Exportou lista de medicamentos em PDF")
 
-    response = Response(content_type="application/pdf")
-    response.headers["Content-Disposition"] = (
-        f"attachment; filename=medicamentos_{date.today()}.pdf"
-    )
-
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter, 
-                           rightMargin=1.5*cm, leftMargin=1.5*cm,
-                           topMargin=2*cm, bottomMargin=2*cm)
-    elements = []
-
-    _criar_cabecalho_profissional(elementos, "Relatório de Medicamentos")
-
-    data = [["Nome", "Lote", "Validade", "Qtd", "Status"]]
-    status_map = {0: "Seguro", 1: "Próximo Vencimento", 2: "Vencido"}
-
-    for m in medicamentos:
-        data.append(
-            [
-                m.nome,
-                m.lote,
-                m.data_validade.strftime("%d/%m/%Y"),
-                str(m.quantidade),
-                status_map.get(m.status_semaforo, ""),
-            ]
+        response = Response(content_type="application/pdf")
+        response.headers["Content-Disposition"] = (
+            f"attachment; filename=medicamentos_{date.today()}.pdf"
         )
 
-    table = Table(
-        data, colWidths=[2.5 * inch, 1 * inch, 1 * inch, 0.5 * inch, 1.2 * inch]
-    )
-    table = _aplicar_estilo_tabela_profissional(table)
-    elements.append(table)
-    
-    _criar_rodape_profissional(elementos)
-    doc.build(elements)
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter, 
+                               rightMargin=1.5*cm, leftMargin=1.5*cm,
+                               topMargin=2*cm, bottomMargin=2*cm)
+        elements = []
 
-    pdf = buffer.getvalue()
-    buffer.close()
-    response.data = pdf
+        _criar_cabecalho_profissional(elementos, "Relatório de Medicamentos")
 
-    return response
+        data = [["Nome", "Lote", "Validade", "Qtd", "Status"]]
+        status_map = {0: "Seguro", 1: "Próximo Vencimento", 2: "Vencido"}
+
+        for m in medicamentos:
+            data.append(
+                [
+                    m.nome,
+                    m.lote,
+                    m.data_validade.strftime("%d/%m/%Y") if m.data_validade else "N/A",
+                    str(m.quantidade),
+                    status_map.get(m.status_semaforo, ""),
+                ]
+            )
+
+        table = Table(
+            data, colWidths=[2.5 * inch, 1 * inch, 1 * inch, 0.5 * inch, 1.2 * inch]
+        )
+        table = _aplicar_estilo_tabela_profissional(table)
+        elements.append(table)
+        
+        _criar_rodape_profissional(elementos)
+        doc.build(elements)
+
+        pdf = buffer.getvalue()
+        buffer.close()
+        response.data = pdf
+
+        return response
+    except Exception as e:
+        logger.error(f"Erro ao gerar PDF de medicamentos: {str(e)}")
+        flash("Erro ao gerar PDF. Tente novamente.", "danger")
+        return redirect(url_for("relatorios.relatorios"))
 
 
 @relatorios_bp.route("/relatorios/exportar/medicos/pdf")
@@ -400,49 +405,54 @@ def exportar_medicos_pdf():
     if not REPORTLAB_AVAILABLE:
         return redirect(url_for("relatorios.relatorios"))
 
-    medicos = Medico.query.order_by(Medico.nome).all()
-    registrar_log("Exportação PDF", "Exportou lista de médicos em PDF")
+    try:
+        medicos = Medico.query.order_by(Medico.nome).all()
+        registrar_log("Exportação PDF", "Exportou lista de médicos em PDF")
 
-    response = Response(content_type="application/pdf")
-    response.headers["Content-Disposition"] = (
-        f"attachment; filename=medicos_{date.today()}.pdf"
-    )
-
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter,
-                           rightMargin=1.5*cm, leftMargin=1.5*cm,
-                           topMargin=2*cm, bottomMargin=2*cm)
-    elements = []
-
-    _criar_cabecalho_profissional(elementos, "Relatório de Médicos")
-
-    data = [["Nome", "CRM", "Especialidade", "Contato", "Cadastrado em"]]
-
-    for m in medicos:
-        data.append(
-            [
-                m.nome,
-                m.crm,
-                m.especialidade,
-                m.contato or "",
-                m.created_at.strftime("%d/%m/%Y") if m.created_at else "",
-            ]
+        response = Response(content_type="application/pdf")
+        response.headers["Content-Disposition"] = (
+            f"attachment; filename=medicos_{date.today()}.pdf"
         )
 
-    table = Table(
-        data, colWidths=[2 * inch, 1 * inch, 1.5 * inch, 1.5 * inch, 1 * inch]
-    )
-    table = _aplicar_estilo_tabela_profissional(table)
-    elements.append(table)
-    
-    _criar_rodape_profissional(elementos)
-    doc.build(elements)
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter,
+                               rightMargin=1.5*cm, leftMargin=1.5*cm,
+                               topMargin=2*cm, bottomMargin=2*cm)
+        elements = []
 
-    pdf = buffer.getvalue()
-    buffer.close()
-    response.data = pdf
+        _criar_cabecalho_profissional(elementos, "Relatório de Médicos")
 
-    return response
+        data = [["Nome", "CRM", "Especialidade", "Contato", "Cadastrado em"]]
+
+        for m in medicos:
+            data.append(
+                [
+                    m.nome,
+                    m.crm,
+                    m.especialidade,
+                    m.contato or "",
+                    m.created_at.strftime("%d/%m/%Y") if m.created_at else "",
+                ]
+            )
+
+        table = Table(
+            data, colWidths=[2 * inch, 1 * inch, 1.5 * inch, 1.5 * inch, 1 * inch]
+        )
+        table = _aplicar_estilo_tabela_profissional(table)
+        elements.append(table)
+        
+        _criar_rodape_profissional(elementos)
+        doc.build(elements)
+
+        pdf = buffer.getvalue()
+        buffer.close()
+        response.data = pdf
+
+        return response
+    except Exception as e:
+        logger.error(f"Erro ao gerar PDF de médicos: {str(e)}")
+        flash("Erro ao gerar PDF. Tente novamente.", "danger")
+        return redirect(url_for("relatorios.relatorios"))
 
 
 @relatorios_bp.route("/relatorios/exportar/farmacias/pdf")
@@ -452,50 +462,55 @@ def exportar_farmacias_pdf():
     if not REPORTLAB_AVAILABLE:
         return redirect(url_for("relatorios.relatorios"))
 
-    farmacias = Farmacia.query.order_by(Farmacia.nome_fantasia).all()
-    registrar_log("Exportação PDF", "Exportou lista de farmácias em PDF")
+    try:
+        farmacias = Farmacia.query.order_by(Farmacia.nome_fantasia).all()
+        registrar_log("Exportação PDF", "Exportou lista de farmácias em PDF")
 
-    response = Response(content_type="application/pdf")
-    response.headers["Content-Disposition"] = (
-        f"attachment; filename=farmacias_{date.today()}.pdf"
-    )
-
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter,
-                           rightMargin=1.5*cm, leftMargin=1.5*cm,
-                           topMargin=2*cm, bottomMargin=2*cm)
-    elements = []
-
-    _criar_cabecalho_profissional(elementos, "Relatório de Farmácias")
-
-    data = [["Nome Fantasia", "Razão Social", "CNPJ", "Responsável", "Endereço", "Cadastrado em"]]
-
-    for f in farmacias:
-        data.append(
-            [
-                f.nome_fantasia,
-                f.razao_social or "",
-                f.cnpj,
-                f.responsavel,
-                f.endereco,
-                f.created_at.strftime("%d/%m/%Y") if f.created_at else "",
-            ]
+        response = Response(content_type="application/pdf")
+        response.headers["Content-Disposition"] = (
+            f"attachment; filename=farmacias_{date.today()}.pdf"
         )
 
-    table = Table(
-        data, colWidths=[1.5 * inch, 1.5 * inch, 1 * inch, 1 * inch, 1.5 * inch, 1 * inch]
-    )
-    table = _aplicar_estilo_tabela_profissional(table)
-    elements.append(table)
-    
-    _criar_rodape_profissional(elementos)
-    doc.build(elements)
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter,
+                               rightMargin=1.5*cm, leftMargin=1.5*cm,
+                               topMargin=2*cm, bottomMargin=2*cm)
+        elements = []
 
-    pdf = buffer.getvalue()
-    buffer.close()
-    response.data = pdf
+        _criar_cabecalho_profissional(elementos, "Relatório de Farmácias")
 
-    return response
+        data = [["Nome Fantasia", "Razão Social", "CNPJ", "Responsável", "Endereço", "Cadastrado em"]]
+
+        for f in farmacias:
+            data.append(
+                [
+                    f.nome_fantasia,
+                    f.razao_social or "",
+                    f.cnpj,
+                    f.responsavel,
+                    f.endereco,
+                    f.created_at.strftime("%d/%m/%Y") if f.created_at else "",
+                ]
+            )
+
+        table = Table(
+            data, colWidths=[1.5 * inch, 1.5 * inch, 1 * inch, 1 * inch, 1.5 * inch, 1 * inch]
+        )
+        table = _aplicar_estilo_tabela_profissional(table)
+        elements.append(table)
+        
+        _criar_rodape_profissional(elementos)
+        doc.build(elements)
+
+        pdf = buffer.getvalue()
+        buffer.close()
+        response.data = pdf
+
+        return response
+    except Exception as e:
+        logger.error(f"Erro ao gerar PDF de farmácias: {str(e)}")
+        flash("Erro ao gerar PDF. Tente novamente.", "danger")
+        return redirect(url_for("relatorios.relatorios"))
 
 
 @relatorios_bp.route("/relatorios/exportar/pacientes/pdf")
@@ -505,49 +520,54 @@ def exportar_pacientes_pdf():
     if not REPORTLAB_AVAILABLE:
         return redirect(url_for("relatorios.relatorios"))
 
-    pacientes = Paciente.query.order_by(Paciente.nome).all()
-    registrar_log("Exportação PDF", "Exportou lista de pacientes em PDF")
+    try:
+        pacientes = Paciente.query.order_by(Paciente.nome).all()
+        registrar_log("Exportação PDF", "Exportou lista de pacientes em PDF")
 
-    response = Response(content_type="application/pdf")
-    response.headers["Content-Disposition"] = (
-        f"attachment; filename=pacientes_{date.today()}.pdf"
-    )
-
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter,
-                           rightMargin=1.5*cm, leftMargin=1.5*cm,
-                           topMargin=2*cm, bottomMargin=2*cm)
-    elements = []
-
-    _criar_cabecalho_profissional(elementos, "Relatório de Pacientes")
-
-    data = [["Nome", "CPF", "Data de Nascimento", "Endereço", "Cadastrado em"]]
-
-    for p in pacientes:
-        data.append(
-            [
-                p.nome,
-                p.cpf,
-                p.data_nascimento.strftime("%d/%m/%Y") if p.data_nascimento else "",
-                p.endereco or "",
-                p.created_at.strftime("%d/%m/%Y") if p.created_at else "",
-            ]
+        response = Response(content_type="application/pdf")
+        response.headers["Content-Disposition"] = (
+            f"attachment; filename=pacientes_{date.today()}.pdf"
         )
 
-    table = Table(
-        data, colWidths=[2 * inch, 1 * inch, 1 * inch, 1.5 * inch, 1 * inch]
-    )
-    table = _aplicar_estilo_tabela_profissional(table)
-    elements.append(table)
-    
-    _criar_rodape_profissional(elementos)
-    doc.build(elements)
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter,
+                               rightMargin=1.5*cm, leftMargin=1.5*cm,
+                               topMargin=2*cm, bottomMargin=2*cm)
+        elements = []
 
-    pdf = buffer.getvalue()
-    buffer.close()
-    response.data = pdf
+        _criar_cabecalho_profissional(elementos, "Relatório de Pacientes")
 
-    return response
+        data = [["Nome", "CPF", "Data de Nascimento", "Endereço", "Cadastrado em"]]
+
+        for p in pacientes:
+            data.append(
+                [
+                    p.nome,
+                    p.cpf,
+                    p.data_nascimento.strftime("%d/%m/%Y") if p.data_nascimento else "",
+                    p.endereco or "",
+                    p.created_at.strftime("%d/%m/%Y") if p.created_at else "",
+                ]
+            )
+
+        table = Table(
+            data, colWidths=[2 * inch, 1 * inch, 1 * inch, 1.5 * inch, 1 * inch]
+        )
+        table = _aplicar_estilo_tabela_profissional(table)
+        elements.append(table)
+
+        _criar_rodape_profissional(elementos)
+        doc.build(elements)
+
+        pdf = buffer.getvalue()
+        buffer.close()
+        response.data = pdf
+
+        return response
+    except Exception as e:
+        logger.error(f"Erro ao gerar PDF de pacientes: {str(e)}")
+        flash("Erro ao gerar PDF. Tente novamente.", "danger")
+        return redirect(url_for("relatorios.relatorios"))
 
 
 @relatorios_bp.route("/relatorios/exportar/doacoes/pdf")
@@ -557,62 +577,67 @@ def exportar_doacoes_pdf():
     if not REPORTLAB_AVAILABLE:
         return redirect(url_for("relatorios.relatorios"))
 
-    doacoes = Doacao.query.order_by(Doacao.data_doacao.desc()).all()
-    registrar_log("Exportação PDF", "Exportou histórico de doações em PDF")
+    try:
+        doacoes = Doacao.query.order_by(Doacao.data_doacao.desc()).all()
+        registrar_log("Exportação PDF", "Exportou histórico de doações em PDF")
 
-    response = Response(content_type="application/pdf")
-    response.headers["Content-Disposition"] = (
-        f"attachment; filename=doacoes_{date.today()}.pdf"
-    )
-
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter)
-    elements = []
-
-    styles = getSampleStyleSheet()
-    title = Paragraph("Relatório de Doações", styles["Heading1"])
-    elements.append(title)
-
-    data = [["Data/Hora", "Medicamento", "Lote", "Qtd", "Responsável", "Cargo"]]
-
-    for d in doacoes:
-        data.append(
-            [
-                d.data_doacao.strftime("%d/%m/%Y %H:%M"),
-                d.medicamento.nome if d.medicamento else "—",
-                d.medicamento.lote if d.medicamento else "—",
-                str(d.quantidade),
-                d.usuario.nome if d.usuario else "—",
-                d.usuario.cargo if d.usuario else "—",
-            ]
+        response = Response(content_type="application/pdf")
+        response.headers["Content-Disposition"] = (
+            f"attachment; filename=doacoes_{date.today()}.pdf"
         )
 
-    table = Table(
-        data, colWidths=[1.2 * inch, 1.5 * inch, 0.8 * inch, 0.5 * inch, 1.2 * inch, 1 * inch]
-    )
-    table.setStyle(
-        TableStyle(
-            [
-                ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
-                ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
-                ("ALIGN", (0, 0), (-1, -1), "CENTER"),
-                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-                ("FONTSIZE", (0, 0), (-1, 0), 12),
-                ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
-                ("BACKGROUND", (0, 1), (-1, -1), colors.beige),
-                ("GRID", (0, 0), (-1, -1), 1, colors.black),
-            ]
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter)
+        elements = []
+
+        styles = getSampleStyleSheet()
+        title = Paragraph("Relatório de Doações", styles["Heading1"])
+        elements.append(title)
+
+        data = [["Data/Hora", "Medicamento", "Lote", "Qtd", "Responsável", "Cargo"]]
+
+        for d in doacoes:
+            data.append(
+                [
+                    d.data_doacao.strftime("%d/%m/%Y %H:%M"),
+                    d.medicamento.nome if d.medicamento else "—",
+                    d.medicamento.lote if d.medicamento else "—",
+                    str(d.quantidade),
+                    d.usuario.nome if d.usuario else "—",
+                    d.usuario.cargo if d.usuario else "—",
+                ]
+            )
+
+        table = Table(
+            data, colWidths=[1.2 * inch, 1.5 * inch, 0.8 * inch, 0.5 * inch, 1.2 * inch, 1 * inch]
         )
-    )
+        table.setStyle(
+            TableStyle(
+                [
+                    ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
+                    ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+                    ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+                    ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                    ("FONTSIZE", (0, 0), (-1, 0), 12),
+                    ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
+                    ("BACKGROUND", (0, 1), (-1, -1), colors.beige),
+                    ("GRID", (0, 0), (-1, -1), 1, colors.black),
+                ]
+            )
+        )
 
-    elements.append(table)
-    doc.build(elements)
+        elements.append(table)
+        doc.build(elements)
 
-    pdf = buffer.getvalue()
-    buffer.close()
-    response.data = pdf
+        pdf = buffer.getvalue()
+        buffer.close()
+        response.data = pdf
 
-    return response
+        return response
+    except Exception as e:
+        logger.error(f"Erro ao gerar PDF de doações: {str(e)}")
+        flash("Erro ao gerar PDF. Tente novamente.", "danger")
+        return redirect(url_for("relatorios.relatorios"))
 
 
 @relatorios_bp.route("/relatorios/exportar/sumario/pdf")
@@ -626,116 +651,115 @@ def exportar_sumario_pdf():
         return redirect(url_for("relatorios.relatorios"))
 
     try:
-        hoje = date.today()
-    except Exception:
-        hoje = None
+        try:
+            hoje = date.today()
+        except Exception:
+            hoje = None
 
-    try:
-        total_medicamentos = Medicamento.query.count()
-    except Exception:
-        total_medicamentos = 0
-    
-    try:
-        vencidos = Medicamento.query.filter(Medicamento.status_semaforo == 2).count()
-    except Exception:
-        vencidos = 0
-    
-    try:
-        proximos_vencimento = Medicamento.query.filter(Medicamento.status_semaforo == 1).count()
-    except Exception:
-        proximos_vencimento = 0
-    
-    try:
-        total_doacoes = Doacao.query.count()
-    except Exception:
-        total_doacoes = 0
-    
-    try:
-        total_medicos = Medico.query.count()
-    except Exception:
-        total_medicos = 0
-    
-    try:
-        total_farmacias = Farmacia.query.count()
-    except Exception:
-        total_farmacias = 0
-    
-    try:
-        total_pacientes = Paciente.query.count()
-    except Exception:
-        total_pacientes = 0
+        try:
+            total_medicamentos = Medicamento.query.count()
+        except Exception:
+            total_medicamentos = 0
 
-    response = Response(content_type="application/pdf")
-    response.headers["Content-Disposition"] = (
-        f"attachment; filename=sumario_redevita_{date.today()}.pdf"
-    )
+        try:
+            vencidos = Medicamento.query.filter(Medicamento.status_semaforo == 2).count()
+        except Exception:
+            vencidos = 0
 
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter,
-                           rightMargin=1.5*cm, leftMargin=1.5*cm,
-                           topMargin=2*cm, bottomMargin=2*cm)
-    elements = []
+        try:
+            proximos_vencimento = Medicamento.query.filter(Medicamento.status_semaforo == 1).count()
+        except Exception:
+            proximos_vencimento = 0
 
-    _criar_cabecalho_profissional(elementos, "Sumário Executivo - RedeVita")
+        try:
+            total_doacoes = Doacao.query.count()
+        except Exception:
+            total_doacoes = 0
 
-    # Resumo das métricas
-    styles = getSampleStyleSheet()
-    summary_style = ParagraphStyle(
-        'Summary',
-        parent=styles['Normal'],
-        fontSize=11,
-        textColor=colors.HexColor(COR_TEXTO),
-        spaceAfter=12,
-        leading=16
-    )
+        try:
+            total_medicos = Medico.query.count()
+        except Exception:
+            total_medicos = 0
 
-    summary_data = [
-        ["Métrica", "Quantidade", "Status"],
-        ["Total de Medicamentos", str(total_medicamentos), "—" if total_medicamentos > 0 else "Vazio"],
-        ["Medicamentos Vencidos", str(vencidos), "Crítico" if vencidos > 0 else "OK"],
-        ["Próximos do Vencimento", str(proximos_vencimento), "Atenção" if proximos_vencimento > 0 else "OK"],
-        ["Total de Doações", str(total_doacoes), "—" if total_doacoes > 0 else "Vazio"],
-        ["Médicos Cadastrados", str(total_medicos), "—" if total_medicos > 0 else "Vazio"],
-        ["Farmácias Parceiras", str(total_farmacias), "—" if total_farmacias > 0 else "Vazio"],
-        ["Pacientes Cadastrados", str(total_pacientes), "—" if total_pacientes > 0 else "Vazio"],
-    ]
+        try:
+            total_farmacias = Farmacia.query.count()
+        except Exception:
+            total_farmacias = 0
 
-    summary_table = Table(summary_data, colWidths=[2.5 * inch, 1.5 * inch, 1.2 * inch])
-    summary_table = _aplicar_estilo_tabela_profissional(summary_table)
-    elements.append(summary_table)
+        try:
+            total_pacientes = Paciente.query.count()
+        except Exception:
+            total_pacientes = 0
 
-    # Adicionar observações
-    elements.append(Spacer(1, 0.5*cm))
-    elements.append(Paragraph("Observações:", styles['Heading3']))
-    
-    observacoes = []
-    if vencidos > 0:
-        observacoes.append(f"• {vencidos} medicamento(s) vencido(s) encontrado(s). Ação recomendada: descarte imediato.")
-    if proximos_vencimento > 0:
-        observacoes.append(f"• {proximos_vencimento} medicamento(s) próximo(s) do vencimento. Monitorar estoque.")
-    if total_medicamentos == 0:
-        observacoes.append("• Nenhum medicamento cadastrado. Iniciar triagem de doações.")
-    if total_doacoes == 0:
-        observacoes.append("• Nenhuma doação registrada. Sistema pronto para receber doações.")
-    
-    if not observacoes:
-        observacoes.append("• Sistema operando dentro dos parâmetros normais.")
-    
-    for obs in observacoes:
-        elements.append(Paragraph(obs, summary_style))
+        response = Response(content_type="application/pdf")
+        response.headers["Content-Disposition"] = (
+            f"attachment; filename=sumario_redevita_{date.today()}.pdf"
+        )
 
-    _criar_rodape_profissional(elements)
-    doc.build(elements)
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter,
+                               rightMargin=1.5*cm, leftMargin=1.5*cm,
+                               topMargin=2*cm, bottomMargin=2*cm)
+        elements = []
 
-    pdf = buffer.getvalue()
-    buffer.close()
-    response.data = pdf
+        _criar_cabecalho_profissional(elementos, "Sumário Executivo - RedeVita")
 
-    registrar_log("Exportação PDF", "Exportou sumário executivo em PDF")
-    return response
+        # Resumo das métricas
+        styles = getSampleStyleSheet()
+        summary_style = ParagraphStyle(
+            'Summary',
+            parent=styles['Normal'],
+            fontSize=11,
+            textColor=colors.HexColor(COR_TEXTO),
+            spaceAfter=12,
+            leading=16
+        )
 
-    pdf = buffer.getvalue()
-    buffer.close()
-    response.data = pdf
+        summary_data = [
+            ["Métrica", "Quantidade", "Status"],
+            ["Total de Medicamentos", str(total_medicamentos), "—" if total_medicamentos > 0 else "Vazio"],
+            ["Medicamentos Vencidos", str(vencidos), "Crítico" if vencidos > 0 else "OK"],
+            ["Próximos do Vencimento", str(proximos_vencimento), "Atenção" if proximos_vencimento > 0 else "OK"],
+            ["Total de Doações", str(total_doacoes), "—" if total_doacoes > 0 else "Vazio"],
+            ["Médicos Cadastrados", str(total_medicos), "—" if total_medicos > 0 else "Vazio"],
+            ["Farmácias Parceiras", str(total_farmacias), "—" if total_farmacias > 0 else "Vazio"],
+            ["Pacientes Cadastrados", str(total_pacientes), "—" if total_pacientes > 0 else "Vazio"],
+        ]
 
-    return response
+        summary_table = Table(summary_data, colWidths=[2.5 * inch, 1.5 * inch, 1.2 * inch])
+        summary_table = _aplicar_estilo_tabela_profissional(summary_table)
+        elements.append(summary_table)
+
+        # Adicionar observações
+        elements.append(Spacer(1, 0.5*cm))
+        elements.append(Paragraph("Observações:", styles['Heading3']))
+
+        observacoes = []
+        if vencidos > 0:
+            observacoes.append(f"• {vencidos} medicamento(s) vencido(s) encontrado(s). Ação recomendada: descarte imediato.")
+        if proximos_vencimento > 0:
+            observacoes.append(f"• {proximos_vencimento} medicamento(s) próximo(s) do vencimento. Monitorar estoque.")
+        if total_medicamentos == 0:
+            observacoes.append("• Nenhum medicamento cadastrado. Iniciar triagem de doações.")
+        if total_doacoes == 0:
+            observacoes.append("• Nenhuma doação registrada. Sistema pronto para receber doações.")
+
+        if not observacoes:
+            observacoes.append("• Sistema operando dentro dos parâmetros normais.")
+
+        for obs in observacoes:
+            elements.append(Paragraph(obs, summary_style))
+
+        _criar_rodape_profissional(elementos)
+        doc.build(elements)
+
+        pdf = buffer.getvalue()
+        buffer.close()
+        response.data = pdf
+
+        registrar_log("Exportação PDF", "Exportou sumário executivo em PDF")
+        return response
+    except Exception as e:
+        logger.error(f"Erro ao gerar PDF de sumário: {str(e)}")
+        flash("Erro ao gerar PDF. Tente novamente.", "danger")
+        return redirect(url_for("relatorios.relatorios"))

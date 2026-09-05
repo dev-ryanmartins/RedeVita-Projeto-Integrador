@@ -74,16 +74,80 @@ def monitoramento_iot():
     # Se não houver farmácias e for Admin, usa dados de demonstração
     if total_farmacias == 0:
         sensores = []  # Lista vazia para Admin demonstrar o painel sem dados
+        farmacias = []
     else:
         sensores = iot_simulator.obter_todas_leituras()
+        farmacias = Farmacia.query.all()
     
     return render_template(
         "monitoramento_iot.html",
         sensores=sensores,
+        farmacias=farmacias,
         alertas=sum(1 for sensor in sensores if sensor["status"] != "NORMAL"),
         atualizado_em=datetime.utcnow().isoformat(),
         total_farmacias=total_farmacias
     )
+
+
+@academico_bp.route("/monitoramento-iot/novo-registro", methods=["POST"])
+@login_required
+@farmaceutico_required
+def novo_registro_termico():
+    """
+    Registra manualmente uma nova leitura de temperatura e umidade.
+    """
+    from flask import request, flash, redirect, url_for
+    
+    farmacia_id = request.form.get("farmacia_id")
+    temperatura = request.form.get("temperatura")
+    umidade = request.form.get("umidade")
+    status = request.form.get("status")
+    
+    if not farmacia_id or not temperatura or not umidade or not status:
+        flash("Preencha todos os campos obrigatórios.", "danger")
+        return redirect(url_for("academico.monitoramento_iot"))
+    
+    try:
+        temp_float = float(temperatura)
+        umid_float = float(umidade)
+        
+        # Validar faixas regulatórias Anvisa
+        if temp_float < -10 or temp_float > 40:
+            flash("Temperatura fora da faixa válida (-10°C a 40°C).", "danger")
+            return redirect(url_for("academico.monitoramento_iot"))
+        
+        if umid_float < 0 or umid_float > 100:
+            flash("Umidade fora da faixa válida (0% a 100%).", "danger")
+            return redirect(url_for("academico.monitoramento_iot"))
+        
+        # Registrar leitura no simulador
+        farmacia = Farmacia.query.get(farmacia_id)
+        if not farmacia:
+            flash("Farmácia não encontrada.", "danger")
+            return redirect(url_for("academico.monitoramento_iot"))
+        
+        # Adicionar leitura ao simulador
+        iot_simulator.adicionar_leitura_manual(
+            farmacia_id=farmacia_id,
+            temperatura=temp_float,
+            umidade=umid_float,
+            status=status
+        )
+        
+        registrar_log(
+            "Registro Térmico Manual",
+            f"Leitura registrada para {farmacia.nome_fantasia}: {temp_float}°C, {umid_float}% umidade, status {status}"
+        )
+        
+        flash("Registro térmico adicionado com sucesso.", "success")
+        return redirect(url_for("academico.monitoramento_iot"))
+        
+    except ValueError:
+        flash("Valores inválidos para temperatura ou umidade.", "danger")
+        return redirect(url_for("academico.monitoramento_iot"))
+    except Exception as e:
+        flash(f"Erro ao registrar leitura: {str(e)}", "danger")
+        return redirect(url_for("academico.monitoramento_iot"))
 
 
 @academico_bp.route("/api/v1/monitoramento-iot/snapshot")

@@ -148,6 +148,39 @@ class IoTTelemetrySimulator:
         
         return 'NORMAL'
     
+    def adicionar_leitura_manual(self, farmacia_id: str, temperatura: float, umidade: float, status: str):
+        """
+        Adiciona uma leitura manual de temperatura e umidade.
+        
+        Args:
+            farmacia_id: ID da farmácia vinculada
+            temperatura: Temperatura em graus Celsius
+            umidade: Umidade em porcentagem
+            status: Status do refrigerador (NORMAL, ALERTA, CRÍTICO)
+        """
+        # Cria uma leitura manual com base na farmácia
+        sensor_key = f"manual_{farmacia_id}"
+        
+        if sensor_key not in self._historico:
+            self._historico[sensor_key] = []
+        
+        leitura = SensorReading(
+            sensor_id=f"MANUAL-{farmacia_id}",
+            temperatura=temperatura,
+            umidade=umidade,
+            timestamp=datetime.utcnow(),
+            localizacao=f"Farmácia ID {farmacia_id} - Registro Manual",
+            status=status
+        )
+        
+        self._historico[sensor_key].append(leitura)
+        
+        # Mantém apenas as últimas 100 leituras
+        if len(self._historico[sensor_key]) > 100:
+            self._historico[sensor_key].pop(0)
+        
+        logger.info(f"Leitura manual adicionada: Farmácia {farmacia_id}, {temperatura}°C, {umidade}% umidade, status {status}")
+    
     def obter_leitura_atual(self, sensor_key: str) -> Optional[Dict]:
         """
         Obtém a leitura mais recente de um sensor.

@@ -701,6 +701,91 @@ code { font-family: 'Courier New', monospace; }
     color: var(--text-muted);
 }
 
+/* IoT Chart Section */
+.iot-chart-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+.iot-chart-section .chart-container {
+    height: 300px;
+    margin-top: 16px;
+}
+
+/* IoT Badges */
+.iot-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-top: 4px;
+}
+
+.iot-badge.badge-green {
+    background: rgba(46, 204, 113, 0.2);
+    color: #2ecc71;
+}
+
+.iot-badge.badge-yellow {
+    background: rgba(243, 156, 18, 0.2);
+    color: #f39c12;
+}
+
+.iot-badge.badge-red {
+    background: rgba(231, 76, 60, 0.2);
+    color: #e74c3c;
+}
+
+/* Alerta Térmico */
+.alerta-termico {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    transition: var(--transition);
+}
+
+.alerta-termico.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.alerta-termico.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.alerta-content {
+    background: var(--bg-card);
+    border: 2px solid var(--danger);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: var(--shadow);
+    min-width: 400px;
+}
+
+.alerta-content i {
+    font-size: 2rem;
+    color: var(--danger);
+}
+
+.alerta-content h4 {
+    color: var(--danger);
+    margin-bottom: 4px;
+}
+
+.alerta-content p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
 /* ==========================================================================
    FORMULÁRIOS
    ========================================================================== */

@@ -701,7 +701,9 @@ code { font-family: 'Courier New', monospace; }
     color: var(--text-muted);
 }
 
-/* IoT Chart Section */
+/* ==========================================================================
+   IOT CHART SECTION
+   ========================================================================== */
 .iot-chart-section {
     background: var(--bg-card);
     border: 1px solid var(--border);
@@ -715,7 +717,9 @@ code { font-family: 'Courier New', monospace; }
     margin-top: 16px;
 }
 
-/* IoT Badges */
+/* ==========================================================================
+   IOT BADGES
+   ========================================================================== */
 .iot-badge {
     display: inline-block;
     padding: 2px 8px;
@@ -738,6 +742,54 @@ code { font-family: 'Courier New', monospace; }
 .iot-badge.badge-red {
     background: rgba(231, 76, 60, 0.2);
     color: #e74c3c;
+}
+
+/* ==========================================================================
+   ALERTA TÉRMICO
+   ========================================================================== */
+.alerta-termico {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    transition: var(--transition);
+}
+
+.alerta-termico.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.alerta-termico.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.alerta-content {
+    background: var(--bg-card);
+    border: 2px solid var(--danger);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: var(--shadow);
+    min-width: 400px;
+}
+
+.alerta-content i {
+    font-size: 2rem;
+    color: var(--danger);
+}
+
+.alerta-content h4 {
+    color: var(--danger);
+    margin-bottom: 4px;
+}
+
+.alerta-content p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
 }
 
 /* Alerta Térmico */

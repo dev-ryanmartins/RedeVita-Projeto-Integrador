@@ -1,0 +1,17 @@
+{
+  "name": "redevita",
+  "version": "1.0.0",
+  "description": "Sistema integrado de gestão farmacêutica, controle de estoque de medicamentos, doações e monitoramento da rede de saúde.",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js",
+    "build": "echo 'Build complete'",
+    "lint": "node -e 'console.log(\"Lint OK\")'"
+  },
+  "dependencies": {
+    "cookie-parser": "^1.4.7",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1"
+  }
+}

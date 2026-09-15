@@ -1,0 +1,155 @@
+<%- include('layout/header', { title: 'Cadastre-se - RedeVita', extra_css: '/static/css/login.css' }) %>
+
+<div class="auth-wrapper">
+    <div class="auth-card-modern auth-card-wide">
+        <div class="auth-brand-center">
+            <a href="/login" class="redevita-brand" aria-label="RedeVita" style="display:inline-flex; align-items:center; text-decoration:none; margin-bottom:14px;">
+                <span class="redevita-logo-icon" aria-hidden="true" style="margin-right:6px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 56" style="height:38px; width:auto;">
+                        <defs>
+                            <style>
+                                .cruz-borda { fill: none; stroke: #0ea5e9; stroke-width: 2.8; stroke-linecap: round; stroke-linejoin: round; }
+                                .coracao-vermelho { fill: #f43f5e; }
+                                .ecg-linha { fill: none; stroke: #ffffff; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+                            </style>
+                        </defs>
+                        <path class="cruz-borda" d="M 27 5 h 12 a 4 4 0 0 1 4 4 v 11 h 11 a 4 4 0 0 1 4 4 v 10 a 4 4 0 0 1 -4 4 h -11 v 11 a 4 4 0 0 1 -4 4 h -12 a 4 4 0 0 1 -4 -4 v -11 h -11 a 4 4 0 0 1 -4 -4 v -10 a 4 4 0 0 1 4 -4 h 11 v -11 a 4 4 0 0 1 4 -4 z" />
+                        <path class="coracao-vermelho" transform="translate(1, -4) scale(1.5)" d="M 40 20 C 40 13 31 11 27 17 C 23 11 14 13 14 20 C 14 29 27 37 27 37 C 27 37 40 29 40 20 Z" />
+                        <path class="ecg-linha" d="M 21 25 h 5 l 3.5 -11 l 5 22 l 4.5 -14 l 3.5 3 h 6" />
+                    </svg>
+                </span>
+                <span class="redevita-brand-text">
+                    <span class="brand-rede" style="color:#ffffff; font-weight:800; font-size:1.55rem;">Rede</span><span class="brand-vita" style="color:#38bdf8; font-weight:800; font-size:1.55rem;">Vita</span>
+                </span>
+            </a>
+            <h2>Criar Conta</h2>
+            <p class="subtitle">Preencha seus dados para se cadastrar na rede solidária de saúde.</p>
+        </div>
+
+        <% if (typeof error !== 'undefined' && error) { %>
+            <div class="alert alert-danger" style="margin-bottom:20px; display:flex; align-items:center; gap:8px;">
+                <i class="ph-duotone ph-warning-circle" style="font-size:1.2rem;"></i>
+                <span><%= error %></span>
+            </div>
+        <% } %>
+
+        <form action="/cadastro" method="POST" class="modern-form" id="form-cadastro">
+            <div class="form-group" style="margin-bottom:16px;">
+                <label for="nome" style="color:#cbd5e1; font-weight:600; margin-bottom:8px; display:block;">
+                    Nome Completo <span style="color:#f43f5e;">*</span>
+                </label>
+                <div class="input-with-icon">
+                    <i class="ph-duotone ph-user"></i>
+                    <input type="text" name="nome" id="nome" placeholder="Ex: Dr. Lucas Silveira" required maxlength="100" autocomplete="name" autofocus value="<%= typeof dados !== 'undefined' && dados.nome ? dados.nome : '' %>">
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:16px;">
+                <div class="form-group">
+                    <label for="cpf" style="color:#cbd5e1; font-weight:600; margin-bottom:8px; display:block;">
+                        CPF <span style="color:#f43f5e;">*</span>
+                    </label>
+                    <div class="input-with-icon">
+                        <i class="ph-duotone ph-identification-card"></i>
+                        <input type="text" name="cpf" id="cpf" placeholder="000.000.000-00" required maxlength="14" autocomplete="off" value="<%= typeof dados !== 'undefined' && dados.cpf ? dados.cpf : '' %>">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="cargo" style="color:#cbd5e1; font-weight:600; margin-bottom:8px; display:block;">
+                        Função / Cargo <span style="color:#f43f5e;">*</span>
+                    </label>
+                    <div class="input-with-icon">
+                        <i class="ph-duotone ph-briefcase"></i>
+                        <select name="cargo" id="cargo" required>
+                            <option value="Voluntário" <%= typeof dados !== 'undefined' && dados.cargo === 'Voluntário' ? 'selected' : '' %>>Voluntário</option>
+                            <option value="Farmacêutico" <%= typeof dados !== 'undefined' && dados.cargo === 'Farmacêutico' ? 'selected' : '' %>>Farmacêutico</option>
+                            <option value="Médico" <%= typeof dados !== 'undefined' && dados.cargo === 'Médico' ? 'selected' : '' %>>Médico</option>
+                            <option value="Operador" <%= typeof dados !== 'undefined' && dados.cargo === 'Operador' ? 'selected' : '' %>>Operador / Receptor</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom:16px;">
+                <label for="email" style="color:#cbd5e1; font-weight:600; margin-bottom:8px; display:block;">
+                    E-mail <span style="color:#f43f5e;">*</span>
+                    <span style="color:#94a3b8; font-weight:normal; font-size:0.8rem;">(para recuperação de senha e avisos)</span>
+                </label>
+                <div class="input-with-icon">
+                    <i class="ph-duotone ph-envelope-simple"></i>
+                    <input type="email" name="email" id="email" placeholder="seu.email@exemplo.com" required autocomplete="email" value="<%= typeof dados !== 'undefined' && dados.email ? dados.email : '' %>">
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:24px;">
+                <div class="form-group">
+                    <label for="senha" style="color:#cbd5e1; font-weight:600; margin-bottom:8px; display:block;">
+                        Senha <span style="color:#f43f5e;">*</span>
+                    </label>
+                    <div class="input-with-icon">
+                        <i class="ph-duotone ph-lock"></i>
+                        <input type="password" name="senha" id="senha" placeholder="Mínimo 6 dígitos" required minlength="6" autocomplete="new-password">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmar_senha" style="color:#cbd5e1; font-weight:600; margin-bottom:8px; display:block;">
+                        Confirmar Senha <span style="color:#f43f5e;">*</span>
+                    </label>
+                    <div class="input-with-icon">
+                        <i class="ph-duotone ph-lock-simple-open"></i>
+                        <input type="password" name="confirmar_senha" id="confirmar_senha" placeholder="Repita a senha" required minlength="6" autocomplete="new-password">
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-primary-gradient" style="width:100%; display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:14px; font-weight:600;">
+                <span>Criar Minha Conta</span>
+                <i class="ph-duotone ph-user-plus"></i>
+            </button>
+        </form>
+
+        <div style="margin-top: 24px; text-align: center; border-top: 1px solid rgba(255, 255, 255, 0.06); padding-top: 18px;">
+            <p style="color:#94a3b8; font-size:0.9rem; margin:0;">
+                Já possui uma conta? 
+                <a href="/login" style="color:#38bdf8; font-weight:600; text-decoration:none; margin-left:4px;">Faça o login</a>
+            </p>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const cpfInput = document.getElementById('cpf');
+        if (cpfInput) {
+            cpfInput.addEventListener('input', (e) => {
+                let v = e.target.value.replace(/\D/g, '');
+                if (v.length > 11) v = v.slice(0, 11);
+                if (v.length > 9) {
+                    e.target.value = v.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+                } else if (v.length > 6) {
+                    e.target.value = v.replace(/(\d{3})(\d{3})(\d{1,3})/, '$1.$2.$3');
+                } else if (v.length > 3) {
+                    e.target.value = v.replace(/(\d{3})(\d{1,3})/, '$1.$2');
+                } else {
+                    e.target.value = v;
+                }
+            });
+        }
+
+        const form = document.getElementById('form-cadastro');
+        const senha = document.getElementById('senha');
+        const confirmarSenha = document.getElementById('confirmar_senha');
+
+        form.addEventListener('submit', (e) => {
+            if (senha.value !== confirmarSenha.value) {
+                e.preventDefault();
+                alert('As senhas digitadas não coincidem. Por favor, verifique.');
+                confirmarSenha.focus();
+            }
+        });
+    });
+</script>
+
+<%- include('layout/footer') %>

@@ -1,0 +1,136 @@
+<%- include('layout/header', { title: 'Busca Global - RedeVita', extra_css: '/static/css/inventory.css' }) %>
+<%- include('layout/nav') %>
+
+<div class="page-wrapper">
+    <div class="page-header">
+        <div>
+            <h2><i class="ph-duotone ph-magnifying-glass"></i> Busca Global Integrada</h2>
+            <p class="page-subtitle">Pesquise simultaneamente em medicamentos, pacientes, médicos e farmácias.</p>
+        </div>
+    </div>
+
+    <form action="/busca" method="GET" style="margin:20px 0;">
+        <div style="display:flex; gap:12px; align-items:center;">
+            <div class="search-input-wrapper" style="flex:1; position:relative; display:flex; align-items:center;">
+                <i class="ph-duotone ph-magnifying-glass" aria-hidden="true" style="position:absolute; left:16px; top:50%; transform:translateY(-50%); font-size:1.2rem; color:var(--text-muted); pointer-events:none; z-index:2;"></i>
+                <input type="text" name="q" value="<%= termo %>" placeholder="Digite nome do medicamento, paciente, médico ou farmácia..." class="input-standard" style="width:100%; padding:12px 18px 12px 48px !important; font-size:0.95rem; border-radius:10px;">
+            </div>
+            <button type="submit" class="btn-primary" style="padding:11px 24px; border-radius:10px; font-size:0.95rem;">
+                <i class="ph-duotone ph-magnifying-glass"></i> Buscar
+            </button>
+        </div>
+    </form>
+
+    <% if (termo) { %>
+    <div style="display:flex; flex-direction:column; gap:24px;">
+        <% if (resultados.medicamentos.length > 0) { %>
+        <div class="recent-section">
+            <div class="section-header">
+                <h3><i class="ph-duotone ph-pill"></i> Medicamentos Encontrados (<%= resultados.medicamentos.length %>)</h3>
+            </div>
+            <div class="table-wrapper">
+                <table class="styled-table">
+                    <thead>
+                        <tr><th>Nome</th><th>Lote</th><th>Validade</th><th>Estoque</th></tr>
+                    </thead>
+                    <tbody>
+                        <% resultados.medicamentos.forEach(function(m) { %>
+                        <tr>
+                            <td><strong><%= m.nome %></strong></td>
+                            <td><code><%= m.lote %></code></td>
+                            <td><%= m.data_validade %></td>
+                            <td><%= m.quantidade %> un.</td>
+                        </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <% } %>
+
+        <% if (resultados.pacientes.length > 0) { %>
+        <div class="recent-section">
+            <div class="section-header">
+                <h3><i class="ph-duotone ph-users"></i> Pacientes Encontrados (<%= resultados.pacientes.length %>)</h3>
+            </div>
+            <div class="table-wrapper">
+                <table class="styled-table">
+                    <thead>
+                        <tr><th>Nome</th><th>CPF</th><th>Contato</th><th>Endereço</th></tr>
+                    </thead>
+                    <tbody>
+                        <% resultados.pacientes.forEach(function(p) { %>
+                        <tr>
+                            <td><strong><%= p.nome %></strong></td>
+                            <td><code><%= p.cpf %></code></td>
+                            <td><%= p.contato %></td>
+                            <td><%= p.endereco %></td>
+                        </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <% } %>
+
+        <% if (resultados.medicos.length > 0) { %>
+        <div class="recent-section">
+            <div class="section-header">
+                <h3><i class="ph-duotone ph-stethoscope"></i> Médicos Encontrados (<%= resultados.medicos.length %>)</h3>
+            </div>
+            <div class="table-wrapper">
+                <table class="styled-table">
+                    <thead>
+                        <tr><th>Nome</th><th>CRM</th><th>Especialidade</th><th>Telefone</th></tr>
+                    </thead>
+                    <tbody>
+                        <% resultados.medicos.forEach(function(m) { %>
+                        <tr>
+                            <td><strong><%= m.nome %></strong></td>
+                            <td><code><%= m.crm %></code></td>
+                            <td><%= m.especialidade %></td>
+                            <td><%= m.contato %></td>
+                        </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <% } %>
+
+        <% if (resultados.farmacias.length > 0) { %>
+        <div class="recent-section">
+            <div class="section-header">
+                <h3><i class="ph-duotone ph-buildings"></i> Farmácias Encontradas (<%= resultados.farmacias.length %>)</h3>
+            </div>
+            <div class="table-wrapper">
+                <table class="styled-table">
+                    <thead>
+                        <tr><th>Unidade</th><th>Endereço</th><th>Responsável</th><th>Telefone</th></tr>
+                    </thead>
+                    <tbody>
+                        <% resultados.farmacias.forEach(function(f) { %>
+                        <tr>
+                            <td><strong><%= f.nome_fantasia %></strong></td>
+                            <td><%= f.endereco %></td>
+                            <td><%= f.responsavel %></td>
+                            <td><%= f.telefone %></td>
+                        </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <% } %>
+
+        <% if (resultados.medicamentos.length === 0 && resultados.pacientes.length === 0 && resultados.medicos.length === 0 && resultados.farmacias.length === 0) { %>
+        <div style="text-align:center; padding:40px; color:var(--text-muted);">
+            <i class="ph-duotone ph-magnifying-glass" style="font-size:2.5rem; margin-bottom:12px; opacity:0.5;"></i>
+            <p>Nenhum resultado encontrado para a busca "<strong><%= termo %></strong>".</p>
+        </div>
+        <% } %>
+    </div>
+    <% } %>
+</div>
+
+<%- include('layout/footer') %>

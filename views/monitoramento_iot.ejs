@@ -1,0 +1,69 @@
+<%- include('layout/header', { title: 'Monitoramento IoT - RedeVita', extra_css: '/static/css/academic.css' }) %>
+<%- include('layout/nav') %>
+
+<div class="page-wrapper">
+    <div class="page-header">
+        <div>
+            <h2><i class="ph-duotone ph-thermometer-simple"></i> Monitoramento IoT da Cadeia de Frio</h2>
+            <p class="page-subtitle">Telemetria em tempo real para preservação térmica de termolábeis e insulinas.</p>
+        </div>
+        <div>
+            <form action="/academico/simular-iot" method="POST" style="display:inline;">
+                <button type="submit" class="btn-secondary">
+                    <i class="ph-duotone ph-arrows-clockwise"></i> Simular Nova Leitura
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:20px; margin-top:20px;">
+        <% iotDispositivos.forEach(function(disp) { %>
+        <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:20px; display:flex; flex-direction:column; gap:16px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div>
+                    <h3 style="font-size:1.1rem; color:var(--text-main);"><%= disp.nome %></h3>
+                    <small style="color:var(--text-muted);"><i class="ph-duotone ph-map-pin"></i> <%= disp.local %></small>
+                </div>
+                <span class="status-pill green">● <%= disp.status.toUpperCase() %></span>
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; text-align:center; background:var(--bg-input); padding:16px; border-radius:10px;">
+                <div>
+                    <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:4px;">Temperatura</div>
+                    <div style="font-size:2rem; font-weight:800; color:var(--primary);">
+                        <%= disp.temperatura.toFixed(1) %> °C
+                    </div>
+                    <div style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">
+                        Faixa: <%= disp.tempMin %>°C a <%= disp.tempMax %>°C
+                    </div>
+                </div>
+                <div>
+                    <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:4px;">Umidade Relativa</div>
+                    <div style="font-size:2rem; font-weight:800; color:#10b981;">
+                        <%= disp.umidade %>%
+                    </div>
+                    <div style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">
+                        Bateria: <i class="ph-duotone ph-battery-charging"></i> <%= disp.bateria %>%
+                    </div>
+                </div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:var(--text-muted); border-top:1px solid var(--border); padding-top:12px;">
+                <span>ID: <code><%= disp.id %></code></span>
+                <span>Última transmissão: <%= new Date(disp.ultimaLeitura).toLocaleTimeString('pt-BR') %></span>
+            </div>
+        </div>
+        <% }); %>
+    </div>
+
+    <div class="recent-section" style="margin-top:28px;">
+        <div class="section-header">
+            <h3><i class="ph-duotone ph-shield-check"></i> Protocolo de Segurança Sanitária (RDC 430/2020)</h3>
+        </div>
+        <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:20px; color:var(--text-muted); line-height:1.7;">
+            <p>Os nós sensores comunicam telemetria via protocolo seguro. Dispositivos com leituras fora do intervalo ideal de temperatura disparam automaticamente alertas imediatos no painel e no registro de auditoria farmacêutica.</p>
+        </div>
+    </div>
+</div>
+
+<%- include('layout/footer') %>

@@ -1,26 +1,38 @@
 {
-  "name": "RedeVita - Gestão de Medicamentos",
+  "id": "/",
+  "name": "RedeVita - Gestão Farmacêutica",
   "short_name": "RedeVita",
-  "description": "Gestão inteligente de medicamentos e doações com suporte offline",
+  "description": "Sistema integrado de gestão farmacêutica, controle de estoque de medicamentos, doações e monitoramento da rede de saúde.",
   "start_url": "/",
-  "display": "standalone",
-  "background_color": "#0f0f0f",
-  "theme_color": "#3498db",
-  "orientation": "portrait-primary",
-  "lang": "pt-BR",
   "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0f172a",
+  "theme_color": "#0ea5e9",
   "icons": [
     {
       "src": "/static/img/icons/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/static/img/icons/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/static/img/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/static/img/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
     }
   ],
   "categories": ["health", "medical", "productivity"],
@@ -28,38 +40,17 @@
     {
       "name": "Dashboard",
       "url": "/dashboard",
-      "description": "Ver resumo do sistema",
-      "icons": [
-        {
-          "src": "/static/img/icons/icon-192x192.png",
-          "sizes": "192x192"
-        }
-      ]
-    },
-    {
-      "name": "Nova Doação",
-      "url": "/doacoes/nova",
-      "description": "Registrar nova doação",
-      "icons": [
-        {
-          "src": "/static/img/icons/icon-192x192.png",
-          "sizes": "192x192"
-        }
-      ]
+      "description": "Ver painel de indicadores"
     },
     {
       "name": "Inventário",
-      "url": "/medicamentos",
-      "description": "Gerenciar estoque",
-      "icons": [
-        {
-          "src": "/static/img/icons/icon-192x192.png",
-          "sizes": "192x192"
-        }
-      ]
+      "url": "/inventario",
+      "description": "Consultar estoque de medicamentos"
+    },
+    {
+      "name": "Doações",
+      "url": "/doacoes",
+      "description": "Gerenciar doações"
     }
-  ],
-  "screenshots": [],
-  "related_applications": [],
-  "prefer_related_applications": false
+  ]
 }

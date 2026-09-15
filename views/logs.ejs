@@ -1,0 +1,54 @@
+<%- include('layout/header', { title: 'Logs de Atividade - RedeVita', extra_css: '/static/css/inventory.css' }) %>
+<%- include('layout/nav') %>
+
+<div class="page-wrapper">
+    <div class="page-header">
+        <div>
+            <h2><i class="ph-duotone ph-shield-check"></i> Trilha de Auditoria e Logs de Atividade</h2>
+            <p class="page-subtitle">Registro cronológico imutável de todas as ações executadas no sistema.</p>
+        </div>
+        <div>
+            <button type="button" class="btn-secondary" onclick="window.print()" title="Imprimir relatório de auditoria">
+                <i class="ph-duotone ph-printer"></i> Imprimir Logs
+            </button>
+        </div>
+    </div>
+
+    <div class="table-toolbar" role="search" style="margin-top:16px;">
+        <label class="table-search" for="logs-table-search">
+            <i class="ph-duotone ph-magnifying-glass" aria-hidden="true"></i>
+            <input type="search" id="logs-table-search"
+                   data-table-search="tabela-logs"
+                   placeholder="Buscar log por usuário, ação, detalhe ou IP..."
+                   autocomplete="off">
+        </label>
+        <span class="table-search-hint" style="font-size:0.85rem; color:var(--text-muted);"></span>
+    </div>
+
+    <div class="table-wrapper" style="margin-top:10px;">
+        <table class="styled-table" id="tabela-logs">
+            <thead>
+                <tr>
+                    <th>Data / Hora</th>
+                    <th>Usuário</th>
+                    <th>Ação</th>
+                    <th>Detalhes</th>
+                    <th>IP Origem</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% logs.forEach(function(l) { %>
+                <tr>
+                    <td><code><%= l.data_hora %></code></td>
+                    <td><strong><%= l.usuario %></strong></td>
+                    <td><span class="status-pill blue"><%= l.acao %></span></td>
+                    <td><%= l.detalhes %></td>
+                    <td><small style="color:var(--text-muted);"><%= l.ip %></small></td>
+                </tr>
+                <% }); %>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<%- include('layout/footer') %>

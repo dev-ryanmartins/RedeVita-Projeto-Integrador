@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <script>
+        // Previne erro 'Cannot set property fetch of #<Window> which has only a getter'
+        (function() {
+            try {
+                const origDefine = Object.defineProperty;
+                Object.defineProperty = function(obj, prop, descriptor) {
+                    if (obj === window && prop === 'fetch' && descriptor) {
+                        let currentVal = descriptor.get ? descriptor.get() : descriptor.value;
+                        const safeDesc = {
+                            configurable: true,
+                            enumerable: descriptor.enumerable !== undefined ? descriptor.enumerable : true,
+                            get: function() {
+                                return descriptor.get ? descriptor.get() : currentVal;
+                            },
+                            set: function(val) {
+                                if (descriptor.set) {
+                                    descriptor.set(val);
+                                } else {
+                                    currentVal = val;
+                                }
+                            }
+                        };
+                        return origDefine.call(Object, obj, prop, safeDesc);
+                    }
+                    return origDefine.apply(Object, arguments);
+                };
+            } catch(e) {}
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sistema integrado de gestão farmacêutica, controle de estoque de medicamentos, doações e monitoramento da rede de saúde.">
+    <meta property="og:title" content="RedeVita">
+    <meta property="og:description" content="Sistema integrado de gestão farmacêutica, controle de estoque de medicamentos, doações e monitoramento da rede de saúde.">
+    <title><%= typeof title !== 'undefined' ? title : 'RedeVita' %></title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#0ea5e9">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="RedeVita">
+    <link rel="apple-touch-icon" href="/static/img/icons/icon-192x192.png">
+    <link rel="icon" href="/static/img/icons/icon.svg" type="image/svg+xml">
+    <script src="/static/js/theme.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js', { scope: '/' })
+                    .then(function(reg) {
+                        console.log('PWA: Service Worker ativo com escopo:', reg.scope);
+                    })
+                    .catch(function(err) {
+                        console.warn('PWA: Falha ao registrar Service Worker:', err);
+                    });
+            });
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/duotone/style.css">
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css">
+    <link rel="stylesheet" href="/static/css/global.css">
+    <% if (typeof extra_css !== 'undefined' && extra_css) { %>
+        <link rel="stylesheet" href="<%= extra_css %>">
+    <% } %>
+</head>
+<body>

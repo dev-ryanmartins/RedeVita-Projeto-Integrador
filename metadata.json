@@ -1,0 +1,8 @@
+{
+  "name": "RedeVita",
+  "description": "Sistema integrado de gestão farmacêutica, controle de estoque de medicamentos, doações e monitoramento da rede de saúde.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

@@ -9,6 +9,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/duotone/style.css">
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}">
     {% block extra_css %}{% endblock %}
 </head>
@@ -22,74 +25,74 @@
 
         <button class="nav-toggle" id="navToggle" aria-label="Abrir menu"
                 aria-controls="navLinks" aria-expanded="false" data-tooltip="Abrir menu">
-            <i class="fas fa-bars"></i>
+            <i class="ph-duotone ph-list"></i>
         </button>
 
         <ul class="nav-links" id="navLinks">
             <li>
                 <a href="{{ url_for('inventory.dashboard') }}"
                    class="{{ 'active' if request.endpoint == 'inventory.dashboard' else '' }}">
-                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                    <i class="ph-duotone ph-squares-four"></i> Dashboard
                 </a>
             </li>
             <li>
                 <a href="{{ url_for('inventory.listar_medicamentos') }}"
                    class="{{ 'active' if request.endpoint == 'inventory.listar_medicamentos' else '' }}">
-                    <i class="fas fa-pills"></i> Inventário
+                    <i class="ph-duotone ph-pill"></i> Inventário
                 </a>
             </li>
             <li>
                 <a href="{{ url_for('donation.nova_doacao') }}"
                    class="{{ 'active' if request.endpoint == 'donation.nova_doacao' else '' }}">
-                    <i class="fas fa-hand-holding-heart"></i> Doações
+                    <i class="ph-duotone ph-hand-heart"></i> Doações
                 </a>
             </li>
             <li>
                 <a href="{{ url_for('pacientes.listar_pacientes') }}"
                    class="{{ 'active' if request.endpoint and request.endpoint.startswith('pacientes.') else '' }}">
-                    <i class="fas fa-user-injured"></i> Pacientes
+                    <i class="ph-duotone ph-users"></i> Pacientes
                 </a>
             </li>
             <li>
                 <a href="{{ url_for('medicos.listar_medicos') }}"
                    class="{{ 'active' if request.endpoint and request.endpoint.startswith('medicos.') else '' }}">
-                    <i class="fas fa-user-md"></i> Médicos
+                    <i class="ph-duotone ph-stethoscope"></i> Médicos
                 </a>
             </li>
             <li>
                 <a href="{{ url_for('farmacias.listar_farmacias') }}"
                    class="{{ 'active' if request.endpoint and request.endpoint.startswith('farmacias.') else '' }}">
-                    <i class="fas fa-hospital"></i> Farmácias
+                    <i class="ph-duotone ph-buildings"></i> Farmácias
                 </a>
             </li>
             <li>
                 <a href="{{ url_for('relatorios.relatorios') }}"
                    class="{{ 'active' if request.endpoint and request.endpoint.startswith('relatorios.') else '' }}">
-                    <i class="fas fa-chart-bar"></i> Relatórios
+                    <i class="ph-duotone ph-chart-line-up"></i> Relatórios
                 </a>
             </li>
             <li>
                 <a href="{{ url_for('academico.monitoramento_iot') }}"
                    class="{{ 'active' if request.endpoint and request.endpoint.startswith('academico.') and request.endpoint == 'academico.monitoramento_iot' else '' }}">
-                    <i class="fas fa-temperature-half"></i> IoT
+                    <i class="ph-duotone ph-thermometer-simple"></i> IoT
                 </a>
             </li>
             <li>
                 <a href="{{ url_for('mapa.mapa_saude') }}"
                    class="{{ 'active' if request.endpoint and request.endpoint.startswith('mapa.') else '' }}">
-                    <i class="fas fa-map-marked-alt"></i> Mapa
+                    <i class="ph-duotone ph-map-trifold"></i> Mapa
                 </a>
             </li>
             <li>
                 <a href="{{ url_for('medical.prescriptions') }}"
                    class="{{ 'active' if request.endpoint and request.endpoint.startswith('medical.') else '' }}">
-                    <i class="fas fa-prescription"></i> Prescrições
+                    <i class="ph-duotone ph-file-text"></i> Prescrições
                 </a>
             </li>
             <li>
                 <a href="{{ url_for('busca.buscar') }}"
                    class="{{ 'active' if request.endpoint and request.endpoint.startswith('busca.') else '' }}">
-                    <i class="fas fa-search"></i> Busca
+                    <i class="ph-duotone ph-magnifying-glass"></i> Busca
                 </a>
             </li>
             {% if current_user.cargo == 'Admin' %}
@@ -97,25 +100,25 @@
             <li>
                 <a href="{{ url_for('notificacoes.painel') }}"
                    class="{{ 'active' if request.endpoint and request.endpoint.startswith('notificacoes.') else '' }} nav-admin">
-                    <i class="fas fa-bell"></i> Notificações
+                    <i class="ph-duotone ph-bell"></i> Notificações
                 </a>
             </li>
             <li>
                 <a href="{{ url_for('usuarios.listar_usuarios') }}"
                    class="{{ 'active' if request.endpoint and request.endpoint.startswith('usuarios.') else '' }} nav-admin">
-                    <i class="fas fa-users-cog"></i> Usuários
+                    <i class="ph-duotone ph-users-three"></i> Usuários
                 </a>
             </li>
             <li>
                 <a href="{{ url_for('logs.listar_logs') }}"
                    class="{{ 'active' if request.endpoint and request.endpoint.startswith('logs.') else '' }} nav-admin">
-                    <i class="fas fa-shield-alt"></i> Logs
+                    <i class="ph-duotone ph-shield-check"></i> Logs
                 </a>
             </li>
             <li>
                 <a href="{{ url_for('academico.auditoria') }}"
                    class="{{ 'active' if request.endpoint == 'academico.auditoria' else '' }} nav-admin">
-                    <i class="fas fa-shield-halved"></i> Auditoria
+                    <i class="ph-duotone ph-clipboard-text"></i> Auditoria
                 </a>
             </li>
             <li>
@@ -575,8 +578,11 @@
         resultadoDiv.style.border = '1px solid rgba(52, 152, 219, 0.3)';
         resultadoDiv.innerHTML = '<p style="color: #6cb8e8; margin: 0;">Processando cadastro...</p>';
         
-        // Submeter formulário tradicionalmente para garantir CSRF funcione
-        form.submit();
+        // Submeter formulário via fetch para capturar feedback
+        fetch(form.action || window.location.href, {
+            method: 'POST',
+            body: formData
+        })
         .then(response => response.text())
         .then(html => {
             // Parse the response to check for flash messages
@@ -594,6 +600,9 @@
                 resultadoDiv.innerHTML = `<p style="color: ${isDanger ? '#f07070' : '#5dde8d'}; margin: 0;">${lastMessage.textContent.trim()}</p>`;
                 
                 if (isSuccess) {
+                    if (window.showToast) {
+                        window.showToast('Usuário salvo com sucesso!', 'success');
+                    }
                     // Mostrar detalhes do usuário criado
                     setTimeout(() => {
                         resultadoDiv.innerHTML = `
@@ -628,6 +637,7 @@
         });
     }
 </script>
+<script src="/static/js/redevita-enhancements.js"></script>
 {% block extra_js %}{% endblock %}
 </body>
 </html>

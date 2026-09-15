@@ -1,0 +1,94 @@
+<%- include('layout/header', { title: 'Médicos - RedeVita', extra_css: '/static/css/inventory.css' }) %>
+<%- include('layout/nav') %>
+
+<div class="page-wrapper">
+    <div class="page-header">
+        <div>
+            <h2><i class="ph-duotone ph-stethoscope"></i> Médicos Cadastrados</h2>
+            <p class="page-subtitle">Corpo clínico autorizado para emissão e validação de prescrições.</p>
+        </div>
+        <div>
+            <button class="btn-primary" onclick="abrirModal('modal-medico')">
+                <i class="ph-duotone ph-plus-circle"></i> Novo Médico
+            </button>
+        </div>
+    </div>
+
+    <div class="table-toolbar" role="search" style="margin-top:16px;">
+        <label class="table-search" for="medicos-table-search">
+            <i class="ph-duotone ph-magnifying-glass" aria-hidden="true"></i>
+            <input type="search" id="medicos-table-search"
+                   data-table-search="tabela-medicos"
+                   placeholder="Buscar médico por nome, CRM ou especialidade..."
+                   autocomplete="off">
+        </label>
+        <span class="table-search-hint" style="font-size:0.85rem; color:var(--text-muted);"></span>
+    </div>
+
+    <div class="table-wrapper" style="margin-top:10px;">
+        <table class="styled-table" id="tabela-medicos">
+            <thead>
+                <tr>
+                    <th>Nome do Médico</th>
+                    <th>CRM</th>
+                    <th>Especialidade</th>
+                    <th>Telefone</th>
+                    <th>E-mail</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% medicos.forEach(function(m) { %>
+                <tr>
+                    <td><strong><%= m.nome %></strong></td>
+                    <td><code><%= m.crm %></code></td>
+                    <td><span class="status-pill" style="background:var(--bg-input); border:1px solid var(--border);"><%= m.especialidade %></span></td>
+                    <td><%= m.contato %></td>
+                    <td><%= m.email || '—' %></td>
+                </tr>
+                <% }); %>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Novo Médico -->
+<div id="modal-medico" class="modal-overlay" style="display:none;">
+    <div class="modal-box" style="max-width:500px;">
+        <div class="modal-header">
+            <h3><i class="ph-duotone ph-stethoscope"></i> Cadastrar Médico</h3>
+            <button type="button" class="modal-close" onclick="fecharModal('modal-medico')">&times;</button>
+        </div>
+        <form action="/medicos" method="POST" class="modern-form" style="padding:20px;">
+            <div class="form-group" style="margin-bottom:12px;">
+                <label for="m_nome">Nome Completo *</label>
+                <input type="text" id="m_nome" name="nome" required placeholder="Ex: Dr. Lucas Rodrigues" class="input-standard">
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px;">
+                <div class="form-group">
+                    <label for="m_crm">CRM / Registro *</label>
+                    <input type="text" id="m_crm" name="crm" required placeholder="CRM-SP 178901" class="input-standard">
+                </div>
+                <div class="form-group">
+                    <label for="m_esp">Especialidade *</label>
+                    <input type="text" id="m_esp" name="especialidade" required placeholder="Ortopedia" class="input-standard">
+                </div>
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:16px;">
+                <div class="form-group">
+                    <label for="m_contato">Telefone</label>
+                    <input type="text" id="m_contato" name="contato" placeholder="(15) 99666-7700" class="input-standard">
+                </div>
+                <div class="form-group">
+                    <label for="m_email">E-mail</label>
+                    <input type="email" id="m_email" name="email" placeholder="medico@saude.sp.gov.br" class="input-standard">
+                </div>
+            </div>
+            <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px;">
+                <button type="button" class="btn-secondary" onclick="fecharModal('modal-medico')">Cancelar</button>
+                <button type="submit" class="btn-primary"><i class="ph-duotone ph-floppy-disk"></i> Salvar Médico</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<%- include('layout/footer') %>

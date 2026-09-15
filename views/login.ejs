@@ -1,0 +1,137 @@
+<%- include('layout/header', { title: 'Login - RedeVita', extra_css: '/static/css/login.css' }) %>
+
+<div class="auth-wrapper">
+    <div class="login-box">
+
+        <div class="login-side-image">
+            <div class="image-overlay-card">
+                <a href="/login" class="redevita-brand" aria-label="RedeVita" style="display:inline-flex; align-items:center; text-decoration:none; margin-bottom:12px;">
+                    <span class="redevita-logo-icon" aria-hidden="true" style="margin-right:6px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 56" style="height:36px; width:auto;">
+                            <defs>
+                                <style>
+                                    .cruz-borda { fill: none; stroke: #0ea5e9; stroke-width: 2.8; stroke-linecap: round; stroke-linejoin: round; }
+                                    .coracao-vermelho { fill: #f43f5e; }
+                                    .ecg-linha { fill: none; stroke: #ffffff; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+                                </style>
+                            </defs>
+                            <path class="cruz-borda" d="M 27 5 h 12 a 4 4 0 0 1 4 4 v 11 h 11 a 4 4 0 0 1 4 4 v 10 a 4 4 0 0 1 -4 4 h -11 v 11 a 4 4 0 0 1 -4 4 h -12 a 4 4 0 0 1 -4 -4 v -11 h -11 a 4 4 0 0 1 -4 -4 v -10 a 4 4 0 0 1 4 -4 h 11 v -11 a 4 4 0 0 1 4 -4 z" />
+                            <path class="coracao-vermelho" transform="translate(1, -4) scale(1.5)" d="M 40 20 C 40 13 31 11 27 17 C 23 11 14 13 14 20 C 14 29 27 37 27 37 C 27 37 40 29 40 20 Z" />
+                            <path class="ecg-linha" d="M 21 25 h 5 l 3.5 -11 l 5 22 l 4.5 -14 l 3.5 3 h 6" />
+                        </svg>
+                    </span>
+                    <span class="redevita-brand-text">
+                        <span class="brand-rede" style="color:#ffffff; font-weight:800; font-size:1.5rem;">Rede</span><span class="brand-vita" style="color:#38bdf8; font-weight:800; font-size:1.5rem;">Vita</span>
+                    </span>
+                </a>
+                <p>Gestão inteligente de medicamentos e doações.</p>
+                <ul class="features-list">
+                    <li><i class="ph-duotone ph-check-circle"></i> Controle de estoque em tempo real</li>
+                    <li><i class="ph-duotone ph-check-circle"></i> Alerta de vencimento automático</li>
+                    <li><i class="ph-duotone ph-check-circle"></i> Histórico completo de doações</li>
+                    <li><i class="ph-duotone ph-check-circle"></i> Segurança e rastreabilidade</li>
+                </ul>
+
+                <div style="margin-top:20px; padding:14px; background:rgba(255,255,255,0.08); border-radius:10px; font-size:0.85rem;">
+                    <div style="font-weight:600; margin-bottom:8px; color:#38bdf8; display:flex; align-items:center; gap:6px;">
+                        <i class="ph-duotone ph-key"></i> Contas de Demonstração (Clique para selecionar):
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:6px;">
+                        <button type="button" onclick="preencherLogin('00000000000', 'admin123')" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); color:#f8fafc; padding:6px 10px; border-radius:6px; text-align:left; cursor:pointer; font-size:0.82rem; display:flex; justify-content:space-between; align-items:center;">
+                            <span>👑 <strong>Admin:</strong> 000.000.000-00</span>
+                            <span style="color:#38bdf8; font-family:monospace; font-size:0.75rem;">admin123</span>
+                        </button>
+                        <button type="button" onclick="preencherLogin('33355577782', 'demo1234')" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); color:#f8fafc; padding:6px 10px; border-radius:6px; text-align:left; cursor:pointer; font-size:0.82rem; display:flex; justify-content:space-between; align-items:center;">
+                            <span>💊 <strong>Farmacêutico:</strong> 333.555.777-82</span>
+                            <span style="color:#38bdf8; font-family:monospace; font-size:0.75rem;">demo1234</span>
+                        </button>
+                        <button type="button" onclick="preencherLogin('44466688893', 'demo1234')" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); color:#f8fafc; padding:6px 10px; border-radius:6px; text-align:left; cursor:pointer; font-size:0.82rem; display:flex; justify-content:space-between; align-items:center;">
+                            <span>🩺 <strong>Médico:</strong> 444.666.888-93</span>
+                            <span style="color:#38bdf8; font-family:monospace; font-size:0.75rem;">demo1234</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="login-side-form" style="background-color: #151c2a;">
+            <div class="form-content">
+                <h2>Bem-vindo!</h2>
+                <p class="subtitle">Acesse sua conta para continuar.</p>
+
+                <% if (typeof success !== 'undefined' && success) { %>
+                    <div class="alert alert-success" style="margin-bottom:16px; display:flex; align-items:center; gap:8px; background:rgba(16, 185, 129, 0.12); border:1px solid rgba(16, 185, 129, 0.3); border-radius:10px; padding:12px 16px; color:#34d399; font-size:0.88rem;">
+                        <i class="ph-duotone ph-check-circle" style="font-size:1.2rem;"></i> <span><%= success %></span>
+                    </div>
+                <% } %>
+
+                <% if (typeof info !== 'undefined' && info) { %>
+                    <div class="alert alert-info" style="margin-bottom:16px;">
+                        <i class="ph-duotone ph-check-circle"></i> <%= info %>
+                    </div>
+                <% } %>
+
+                <% if (typeof error !== 'undefined' && error) { %>
+                    <div class="alert alert-danger" style="margin-bottom:16px;">
+                        <i class="ph-duotone ph-warning-circle"></i> <%= error %>
+                    </div>
+                <% } %>
+
+                <form action="/login" method="POST" class="modern-form">
+                    <div class="form-group">
+                        <label id="label-identificador" for="identificador">CPF</label>
+                        <div class="input-with-icon">
+                            <i class="ph-duotone ph-identification-card"></i>
+                            <input type="text" name="identificador" id="identificador"
+                                   placeholder="000.000.000-00" required maxlength="14"
+                                   autocomplete="username" value="00000000000">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="senha">Senha</label>
+                        <div class="input-with-icon">
+                            <i class="ph-duotone ph-lock"></i>
+                            <input type="password" name="senha" id="senha"
+                                   placeholder="••••••••" required autocomplete="current-password" value="admin123">
+                        </div>
+                    </div>
+
+                    <div class="forgot-pass-container" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
+                        <span style="font-size:0.85rem; color:#94a3b8; display:inline-flex; align-items:center; gap:6px;">
+                            <i class="ph-duotone ph-shield-check" style="color:#38bdf8;"></i> Ambiente seguro
+                        </span>
+                        <a href="/recuperar-senha" class="forgot-link" style="color:#38bdf8; font-size:0.88rem; font-weight:500; text-decoration:none; transition:color 0.2s ease;">Esqueceu a senha?</a>
+                    </div>
+
+                    <button type="submit" class="btn-primary-gradient" style="width:100%; display:inline-flex; align-items:center; justify-content:center; gap:8px;">
+                        Entrar no Sistema <i class="ph-duotone ph-arrow-right"></i>
+                    </button>
+                </form>
+
+                <div class="auth-footer" style="margin-top: 22px; text-align: center;">
+                    <p style="color:#94a3b8; font-size:0.9rem; margin-bottom:10px;">
+                        Não tem uma conta? <a href="/cadastro" style="color:#38bdf8; font-weight:600; text-decoration:none; transition:opacity 0.2s ease;">Cadastre-se</a>
+                    </p>
+                    <p style="color:#64748b; font-size:0.8rem; margin:0;">RedeVita &copy; 2026 - Gestão Integrada de Saúde</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    function preencherLogin(cpf, senha) {
+        const inputCpf = document.getElementById('identificador');
+        const inputSenha = document.getElementById('senha');
+        if (inputCpf) {
+            inputCpf.value = cpf;
+        }
+        if (inputSenha) {
+            inputSenha.value = senha;
+        }
+    }
+</script>
+
+<%- include('layout/footer') %>

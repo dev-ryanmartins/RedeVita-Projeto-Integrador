@@ -7,26 +7,6 @@ from app.database import db
 
 
 def registrar_handlers_api(app):
-    @app.errorhandler(HTTPException)
-    def tratar_http(e):
-        if request.path.startswith("/api/"):
-            return resposta_erro(e.description or "Erro na requisição.", e.code)
-        return e
-
-    @app.errorhandler(400)
-    def bad_request(e):
-        if request.path.startswith("/api/"):
-            return resposta_erro("Requisição inválida.", 400)
-        return render_template("404.html"), 400
-
-    @app.errorhandler(401)
-    def nao_autorizado(e):
-        if request.path.startswith("/api/"):
-            return resposta_erro("Autenticação necessária.", 401)
-        from flask import redirect, url_for
-
-        return redirect(url_for("auth.login"))
-
     @app.errorhandler(403)
     def acesso_negado_api(e):
         if request.path.startswith("/api/"):
@@ -39,22 +19,38 @@ def registrar_handlers_api(app):
             return resposta_erro("Recurso não encontrado.", 404)
         return render_template("404.html"), 404
 
-    @app.errorhandler(413)
-    def payload_grande(e):
-        if request.path.startswith("/api/"):
-            return resposta_erro("Payload excede o limite permitido.", 413)
-        from flask import flash, redirect, url_for
-
-        flash(
-            "O dado enviado é muito grande. Verifique os campos e tente novamente.",
-            "danger",
-        )
-        return redirect(url_for("auth.login")), 413
-
     @app.errorhandler(500)
     def erro_interno_api(e):
         db.session.rollback()
-        app.logger.error("Erro interno", exc_info=True)
+        app.logger.error("Erro interno do servidor: %s", str(e), exc_info=True)
+        if request.path.startswith("/api/"):
+            return resposta_erro("Erro interno do servidor.", 500)
+        return render_template("500.html"), 500
+
+    @app.errorhandler(HTTPException)
+    def tratar_http(e):
+        if request.path.startswith("/api/"):
+            return resposta_erro(e.description or "Erro na requisição.", e.code)
+        if e.code == 404:
+            return render_template("404.html"), 404
+        if e.code == 403:
+            return render_template("403.html"), 403
+        if e.code == 500:
+            return render_template("500.html"), 500
+        return e
+
+    @app.errorhandler(Exception)
+    def tratar_excecao_nao_capturada(e):
+        db.session.rollback()
+        if isinstance(e, HTTPException):
+            if request.path.startswith("/api/"):
+                return resposta_erro(e.description or "Erro na requisição.", e.code)
+            if e.code == 404:
+                return render_template("404.html"), 404
+            if e.code == 403:
+                return render_template("403.html"), 403
+            return render_template("500.html"), e.code if hasattr(e, "code") else 500
+        app.logger.error("Exceção não tratada capturada: %s", str(e), exc_info=True)
         if request.path.startswith("/api/"):
             return resposta_erro("Erro interno do servidor.", 500)
         return render_template("500.html"), 500

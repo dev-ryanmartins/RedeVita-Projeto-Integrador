@@ -177,6 +177,15 @@ def create_app(config_overrides=None):
     registrar_handlers_limite(app)
     registrar_handlers_api(app)
 
+    @app.after_request
+    def adicionar_cabecalhos_seguranca(response):
+        """Aplica cabeçalhos HTTP de segurança para blindar a aplicação contra ataques comuns."""
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+        response.headers['X-XSS-Protection'] = '1; mode=block'
+        response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+        return response
+
     @app.route('/')
     def index():
         return render_template('login.html')

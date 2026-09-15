@@ -361,7 +361,7 @@ def exportar_medicamentos_pdf():
                            topMargin=2*cm, bottomMargin=2*cm)
     elements = []
 
-    _criar_cabecalho_profissional(elementos, "Relatório de Medicamentos")
+    _criar_cabecalho_profissional(elements, "Relatório de Medicamentos")
 
     data = [["Nome", "Lote", "Validade", "Qtd", "Status"]]
     status_map = {0: "Seguro", 1: "Próximo Vencimento", 2: "Vencido"}
@@ -371,7 +371,7 @@ def exportar_medicamentos_pdf():
             [
                 m.nome,
                 m.lote,
-                m.data_validade.strftime("%d/%m/%Y"),
+                m.data_validade.strftime("%d/%m/%Y") if hasattr(m.data_validade, 'strftime') else str(m.data_validade),
                 str(m.quantidade),
                 status_map.get(m.status_semaforo, ""),
             ]
@@ -383,7 +383,7 @@ def exportar_medicamentos_pdf():
     table = _aplicar_estilo_tabela_profissional(table)
     elements.append(table)
     
-    _criar_rodape_profissional(elementos)
+    _criar_rodape_profissional(elements)
     doc.build(elements)
 
     pdf = buffer.getvalue()
@@ -414,7 +414,7 @@ def exportar_medicos_pdf():
                            topMargin=2*cm, bottomMargin=2*cm)
     elements = []
 
-    _criar_cabecalho_profissional(elementos, "Relatório de Médicos")
+    _criar_cabecalho_profissional(elements, "Relatório de Médicos")
 
     data = [["Nome", "CRM", "Especialidade", "Contato", "Cadastrado em"]]
 
@@ -435,7 +435,7 @@ def exportar_medicos_pdf():
     table = _aplicar_estilo_tabela_profissional(table)
     elements.append(table)
     
-    _criar_rodape_profissional(elementos)
+    _criar_rodape_profissional(elements)
     doc.build(elements)
 
     pdf = buffer.getvalue()
@@ -466,7 +466,7 @@ def exportar_farmacias_pdf():
                            topMargin=2*cm, bottomMargin=2*cm)
     elements = []
 
-    _criar_cabecalho_profissional(elementos, "Relatório de Farmácias")
+    _criar_cabecalho_profissional(elements, "Relatório de Farmácias")
 
     data = [["Nome Fantasia", "Razão Social", "CNPJ", "Responsável", "Endereço", "Cadastrado em"]]
 
@@ -488,7 +488,7 @@ def exportar_farmacias_pdf():
     table = _aplicar_estilo_tabela_profissional(table)
     elements.append(table)
     
-    _criar_rodape_profissional(elementos)
+    _criar_rodape_profissional(elements)
     doc.build(elements)
 
     pdf = buffer.getvalue()
@@ -519,7 +519,7 @@ def exportar_pacientes_pdf():
                            topMargin=2*cm, bottomMargin=2*cm)
     elements = []
 
-    _criar_cabecalho_profissional(elementos, "Relatório de Pacientes")
+    _criar_cabecalho_profissional(elements, "Relatório de Pacientes")
 
     data = [["Nome", "CPF", "Data de Nascimento", "Endereço", "Cadastrado em"]]
 
@@ -540,7 +540,7 @@ def exportar_pacientes_pdf():
     table = _aplicar_estilo_tabela_profissional(table)
     elements.append(table)
     
-    _criar_rodape_profissional(elementos)
+    _criar_rodape_profissional(elements)
     doc.build(elements)
 
     pdf = buffer.getvalue()
@@ -676,7 +676,7 @@ def exportar_sumario_pdf():
                            topMargin=2*cm, bottomMargin=2*cm)
     elements = []
 
-    _criar_cabecalho_profissional(elementos, "Sumário Executivo - RedeVita")
+    _criar_cabecalho_profissional(elements, "Sumário Executivo - RedeVita")
 
     # Resumo das métricas
     styles = getSampleStyleSheet()
@@ -732,10 +732,4 @@ def exportar_sumario_pdf():
     response.data = pdf
 
     registrar_log("Exportação PDF", "Exportou sumário executivo em PDF")
-    return response
-
-    pdf = buffer.getvalue()
-    buffer.close()
-    response.data = pdf
-
     return response

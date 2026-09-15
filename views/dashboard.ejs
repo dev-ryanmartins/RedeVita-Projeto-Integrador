@@ -1,0 +1,198 @@
+<%- include('layout/header', { title: 'Dashboard - RedeVita', extra_css: '/static/css/dashboard.css' }) %>
+<%- include('layout/nav') %>
+
+<div class="page-wrapper">
+
+    <div class="dashboard-header">
+        <div>
+            <h1>Olá, <%= current_user ? current_user.nome.split(' ')[0] : 'Usuário' %>!</h1>
+            <p class="subtitle">Resumo completo da RedeVita em <strong><%= new Date().toLocaleDateString('pt-BR') %></strong>.</p>
+        </div>
+        <div class="header-actions">
+            <a href="/relatorios" class="btn-secondary">
+                <i class="ph-duotone ph-chart-line-up"></i> Relatórios
+            </a>
+            <a href="/doacoes" class="btn-primary">
+                <i class="ph-duotone ph-plus-circle"></i> Nova Doação
+            </a>
+        </div>
+    </div>
+
+    <% if (stats.alertasVencimento > 0) { %>
+    <div class="alert-banner">
+        <i class="ph-duotone ph-warning-circle"></i>
+        <div>
+            <strong>Atenção:</strong> <%= stats.alertasVencimento %> medicamento(s) com alerta ou vencidos necessitam de ação preventiva.
+        </div>
+        <a href="/inventario" class="alert-banner-link">
+            Ver estoque <i class="ph-bold ph-arrow-right"></i>
+        </a>
+    </div>
+    <% } %>
+
+    <div class="welcome-banner">
+        <div class="welcome-banner__content">
+            <h2>Olá, <%= current_user ? current_user.nome : 'Administrador' %> 👋</h2>
+            <p>Painel integrado de monitoramento e gestão farmacêutica.</p>
+        </div>
+        <div class="welcome-banner__status">● Sistema Operacional Conectado</div>
+    </div>
+
+    <div class="stats-grid stats-grid-7">
+        <div class="stat-card stat-card--blue">
+            <div class="stat-card-header">
+                <div class="stat-icon blue"><i class="ph-duotone ph-pill"></i></div>
+            </div>
+            <div class="stat-info">
+                <p class="stat-label">Medicamentos</p>
+                <p class="stat-value"><%= stats.totalMedicamentos %></p>
+            </div>
+        </div>
+        <div class="stat-card stat-card--yellow">
+            <div class="stat-card-header">
+                <div class="stat-icon yellow"><i class="ph-duotone ph-warning-circle"></i></div>
+            </div>
+            <div class="stat-info">
+                <p class="stat-label">Vencidos / Alerta</p>
+                <p class="stat-value"><%= stats.alertasVencimento %></p>
+            </div>
+        </div>
+        <div class="stat-card stat-card--green">
+            <div class="stat-card-header">
+                <div class="stat-icon green"><i class="ph-duotone ph-package"></i></div>
+            </div>
+            <div class="stat-info">
+                <p class="stat-label">Unidades em Estoque</p>
+                <p class="stat-value"><%= stats.totalEstoque %></p>
+            </div>
+        </div>
+        <div class="stat-card stat-card--red">
+            <div class="stat-card-header">
+                <div class="stat-icon red"><i class="ph-duotone ph-hand-heart"></i></div>
+            </div>
+            <div class="stat-info">
+                <p class="stat-label">Total de Doações</p>
+                <p class="stat-value"><%= stats.totalDoacoes %></p>
+            </div>
+        </div>
+        <div class="stat-card stat-card--orange">
+            <div class="stat-card-header">
+                <div class="stat-icon orange"><i class="ph-duotone ph-users"></i></div>
+            </div>
+            <div class="stat-info">
+                <p class="stat-label">Pacientes</p>
+                <p class="stat-value"><%= stats.totalPacientes %></p>
+            </div>
+        </div>
+        <div class="stat-card stat-card--purple">
+            <div class="stat-card-header">
+                <div class="stat-icon purple"><i class="ph-duotone ph-stethoscope"></i></div>
+            </div>
+            <div class="stat-info">
+                <p class="stat-label">Médicos Cadastrados</p>
+                <p class="stat-value"><%= stats.totalMedicos %></p>
+            </div>
+        </div>
+        <div class="stat-card stat-card--teal">
+            <div class="stat-card-header">
+                <div class="stat-icon teal"><i class="ph-duotone ph-buildings"></i></div>
+            </div>
+            <div class="stat-info">
+                <p class="stat-label">Farmácias Parceiras</p>
+                <p class="stat-value"><%= stats.totalFarmacias %></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="quick-panel">
+        <div class="quick-actions">
+            <h3><i class="ph-duotone ph-lightning"></i> Ações Rápidas</h3>
+            <div class="action-buttons">
+                <a href="/inventario" class="btn-secondary">
+                    <i class="ph-duotone ph-pill"></i> Gerenciar Inventário
+                </a>
+                <a href="/doacoes" class="btn-primary">
+                    <i class="ph-duotone ph-plus-circle"></i> Registrar Doação
+                </a>
+                <a href="/pacientes" class="btn-secondary">
+                    <i class="ph-duotone ph-users"></i> Gerenciar Pacientes
+                </a>
+                <a href="/prescriptions" class="btn-secondary">
+                    <i class="ph-duotone ph-file-text"></i> Receituário Digital
+                </a>
+                <a href="/medicos" class="btn-secondary">
+                    <i class="ph-duotone ph-stethoscope"></i> Cadastrar Médico
+                </a>
+                <a href="/academico/monitoramento-iot" class="btn-secondary">
+                    <i class="ph-duotone ph-thermometer-simple"></i> Monitoramento IoT
+                </a>
+                <a href="/relatorios" class="btn-secondary">
+                    <i class="ph-duotone ph-chart-line-up"></i> Ver Relatórios
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="recent-two-col" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:20px; margin-top:24px;">
+        <div class="recent-section">
+            <div class="section-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <h3><i class="ph-duotone ph-clock-counter-clockwise"></i> Medicamentos no Inventário</h3>
+                <a href="/inventario" class="forgot-link">Ver todos <i class="ph-bold ph-arrow-right"></i></a>
+            </div>
+            <div class="table-wrapper">
+                <table class="styled-table">
+                    <thead>
+                        <tr>
+                            <th>Status</th>
+                            <th>Medicamento</th>
+                            <th>Validade</th>
+                            <th>Qtd.</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% ultimosMedicamentos.forEach(function(med) { %>
+                        <tr>
+                            <td>
+                                <% if (med.status_semaforo === 0) { %>
+                                    <span class="status-pill green">Seguro</span>
+                                <% } else if (med.status_semaforo === 1) { %>
+                                    <span class="status-pill yellow">Atenção</span>
+                                <% } else { %>
+                                    <span class="status-pill red">Vencido</span>
+                                <% } %>
+                            </td>
+                            <td><strong><%= med.nome %></strong></td>
+                            <td><%= med.data_validade %></td>
+                            <td><%= med.quantidade %> un.</td>
+                        </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="recent-section">
+            <div class="section-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <h3><i class="ph-duotone ph-thermometer-simple"></i> Sensores IoT (Cadeia de Frio)</h3>
+                <a href="/academico/monitoramento-iot" class="forgot-link">Ver detalhes <i class="ph-bold ph-arrow-right"></i></a>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:12px;">
+                <% iotDispositivos.forEach(function(dispositivo) { %>
+                <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:10px; padding:12px 16px; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <div style="font-weight:600;"><%= dispositivo.nome %></div>
+                        <div style="font-size:0.8rem; color:var(--text-muted);"><%= dispositivo.local %></div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-size:1.2rem; font-weight:700; color:var(--primary);"><%= dispositivo.temperatura.toFixed(1) %> °C</div>
+                        <div style="font-size:0.8rem; color:var(--text-muted);"><i class="ph-duotone ph-drop"></i> <%= dispositivo.umidade %>% | <span style="color:#10b981;">● Online</span></div>
+                    </div>
+                </div>
+                <% }); %>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<%- include('layout/footer') %>

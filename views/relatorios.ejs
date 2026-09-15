@@ -1,0 +1,104 @@
+<%- include('layout/header', { title: 'Relatórios Gerenciais - RedeVita', extra_css: '/static/css/dashboard.css' }) %>
+<%- include('layout/nav') %>
+
+<div class="page-wrapper">
+    <div class="page-header">
+        <div>
+            <h2><i class="ph-duotone ph-chart-line-up"></i> Relatórios e Auditoria Farmacêutica</h2>
+            <p class="page-subtitle">Indicadores consolidados de estoque, validade, doações e telemetria.</p>
+        </div>
+        <div style="display:flex; gap:10px;">
+            <button type="button" class="btn-secondary" onclick="window.print()" title="Imprimir relatório limpo ou gerar PDF">
+                <i class="ph-duotone ph-printer"></i> Imprimir / PDF
+            </button>
+            <a href="/inventario/exportar-csv" class="btn-primary">
+                <i class="ph-duotone ph-download-simple"></i> Exportar Dados (CSV)
+            </a>
+        </div>
+    </div>
+
+    <div class="stats-grid stats-grid-7" style="margin-top:16px;">
+        <div class="stat-card">
+            <div class="stat-icon blue"><i class="ph-duotone ph-pill"></i></div>
+            <div class="stat-info">
+                <p class="stat-label">Itens Distintos</p>
+                <p class="stat-value"><%= stats.totalMedicamentos %></p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon green"><i class="ph-duotone ph-package"></i></div>
+            <div class="stat-info">
+                <p class="stat-label">Estoque Total</p>
+                <p class="stat-value"><%= stats.totalEstoque %> un.</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon yellow"><i class="ph-duotone ph-warning"></i></div>
+            <div class="stat-info">
+                <p class="stat-label">Vencidos / Alerta</p>
+                <p class="stat-value"><%= stats.alertasVencimento %></p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon red"><i class="ph-duotone ph-hand-heart"></i></div>
+            <div class="stat-info">
+                <p class="stat-label">Doações Registradas</p>
+                <p class="stat-value"><%= stats.totalDoacoes %></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="recent-section" style="margin-top:24px;">
+        <div class="section-header">
+            <h3><i class="ph-duotone ph-calendar-check"></i> Análise de Validade do Estoque</h3>
+        </div>
+
+        <div class="table-toolbar" role="search" style="margin-top:12px; margin-bottom:12px;">
+            <label class="table-search" for="relatorios-table-search">
+                <i class="ph-duotone ph-magnifying-glass" aria-hidden="true"></i>
+                <input type="search" id="relatorios-table-search"
+                       data-table-search="tabela-relatorios"
+                       placeholder="Filtrar por medicamento, lote ou validade..."
+                       autocomplete="off">
+            </label>
+            <span class="table-search-hint" style="font-size:0.85rem; color:var(--text-muted);"></span>
+        </div>
+
+        <div class="table-wrapper">
+            <table class="styled-table" id="tabela-relatorios">
+                <thead>
+                    <tr>
+                        <th>Medicamento</th>
+                        <th>Lote</th>
+                        <th>Data de Validade</th>
+                        <th>Quantidade</th>
+                        <th>Classificação Tarja</th>
+                        <th>Situação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% medicamentos.forEach(function(m) { %>
+                    <tr>
+                        <td><strong><%= m.nome %></strong></td>
+                        <td><code><%= m.lote %></code></td>
+                        <td><%= m.data_validade %></td>
+                        <td><%= m.quantidade %> un.</td>
+                        <td><%= m.tarja %></td>
+                        <td>
+                            <% if (m.status_semaforo === 0) { %>
+                                <span class="status-pill green">Seguro (> 30 dias)</span>
+                            <% } else if (m.status_semaforo === 1) { %>
+                                <span class="status-pill yellow">Atenção (<= 30 dias)</span>
+                            <% } else { %>
+                                <span class="status-pill red">Vencido</span>
+                            <% } %>
+                        </td>
+                    </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<%- include('layout/footer') %>

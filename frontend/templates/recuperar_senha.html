@@ -8,6 +8,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/duotone/style.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
 </head>
@@ -15,30 +17,54 @@
 <body style="background-color: #0b0f17;">
 {% include "_accessibility_controls.html" %}
 <div class="auth-wrapper">
-    <div class="auth-card" style="background-color: #151c2a;">
-        <div class="auth-header">
-            {{ brand_logo(url_for('auth.login')) }}
+    <div class="auth-card-modern">
+        <div class="auth-brand-center">
+            <div style="margin-bottom: 14px;">
+                {{ brand_logo(url_for('auth.login')) }}
+            </div>
             <h2>Recuperar Senha</h2>
-            <p>Informe seu e-mail cadastrado e enviaremos um link de recuperação.</p>
+            <p class="subtitle">Informe seu e-mail ou CPF cadastrado para receber um código de segurança de 6 dígitos.</p>
         </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'danger' or category == 'error' else category }}" style="margin-bottom:20px; display:flex; align-items:center; gap:8px;">
+                        <i class="ph-duotone ph-warning-circle"></i>
+                        <span>{{ message }}</span>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
 
         <form action="{{ url_for('auth.recuperar_senha') }}" method="POST" class="modern-form">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <div class="form-group">
-                <label for="email">E-mail de Cadastro <span class="required">*</span></label>
+            <div class="form-group" style="margin-bottom:24px;">
+                <label for="identificador" style="color:#cbd5e1; font-weight:600; margin-bottom:8px; display:block;">
+                    E-mail ou CPF Cadastrado <span style="color:#f43f5e;">*</span>
+                </label>
                 <div class="input-with-icon">
-                    <i class="fas fa-envelope"></i>
-                    <input type="email" name="email" id="email"
-                           placeholder="seu@email.com" required autocomplete="email">
+                    <i class="ph-duotone ph-user-focus"></i>
+                    <input type="text" name="identificador" id="identificador"
+                           placeholder="seu@email.com ou 000.000.000-00" required
+                           autocomplete="username" autofocus>
                 </div>
+                <small style="color:#64748b; font-size:0.8rem; margin-top:6px; display:block;">
+                    Enviaremos um código numérico de 6 dígitos com validade de 15 minutos.
+                </small>
             </div>
-            <button type="submit" class="btn-primary-gradient">
-                <i class="fas fa-paper-plane"></i> Enviar Link
+
+            <button type="submit" class="btn-primary-gradient" style="width:100%; display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:14px; font-weight:600;">
+                <span>Enviar Código de Verificação</span>
+                <i class="ph-duotone ph-paper-plane-tilt"></i>
             </button>
         </form>
 
-        <div class="auth-footer">
-            <a href="{{ url_for('auth.login') }}"><i class="fas fa-arrow-left"></i> Voltar para o Login</a>
+        <div style="margin-top: 28px; text-align: center; border-top: 1px solid rgba(255, 255, 255, 0.06); padding-top: 20px;">
+            <a href="{{ url_for('auth.login') }}" class="auth-back-link">
+                <i class="ph-duotone ph-arrow-left"></i>
+                <span>Voltar para o Login</span>
+            </a>
         </div>
     </div>
 </div>

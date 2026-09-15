@@ -1,0 +1,43 @@
+<%- include('layout/header', { title: 'Acesso Não Autorizado - RedeVita', extra_css: '/static/css/login.css' }) %>
+
+<div class="auth-wrapper" style="min-height: 80vh; display: flex; align-items: center; justify-content: center; padding: 24px;">
+    <div class="auth-card-modern" style="max-width: 480px; text-align: center; padding: 40px 32px;">
+        <div class="auth-brand-center" style="margin-bottom: 20px;">
+            <a href="/" class="redevita-brand" aria-label="RedeVita" style="display:inline-flex; align-items:center; text-decoration:none; margin-bottom:12px;">
+                <span class="redevita-logo-icon" aria-hidden="true" style="margin-right:6px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 56" style="height:36px; width:auto;">
+                        <defs>
+                            <style>
+                                .cruz-borda { fill: none; stroke: #0ea5e9; stroke-width: 2.8; stroke-linecap: round; stroke-linejoin: round; }
+                                .coracao-vermelho { fill: #f43f5e; }
+                                .ecg-linha { fill: none; stroke: #ffffff; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+                            </style>
+                        </defs>
+                        <path class="cruz-borda" d="M 27 5 h 12 a 4 4 0 0 1 4 4 v 11 h 11 a 4 4 0 0 1 4 4 v 10 a 4 4 0 0 1 -4 4 h -11 v 11 a 4 4 0 0 1 -4 4 h -12 a 4 4 0 0 1 -4 -4 v -11 h -11 a 4 4 0 0 1 -4 -4 v -10 a 4 4 0 0 1 4 -4 h 11 v -11 a 4 4 0 0 1 4 -4 z" />
+                        <path class="coracao-vermelho" transform="translate(1, -4) scale(1.5)" d="M 40 20 C 40 13 31 11 27 17 C 23 11 14 13 14 20 C 14 29 27 37 27 37 C 27 37 40 29 40 20 Z" />
+                        <path class="ecg-linha" d="M 21 25 h 5 l 3.5 -11 l 5 22 l 4.5 -14 l 3.5 3 h 6" />
+                    </svg>
+                </span>
+                <span class="redevita-brand-text">
+                    <span class="brand-rede" style="color:#ffffff; font-weight:800; font-size:1.5rem;">Rede</span><span class="brand-vita" style="color:#38bdf8; font-weight:800; font-size:1.5rem;">Vita</span>
+                </span>
+            </a>
+            <div style="font-size: 3.5rem; font-weight: 800; color: #fbbf24; letter-spacing: -0.04em; margin: 12px 0 4px 0; font-family: monospace;">403</div>
+            <h2 style="font-size: 1.4rem; color: #f8fafc; font-weight: 700; margin-bottom: 8px;">Acesso Negado</h2>
+            <p class="subtitle" style="color: #94a3b8; font-size: 0.95rem; line-height: 1.5; margin: 0 auto; max-width: 360px;">
+                Você não possui permissão de acesso para o módulo ou funcionalidade solicitada. Verifique com o administrador da sua unidade de saúde.
+            </p>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 24px;">
+            <a href="/dashboard" class="btn-primary-gradient" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
+                <i class="ph-duotone ph-squares-four"></i> Retornar ao Dashboard
+            </a>
+            <button type="button" onclick="window.history.back()" style="background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12); color: #cbd5e1; padding: 10px 16px; border-radius: 8px; font-size: 0.9rem; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s ease;">
+                <i class="ph-duotone ph-arrow-left"></i> Voltar à página anterior
+            </button>
+        </div>
+    </div>
+</div>
+
+<%- include('layout/footer') %>

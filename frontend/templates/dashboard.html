@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 {% block title %}Dashboard - RedeVita{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
+
 {% block content %}
 <div class="page-wrapper">
 
@@ -41,50 +45,64 @@
     </div>
 
     <div class="stats-grid stats-grid-7">
-        <div class="stat-card">
-            <div class="stat-icon blue"><i class="fas fa-pills"></i></div>
+        <div class="stat-card stat-card--blue">
+            <div class="stat-card-header">
+                <div class="stat-icon blue"><i class="ph-duotone ph-pill"></i></div>
+            </div>
             <div class="stat-info">
                 <p class="stat-label">Medicamentos</p>
                 <p class="stat-value">{{ total|default(0) }}</p>
             </div>
         </div>
-        <div class="stat-card">
-            <div class="stat-icon yellow"><i class="fas fa-exclamation-triangle"></i></div>
+        <div class="stat-card stat-card--yellow">
+            <div class="stat-card-header">
+                <div class="stat-icon yellow"><i class="ph-duotone ph-warning-circle"></i></div>
+            </div>
             <div class="stat-info">
-                <p class="stat-label">Vencidos / Críticos</p>
+                <p class="stat-label">Vencidos / Alerta</p>
                 <p class="stat-value">{{ alertas|default(0) }}</p>
             </div>
         </div>
-        <div class="stat-card">
-            <div class="stat-icon green"><i class="fas fa-cubes"></i></div>
+        <div class="stat-card stat-card--green">
+            <div class="stat-card-header">
+                <div class="stat-icon green"><i class="ph-duotone ph-package"></i></div>
+            </div>
             <div class="stat-info">
                 <p class="stat-label">Unidades em Estoque</p>
                 <p class="stat-value">{{ estoque|default(0) }}</p>
             </div>
         </div>
-        <div class="stat-card">
-            <div class="stat-icon red"><i class="fas fa-hand-holding-heart"></i></div>
+        <div class="stat-card stat-card--red">
+            <div class="stat-card-header">
+                <div class="stat-icon red"><i class="ph-duotone ph-hand-heart"></i></div>
+            </div>
             <div class="stat-info">
                 <p class="stat-label">Total de Doações</p>
                 <p class="stat-value">{{ total_doacoes|default(0) }}</p>
             </div>
         </div>
-        <div class="stat-card">
-            <div class="stat-icon orange"><i class="fas fa-user-injured"></i></div>
+        <div class="stat-card stat-card--orange">
+            <div class="stat-card-header">
+                <div class="stat-icon orange"><i class="ph-duotone ph-users"></i></div>
+            </div>
             <div class="stat-info">
                 <p class="stat-label">Pacientes</p>
                 <p class="stat-value">{{ total_pacientes|default(0) }}</p>
             </div>
         </div>
-        <div class="stat-card">
-            <div class="stat-icon purple"><i class="fas fa-user-md"></i></div>
+        <div class="stat-card stat-card--purple">
+            <div class="stat-card-header">
+                <div class="stat-icon purple"><i class="ph-duotone ph-stethoscope"></i></div>
+            </div>
             <div class="stat-info">
                 <p class="stat-label">Médicos Cadastrados</p>
                 <p class="stat-value">{{ total_medicos|default(0) }}</p>
             </div>
         </div>
-        <div class="stat-card">
-            <div class="stat-icon teal"><i class="fas fa-hospital"></i></div>
+        <div class="stat-card stat-card--teal">
+            <div class="stat-card-header">
+                <div class="stat-icon teal"><i class="ph-duotone ph-buildings"></i></div>
+            </div>
             <div class="stat-info">
                 <p class="stat-label">Farmácias Parceiras</p>
                 <p class="stat-value">{{ total_farmacias|default(0) }}</p>

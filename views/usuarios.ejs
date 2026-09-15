@@ -1,0 +1,99 @@
+<%- include('layout/header', { title: 'Gestão de Usuários - RedeVita', extra_css: '/static/css/inventory.css' }) %>
+<%- include('layout/nav') %>
+
+<div class="page-wrapper">
+    <div class="page-header">
+        <div>
+            <h2><i class="ph-duotone ph-users-three"></i> Gestão de Usuários e Permissões</h2>
+            <p class="page-subtitle">Controle de acessos, papéis (Admin, Farmacêutico, Médico, etc.) e credenciais.</p>
+        </div>
+        <div>
+            <button class="btn-primary" onclick="abrirModal('modal-usuario')">
+                <i class="ph-duotone ph-user-plus"></i> Novo Usuário
+            </button>
+        </div>
+    </div>
+
+    <div class="table-toolbar" role="search" style="margin-top:16px;">
+        <label class="table-search" for="usuarios-table-search">
+            <i class="ph-duotone ph-magnifying-glass" aria-hidden="true"></i>
+            <input type="search" id="usuarios-table-search"
+                   data-table-search="tabela-usuarios"
+                   placeholder="Buscar usuário por nome, CPF, e-mail ou cargo..."
+                   autocomplete="off">
+        </label>
+        <span class="table-search-hint" style="font-size:0.85rem; color:var(--text-muted);"></span>
+    </div>
+
+    <div class="table-wrapper" style="margin-top:10px;">
+        <table class="styled-table" id="tabela-usuarios">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>CPF</th>
+                    <th>E-mail</th>
+                    <th>Cargo / Perfil</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% usuarios.forEach(function(u) { %>
+                <tr>
+                    <td><strong><%= u.nome %></strong></td>
+                    <td><code><%= u.cpf %></code></td>
+                    <td><%= u.email %></td>
+                    <td><span class="status-pill blue"><%= u.cargo %></span></td>
+                    <td><span class="status-pill green">● Ativo</span></td>
+                </tr>
+                <% }); %>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Novo Usuário -->
+<div id="modal-usuario" class="modal-overlay" style="display:none;">
+    <div class="modal-box" style="max-width:500px;">
+        <div class="modal-header">
+            <h3><i class="ph-duotone ph-user-plus"></i> Cadastrar Usuário</h3>
+            <button type="button" class="modal-close" onclick="fecharModal('modal-usuario')">&times;</button>
+        </div>
+        <form action="/usuarios" method="POST" class="modern-form" style="padding:20px;">
+            <div class="form-group" style="margin-bottom:12px;">
+                <label for="u_nome">Nome Completo *</label>
+                <input type="text" id="u_nome" name="nome" required placeholder="Ex: Carlos Eduardo Silveira" class="input-standard">
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px;">
+                <div class="form-group">
+                    <label for="u_cpf">CPF *</label>
+                    <input type="text" id="u_cpf" name="cpf" required placeholder="000.000.000-00" class="input-standard">
+                </div>
+                <div class="form-group">
+                    <label for="u_cargo">Perfil de Acesso *</label>
+                    <select id="u_cargo" name="cargo" required class="input-standard">
+                        <option value="Farmacêutico">Farmacêutico</option>
+                        <option value="Médico">Médico</option>
+                        <option value="Admin">Admin</option>
+                        <option value="Operador">Operador</option>
+                    </select>
+                </div>
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:16px;">
+                <div class="form-group">
+                    <label for="u_email">E-mail</label>
+                    <input type="email" id="u_email" name="email" placeholder="usuario@redevita.org" class="input-standard">
+                </div>
+                <div class="form-group">
+                    <label for="u_senha">Senha Inicial</label>
+                    <input type="password" id="u_senha" name="senha" placeholder="••••••••" required class="input-standard">
+                </div>
+            </div>
+            <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px;">
+                <button type="button" class="btn-secondary" onclick="fecharModal('modal-usuario')">Cancelar</button>
+                <button type="submit" class="btn-primary"><i class="ph-duotone ph-floppy-disk"></i> Salvar Usuário</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<%- include('layout/footer') %>

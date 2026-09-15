@@ -1,0 +1,76 @@
+<%- include('layout/header', { title: 'Mapa da Rede - RedeVita', extra_css: '/static/css/leaflet.css' }) %>
+<%- include('layout/nav') %>
+
+<div class="page-wrapper">
+    <div class="page-header">
+        <div>
+            <h2><i class="ph-duotone ph-map-trifold"></i> Mapa da Rede de Saúde</h2>
+            <p class="page-subtitle">Localização geográfica dos pontos de coleta, triagem e farmácias comunitárias.</p>
+        </div>
+        <div style="display:flex; gap:10px;">
+            <a href="/farmacias" class="btn-secondary">
+                <i class="ph-duotone ph-list-dashes"></i> Ver Lista
+            </a>
+        </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns: 1fr 340px; gap:20px; margin-top:16px;">
+        <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:12px; overflow:hidden; min-height:550px; position:relative;">
+            <div id="mapa-redevita" style="width:100%; height:100%; min-height:550px;"></div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:12px;">
+            <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:16px;">
+                <h3 style="font-size:1.1rem; margin-bottom:12px;"><i class="ph-duotone ph-buildings"></i> Unidades (<%= farmacias.length %>)</h3>
+                <div style="display:flex; flex-direction:column; gap:10px; max-height:450px; overflow-y:auto;">
+                    <% farmacias.forEach(function(f, idx) { %>
+                    <div style="padding:10px; background:var(--bg-input); border-radius:8px; border-left:3px solid #0ea5e9; cursor:pointer;" onclick="focarUnidade(<%= f.lat %>, <%= f.lng %>, '<%= f.nome_fantasia %>')">
+                        <strong style="color:var(--text-main); font-size:0.95rem;"><%= f.nome_fantasia %></strong>
+                        <div style="font-size:0.8rem; color:var(--text-muted); margin-top:2px;"><i class="ph-duotone ph-map-pin"></i> <%= f.endereco %></div>
+                        <div style="font-size:0.8rem; color:#10b981; margin-top:4px;"><i class="ph-duotone ph-phone"></i> <%= f.telefone %></div>
+                    </div>
+                    <% }); %>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/static/js/leaflet.js"></script>
+<script>
+    let map;
+    let markers = [];
+
+    window.addEventListener('DOMContentLoaded', () => {
+        const farmacias = <%- JSON.stringify(farmacias) %>;
+        // Centraliza na região de Sorocaba/SP
+        map = L.map('mapa-redevita').setView([-23.498, -47.458], 12);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        farmacias.forEach(f => {
+            const marker = L.marker([f.lat, f.lng]).addTo(map);
+            marker.bindPopup(`
+                <div style="color:#0f172a; font-family:sans-serif; padding:4px;">
+                    <strong style="font-size:14px; color:#0284c7;">${f.nome_fantasia}</strong><br>
+                    <small>${f.endereco}</small><br>
+                    <strong>Resp:</strong> ${f.responsavel}<br>
+                    <strong>Tel:</strong> ${f.telefone}
+                </div>
+            `);
+            markers.push({ id: f.id, marker, lat: f.lat, lng: f.lng });
+        });
+    });
+
+    function focarUnidade(lat, lng, nome) {
+        if (map) {
+            map.setView([lat, lng], 15);
+            const found = markers.find(m => Math.abs(m.lat - lat) < 0.001 && Math.abs(m.lng - lng) < 0.001);
+            if (found) found.marker.openPopup();
+        }
+    }
+</script>
+
+<%- include('layout/footer') %>

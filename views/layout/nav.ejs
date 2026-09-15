@@ -1,0 +1,266 @@
+<% if (typeof current_user !== 'undefined' && current_user) { %>
+<nav class="navbar">
+    <div class="container-nav">
+        <a href="/dashboard" class="redevita-brand" aria-label="RedeVita — início" style="display:inline-flex; align-items:center; vertical-align:middle; text-decoration:none;">
+            <span class="redevita-logo-icon" aria-hidden="true" style="display:inline-flex; align-items:center; margin-right:4px;">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 56" style="height:32px; width:auto;">
+                    <defs>
+                        <style>
+                            .cruz-borda { fill: none; stroke: #0ea5e9; stroke-width: 2.8; stroke-linecap: round; stroke-linejoin: round; }
+                            .coracao-vermelho { fill: #f43f5e; }
+                            .ecg-linha { fill: none; stroke: #ffffff; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+                        </style>
+                    </defs>
+                    <path class="cruz-borda" d="M 27 5 h 12 a 4 4 0 0 1 4 4 v 11 h 11 a 4 4 0 0 1 4 4 v 10 a 4 4 0 0 1 -4 4 h -11 v 11 a 4 4 0 0 1 -4 4 h -12 a 4 4 0 0 1 -4 -4 v -11 h -11 a 4 4 0 0 1 -4 -4 v -10 a 4 4 0 0 1 4 -4 h 11 v -11 a 4 4 0 0 1 4 -4 z" />
+                    <path class="coracao-vermelho" transform="translate(1, -4) scale(1.5)" d="M 40 20 C 40 13 31 11 27 17 C 23 11 14 13 14 20 C 14 29 27 37 27 37 C 27 37 40 29 40 20 Z" />
+                    <path class="ecg-linha" d="M 21 25 h 5 l 3.5 -11 l 5 22 l 4.5 -14 l 3.5 3 h 6" />
+                </svg>
+            </span>
+            <span class="redevita-brand-text">
+                <span class="brand-rede" style="color:var(--text-main); font-weight:800; font-size:1.25rem;">Rede</span><span class="brand-vita" style="color:#0ea5e9; font-weight:800; font-size:1.25rem;">Vita</span>
+            </span>
+        </a>
+
+        <button class="nav-toggle" id="navToggle" aria-label="Abrir menu" aria-controls="navLinks" aria-expanded="false">
+            <i class="ph-duotone ph-list"></i>
+        </button>
+
+        <ul class="nav-links" id="navLinks">
+            <li>
+                <a href="/dashboard" class="<%= current_path === '/dashboard' ? 'active' : '' %>">
+                    <i class="ph-duotone ph-squares-four"></i> Dashboard
+                </a>
+            </li>
+            <li>
+                <a href="/inventario" class="<%= current_path === '/inventario' ? 'active' : '' %>">
+                    <i class="ph-duotone ph-pill"></i> Inventário
+                </a>
+            </li>
+            <li>
+                <a href="/doacoes" class="<%= current_path === '/doacoes' ? 'active' : '' %>">
+                    <i class="ph-duotone ph-hand-heart"></i> Doações
+                </a>
+            </li>
+            <li>
+                <a href="/pacientes" class="<%= current_path === '/pacientes' ? 'active' : '' %>">
+                    <i class="ph-duotone ph-users"></i> Pacientes
+                </a>
+            </li>
+            <li>
+                <a href="/medicos" class="<%= current_path === '/medicos' ? 'active' : '' %>">
+                    <i class="ph-duotone ph-stethoscope"></i> Médicos
+                </a>
+            </li>
+            <li>
+                <a href="/farmacias" class="<%= current_path === '/farmacias' ? 'active' : '' %>">
+                    <i class="ph-duotone ph-buildings"></i> Farmácias
+                </a>
+            </li>
+            <li>
+                <a href="/relatorios" class="<%= current_path === '/relatorios' ? 'active' : '' %>">
+                    <i class="ph-duotone ph-chart-line-up"></i> Relatórios
+                </a>
+            </li>
+            <li>
+                <a href="/academico/monitoramento-iot" class="<%= current_path === '/academico/monitoramento-iot' ? 'active' : '' %>">
+                    <i class="ph-duotone ph-thermometer-simple"></i> IoT
+                </a>
+            </li>
+            <li>
+                <a href="/mapa" class="<%= current_path === '/mapa' ? 'active' : '' %>">
+                    <i class="ph-duotone ph-map-trifold"></i> Mapa
+                </a>
+            </li>
+            <li>
+                <a href="/prescriptions" class="<%= current_path === '/prescriptions' ? 'active' : '' %>">
+                    <i class="ph-duotone ph-file-text"></i> Prescrições
+                </a>
+            </li>
+            <li>
+                <a href="/busca" class="<%= current_path === '/busca' ? 'active' : '' %>">
+                    <i class="ph-duotone ph-magnifying-glass"></i> Busca
+                </a>
+            </li>
+            <% if (current_user.cargo === 'Admin') { %>
+            <li class="nav-divider"></li>
+            <li>
+                <a href="/notificacoes" class="<%= current_path === '/notificacoes' ? 'active' : '' %> nav-admin">
+                    <i class="ph-duotone ph-bell"></i> Notificações
+                </a>
+            </li>
+            <li>
+                <a href="/usuarios" class="<%= current_path === '/usuarios' ? 'active' : '' %> nav-admin">
+                    <i class="ph-duotone ph-users-three"></i> Usuários
+                </a>
+            </li>
+            <li>
+                <a href="/logs" class="<%= current_path === '/logs' ? 'active' : '' %> nav-admin">
+                    <i class="ph-duotone ph-shield-check"></i> Logs
+                </a>
+            </li>
+            <li>
+                <a href="/academico/auditoria" class="<%= current_path === '/academico/auditoria' ? 'active' : '' %> nav-admin">
+                    <i class="ph-duotone ph-clipboard-text"></i> Auditoria
+                </a>
+            </li>
+            <% } %>
+        </ul>
+
+        <div class="accessibility-controls" aria-label="Preferências de visualização">
+            <button type="button" class="accessibility-control" data-theme-toggle
+                    aria-label="Alternar tema" title="Alternar tema" data-tooltip="Alternar tema">
+                <i class="ph-duotone ph-sun" data-theme-icon aria-hidden="true"></i>
+            </button>
+            <button type="button" class="accessibility-control" data-font-decrease
+                    aria-label="Diminuir tamanho da fonte" title="Diminuir fonte">
+                <span aria-hidden="true">A−</span>
+            </button>
+            <button type="button" class="accessibility-control" data-font-increase
+                    aria-label="Aumentar tamanho da fonte" title="Aumentar fonte">
+                <span aria-hidden="true">A+</span>
+            </button>
+            <button type="button" class="accessibility-control" data-a11y-toggle
+                    aria-label="Menu de Acessibilidade" title="Acessibilidade" data-tooltip="Acessibilidade">
+                <i class="ph-duotone ph-sliders-horizontal" aria-hidden="true"></i>
+            </button>
+        </div>
+
+        <div class="user-menu-nav">
+          <a href="/perfil" class="user-menu-link" aria-label="Abrir perfil de <%= (current_user && current_user.nome) ? current_user.nome : 'Usuário' %>">
+            <div class="user-avatar">
+              <%= (current_user && current_user.nome) ? current_user.nome.substring(0, 2).toUpperCase() : 'US' %>
+            </div>
+            <div class="user-meta">
+              <span class="user-name"><%= (current_user && current_user.nome) ? current_user.nome : 'Usuário' %></span>
+              <span class="user-role"><%= (current_user && current_user.cargo) ? current_user.cargo : 'Visitante' %></span>
+            </div>
+          </a>
+          <a href="/logout" class="btn-logout" title="Sair" aria-label="Sair do sistema">
+            <i class="ph-duotone ph-sign-out" aria-hidden="true"></i> Sair
+          </a>
+        </div>
+    </div>
+</nav>
+<% } else { %>
+<div class="standalone-accessibility">
+    <div class="accessibility-controls" aria-label="Preferências de visualização">
+        <button type="button" class="accessibility-control" data-theme-toggle
+                aria-label="Alternar tema" title="Alternar tema" data-tooltip="Alternar tema">
+            <i class="ph-duotone ph-sun" data-theme-icon aria-hidden="true"></i>
+        </button>
+        <button type="button" class="accessibility-control" data-font-decrease
+                aria-label="Diminuir tamanho da fonte" title="Diminuir fonte">
+            <span aria-hidden="true">A−</span>
+        </button>
+        <button type="button" class="accessibility-control" data-font-increase
+                aria-label="Aumentar tamanho da fonte" title="Aumentar fonte">
+            <span aria-hidden="true">A+</span>
+        </button>
+        <button type="button" class="accessibility-control" data-a11y-toggle
+                aria-label="Menu de Acessibilidade" title="Acessibilidade" data-tooltip="Acessibilidade">
+            <i class="ph-duotone ph-sliders-horizontal" aria-hidden="true"></i>
+        </button>
+    </div>
+</div>
+<% } %>
+
+<!-- Modal de Acessibilidade e Visualização -->
+<div id="accessibility-modal" class="modal-overlay" style="display:none;" aria-hidden="true" role="dialog" aria-labelledby="a11y-modal-title">
+    <div class="modal-box modal-md a11y-modal" style="max-width: 460px; border-radius: 12px; background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.3); overflow: hidden;">
+        <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; padding:16px 20px; border-bottom:1px solid var(--border);">
+            <h3 id="a11y-modal-title" style="margin:0; font-size:1.15rem; font-weight:700; display:flex; align-items:center; gap:8px;">
+                <i class="ph-duotone ph-sliders-horizontal" style="color:var(--primary);"></i> Menu de Acessibilidade
+            </h3>
+            <button type="button" class="modal-close" data-a11y-close aria-label="Fechar painel de acessibilidade" style="background:transparent; border:none; color:var(--text-muted); font-size:1.4rem; cursor:pointer;">&times;</button>
+        </div>
+        <div class="modal-body" style="padding:20px; display:flex; flex-direction:column; gap:16px;">
+            <!-- Contraste -->
+            <div class="a11y-section" style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <strong style="display:block; font-size:0.95rem;">Ajuste Rápido de Contraste</strong>
+                    <span style="font-size:0.82rem; color:var(--text-muted);">Alto contraste para máxima legibilidade</span>
+                </div>
+                <button type="button" class="btn-secondary btn-sm" data-contrast-toggle id="btnHighContrastToggle" style="padding:6px 14px; font-weight:600; display:inline-flex; align-items:center; gap:6px;">
+                    <i class="ph-duotone ph-circle-half"></i> <span id="contrastToggleText">Alto Contraste</span>
+                </button>
+            </div>
+
+            <!-- Tema Claro / Escuro -->
+            <div class="a11y-section" style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border); padding-top:14px;">
+                <div>
+                    <strong style="display:block; font-size:0.95rem;">Modo de Visualização</strong>
+                    <span style="font-size:0.82rem; color:var(--text-muted);">Alternar entre tema Claro e Escuro</span>
+                </div>
+                <button type="button" class="btn-secondary btn-sm" data-theme-toggle style="padding:6px 14px; font-weight:600; display:inline-flex; align-items:center; gap:6px;">
+                    <i class="ph-duotone ph-sun" data-theme-icon></i> <span id="themeToggleText">Alternar</span>
+                </button>
+            </div>
+
+            <!-- Tamanho da Fonte -->
+            <div class="a11y-section" style="border-top:1px solid var(--border); padding-top:14px;">
+                <div style="margin-bottom:8px;">
+                    <strong style="display:block; font-size:0.95rem;">Tamanho da Fonte (Leitor Acessível)</strong>
+                    <span style="font-size:0.82rem; color:var(--text-muted);">Ajuste a escala tipográfica do sistema</span>
+                </div>
+                <div style="display:flex; gap:8px;">
+                    <button type="button" class="btn-secondary btn-sm" data-font-set="normal" style="flex:1; padding:8px; text-align:center; font-weight:600;">
+                        A− Padrão
+                    </button>
+                    <button type="button" class="btn-secondary btn-sm" data-font-set="large" style="flex:1; padding:8px; text-align:center; font-weight:600;">
+                        A Médio
+                    </button>
+                    <button type="button" class="btn-secondary btn-sm" data-font-set="xlarge" style="flex:1; padding:8px; text-align:center; font-weight:600;">
+                        A+ Grande
+                    </button>
+                </div>
+            </div>
+
+            <!-- Leitura Simplificada -->
+            <div class="a11y-section" style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border); padding-top:14px;">
+                <div>
+                    <strong style="display:block; font-size:0.95rem;">Leituras Simplificadas</strong>
+                    <span style="font-size:0.82rem; color:var(--text-muted);">Espaçamento amplo e fonte simplificada</span>
+                </div>
+                <button type="button" class="btn-secondary btn-sm" data-reading-toggle id="btnReadingToggle" style="padding:6px 14px; font-weight:600; display:inline-flex; align-items:center; gap:6px;">
+                    <i class="ph-duotone ph-text-aa"></i> <span id="readingToggleText">Ativar</span>
+                </button>
+            </div>
+
+            <!-- PWA Instalação Desktop e Mobile -->
+            <div class="a11y-section" style="border-top:1px solid var(--border); padding-top:14px;">
+                <div style="margin-bottom:8px;">
+                    <strong style="display:block; font-size:0.95rem;">Instalar Aplicativo (PWA)</strong>
+                    <span style="font-size:0.82rem; color:var(--text-muted);">Instale o RedeVita no Windows, Mac, Android ou iOS</span>
+                </div>
+                <button type="button" class="btn-primary btn-sm" id="btnPWAInstall" style="width:100%; padding:10px; font-weight:600; display:inline-flex; align-items:center; justify-content:center; gap:8px;">
+                    <i class="ph-duotone ph-arrow-circle-down"></i> <span>Instalar como App Nativo</span>
+                </button>
+            </div>
+        </div>
+        <div class="modal-footer" style="padding:12px 20px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+            <button type="button" class="btn-secondary btn-sm" data-a11y-reset style="padding:6px 12px; font-size:0.82rem;">
+                <i class="ph-duotone ph-arrow-counter-clockwise"></i> Redefinir Padrões
+            </button>
+            <button type="button" class="btn-secondary btn-sm" data-a11y-close style="padding:6px 16px;">
+                Fechar
+            </button>
+        </div>
+    </div>
+</div>
+
+<main class="main-content">
+    <% if (typeof flashMessage !== 'undefined' && flashMessage) { %>
+        <div class="flash-messages">
+            <div class="alert alert-<%= flashMessage.type || 'info' %>">
+                <% 
+                    var flashIcon = 'ph-info';
+                    if (flashMessage.type === 'success') flashIcon = 'ph-check-circle';
+                    else if (flashMessage.type === 'danger') flashIcon = 'ph-warning-circle';
+                    else if (flashMessage.type === 'warning') flashIcon = 'ph-warning';
+                %>
+                <i class="ph-duotone <%= flashIcon %>"></i>
+                <%= flashMessage.text %>
+                <button class="alert-close" onclick="this.parentElement.remove()" aria-label="Fechar">&times;</button>
+            </div>
+        </div>
+    <% } %>

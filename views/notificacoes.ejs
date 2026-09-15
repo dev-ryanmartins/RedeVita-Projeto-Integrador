@@ -1,0 +1,48 @@
+<%- include('layout/header', { title: 'Notificações - RedeVita', extra_css: '/static/css/inventory.css' }) %>
+<%- include('layout/nav') %>
+
+<div class="page-wrapper">
+    <div class="page-header">
+        <div>
+            <h2><i class="ph-duotone ph-bell"></i> Central de Notificações e Alertas</h2>
+            <p class="page-subtitle">Avisos automáticos de estoque crítico, vencimento e calibração de sensores.</p>
+        </div>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:12px; margin-top:20px;">
+        <div style="background:var(--bg-card); border-left:4px solid #f59e0b; padding:16px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; gap:12px; align-items:center;">
+                <i class="ph-duotone ph-warning" style="color:#f59e0b; font-size:1.5rem;"></i>
+                <div>
+                    <strong>Medicamentos com vencimento próximo</strong>
+                    <div style="font-size:0.85rem; color:var(--text-muted);">Medicamentos com menos de 30 dias de validade requerem prioridade na dispensação.</div>
+                </div>
+            </div>
+            <a href="/inventario" class="btn-secondary" style="padding:6px 12px; font-size:0.85rem;">Verificar</a>
+        </div>
+
+        <div style="background:var(--bg-card); border-left:4px solid #10b981; padding:16px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; gap:12px; align-items:center;">
+                <i class="ph-duotone ph-check-circle" style="color:#10b981; font-size:1.5rem;"></i>
+                <div>
+                    <strong>Sensores IoT em conformidade</strong>
+                    <div style="font-size:0.85rem; color:var(--text-muted);">Todas as câmaras frigoríficas operando dentro da faixa térmica estabelecida.</div>
+                </div>
+            </div>
+            <a href="/academico/monitoramento-iot" class="btn-secondary" style="padding:6px 12px; font-size:0.85rem;">Telemetria</a>
+        </div>
+
+        <div style="background:var(--bg-card); border-left:4px solid #0ea5e9; padding:16px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; gap:12px; align-items:center;">
+                <i class="ph-duotone ph-info" style="color:#0ea5e9; font-size:1.5rem;"></i>
+                <div>
+                    <strong>Triagem de doações pendentes</strong>
+                    <div style="font-size:0.85rem; color:var(--text-muted);">Existem doações aguardando conferência de integridade de embalagem e lote.</div>
+                </div>
+            </div>
+            <a href="/doacoes" class="btn-secondary" style="padding:6px 12px; font-size:0.85rem;">Triagem</a>
+        </div>
+    </div>
+</div>
+
+<%- include('layout/footer') %>

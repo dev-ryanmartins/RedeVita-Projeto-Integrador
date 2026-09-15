@@ -1,0 +1,204 @@
+<%- include('layout/header', { title: 'Verificar Código - RedeVita', extra_css: '/static/css/login.css' }) %>
+
+<div class="auth-wrapper">
+    <div class="auth-card-modern">
+        <div class="auth-brand-center">
+            <a href="/login" class="redevita-brand" aria-label="RedeVita" style="display:inline-flex; align-items:center; text-decoration:none; margin-bottom:14px;">
+                <span class="redevita-logo-icon" aria-hidden="true" style="margin-right:6px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 56" style="height:38px; width:auto;">
+                        <defs>
+                            <style>
+                                .cruz-borda { fill: none; stroke: #0ea5e9; stroke-width: 2.8; stroke-linecap: round; stroke-linejoin: round; }
+                                .coracao-vermelho { fill: #f43f5e; }
+                                .ecg-linha { fill: none; stroke: #ffffff; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+                            </style>
+                        </defs>
+                        <path class="cruz-borda" d="M 27 5 h 12 a 4 4 0 0 1 4 4 v 11 h 11 a 4 4 0 0 1 4 4 v 10 a 4 4 0 0 1 -4 4 h -11 v 11 a 4 4 0 0 1 -4 4 h -12 a 4 4 0 0 1 -4 -4 v -11 h -11 a 4 4 0 0 1 -4 -4 v -10 a 4 4 0 0 1 4 -4 h 11 v -11 a 4 4 0 0 1 4 -4 z" />
+                        <path class="coracao-vermelho" transform="translate(1, -4) scale(1.5)" d="M 40 20 C 40 13 31 11 27 17 C 23 11 14 13 14 20 C 14 29 27 37 27 37 C 27 37 40 29 40 20 Z" />
+                        <path class="ecg-linha" d="M 21 25 h 5 l 3.5 -11 l 5 22 l 4.5 -14 l 3.5 3 h 6" />
+                    </svg>
+                </span>
+                <span class="redevita-brand-text">
+                    <span class="brand-rede" style="color:#ffffff; font-weight:800; font-size:1.55rem;">Rede</span><span class="brand-vita" style="color:#38bdf8; font-weight:800; font-size:1.55rem;">Vita</span>
+                </span>
+            </a>
+            <h2>Código de Verificação</h2>
+            <p class="subtitle">
+                Insira o código numérico de 6 dígitos enviado para 
+                <strong style="color:#f8fafc; font-weight:600;"><%= typeof maskedEmail !== 'undefined' ? maskedEmail : 'seu e-mail' %></strong>.
+            </p>
+        </div>
+
+        <% if (typeof error !== 'undefined' && error) { %>
+            <div class="alert alert-danger" style="margin-bottom:20px; display:flex; align-items:center; gap:8px;">
+                <i class="ph-duotone ph-warning-circle" style="font-size:1.2rem;"></i>
+                <span><%= error %></span>
+            </div>
+        <% } %>
+
+        <% if (typeof info !== 'undefined' && info) { %>
+            <div class="alert alert-info" style="margin-bottom:20px; display:flex; align-items:center; gap:8px;">
+                <i class="ph-duotone ph-info" style="font-size:1.2rem;"></i>
+                <span><%= info %></span>
+            </div>
+        <% } %>
+
+        <% if (typeof previewCode !== 'undefined' && previewCode) { %>
+            <div class="preview-code-badge">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <i class="ph-duotone ph-lightning" style="color:#38bdf8; font-size:1.2rem;"></i>
+                    <span>Código gerado para validação:</span>
+                </div>
+                <div class="code-value" id="badge-code-val" onclick="copiarCodigoDemo('<%= previewCode %>')" title="Clique para copiar e preencher" style="cursor:pointer;">
+                    <%= previewCode %> <i class="ph-duotone ph-copy" style="font-size:0.85rem; margin-left:4px;"></i>
+                </div>
+            </div>
+        <% } %>
+
+        <form action="/verificar-codigo" method="POST" class="modern-form" id="form-verificacao">
+            <input type="hidden" name="codigo" id="codigo-completo" value="">
+
+            <div class="code-inputs-wrapper" id="code-inputs-group">
+                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" class="code-digit-box" data-index="0" autofocus autocomplete="one-time-code">
+                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" class="code-digit-box" data-index="1" autocomplete="off">
+                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" class="code-digit-box" data-index="2" autocomplete="off">
+                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" class="code-digit-box" data-index="3" autocomplete="off">
+                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" class="code-digit-box" data-index="4" autocomplete="off">
+                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" class="code-digit-box" data-index="5" autocomplete="off">
+            </div>
+
+            <div class="auth-timer-block" style="margin-bottom:24px;">
+                <i class="ph-duotone ph-clock"></i>
+                <span>Tempo restante do código:</span>
+                <span class="time-highlight" id="timer-display">14:59</span>
+            </div>
+
+            <button type="submit" class="btn-primary-gradient" id="btn-verificar" style="width:100%; display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:14px; font-weight:600;">
+                <span>Validar Código</span>
+                <i class="ph-duotone ph-check-circle"></i>
+            </button>
+        </form>
+
+        <div style="margin-top: 24px; text-align: center; display:flex; flex-direction:column; gap:12px;">
+            <div style="font-size:0.88rem; color:#94a3b8;">
+                Não recebeu o e-mail? 
+                <a href="/recuperar-senha" style="color:#38bdf8; font-weight:500; text-decoration:none; margin-left:4px;">Reenviar código</a>
+            </div>
+            <div style="border-top: 1px solid rgba(255, 255, 255, 0.06); padding-top: 16px;">
+                <a href="/login" class="auth-back-link">
+                    <i class="ph-duotone ph-arrow-left"></i>
+                    <span>Voltar para o Login</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const boxes = Array.from(document.querySelectorAll('.code-digit-box'));
+        const hiddenInput = document.getElementById('codigo-completo');
+        const form = document.getElementById('form-verificacao');
+
+        function updateHiddenInput() {
+            const code = boxes.map(b => b.value).join('');
+            hiddenInput.value = code;
+            boxes.forEach(b => {
+                if (b.value) {
+                    b.classList.add('filled');
+                } else {
+                    b.classList.remove('filled');
+                }
+            });
+        }
+
+        boxes.forEach((box, idx) => {
+            box.addEventListener('input', (e) => {
+                const val = e.target.value.replace(/\D/g, '');
+                box.value = val ? val.slice(-1) : '';
+                updateHiddenInput();
+
+                if (box.value && idx < boxes.length - 1) {
+                    boxes[idx + 1].focus();
+                }
+
+                if (hiddenInput.value.length === 6) {
+                    // Auto submit quando todos 6 estiverem preenchidos
+                    setTimeout(() => form.submit(), 150);
+                }
+            });
+
+            box.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && !box.value && idx > 0) {
+                    boxes[idx - 1].focus();
+                } else if (e.key === 'ArrowLeft' && idx > 0) {
+                    boxes[idx - 1].focus();
+                } else if (e.key === 'ArrowRight' && idx < boxes.length - 1) {
+                    boxes[idx + 1].focus();
+                }
+            });
+
+            box.addEventListener('paste', (e) => {
+                e.preventDefault();
+                const pasteData = (e.clipboardData || window.clipboardData).getData('text');
+                const cleanDigits = pasteData.replace(/\D/g, '').slice(0, 6);
+                if (cleanDigits) {
+                    cleanDigits.split('').forEach((d, i) => {
+                        if (boxes[i]) boxes[i].value = d;
+                    });
+                    updateHiddenInput();
+                    const nextIdx = Math.min(cleanDigits.length, boxes.length - 1);
+                    boxes[nextIdx].focus();
+                    if (cleanDigits.length === 6) {
+                        setTimeout(() => form.submit(), 200);
+                    }
+                }
+            });
+        });
+
+        form.addEventListener('submit', (e) => {
+            updateHiddenInput();
+            if (hiddenInput.value.length !== 6) {
+                e.preventDefault();
+                if (window.showToast) {
+                    showToast('Por favor, digite todos os 6 dígitos do código de verificação.', 'warning');
+                } else {
+                    alert('Por favor, digite todos os 6 dígitos do código de verificação.');
+                }
+                const firstEmpty = boxes.find(b => !b.value);
+                if (firstEmpty) firstEmpty.focus();
+            }
+        });
+
+        // Countdown timer de 15 minutos
+        let totalSeconds = 15 * 60;
+        const timerDisplay = document.getElementById('timer-display');
+        const countdown = setInterval(() => {
+            totalSeconds--;
+            if (totalSeconds <= 0) {
+                clearInterval(countdown);
+                timerDisplay.textContent = 'Expirado';
+                timerDisplay.style.color = '#ef4444';
+            } else {
+                const mins = Math.floor(totalSeconds / 60);
+                const secs = totalSeconds % 60;
+                timerDisplay.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            }
+        }, 1000);
+    });
+
+    function copiarCodigoDemo(codigo) {
+        const boxes = Array.from(document.querySelectorAll('.code-digit-box'));
+        codigo.split('').forEach((d, i) => {
+            if (boxes[i]) boxes[i].value = d;
+        });
+        const hiddenInput = document.getElementById('codigo-completo');
+        if (hiddenInput) hiddenInput.value = codigo;
+        boxes.forEach(b => b.classList.add('filled'));
+        if (window.showToast) {
+            showToast('Código demo preenchido automaticamente!', 'info');
+        }
+    }
+</script>
+
+<%- include('layout/footer') %>

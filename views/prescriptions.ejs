@@ -1,0 +1,132 @@
+<%- include('layout/header', { title: 'Prescrições Médicas - RedeVita', extra_css: '/static/css/inventory.css' }) %>
+<%- include('layout/nav') %>
+
+<div class="page-wrapper">
+    <div class="page-header">
+        <div>
+            <h2><i class="ph-duotone ph-file-text"></i> Prescrições e Receituário Digital</h2>
+            <p class="page-subtitle">Rastreabilidade completa de emissão e dispensação segura de medicamentos.</p>
+        </div>
+        <div style="display:flex; gap:10px;">
+            <button type="button" class="btn-secondary" onclick="window.print()" title="Imprimir receituário limpo">
+                <i class="ph-duotone ph-printer"></i> Imprimir
+            </button>
+            <button class="btn-primary" onclick="abrirModal('modal-receita')">
+                <i class="ph-duotone ph-plus-circle"></i> Nova Prescrição
+            </button>
+        </div>
+    </div>
+
+    <div class="table-toolbar" role="search" style="margin-top:16px;">
+        <label class="table-search" for="prescriptions-table-search">
+            <i class="ph-duotone ph-magnifying-glass" aria-hidden="true"></i>
+            <input type="search" id="prescriptions-table-search"
+                   data-table-search="tabela-prescricoes"
+                   placeholder="Buscar prescrição por paciente, médico ou medicamento..."
+                   autocomplete="off">
+        </label>
+        <span class="table-search-hint" style="font-size:0.85rem; color:var(--text-muted);"></span>
+    </div>
+
+    <div class="table-wrapper" style="margin-top:10px;">
+        <table class="styled-table" id="tabela-prescricoes">
+            <thead>
+                <tr>
+                    <th>Status</th>
+                    <th>Paciente</th>
+                    <th>Médico Emissor</th>
+                    <th>Medicamento</th>
+                    <th>Tipo de Receita</th>
+                    <th>Emissão</th>
+                    <th>Dispensação</th>
+                    <th style="text-align:center;">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% receitas.forEach(function(r) { %>
+                <tr>
+                    <td>
+                        <% if (r.status === 'dispensada') { %>
+                            <span class="status-pill green"><i class="ph-duotone ph-check-circle"></i> Dispensada</span>
+                        <% } else { %>
+                            <span class="status-pill yellow"><i class="ph-duotone ph-clock"></i> Ativa (Pendente)</span>
+                        <% } %>
+                    </td>
+                    <td><strong><%= r.paciente_nome %></strong></td>
+                    <td><%= r.medico_nome %></td>
+                    <td><strong><%= r.medicamento_nome %></strong></td>
+                    <td><small style="color:var(--text-muted);"><%= r.tipo %></small></td>
+                    <td><%= r.data_emissao %></td>
+                    <td><%= r.dispensada_por ? 'Por ' + r.dispensada_por : 'Aguardando' %></td>
+                    <td style="text-align:center;">
+                        <% if (r.status !== 'dispensada') { %>
+                        <form action="/prescriptions/<%= r.id %>/dispensar" method="POST" style="display:inline;">
+                            <button type="submit" class="btn-secondary" style="padding:4px 10px; font-size:0.8rem;">
+                                <i class="ph-duotone ph-pill"></i> Dispensar
+                            </button>
+                        </form>
+                        <% } else { %>
+                            <span style="font-size:0.8rem; color:#10b981;"><i class="ph-duotone ph-check"></i> Entregue</span>
+                        <% } %>
+                    </td>
+                </tr>
+                <% }); %>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Nova Prescrição -->
+<div id="modal-receita" class="modal-overlay" style="display:none;">
+    <div class="modal-box" style="max-width:520px;">
+        <div class="modal-header">
+            <h3><i class="ph-duotone ph-file-text"></i> Emitir Prescrição Médica</h3>
+            <button type="button" class="modal-close" onclick="fecharModal('modal-receita')">&times;</button>
+        </div>
+        <form action="/prescriptions" method="POST" class="modern-form" style="padding:20px;">
+            <div class="form-group" style="margin-bottom:12px;">
+                <label for="rec_paciente">Paciente *</label>
+                <select id="rec_paciente" name="paciente_nome" required class="input-standard">
+                    <% pacientes.forEach(function(p) { %>
+                        <option value="<%= p.nome %>"><%= p.nome %> (CPF: <%= p.cpf %>)</option>
+                    <% }); %>
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom:12px;">
+                <label for="rec_medico">Médico Prescritor *</label>
+                <select id="rec_medico" name="medico_nome" required class="input-standard">
+                    <% medicos.forEach(function(m) { %>
+                        <option value="<%= m.nome %>"><%= m.nome %> (<%= m.crm %>)</option>
+                    <% }); %>
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom:12px;">
+                <label for="rec_med">Medicamento Prescrito *</label>
+                <select id="rec_med" name="medicamento_nome" required class="input-standard">
+                    <% medicamentos.forEach(function(m) { %>
+                        <option value="<%= m.nome %>"><%= m.nome %> (Estoque: <%= m.quantidade %> un.)</option>
+                    <% }); %>
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom:12px;">
+                <label for="rec_tipo">Tipo de Receita</label>
+                <select id="rec_tipo" name="tipo" class="input-standard">
+                    <option value="Receita Simples">Receita Simples</option>
+                    <option value="Receita de Controle Especial (Branca)">Receita de Controle Especial (Branca)</option>
+                    <option value="Receita 'B' Especial (Azul)">Receita 'B' Especial (Azul)</option>
+                    <option value="Receita 'A' (Amarela)">Receita 'A' (Amarela)</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom:16px;">
+                <label for="rec_obs">Posologia e Orientações de Uso</label>
+                <textarea id="rec_obs" name="observacoes" rows="3" placeholder="Tomar 1 comprimido a cada 8 horas..." class="input-standard"></textarea>
+            </div>
+            <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px;">
+                <button type="button" class="btn-secondary" onclick="fecharModal('modal-receita')">Cancelar</button>
+                <button type="submit" class="btn-primary"><i class="ph-duotone ph-floppy-disk"></i> Emitir Receita</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<%- include('layout/footer') %>

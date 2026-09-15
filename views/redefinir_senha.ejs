@@ -1,0 +1,133 @@
+<%- include('layout/header', { title: 'Redefinir Senha - RedeVita', extra_css: '/static/css/login.css' }) %>
+
+<div class="auth-wrapper">
+    <div class="auth-card-modern">
+        <div class="auth-brand-center">
+            <a href="/login" class="redevita-brand" aria-label="RedeVita" style="display:inline-flex; align-items:center; text-decoration:none; margin-bottom:14px;">
+                <span class="redevita-logo-icon" aria-hidden="true" style="margin-right:6px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 56" style="height:38px; width:auto;">
+                        <defs>
+                            <style>
+                                .cruz-borda { fill: none; stroke: #0ea5e9; stroke-width: 2.8; stroke-linecap: round; stroke-linejoin: round; }
+                                .coracao-vermelho { fill: #f43f5e; }
+                                .ecg-linha { fill: none; stroke: #ffffff; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+                            </style>
+                        </defs>
+                        <path class="cruz-borda" d="M 27 5 h 12 a 4 4 0 0 1 4 4 v 11 h 11 a 4 4 0 0 1 4 4 v 10 a 4 4 0 0 1 -4 4 h -11 v 11 a 4 4 0 0 1 -4 4 h -12 a 4 4 0 0 1 -4 -4 v -11 h -11 a 4 4 0 0 1 -4 -4 v -10 a 4 4 0 0 1 4 -4 h 11 v -11 a 4 4 0 0 1 4 -4 z" />
+                        <path class="coracao-vermelho" transform="translate(1, -4) scale(1.5)" d="M 40 20 C 40 13 31 11 27 17 C 23 11 14 13 14 20 C 14 29 27 37 27 37 C 27 37 40 29 40 20 Z" />
+                        <path class="ecg-linha" d="M 21 25 h 5 l 3.5 -11 l 5 22 l 4.5 -14 l 3.5 3 h 6" />
+                    </svg>
+                </span>
+                <span class="redevita-brand-text">
+                    <span class="brand-rede" style="color:#ffffff; font-weight:800; font-size:1.55rem;">Rede</span><span class="brand-vita" style="color:#38bdf8; font-weight:800; font-size:1.55rem;">Vita</span>
+                </span>
+            </a>
+            <h2>Nova Senha</h2>
+            <p class="subtitle">
+                Código validado com sucesso! Escolha uma nova senha segura para sua conta.
+            </p>
+        </div>
+
+        <% if (typeof error !== 'undefined' && error) { %>
+            <div class="alert alert-danger" style="margin-bottom:20px; display:flex; align-items:center; gap:8px;">
+                <i class="ph-duotone ph-warning-circle" style="font-size:1.2rem;"></i>
+                <span><%= error %></span>
+            </div>
+        <% } %>
+
+        <form action="/redefinir-senha" method="POST" class="modern-form" id="form-redefinir">
+            <div class="form-group" style="margin-bottom:18px;">
+                <label for="nova_senha" style="color:#cbd5e1; font-weight:600; margin-bottom:8px; display:block;">
+                    Nova Senha <span style="color:#f43f5e;">*</span>
+                </label>
+                <div class="input-with-icon">
+                    <i class="ph-duotone ph-lock"></i>
+                    <input type="password" name="nova_senha" id="nova_senha"
+                           placeholder="Mínimo 6 caracteres" required minlength="6"
+                           autocomplete="new-password" autofocus>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom:22px;">
+                <label for="confirmar_senha" style="color:#cbd5e1; font-weight:600; margin-bottom:8px; display:block;">
+                    Confirmar Nova Senha <span style="color:#f43f5e;">*</span>
+                </label>
+                <div class="input-with-icon">
+                    <i class="ph-duotone ph-lock-simple-open"></i>
+                    <input type="password" name="confirmar_senha" id="confirmar_senha"
+                           placeholder="Repita a nova senha" required minlength="6"
+                           autocomplete="new-password">
+                </div>
+                <small id="password-match-feedback" style="font-size:0.8rem; margin-top:6px; display:none;"></small>
+            </div>
+
+            <div style="background:rgba(15, 23, 42, 0.6); border:1px solid #1e293b; border-radius:12px; padding:12px 14px; margin-bottom:22px;">
+                <div style="font-size:0.8rem; color:#94a3b8; display:flex; flex-direction:column; gap:6px;">
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <i class="ph-duotone ph-check-circle" style="color:#38bdf8;"></i> Mínimo de 6 caracteres
+                    </div>
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <i class="ph-duotone ph-shield-check" style="color:#38bdf8;"></i> Atualização criptografada imediata
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-primary-gradient" style="width:100%; display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:14px; font-weight:600;">
+                <span>Salvar Nova Senha</span>
+                <i class="ph-duotone ph-floppy-disk-back"></i>
+            </button>
+        </form>
+
+        <div style="margin-top: 24px; text-align: center; border-top: 1px solid rgba(255, 255, 255, 0.06); padding-top: 18px;">
+            <a href="/login" class="auth-back-link">
+                <i class="ph-duotone ph-arrow-left"></i>
+                <span>Cancelar e voltar ao Login</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const novaSenha = document.getElementById('nova_senha');
+        const confirmarSenha = document.getElementById('confirmar_senha');
+        const feedback = document.getElementById('password-match-feedback');
+        const form = document.getElementById('form-redefinir');
+
+        function checkMatch() {
+            if (!confirmarSenha.value) {
+                feedback.style.display = 'none';
+                return true;
+            }
+            feedback.style.display = 'block';
+            if (novaSenha.value === confirmarSenha.value) {
+                feedback.style.color = '#34d399';
+                feedback.innerHTML = '<i class="ph-duotone ph-check-circle"></i> As senhas coincidem perfeitamente.';
+                return true;
+            } else {
+                feedback.style.color = '#f87171';
+                feedback.innerHTML = '<i class="ph-duotone ph-x-circle"></i> As senhas não conferem.';
+                return false;
+            }
+        }
+
+        novaSenha.addEventListener('input', checkMatch);
+        confirmarSenha.addEventListener('input', checkMatch);
+
+        form.addEventListener('submit', (e) => {
+            if (novaSenha.value.length < 6) {
+                e.preventDefault();
+                alert('A senha deve conter no mínimo 6 caracteres.');
+                novaSenha.focus();
+                return;
+            }
+            if (novaSenha.value !== confirmarSenha.value) {
+                e.preventDefault();
+                alert('As senhas não coincidem. Por favor, redigite a confirmação.');
+                confirmarSenha.focus();
+            }
+        });
+    });
+</script>
+
+<%- include('layout/footer') %>

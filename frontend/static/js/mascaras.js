@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.mask-tel').forEach(aplicarMascaraTel);
     document.querySelectorAll('.mask-cep').forEach(aplicarMascaraCEP);
 
-    const cpfInput = document.getElementById('cpf') || document.getElementById('identificador');
+    const cpfInput = document.getElementById('cpf');
     if (cpfInput && !cpfInput.classList.contains('mask-cpf')) {
         aplicarMascaraCPF(cpfInput);
     }

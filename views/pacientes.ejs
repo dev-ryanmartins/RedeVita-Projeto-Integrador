@@ -1,0 +1,92 @@
+<%- include('layout/header', { title: 'Pacientes - RedeVita', extra_css: '/static/css/inventory.css' }) %>
+<%- include('layout/nav') %>
+
+<div class="page-wrapper">
+    <div class="page-header">
+        <div>
+            <h2><i class="ph-duotone ph-users"></i> Cadastro e Gestão de Pacientes</h2>
+            <p class="page-subtitle">Prontuário e cadastro dos beneficiários do programa de distribuição.</p>
+        </div>
+        <div>
+            <button class="btn-primary" onclick="abrirModal('modal-paciente')">
+                <i class="ph-duotone ph-plus-circle"></i> Novo Paciente
+            </button>
+        </div>
+    </div>
+
+    <div class="table-toolbar" role="search" style="margin-top:16px;">
+        <label class="table-search" for="pacientes-table-search">
+            <i class="ph-duotone ph-magnifying-glass" aria-hidden="true"></i>
+            <input type="search" id="pacientes-table-search"
+                   data-table-search="tabela-pacientes"
+                   placeholder="Buscar paciente por nome, CPF ou contato..."
+                   autocomplete="off">
+        </label>
+        <span class="table-search-hint" style="font-size:0.85rem; color:var(--text-muted);"></span>
+    </div>
+
+    <div class="table-wrapper" style="margin-top:10px;">
+        <table class="styled-table" id="tabela-pacientes">
+            <thead>
+                <tr>
+                    <th>Paciente</th>
+                    <th>CPF</th>
+                    <th>Nascimento</th>
+                    <th>Endereço</th>
+                    <th>Contato</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% pacientes.forEach(function(p) { %>
+                <tr>
+                    <td><strong><%= p.nome %></strong></td>
+                    <td><code><%= p.cpf %></code></td>
+                    <td><%= p.nascimento %></td>
+                    <td><%= p.endereco %></td>
+                    <td><%= p.contato %></td>
+                </tr>
+                <% }); %>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Novo Paciente -->
+<div id="modal-paciente" class="modal-overlay" style="display:none;">
+    <div class="modal-box" style="max-width:500px;">
+        <div class="modal-header">
+            <h3><i class="ph-duotone ph-user-plus"></i> Cadastrar Paciente</h3>
+            <button type="button" class="modal-close" onclick="fecharModal('modal-paciente')">&times;</button>
+        </div>
+        <form action="/pacientes" method="POST" class="modern-form" style="padding:20px;">
+            <div class="form-group" style="margin-bottom:12px;">
+                <label for="p_nome">Nome Completo *</label>
+                <input type="text" id="p_nome" name="nome" required placeholder="Ex: Juliana Maria Alves" class="input-standard">
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px;">
+                <div class="form-group">
+                    <label for="p_cpf">CPF *</label>
+                    <input type="text" id="p_cpf" name="cpf" required placeholder="000.000.000-00" class="input-standard">
+                </div>
+                <div class="form-group">
+                    <label for="p_nasc">Nascimento *</label>
+                    <input type="date" id="p_nasc" name="nascimento" required class="input-standard">
+                </div>
+            </div>
+            <div class="form-group" style="margin-bottom:12px;">
+                <label for="p_end">Endereço Residencial</label>
+                <input type="text" id="p_end" name="endereco" placeholder="Rua, número, bairro - Cidade/UF" class="input-standard">
+            </div>
+            <div class="form-group" style="margin-bottom:16px;">
+                <label for="p_contato">Telefone / Contato</label>
+                <input type="text" id="p_contato" name="contato" placeholder="(15) 99999-9999" class="input-standard">
+            </div>
+            <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px;">
+                <button type="button" class="btn-secondary" onclick="fecharModal('modal-paciente')">Cancelar</button>
+                <button type="submit" class="btn-primary"><i class="ph-duotone ph-floppy-disk"></i> Salvar Paciente</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<%- include('layout/footer') %>

@@ -33,7 +33,12 @@
     padding: 0;
 }
 
-html { scroll-behavior: smooth; }
+html {
+    scroll-behavior: smooth;
+    max-width: 100%;
+    overflow-x: hidden !important;
+    width: 100%;
+}
 
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -43,6 +48,33 @@ body {
     line-height: 1.6;
     display: flex;
     flex-direction: column;
+    max-width: 100%;
+    overflow-x: hidden !important;
+    width: 100%;
+}
+
+img, svg, video, canvas, iframe, picture {
+    max-width: 100%;
+    height: auto;
+}
+
+input, select, textarea, button {
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.container,
+.container-fluid,
+.main-content,
+.auth-wrapper,
+.login-container,
+.login-box,
+.auth-card-modern,
+.card,
+.stat-card,
+.modal-dialog {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
 }
 
 /* Scrollbar integrada ao tema escuro e seleção de texto da aplicação. */

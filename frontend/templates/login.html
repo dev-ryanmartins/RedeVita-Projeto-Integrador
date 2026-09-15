@@ -8,6 +8,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/duotone/style.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
 </head>
@@ -17,57 +19,74 @@
 <div class="auth-wrapper">
     <div class="login-box">
 
+        <!-- Lado da Imagem (Desktop) -->
         <div class="login-side-image">
             <div class="image-overlay-card">
                 {{ brand_logo(url_for('auth.login')) }}
-                <p>Gestão inteligente de medicamentos e doações.</p>
-                <ul class="features-list">
-                    <li><i class="fas fa-check-circle"></i> Controle de estoque em tempo real</li>
-                    <li><i class="fas fa-check-circle"></i> Alerta de vencimento automático</li>
-                    <li><i class="fas fa-check-circle"></i> Histórico completo de doações</li>
-                    <li><i class="fas fa-check-circle"></i> Segurança e rastreabilidade</li>
+                <p style="color:#cbd5e1; font-size:0.95rem; margin-bottom:16px;">Gestão inteligente de medicamentos e doações.</p>
+                <ul class="features-list" style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:8px;">
+                    <li style="display:flex; align-items:center; gap:8px; color:#cbd5e1; font-size:0.88rem;"><i class="fas fa-check-circle" style="color:#38bdf8;"></i> Controle de estoque em tempo real</li>
+                    <li style="display:flex; align-items:center; gap:8px; color:#cbd5e1; font-size:0.88rem;"><i class="fas fa-check-circle" style="color:#38bdf8;"></i> Alerta de vencimento automático</li>
+                    <li style="display:flex; align-items:center; gap:8px; color:#cbd5e1; font-size:0.88rem;"><i class="fas fa-check-circle" style="color:#38bdf8;"></i> Histórico completo de doações</li>
+                    <li style="display:flex; align-items:center; gap:8px; color:#cbd5e1; font-size:0.88rem;"><i class="fas fa-check-circle" style="color:#38bdf8;"></i> Segurança e rastreabilidade</li>
                 </ul>
             </div>
         </div>
 
+        <!-- Lado do Formulário -->
         <div class="login-side-form" style="background-color: #151c2a;">
+            
             <div class="form-content">
                 <h2>Bem-vindo!</h2>
                 <p class="subtitle">Acesse sua conta para continuar.</p>
 
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ 'danger' if category == 'danger' or category == 'error' else category }}" style="margin-bottom:16px; display:flex; align-items:center; gap:8px;">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <span>{{ message }}</span>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
                 <form action="{{ url_for('auth.login') }}" method="POST" class="modern-form">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-                    <div class="form-group">
-                        <label id="label-identificador" for="identificador">CPF</label>
+                    <div class="form-group" style="margin-bottom:18px;">
+                        <label id="label-identificador" for="identificador" style="display:block; margin-bottom:8px; font-weight:600; color:#cbd5e1;">CPF ou E-mail</label>
                         <div class="input-with-icon">
                             <i class="fas fa-id-card"></i>
                             <input type="text" name="identificador" id="identificador"
-                                   placeholder="000.000.000-00" required maxlength="14"
+                                   placeholder="seu@email.com ou 000.000.000-00" value="000.000.000-00" required
                                    autocomplete="username">
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label for="senha">Senha</label>
+                    <div class="form-group" style="margin-bottom:18px;">
+                        <label for="senha" style="display:block; margin-bottom:8px; font-weight:600; color:#cbd5e1;">Senha</label>
                         <div class="input-with-icon">
                             <i class="fas fa-lock"></i>
                             <input type="password" name="senha" id="senha"
-                                   placeholder="••••••••" required autocomplete="current-password">
+                                   placeholder="••••••••" value="admin123" required autocomplete="current-password">
                         </div>
                     </div>
 
-                    <div class="forgot-pass-container">
-                        <a href="{{ url_for('auth.recuperar_senha') }}" class="forgot-link">Esqueceu a senha?</a>
+                    <div class="forgot-pass-container" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                        <span style="font-size:0.85rem; color:#94a3b8; display:inline-flex; align-items:center; gap:6px;">
+                            <i class="fas fa-shield-alt" style="color:#38bdf8;"></i> Ambiente seguro
+                        </span>
+                        <a href="{{ url_for('auth.recuperar_senha') }}" class="forgot-link" style="color:#38bdf8; font-size:0.88rem; font-weight:500; text-decoration:none;">Esqueceu a senha?</a>
                     </div>
 
-                    <button type="submit" class="btn-primary-gradient">
+                    <button type="submit" class="btn-primary-gradient" style="width:100%; display:inline-flex; align-items:center; justify-content:center; gap:8px;">
                         Entrar no Sistema <i class="fas fa-arrow-right"></i>
                     </button>
                 </form>
 
-                <div class="auth-footer" style="margin-top: 20px; text-align: center;">
-                    <p>Não tem uma conta? <a href="{{ url_for('auth.cadastro') }}">Cadastre-se</a></p>
+                <div class="auth-footer" style="margin-top: 24px; text-align: center;">
+                    <p style="color:#94a3b8; font-size:0.9rem;">Não tem uma conta? <a href="{{ url_for('auth.cadastro') }}" style="color:#38bdf8; font-weight:600; text-decoration:none;">Cadastre-se</a></p>
                 </div>
             </div>
         </div>

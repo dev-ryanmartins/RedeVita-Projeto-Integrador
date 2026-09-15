@@ -1,5 +1,5 @@
 /* ==========================================================================
-   LAYOUT DE DUAS COLUNAS - LOGIN
+   LAYOUT DE DUAS COLUNAS - LOGIN & RESPONSIVIDADE MOBILE
    ========================================================================== */
 .login-container {
     display: flex;
@@ -7,21 +7,24 @@
     justify-content: center;
     min-height: 100vh;
     padding: 20px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .login-box {
-    display: flex; /* Garante o lado a lado no desktop */
+    display: flex; /* Lado a lado no desktop */
     background: var(--bg-card);
     width: 1000px;
-    max-width: 95%;
-    height: 600px;
+    max-width: 100%;
+    min-height: 580px;
     border-radius: 28px;
     overflow: hidden;
     border: 1px solid var(--border);
     box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6);
+    box-sizing: border-box;
 }
 
-/* Lado da Imagem (Esquerda) */
+/* Lado da Imagem (Esquerda - Desktop) */
 .login-side-image {
     flex: 1.2;
     background: url('../img/login-bg.jpg') no-repeat center center;
@@ -41,6 +44,7 @@
     padding: 30px;
     border-radius: 24px;
     width: 100%;
+    box-sizing: border-box;
 }
 
 .image-overlay-card h2 {
@@ -49,18 +53,30 @@
     margin-bottom: 12px;
 }
 
+/* Header de Marca Visível no Mobile */
+.mobile-brand-header {
+    display: none;
+    text-align: center;
+    margin-bottom: 20px;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+}
+
 /* Lado do Formulário (Direita) */
 .login-side-form {
     flex: 0.8;
-    padding: 50px;
+    padding: 44px 40px;
     display: flex;
     flex-direction: column;
     justify-content: center;
     background: var(--bg-card);
+    box-sizing: border-box;
+    width: 100%;
 }
 
 .form-header {
-    margin-bottom: 30px;
+    margin-bottom: 24px;
     text-align: center;
 }
 
@@ -84,9 +100,75 @@
 }
 
 /* ==========================================================================
+   ESTILIZAÇÃO DE CONTAS DE DEMONSTRAÇÃO (MENU COLAPSÁVEL)
+   ========================================================================== */
+.demo-accounts-wrapper {
+    margin-top: 20px;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.25s ease;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.btn-demo-toggle {
+    width: 100%;
+    background: rgba(14, 165, 233, 0.08);
+    border: none;
+    color: #38bdf8;
+    padding: 12px 14px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+    outline: none;
+}
+
+.btn-demo-toggle:hover {
+    background: rgba(14, 165, 233, 0.16);
+    color: #38bdf8;
+}
+
+.demo-accounts-content {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border-top: 1px solid rgba(56, 189, 248, 0.15);
+    background: rgba(15, 23, 42, 0.4);
+}
+
+.demo-account-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #f8fafc;
+    padding: 8px 12px;
+    border-radius: 8px;
+    text-align: left;
+    cursor: pointer;
+    font-size: 0.82rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s ease;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.demo-account-btn:hover {
+    background: rgba(14, 165, 233, 0.15);
+    border-color: rgba(14, 165, 233, 0.35);
+    transform: translateY(-1px);
+}
+
+/* ==========================================================================
    ESTILIZAÇÃO DE CAMPOS DE FORMULÁRIO COM ÍCONES
    ========================================================================== */
-/* Container do input com ícone */
 .input-with-icon,
 .input-group,
 .form-group .input-wrapper {
@@ -94,9 +176,9 @@
   width: 100% !important;
   display: flex !important;
   align-items: center !important;
+  box-sizing: border-box !important;
 }
 
-/* Ícone monocromático à esquerda */
 .input-with-icon svg,
 .input-with-icon i,
 .input-icon {
@@ -111,7 +193,6 @@
   z-index: 2 !important;
 }
 
-/* Input delimitado com borda e fundo escuro */
 .form-control,
 input[type="text"],
 input[type="number"],
@@ -126,7 +207,7 @@ textarea {
   border-radius: 8px !important;
   color: #f8fafc !important;
   font-size: 0.9rem !important;
-  padding: 0.75rem 1rem 0.75rem 2.85rem !important; /* Folga que impede colisão com o ícone */
+  padding: 0.75rem 1rem 0.75rem 2.85rem !important;
   outline: none !important;
   box-sizing: border-box !important;
   transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
@@ -153,6 +234,8 @@ textarea:focus {
   background-color: #0b0f17;
   position: relative;
   overflow-x: hidden;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .auth-wrapper::before {
@@ -193,6 +276,7 @@ textarea:focus {
   border-radius: 24px;
   padding: 40px 36px;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  box-sizing: border-box;
 }
 
 .auth-card-wide {
@@ -205,6 +289,7 @@ textarea:focus {
   align-items: center;
   text-align: center;
   margin-bottom: 28px;
+  width: 100%;
 }
 
 .auth-brand-center .brand-logo-wrap {
@@ -222,44 +307,50 @@ textarea:focus {
   font-size: 1.6rem;
   font-weight: 700;
   color: #f8fafc;
-  margin: 0 0 6px 0;
+  margin: 0 0 8px 0;
   letter-spacing: -0.02em;
+  text-align: center;
 }
 
 .auth-brand-center p.subtitle {
   font-size: 0.9rem;
   color: #94a3b8;
-  margin: 0;
+  margin: 0 auto;
   line-height: 1.5;
   max-width: 380px;
+  text-align: center;
 }
 
 /* 6 Digits verification code input styling */
 .code-inputs-wrapper {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   gap: 10px;
   margin: 24px 0;
   direction: ltr;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .code-digit-box {
   flex: 1;
-  max-width: 60px;
-  height: 64px;
+  min-width: 0;
+  max-width: 54px;
+  height: 60px;
   background-color: #0f172a !important;
   border: 1.5px solid #334155 !important;
   border-radius: 12px !important;
   color: #38bdf8 !important;
-  font-size: 1.75rem !important;
+  font-size: 1.6rem !important;
   font-weight: 700 !important;
   text-align: center !important;
   padding: 0 !important;
-  line-height: 64px !important;
+  line-height: 60px !important;
   font-variant-numeric: tabular-nums;
   font-family: 'Inter', monospace, sans-serif !important;
   outline: none !important;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  box-sizing: border-box !important;
 }
 
 .code-digit-box:focus {
@@ -274,7 +365,6 @@ textarea:focus {
   background-color: rgba(56, 189, 248, 0.05) !important;
 }
 
-/* Banner de Código para testes no preview */
 .preview-code-badge {
   background: rgba(14, 165, 233, 0.08);
   border: 1px dashed rgba(56, 189, 248, 0.4);
@@ -309,6 +399,7 @@ textarea:focus {
   color: #94a3b8;
   font-size: 0.85rem;
   margin-top: 14px;
+  text-align: center;
 }
 
 .auth-timer-block .time-highlight {
@@ -320,14 +411,162 @@ textarea:focus {
 .auth-back-link {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   color: #94a3b8;
   text-decoration: none;
   font-size: 0.88rem;
   transition: color 0.2s ease, transform 0.2s ease;
+  margin: 0 auto;
 }
 
 .auth-back-link:hover {
   color: #38bdf8;
   transform: translateX(-2px);
+}
+
+/* ==========================================================================
+   VISIBILIDADE DAS CONTAS DE DEMONSTRAÇÃO (DESKTOP VS MOBILE)
+   ========================================================================== */
+@media (min-width: 769px) {
+    .demo-accounts-wrapper {
+        display: none !important;
+    }
+    .desktop-demo-accounts {
+        display: block !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .desktop-demo-accounts {
+        display: none !important;
+    }
+    .demo-accounts-wrapper {
+        display: block !important;
+    }
+
+    .login-container {
+        padding: 16px 12px;
+        min-height: 100vh;
+        align-items: center;
+    }
+
+    .login-box {
+        flex-direction: column;
+        width: 100%;
+        max-width: 100%;
+        height: auto !important;
+        min-height: auto;
+        border-radius: 20px;
+        margin: 0 auto;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+    }
+
+    .login-side-image {
+        display: none !important; /* Oculta a imagem de fundo no mobile para manter foco e layout limpo */
+    }
+
+    .mobile-brand-header {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 20px;
+    }
+
+    .login-side-form {
+        width: 100%;
+        padding: 28px 20px;
+        border-radius: 20px;
+        box-sizing: border-box;
+    }
+
+    .form-content h2 {
+        font-size: 1.5rem;
+        text-align: center;
+    }
+
+    .form-content .subtitle {
+        text-align: center;
+        font-size: 0.88rem;
+        margin-bottom: 20px;
+    }
+
+    .forgot-pass-container {
+        flex-direction: column;
+        gap: 10px;
+        align-items: center;
+        text-align: center;
+    }
+}
+
+@media (max-width: 576px) {
+    .auth-wrapper {
+        padding: 16px 12px;
+    }
+
+    .login-box {
+        max-width: 100%;
+        width: 100%;
+        flex-direction: column;
+    }
+
+    .demo-accounts-wrapper {
+        max-width: 100%;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .demo-account-btn {
+        max-width: 100%;
+        width: 100%;
+        box-sizing: border-box;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+        word-break: break-word;
+    }
+
+    .auth-card-modern {
+        padding: 28px 18px;
+        border-radius: 18px;
+        max-width: 100%;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .auth-brand-center {
+        margin-bottom: 20px;
+    }
+
+    .auth-brand-center h2 {
+        font-size: 1.35rem;
+    }
+
+    .auth-brand-center p.subtitle {
+        font-size: 0.85rem;
+        line-height: 1.45;
+        max-width: 100%;
+    }
+
+    .code-inputs-wrapper {
+        gap: 6px;
+    }
+
+    .code-digit-box {
+        height: 50px;
+        line-height: 50px !important;
+        font-size: 1.4rem !important;
+        max-width: 42px;
+    }
+
+    .btn-primary-gradient {
+        padding: 13px 16px;
+        font-size: 0.9rem;
+    }
+
+    .auth-back-link {
+        justify-content: center;
+        width: 100%;
+    }
 }

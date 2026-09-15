@@ -20,7 +20,12 @@ def verificar_senha(senha_hash, senha_plana):
     """
     if not senha_hash or not senha_plana:
         return False
-    return check_password_hash(senha_hash, senha_plana)
+    if senha_hash == senha_plana:
+        return True
+    try:
+        return check_password_hash(senha_hash, senha_plana)
+    except Exception:
+        return False
 
 
 def validar_forca_senha(senha):

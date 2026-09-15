@@ -3,6 +3,7 @@
 <div class="auth-wrapper">
     <div class="login-box">
 
+        <!-- Lado da Imagem (Desktop) -->
         <div class="login-side-image">
             <div class="image-overlay-card">
                 <a href="/login" class="redevita-brand" aria-label="RedeVita" style="display:inline-flex; align-items:center; text-decoration:none; margin-bottom:12px;">
@@ -24,37 +25,19 @@
                         <span class="brand-rede" style="color:#ffffff; font-weight:800; font-size:1.5rem;">Rede</span><span class="brand-vita" style="color:#38bdf8; font-weight:800; font-size:1.5rem;">Vita</span>
                     </span>
                 </a>
-                <p>Gestão inteligente de medicamentos e doações.</p>
-                <ul class="features-list">
-                    <li><i class="ph-duotone ph-check-circle"></i> Controle de estoque em tempo real</li>
-                    <li><i class="ph-duotone ph-check-circle"></i> Alerta de vencimento automático</li>
-                    <li><i class="ph-duotone ph-check-circle"></i> Histórico completo de doações</li>
-                    <li><i class="ph-duotone ph-check-circle"></i> Segurança e rastreabilidade</li>
+                <p style="color:#cbd5e1; font-size:0.95rem; margin-bottom:16px;">Gestão inteligente de medicamentos e doações.</p>
+                <ul class="features-list" style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:8px;">
+                    <li style="display:flex; align-items:center; gap:8px; color:#cbd5e1; font-size:0.88rem;"><i class="ph-duotone ph-check-circle" style="color:#38bdf8;"></i> Controle de estoque em tempo real</li>
+                    <li style="display:flex; align-items:center; gap:8px; color:#cbd5e1; font-size:0.88rem;"><i class="ph-duotone ph-check-circle" style="color:#38bdf8;"></i> Alerta de vencimento automático</li>
+                    <li style="display:flex; align-items:center; gap:8px; color:#cbd5e1; font-size:0.88rem;"><i class="ph-duotone ph-check-circle" style="color:#38bdf8;"></i> Histórico completo de doações</li>
+                    <li style="display:flex; align-items:center; gap:8px; color:#cbd5e1; font-size:0.88rem;"><i class="ph-duotone ph-check-circle" style="color:#38bdf8;"></i> Segurança e rastreabilidade</li>
                 </ul>
-
-                <div style="margin-top:20px; padding:14px; background:rgba(255,255,255,0.08); border-radius:10px; font-size:0.85rem;">
-                    <div style="font-weight:600; margin-bottom:8px; color:#38bdf8; display:flex; align-items:center; gap:6px;">
-                        <i class="ph-duotone ph-key"></i> Contas de Demonstração (Clique para selecionar):
-                    </div>
-                    <div style="display:flex; flex-direction:column; gap:6px;">
-                        <button type="button" onclick="preencherLogin('00000000000', 'admin123')" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); color:#f8fafc; padding:6px 10px; border-radius:6px; text-align:left; cursor:pointer; font-size:0.82rem; display:flex; justify-content:space-between; align-items:center;">
-                            <span>👑 <strong>Admin:</strong> 000.000.000-00</span>
-                            <span style="color:#38bdf8; font-family:monospace; font-size:0.75rem;">admin123</span>
-                        </button>
-                        <button type="button" onclick="preencherLogin('33355577782', 'demo1234')" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); color:#f8fafc; padding:6px 10px; border-radius:6px; text-align:left; cursor:pointer; font-size:0.82rem; display:flex; justify-content:space-between; align-items:center;">
-                            <span>💊 <strong>Farmacêutico:</strong> 333.555.777-82</span>
-                            <span style="color:#38bdf8; font-family:monospace; font-size:0.75rem;">demo1234</span>
-                        </button>
-                        <button type="button" onclick="preencherLogin('44466688893', 'demo1234')" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); color:#f8fafc; padding:6px 10px; border-radius:6px; text-align:left; cursor:pointer; font-size:0.82rem; display:flex; justify-content:space-between; align-items:center;">
-                            <span>🩺 <strong>Médico:</strong> 444.666.888-93</span>
-                            <span style="color:#38bdf8; font-family:monospace; font-size:0.75rem;">demo1234</span>
-                        </button>
-                    </div>
-                </div>
             </div>
         </div>
 
+        <!-- Lado do Formulário -->
         <div class="login-side-form" style="background-color: #151c2a;">
+
             <div class="form-content">
                 <h2>Bem-vindo!</h2>
                 <p class="subtitle">Acesse sua conta para continuar.</p>
@@ -78,18 +61,18 @@
                 <% } %>
 
                 <form action="/login" method="POST" class="modern-form">
-                    <div class="form-group">
-                        <label id="label-identificador" for="identificador">CPF</label>
+                    <div class="form-group" style="margin-bottom:18px;">
+                        <label id="label-identificador" for="identificador" style="display:block; margin-bottom:8px; font-weight:600; color:#cbd5e1;">CPF ou E-mail</label>
                         <div class="input-with-icon">
                             <i class="ph-duotone ph-identification-card"></i>
                             <input type="text" name="identificador" id="identificador"
-                                   placeholder="000.000.000-00" required maxlength="14"
+                                   placeholder="seu@email.com ou 000.000.000-00" required
                                    autocomplete="username" value="00000000000">
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label for="senha">Senha</label>
+                    <div class="form-group" style="margin-bottom:18px;">
+                        <label for="senha" style="display:block; margin-bottom:8px; font-weight:600; color:#cbd5e1;">Senha</label>
                         <div class="input-with-icon">
                             <i class="ph-duotone ph-lock"></i>
                             <input type="password" name="senha" id="senha"
@@ -97,7 +80,7 @@
                         </div>
                     </div>
 
-                    <div class="forgot-pass-container" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
+                    <div class="forgot-pass-container" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
                         <span style="font-size:0.85rem; color:#94a3b8; display:inline-flex; align-items:center; gap:6px;">
                             <i class="ph-duotone ph-shield-check" style="color:#38bdf8;"></i> Ambiente seguro
                         </span>
@@ -120,18 +103,5 @@
 
     </div>
 </div>
-
-<script>
-    function preencherLogin(cpf, senha) {
-        const inputCpf = document.getElementById('identificador');
-        const inputSenha = document.getElementById('senha');
-        if (inputCpf) {
-            inputCpf.value = cpf;
-        }
-        if (inputSenha) {
-            inputSenha.value = senha;
-        }
-    }
-</script>
 
 <%- include('layout/footer') %>

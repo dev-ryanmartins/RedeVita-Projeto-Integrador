@@ -96,11 +96,80 @@
     transform: scale(1.02);
 }
 
+/* ==========================================================================
+   CAMPO DE BUSCA DO DASHBOARD (LUPA NATIVA REMOVIDA & LAYOUT POSITION)
+   ========================================================================== */
+.dashboard-search-form {
+    min-width: 240px;
+    margin: 0;
+}
+
+.dashboard-search-wrapper {
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+    width: 100%;
+}
+
+/* Removendo ícones/lupas/botões nativos do navegador */
+.dashboard-search-wrapper input[type="search"]::-webkit-search-decoration,
+.dashboard-search-wrapper input[type="search"]::-webkit-search-cancel-button,
+.dashboard-search-wrapper input[type="search"]::-webkit-search-results-button,
+.dashboard-search-wrapper input[type="search"]::-webkit-search-results-decoration {
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    display: none !important;
+}
+
+.dashboard-search-wrapper input[type="search"] {
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
+    width: 100% !important;
+    padding-left: 38px !important;
+    padding-right: 14px !important;
+    height: 40px !important;
+    background-color: var(--bg-input, #151c2a) !important;
+    border: 1px solid var(--border, #2d3748) !important;
+    border-radius: 10px !important;
+    color: var(--text-main, #f8fafc) !important;
+    font-size: 0.88rem !important;
+    outline: none !important;
+    box-shadow: none !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+    box-sizing: border-box !important;
+}
+
+.dashboard-search-wrapper input[type="search"]:focus {
+    border-color: #38bdf8 !important;
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15) !important;
+}
+
+.dashboard-search-wrapper i,
+.dashboard-search-wrapper .ph,
+.dashboard-search-wrapper svg {
+    position: absolute !important;
+    left: 12px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    pointer-events: none !important;
+    z-index: 2 !important;
+    color: var(--text-muted, #64748b) !important;
+    font-size: 0.95rem !important;
+    transition: color 0.2s ease !important;
+}
+
+.dashboard-search-wrapper:focus-within i,
+.dashboard-search-wrapper:focus-within .ph {
+    color: #38bdf8 !important;
+}
+
 /* GLOBAL CANVAS CONTAINMENT RESTRICTIONS TO PREVENT OVERFLOW */
 canvas {
     max-width: 100% !important;
     max-height: 100% !important;
     display: block;
+    box-sizing: border-box;
 }
 
 .dashboard-redevita-bento {

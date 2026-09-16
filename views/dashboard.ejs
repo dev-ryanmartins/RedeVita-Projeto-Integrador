@@ -8,7 +8,13 @@
             <h1 style="font-size: 1.8rem; font-weight: 800; color: var(--text-main); margin: 0 0 5px 0;">Olá, <%= (current_user && current_user.nome) ? current_user.nome.split(' ')[0] : 'Usuário' %>!</h1>
             <p class="subtitle" style="color: var(--text-muted); margin: 0;">Resumo completo da RedeVita em <strong><%= (typeof now !== 'undefined' && now) ? new Date(now).toLocaleDateString('pt-BR') : new Date().toLocaleDateString('pt-BR') %></strong>.</p>
         </div>
-        <div class="header-actions" style="display: flex; gap: 12px;">
+        <div class="header-actions" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+            <form action="/busca" method="GET" class="dashboard-search-form" style="margin: 0; min-width: 240px; flex: 1;">
+                <div class="dashboard-search-wrapper relative" style="position: relative; display: flex; align-items: center; width: 100%;">
+                    <i class="ph-duotone ph-magnifying-glass" aria-hidden="true" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); pointer-events: none; z-index: 10; color: #64748b; font-size: 1rem;"></i>
+                    <input type="search" name="q" class="dashboard-search-input" placeholder="Buscar medicamentos, pacientes..." aria-label="Buscar no sistema" autocomplete="off" style="width: 100%; padding-left: 44px !important;">
+                </div>
+            </form>
             <a href="/relatorios" class="btn-secondary">
                 <i class="fas fa-chart-bar"></i> Relatórios
             </a>

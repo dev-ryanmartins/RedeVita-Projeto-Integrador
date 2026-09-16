@@ -49,8 +49,11 @@
         <h2 style="margin:0 0 6px; color: var(--text-primary);"><i class="fas fa-search" style="color: var(--primary-blue);"></i> Busca Global</h2>
         <p style="color:var(--text-muted); margin:0;">Pesquise medicamentos, pacientes, médicos e farmácias.</p>
         <form method="GET" action="{{ url_for('busca.buscar') }}" class="busca-input-wrap">
-            <input type="text" id="global-search" name="q" value="{{ q }}" placeholder="Digite o nome, CPF, CRM…" autofocus
-                   list="busca-sugestoes" data-fast-search-url="{{ url_for('academico.busca_rapida') }}" autocomplete="off">
+            <div class="search-input-wrapper relative" style="flex: 1; position: relative; display: flex; align-items: center;">
+                <i class="fas fa-search" aria-hidden="true" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); pointer-events: none; z-index: 10; color: #64748b; font-size: 0.95rem;"></i>
+                <input type="text" id="global-search" name="q" value="{{ q }}" placeholder="Digite o nome, CPF, CRM…" autofocus
+                       list="busca-sugestoes" data-fast-search-url="{{ url_for('academico.busca_rapida') }}" autocomplete="off" style="width: 100%; padding-left: 44px !important;">
+            </div>
             <datalist id="busca-sugestoes"></datalist>
             <button type="submit" class="btn-primary" style="background: linear-gradient(135deg, var(--primary-blue), var(--primary-blue-hover)); border: none; color: #ffffff; padding: 12px 24px; border-radius: 8px; cursor: pointer;"
                     onmouseover="this.style.filter='brightness(1.1)';"

@@ -14,11 +14,11 @@
     </div>
 
     <div class="table-toolbar" role="search">
-        <label class="table-search" for="doctors-table-search">
-            <i class="fas fa-search" aria-hidden="true"></i>
+        <div class="search-input-wrapper relative" style="position: relative; display: flex; align-items: center; width: 100%; max-width: 380px;">
+            <i class="fas fa-search" aria-hidden="true" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); pointer-events: none; z-index: 10; color: #64748b; font-size: 0.95rem;"></i>
             <input type="search" id="doctors-table-search" data-table-search="doctors-table"
-                   placeholder="Buscar por nome, CRM ou especialidade" autocomplete="off">
-        </label>
+                   placeholder="Buscar por nome, CRM ou especialidade" autocomplete="off" style="width: 100%; padding-left: 44px !important;">
+        </div>
         <span class="table-search-hint">Digite para filtrar sem recarregar.</span>
     </div>
     <div class="table-wrapper">

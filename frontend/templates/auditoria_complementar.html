@@ -23,10 +23,10 @@
     <section class="audit-section">
         <h3><i class="fas fa-hospital"></i> Farmácias parceiras</h3>
         <div class="table-toolbar" role="search">
-            <label class="table-search" for="audit-pharmacies-search">
-                <i class="fas fa-search" aria-hidden="true"></i>
-                <input type="search" id="audit-pharmacies-search" data-table-search="audit-pharmacies-table" placeholder="Filtrar farmácias" autocomplete="off">
-            </label>
+            <div class="search-input-wrapper relative" style="position: relative; display: flex; align-items: center; width: 100%; max-width: 380px;">
+                <i class="fas fa-search" aria-hidden="true" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); pointer-events: none; z-index: 10; color: #64748b; font-size: 0.95rem;"></i>
+                <input type="search" id="audit-pharmacies-search" data-table-search="audit-pharmacies-table" placeholder="Filtrar farmácias" autocomplete="off" style="width: 100%; padding-left: 44px !important;">
+            </div>
             <span class="table-search-hint">Consulta somente leitura.</span>
         </div>
         <div class="table-wrapper audit-table-wrap">
@@ -52,10 +52,10 @@
     <section class="audit-section">
         <h3><i class="fas fa-clock-rotate-left"></i> Movimentações recentes</h3>
         <div class="table-toolbar" role="search">
-            <label class="table-search" for="audit-logs-search">
-                <i class="fas fa-search" aria-hidden="true"></i>
-                <input type="search" id="audit-logs-search" data-table-search="audit-logs-table" placeholder="Filtrar por ação ou detalhe" autocomplete="off">
-            </label>
+            <div class="search-input-wrapper relative" style="position: relative; display: flex; align-items: center; width: 100%; max-width: 380px;">
+                <i class="fas fa-search" aria-hidden="true" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); pointer-events: none; z-index: 10; color: #64748b; font-size: 0.95rem;"></i>
+                <input type="search" id="audit-logs-search" data-table-search="audit-logs-table" placeholder="Filtrar por ação ou detalhe" autocomplete="off" style="width: 100%; padding-left: 44px !important;">
+            </div>
             <span class="table-search-hint">Últimos 50 registros.</span>
         </div>
         <div class="table-wrapper audit-table-wrap">

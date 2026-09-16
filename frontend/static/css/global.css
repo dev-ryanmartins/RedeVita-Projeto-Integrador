@@ -1020,10 +1020,25 @@ label {
   color: #38bdf8 !important;
 }
 
+/* Reset e remoção de decorações nativas em inputs do tipo search (evita lupa duplicada e botão X nativo) */
+input[type="search"]::-webkit-search-decoration,
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-results-button,
+input[type="search"]::-webkit-search-results-decoration {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  display: none !important;
+}
+
+input[type="search"] {
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+}
+
 /* Padronização idêntica de inputs e selects */
 .form-control,
 input[type="text"],
-input[type="search"],
 input[type="number"],
 input[type="email"],
 input[type="password"],
@@ -1043,11 +1058,18 @@ textarea {
   box-sizing: border-box !important;
 }
 
-/* Recuo à esquerda exclusivo para campos que possuem ícone (evita sobreposição) */
+/* Recuo à esquerda padronizado para campos de busca e inputs com ícone */
 .input-with-icon input,
 .input-with-icon select,
-.search-input-wrapper input {
-  padding-left: 52px !important;
+.search-input-wrapper input,
+.dashboard-search-wrapper input,
+.table-search input,
+.table-search input[type="search"],
+.table-search input[type="text"],
+input[type="search"] {
+  padding-left: 44px !important;
+  padding-right: 14px !important;
+  box-sizing: border-box !important;
 }
 
 /* Foco sutil e padronizado */
@@ -1141,11 +1163,11 @@ textarea:focus {
 .table-search .ph-duotone,
 .table-search svg {
     position: absolute;
-    left: 14px;
+    left: 12px;
     top: 50%;
     transform: translateY(-50%);
     color: #64748b;
-    font-size: 1.15rem;
+    font-size: 1rem;
     width: 20px;
     height: 20px;
     display: flex;
@@ -1168,7 +1190,7 @@ textarea:focus {
     width: 100% !important;
     min-height: 42px !important;
     height: 42px !important;
-    padding: 0.65rem 1rem 0.65rem 52px !important;
+    padding: 0.65rem 1rem 0.65rem 38px !important;
     background-color: #151c2a !important;
     border: 1px solid #2d3748 !important;
     border-radius: 9px !important;
@@ -2029,7 +2051,6 @@ textarea:focus {
     input[type="password"],
     input[type="date"],
     input[type="tel"],
-    input[type="search"],
     select,
     textarea {
         width: 100% !important;
@@ -2044,8 +2065,16 @@ textarea:focus {
     }
 
     .input-with-icon input,
-    .input-with-icon select {
-        padding-left: 2.75rem !important;
+    .input-with-icon select,
+    .search-input-wrapper input,
+    .dashboard-search-wrapper input,
+    .table-search input,
+    .table-search input[type="search"],
+    .table-search input[type="text"],
+    input[type="search"] {
+        padding-left: 44px !important;
+        padding-right: 14px !important;
+        box-sizing: border-box !important;
     }
 
     .form-control:focus,
@@ -3323,6 +3352,90 @@ html.reading-simplified li {
         width: auto;
         max-width: none;
     }
+}
+
+/* ==========================================================================
+   ALINHAMENTO DEFINITIVO DA LUPA E RECUO DOS CAMPOS DE BUSCA (GLOBAL)
+   ========================================================================== */
+.table-search,
+.search-input-wrapper,
+.dashboard-search-wrapper,
+.input-with-icon,
+.relative,
+[role="search"] .table-search,
+[role="search"] .search-input-wrapper,
+label.table-search {
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.table-search i,
+.table-search .ph,
+.table-search .ph-duotone,
+.table-search .fas,
+.table-search .fa,
+.table-search .far,
+.table-search svg,
+.search-input-wrapper i,
+.search-input-wrapper .ph,
+.search-input-wrapper .ph-duotone,
+.search-input-wrapper .fas,
+.search-input-wrapper .fa,
+.search-input-wrapper .far,
+.search-input-wrapper svg,
+.dashboard-search-wrapper i,
+.dashboard-search-wrapper .ph,
+.dashboard-search-wrapper .ph-duotone,
+.dashboard-search-wrapper .fas,
+.dashboard-search-wrapper .fa,
+.dashboard-search-wrapper svg,
+.input-with-icon i,
+.input-with-icon .ph,
+.input-with-icon .ph-duotone,
+.input-with-icon .fas,
+.input-with-icon .fa,
+.input-with-icon svg {
+    position: absolute !important;
+    left: 14px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    pointer-events: none !important;
+    z-index: 10 !important;
+    color: #64748b !important;
+    font-size: 1rem !important;
+    width: 18px !important;
+    height: 18px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1 !important;
+    margin: 0 !important;
+}
+
+.table-search:focus-within i,
+.table-search:focus-within .ph,
+.table-search:focus-within .ph-duotone,
+.table-search:focus-within .fas,
+.table-search:focus-within svg,
+.search-input-wrapper:focus-within i,
+.search-input-wrapper:focus-within .fas,
+.dashboard-search-wrapper:focus-within i,
+.dashboard-search-wrapper:focus-within .fas {
+    color: #38bdf8 !important;
+}
+
+.table-search input,
+.table-search input[type="search"],
+.table-search input[type="text"],
+.search-input-wrapper input,
+.dashboard-search-wrapper input,
+.input-with-icon input,
+input[type="search"],
+input[data-table-search] {
+    padding-left: 44px !important;
+    padding-right: 14px !important;
+    box-sizing: border-box !important;
 }
 
 

@@ -21,12 +21,13 @@
     </div>
 
     <div class="table-toolbar" role="search" style="margin-bottom:16px;">
-        <label class="table-search" for="inventory-table-search">
-            <i class="ph-duotone ph-magnifying-glass" aria-hidden="true"></i>
+        <div class="search-input-wrapper relative" style="position: relative; display: flex; align-items: center; width: 100%; max-width: 380px;">
+            <i class="ph-duotone ph-magnifying-glass" aria-hidden="true" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); pointer-events: none; z-index: 10; color: #64748b; font-size: 1rem;"></i>
             <input type="search" id="inventory-table-search"
                    placeholder="Buscar medicamento, lote ou princípio ativo..."
-                   oninput="filtrarTabela()" onkeyup="filtrarTabela()" autocomplete="off">
-        </label>
+                   oninput="filtrarTabela()" onkeyup="filtrarTabela()" autocomplete="off"
+                   style="width: 100%; padding-left: 44px !important;">
+        </div>
         <span id="inventory-search-hint" class="table-search-hint" style="font-size:0.85rem; color:var(--text-muted);"></span>
         <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
             <label style="font-size:0.85rem; color:var(--text-muted);">Filtro Tarja:</label>

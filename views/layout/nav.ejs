@@ -27,80 +27,80 @@
 
         <ul class="nav-links" id="navLinks">
             <li>
-                <a href="/dashboard" class="<%= current_path === '/dashboard' ? 'active' : '' %>">
-                    <i class="ph-duotone ph-squares-four"></i> Dashboard
+                <a href="/dashboard" class="<%= current_path === '/dashboard' ? 'active' : '' %>" title="Dashboard" data-tooltip="Dashboard" aria-label="Dashboard">
+                    <i class="ph-duotone ph-squares-four"></i><span class="nav-text">Dashboard</span>
                 </a>
             </li>
             <li>
-                <a href="/inventario" class="<%= current_path === '/inventario' ? 'active' : '' %>">
-                    <i class="ph-duotone ph-pill"></i> Inventário
+                <a href="/inventario" class="<%= current_path === '/inventario' ? 'active' : '' %>" title="Inventário" data-tooltip="Inventário" aria-label="Inventário">
+                    <i class="ph-duotone ph-pill"></i><span class="nav-text">Inventário</span>
                 </a>
             </li>
             <li>
-                <a href="/doacoes" class="<%= current_path === '/doacoes' ? 'active' : '' %>">
-                    <i class="ph-duotone ph-hand-heart"></i> Doações
+                <a href="/doacoes" class="<%= current_path === '/doacoes' ? 'active' : '' %>" title="Doações" data-tooltip="Doações" aria-label="Doações">
+                    <i class="ph-duotone ph-hand-heart"></i><span class="nav-text">Doações</span>
                 </a>
             </li>
             <li>
-                <a href="/pacientes" class="<%= current_path === '/pacientes' ? 'active' : '' %>">
-                    <i class="ph-duotone ph-users"></i> Pacientes
+                <a href="/pacientes" class="<%= current_path === '/pacientes' ? 'active' : '' %>" title="Pacientes" data-tooltip="Pacientes" aria-label="Pacientes">
+                    <i class="ph-duotone ph-users"></i><span class="nav-text">Pacientes</span>
                 </a>
             </li>
             <li>
-                <a href="/medicos" class="<%= current_path === '/medicos' ? 'active' : '' %>">
-                    <i class="ph-duotone ph-stethoscope"></i> Médicos
+                <a href="/medicos" class="<%= current_path === '/medicos' ? 'active' : '' %>" title="Médicos" data-tooltip="Médicos" aria-label="Médicos">
+                    <i class="ph-duotone ph-stethoscope"></i><span class="nav-text">Médicos</span>
                 </a>
             </li>
             <li>
-                <a href="/farmacias" class="<%= current_path === '/farmacias' ? 'active' : '' %>">
-                    <i class="ph-duotone ph-buildings"></i> Farmácias
+                <a href="/farmacias" class="<%= current_path === '/farmacias' ? 'active' : '' %>" title="Farmácias" data-tooltip="Farmácias" aria-label="Farmácias">
+                    <i class="ph-duotone ph-buildings"></i><span class="nav-text">Farmácias</span>
                 </a>
             </li>
             <li>
-                <a href="/relatorios" class="<%= current_path === '/relatorios' ? 'active' : '' %>">
-                    <i class="ph-duotone ph-chart-line-up"></i> Relatórios
+                <a href="/relatorios" class="<%= current_path === '/relatorios' ? 'active' : '' %>" title="Relatórios" data-tooltip="Relatórios" aria-label="Relatórios">
+                    <i class="ph-duotone ph-chart-line-up"></i><span class="nav-text">Relatórios</span>
                 </a>
             </li>
             <li>
-                <a href="/academico/monitoramento-iot" class="<%= current_path === '/academico/monitoramento-iot' ? 'active' : '' %>">
-                    <i class="ph-duotone ph-thermometer-simple"></i> IoT
+                <a href="/academico/monitoramento-iot" class="<%= current_path === '/academico/monitoramento-iot' ? 'active' : '' %>" title="Monitoramento IoT" data-tooltip="Monitoramento IoT" aria-label="Monitoramento IoT">
+                    <i class="ph-duotone ph-thermometer-simple"></i><span class="nav-text">IoT</span>
                 </a>
             </li>
             <li>
-                <a href="/mapa" class="<%= current_path === '/mapa' ? 'active' : '' %>">
-                    <i class="ph-duotone ph-map-trifold"></i> Mapa
+                <a href="/mapa" class="<%= current_path === '/mapa' ? 'active' : '' %>" title="Mapa Geográfico" data-tooltip="Mapa Geográfico" aria-label="Mapa Geográfico">
+                    <i class="ph-duotone ph-map-trifold"></i><span class="nav-text">Mapa</span>
                 </a>
             </li>
             <li>
-                <a href="/prescriptions" class="<%= current_path === '/prescriptions' ? 'active' : '' %>">
-                    <i class="ph-duotone ph-file-text"></i> Prescrições
+                <a href="/prescriptions" class="<%= current_path === '/prescriptions' ? 'active' : '' %>" title="Prescrições" data-tooltip="Prescrições" aria-label="Prescrições">
+                    <i class="ph-duotone ph-file-text"></i><span class="nav-text">Prescrições</span>
                 </a>
             </li>
             <li>
-                <a href="/busca" class="<%= current_path === '/busca' ? 'active' : '' %>">
-                    <i class="ph-duotone ph-magnifying-glass"></i> Busca
+                <a href="/busca" class="<%= current_path === '/busca' ? 'active' : '' %>" title="Busca Geral" data-tooltip="Busca Geral" aria-label="Busca Geral">
+                    <i class="ph-duotone ph-magnifying-glass"></i><span class="nav-text">Busca</span>
                 </a>
             </li>
             <% if (current_user.cargo === 'Admin') { %>
             <li class="nav-divider"></li>
             <li>
-                <a href="/notificacoes" class="<%= current_path === '/notificacoes' ? 'active' : '' %> nav-admin">
-                    <i class="ph-duotone ph-bell"></i> Notificações
+                <a href="/notificacoes" class="<%= current_path === '/notificacoes' ? 'active' : '' %> nav-admin" title="Notificações" data-tooltip="Notificações" aria-label="Notificações">
+                    <i class="ph-duotone ph-bell"></i><span class="nav-text">Notificações</span>
                 </a>
             </li>
             <li>
-                <a href="/usuarios" class="<%= current_path === '/usuarios' ? 'active' : '' %> nav-admin">
-                    <i class="ph-duotone ph-users-three"></i> Usuários
+                <a href="/usuarios" class="<%= current_path === '/usuarios' ? 'active' : '' %> nav-admin" title="Gestão de Usuários" data-tooltip="Gestão de Usuários" aria-label="Gestão de Usuários">
+                    <i class="ph-duotone ph-users-three"></i><span class="nav-text">Usuários</span>
                 </a>
             </li>
             <li>
-                <a href="/logs" class="<%= current_path === '/logs' ? 'active' : '' %> nav-admin">
-                    <i class="ph-duotone ph-shield-check"></i> Logs
+                <a href="/logs" class="<%= current_path === '/logs' ? 'active' : '' %> nav-admin" title="Logs do Sistema" data-tooltip="Logs do Sistema" aria-label="Logs do Sistema">
+                    <i class="ph-duotone ph-shield-check"></i><span class="nav-text">Logs</span>
                 </a>
             </li>
             <li>
-                <a href="/academico/auditoria" class="<%= current_path === '/academico/auditoria' ? 'active' : '' %> nav-admin">
-                    <i class="ph-duotone ph-clipboard-text"></i> Auditoria
+                <a href="/academico/auditoria" class="<%= current_path === '/academico/auditoria' ? 'active' : '' %> nav-admin" title="Auditoria de Operações" data-tooltip="Auditoria de Operações" aria-label="Auditoria de Operações">
+                    <i class="ph-duotone ph-clipboard-text"></i><span class="nav-text">Auditoria</span>
                 </a>
             </li>
             <% } %>

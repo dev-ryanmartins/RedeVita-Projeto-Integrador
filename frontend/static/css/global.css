@@ -344,32 +344,76 @@ code { font-family: 'Courier New', monospace; }
     list-style: none;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 4px;
     flex: 1;
-    justify-content: flex-end;
+    min-width: 0;
+    padding: 0;
+    margin: 0;
+}
+
+/* Link de navegação Desktop: Ícone + Nome Compacto */
+.nav-links li {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
 }
 
 .nav-links li a {
     color: var(--text-muted);
-    padding: 8px 14px;
+    width: auto;
+    height: 34px;
+    padding: 4px 8px;
     border-radius: 8px;
     font-weight: 500;
-    font-size: 0.9rem;
-    display: flex;
+    font-size: 0.78rem;
+    line-height: 1.2;
+    display: inline-flex;
     align-items: center;
-    gap: 7px;
-    transition: var(--transition);
+    justify-content: center;
+    gap: 5px;
+    position: relative;
+    transition: transform 0.15s ease, background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    text-decoration: none;
+    border: 1px solid transparent;
+    white-space: nowrap;
 }
 
-.nav-links li a:hover,
-.nav-links li a.active {
+.nav-links li a i {
+    font-size: 0.95rem;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+/* Exibe o nome do link ao lado do ícone na barra superior desktop */
+.nav-links li a .nav-text {
+    display: inline-block !important;
+    font-size: 0.78rem;
+    font-weight: 500;
+    white-space: nowrap;
+    letter-spacing: -0.01em;
+}
+
+/* Oculta o tooltip redundante no desktop pois o nome do link já é visível */
+.nav-links li a[data-tooltip]::after {
+    display: none !important;
+}
+
+.nav-links li a:hover {
     color: var(--text-main);
     background: var(--bg-hover);
+    transform: translateY(-1px);
 }
 
 .nav-links li a.active {
-    color: var(--primary);
-    background: rgba(52, 152, 219, 0.1);
+    color: #38bdf8;
+    background: rgba(56, 189, 248, 0.15);
+    border-color: rgba(56, 189, 248, 0.35);
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.15);
+}
+
+.nav-links li a.active i {
+    color: #38bdf8;
 }
 
 .btn-logout {
@@ -1001,8 +1045,9 @@ textarea {
 
 /* Recuo à esquerda exclusivo para campos que possuem ícone (evita sobreposição) */
 .input-with-icon input,
-.input-with-icon select {
-  padding-left: 46px !important;
+.input-with-icon select,
+.search-input-wrapper input {
+  padding-left: 52px !important;
 }
 
 /* Foco sutil e padronizado */
@@ -1123,7 +1168,7 @@ textarea:focus {
     width: 100% !important;
     min-height: 42px !important;
     height: 42px !important;
-    padding: 0.65rem 1rem 0.65rem 46px !important;
+    padding: 0.65rem 1rem 0.65rem 52px !important;
     background-color: #151c2a !important;
     border: 1px solid #2d3748 !important;
     border-radius: 9px !important;
@@ -2016,7 +2061,32 @@ textarea:focus {
     }
 }
 
-@media screen and (max-width: 1100px) and (min-width: 769px) {
+/* Responsividade da barra de navegação superior */
+@media screen and (max-width: 1400px) and (min-width: 1025px) {
+    .nav-links {
+        gap: 2px;
+    }
+    .nav-links li a {
+        padding: 4px 6px;
+        font-size: 0.76rem;
+        gap: 4px;
+        height: 32px;
+    }
+    .nav-links li a i {
+        font-size: 0.9rem;
+    }
+    .nav-links li a .nav-text {
+        font-size: 0.74rem;
+    }
+    .container-nav {
+        gap: 8px;
+    }
+    .user-name {
+        max-width: 90px;
+    }
+}
+
+@media screen and (max-width: 1024px) {
     .nav-toggle { display: flex; }
     .nav-links {
         display: none;
@@ -2035,7 +2105,9 @@ textarea:focus {
         z-index: 199;
     }
     .nav-links.open { display: flex; }
-    .nav-links li a { width: 100%; padding: 11px 12px; }
+    .nav-links li a { width: 100%; padding: 11px 12px; justify-content: flex-start; height: auto; }
+    .nav-links li a .nav-text { display: inline-block !important; margin-left: 8px; font-size: 0.92rem; }
+    .nav-links li a[data-tooltip]::after { display: none !important; }
 }
 
 /* ==========================================================================
@@ -2991,6 +3063,28 @@ textarea:focus-visible,
 }
 
 @media (max-width: 768px) {
+    .nav-toggle { display: flex; }
+    .nav-links {
+        display: none;
+        position: absolute;
+        top: 62px;
+        left: 16px;
+        right: 16px;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 0 0 14px 14px;
+        flex-direction: column;
+        align-items: stretch;
+        padding: 10px;
+        gap: 4px;
+        box-shadow: var(--shadow);
+        z-index: 199;
+    }
+    .nav-links.open { display: flex; }
+    .nav-links li a { width: 100%; padding: 11px 12px; justify-content: flex-start; height: auto; }
+    .nav-links li a .nav-text { display: inline-block !important; margin-left: 8px; font-size: 0.92rem; }
+    .nav-links li a[data-tooltip]::after { display: none !important; }
+
     .accessibility-controls {
         justify-content: flex-end;
     }

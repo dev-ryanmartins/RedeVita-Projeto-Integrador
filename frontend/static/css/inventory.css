@@ -1,3 +1,4 @@
+/* Inventário - Estilos adicionais e validação em tempo real */
 .modern-table {
     width: 100%;
     border-collapse: separate;
@@ -19,3 +20,208 @@
     border-top: 1px solid var(--border);
     border-bottom: 1px solid var(--border);
 }
+
+/* ==========================================================================
+   SISTEMA SEMÂNTICO DE BADGES DE STATUS DE INVENTÁRIO
+   ========================================================================== */
+.status-badge,
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    line-height: 1;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+}
+
+/* Status: In Stock (Verde) */
+.status-badge.in-stock,
+.status-badge.status-in-stock,
+.status-pill.in-stock,
+.status-pill.green {
+    background: rgba(16, 185, 129, 0.15);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.35);
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.12);
+}
+
+/* Status: Low Stock (Amarelo) */
+.status-badge.low-stock,
+.status-badge.status-low-stock,
+.status-pill.low-stock,
+.status-pill.yellow {
+    background: rgba(245, 158, 11, 0.15);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.35);
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.12);
+}
+
+/* Status: Expiring Soon / Expired (Vermelho) */
+.status-badge.expiring-soon,
+.status-badge.status-expiring-soon,
+.status-pill.expiring-soon,
+.status-pill.red {
+    background: rgba(244, 63, 94, 0.15);
+    color: #f43f5e;
+    border: 1px solid rgba(244, 63, 94, 0.38);
+    box-shadow: 0 2px 8px rgba(244, 63, 94, 0.15);
+}
+
+/* ==========================================================================
+   GRADE DE CARTÕES DE INVENTÁRIO (RESPONSIVE CARDS GRID)
+   ========================================================================== */
+.inventory-view-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 3px;
+    border-radius: 10px;
+}
+
+.btn-toggle-view {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+
+.btn-toggle-view.active {
+    background: #0ea5e9;
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(14, 165, 233, 0.4);
+}
+
+.inventory-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.inventory-card {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(30, 41, 59, 0.75) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 18px;
+    backdrop-filter: blur(12px);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 14px;
+    transition: all 0.25s ease;
+}
+
+.inventory-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(56, 189, 248, 0.3);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+}
+
+.inventory-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.inventory-card-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #f8fafc;
+    margin: 0 0 2px 0;
+}
+
+.inventory-card-subtitle {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    margin: 0;
+}
+
+.inventory-card-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 0.8rem;
+}
+
+.detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.detail-label {
+    font-size: 0.7rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.detail-value {
+    color: #e2e8f0;
+    font-weight: 600;
+}
+
+.inventory-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Destaque de Validação em Tempo Real (Erros em Vermelho) */
+.input-error,
+.is-invalid,
+input.input-error,
+select.input-error {
+    border-color: #ef4444 !important;
+    background-color: rgba(239, 68, 68, 0.08) !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25) !important;
+}
+
+.field-error-msg {
+    color: #f87171 !important;
+    font-size: 0.8rem;
+    margin-top: 5px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: 500;
+    line-height: 1.3;
+    animation: fadeIn 0.2s ease;
+}
+
+/* Botão de Baixa de Estoque */
+.btn-baixa {
+    color: #f59e0b !important;
+    border-color: rgba(245, 158, 11, 0.35) !important;
+    background: rgba(245, 158, 11, 0.1) !important;
+}
+
+.btn-baixa:hover {
+    background: rgba(245, 158, 11, 0.25) !important;
+    border-color: #f59e0b !important;
+    color: #ffffff !important;
+}
+

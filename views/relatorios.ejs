@@ -86,11 +86,11 @@
                         <td><%= m.tarja %></td>
                         <td>
                             <% if (m.status_semaforo === 0) { %>
-                                <span class="status-pill green">Seguro (> 30 dias)</span>
+                                <span class="status-badge in-stock"><i class="ph-bold ph-check-circle"></i> In Stock</span>
                             <% } else if (m.status_semaforo === 1) { %>
-                                <span class="status-pill yellow">Atenção (<= 30 dias)</span>
+                                <span class="status-badge low-stock"><i class="ph-bold ph-warning"></i> Low Stock</span>
                             <% } else { %>
-                                <span class="status-pill red">Vencido</span>
+                                <span class="status-badge expiring-soon"><i class="ph-bold ph-clock"></i> Expiring Soon</span>
                             <% } %>
                         </td>
                     </tr>

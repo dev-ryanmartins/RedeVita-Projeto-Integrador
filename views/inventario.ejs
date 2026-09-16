@@ -4,8 +4,8 @@
 <div class="page-wrapper">
     <div class="page-header">
         <div>
-            <h2><i class="ph-duotone ph-pill"></i> Inventário de Medicamentos</h2>
-            <p class="page-subtitle">Gerencie o estoque de medicamentos cadastrados.</p>
+            <h2><i class="ph-duotone ph-pill"></i> Gestão de Inventário de Medicamentos</h2>
+            <p class="page-subtitle">Sincronização em tempo real e controle rigoroso de entradas e baixas.</p>
         </div>
         <div style="display:flex; gap:10px;">
             <button type="button" class="btn-secondary" onclick="window.print()" title="Imprimir inventário limpo ou salvar em PDF">
@@ -48,22 +48,42 @@
                     <th>Medicamento</th>
                     <th>Lote</th>
                     <th>Validade</th>
-                    <th>Qtd.</th>
+                    <th>Qtd. Estoque</th>
                     <th>Tarja</th>
-                    <th style="text-align:center;">Ações</th>
+                    <th style="text-align:center;">Ações Operacionais</th>
                 </tr>
             </thead>
             <tbody id="inventory-tbody">
                 <% medicamentos.forEach(function(med) { %>
                 <tr data-tarja="<%= med.tarja || '' %>">
                     <td>
-                        <% if (med.status_semaforo === 0) { %>
-                            <span class="status-pill green"><i class="fas fa-circle"></i> Seguro</span>
-                        <% } else if (med.status_semaforo === 1) { %>
-                            <span class="status-pill yellow"><i class="fas fa-circle"></i> Atenção</span>
-                        <% } else { %>
-                            <span class="status-pill red"><i class="fas fa-circle"></i> Vencido</span>
-                        <% } %>
+                        <% 
+                            let statusClass = 'in-stock';
+                            let statusLabel = 'In Stock';
+                            let iconClass = 'ph-check-circle';
+
+                            const valDate = med.data_validade ? new Date(med.data_validade) : null;
+                            const hoje = new Date();
+                            hoje.setHours(0,0,0,0);
+                            const diffDays = valDate ? Math.ceil((valDate.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24)) : 999;
+
+                            if (diffDays <= 30 || med.status_semaforo === 2) {
+                                statusClass = 'expiring-soon';
+                                statusLabel = diffDays <= 0 ? 'Vencido' : 'Expiring Soon';
+                                iconClass = 'ph-clock';
+                            } else if (med.quantidade <= 15 || med.status_semaforo === 1) {
+                                statusClass = 'low-stock';
+                                statusLabel = 'Low Stock';
+                                iconClass = 'ph-warning';
+                            } else {
+                                statusClass = 'in-stock';
+                                statusLabel = 'In Stock';
+                                iconClass = 'ph-check-circle';
+                            }
+                        %>
+                        <span class="status-badge <%= statusClass %>" title="Status: <%= statusLabel %>">
+                            <i class="ph-bold <%= iconClass %>"></i> <%= statusLabel %>
+                        </span>
                     </td>
                     <td>
                         <strong><%= med.nome %></strong>
@@ -77,12 +97,16 @@
                     <td><%= med.tarja || '—' %></td>
                     <td style="text-align:center;">
                         <div class="action-btns" style="display:inline-flex; gap:6px;">
-                            <button type="button" class="btn-icon btn-edit" title="Editar"
+                            <button type="button" class="btn-icon btn-baixa" title="Registrar Baixa no Estoque"
+                                    onclick="abrirModalBaixa(<%= JSON.stringify(med) %>)">
+                                <i class="fas fa-minus-circle"></i>
+                            </button>
+                            <button type="button" class="btn-icon btn-edit" title="Editar Medicamento"
                                     onclick="editarMed(<%= JSON.stringify(med) %>)">
                                 <i class="fas fa-pen"></i>
                             </button>
-                            <form action="/inventario/deletar/<%= med.id %>" method="POST" style="display:inline;" onsubmit="return confirm('Confirma a exclusão de <%= med.nome %>?')">
-                                <button type="submit" class="btn-icon btn-delete" title="Excluir">
+                            <form action="/inventario/deletar/<%= med.id %>" method="POST" style="display:inline;" onsubmit="return confirm('Confirma a exclusão de <%= med.nome %> (Lote: <%= med.lote %>)?')">
+                                <button type="submit" class="btn-icon btn-delete" title="Excluir do Estoque">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </form>
@@ -99,28 +123,32 @@
 <div id="modal-add" class="modal-overlay" style="display:none;">
     <div class="modal-box" style="max-width:550px;">
         <div class="modal-header">
-            <h3><i class="fas fa-pills"></i> Cadastrar Medicamento</h3>
+            <h3><i class="fas fa-pills" style="color:var(--primary);"></i> Cadastrar Medicamento</h3>
             <button type="button" class="modal-close" onclick="fecharModal('modal-add')">&times;</button>
         </div>
-        <form action="/inventario/adicionar" method="POST" class="modern-form" style="padding:20px;">
+        <form action="/inventario/adicionar" method="POST" id="form-add" class="modern-form" style="padding:10px 0;">
             <div class="form-group" style="margin-bottom:12px;">
                 <label for="med_nome">Nome Comercial *</label>
                 <input type="text" id="med_nome" name="nome" required placeholder="Ex: Dipirona 500mg" class="input-standard">
+                <div id="err_med_nome"></div>
             </div>
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px;">
                 <div class="form-group">
                     <label for="med_lote">Lote *</label>
-                    <input type="text" id="med_lote" name="lote" required placeholder="Ex: LOT-2026-A" class="input-standard">
+                    <input type="text" id="med_lote" name="lote" required placeholder="Ex: LOT-2026-A" class="input-standard" autocomplete="off">
+                    <div id="err_med_lote"></div>
                 </div>
                 <div class="form-group">
                     <label for="med_validade">Data de Validade *</label>
                     <input type="date" id="med_validade" name="data_validade" required class="input-standard">
+                    <div id="err_med_validade"></div>
                 </div>
             </div>
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px;">
                 <div class="form-group">
                     <label for="med_qtd">Quantidade *</label>
-                    <input type="number" id="med_qtd" name="quantidade" min="0" required placeholder="Ex: 100" class="input-standard">
+                    <input type="text" id="med_qtd" name="quantidade" required placeholder="Ex: 100" class="input-standard" inputmode="numeric">
+                    <div id="err_med_qtd"></div>
                 </div>
                 <div class="form-group">
                     <label for="med_tarja">Tarja</label>
@@ -148,28 +176,32 @@
 <div id="modal-edit" class="modal-overlay" style="display:none;">
     <div class="modal-box" style="max-width:550px;">
         <div class="modal-header">
-            <h3><i class="fas fa-pen"></i> Editar Medicamento</h3>
+            <h3><i class="fas fa-pen" style="color:var(--primary);"></i> Editar Medicamento</h3>
             <button type="button" class="modal-close" onclick="fecharModal('modal-edit')">&times;</button>
         </div>
-        <form id="form-edit" method="POST" class="modern-form" style="padding:20px;">
+        <form id="form-edit" method="POST" class="modern-form" style="padding:10px 0;">
             <div class="form-group" style="margin-bottom:12px;">
                 <label for="edit_nome">Nome Comercial *</label>
                 <input type="text" id="edit_nome" name="nome" required class="input-standard">
+                <div id="err_edit_nome"></div>
             </div>
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px;">
                 <div class="form-group">
                     <label for="edit_lote">Lote *</label>
-                    <input type="text" id="edit_lote" name="lote" required class="input-standard">
+                    <input type="text" id="edit_lote" name="lote" required class="input-standard" autocomplete="off">
+                    <div id="err_edit_lote"></div>
                 </div>
                 <div class="form-group">
                     <label for="edit_validade">Data de Validade *</label>
                     <input type="date" id="edit_validade" name="data_validade" required class="input-standard">
+                    <div id="err_edit_validade"></div>
                 </div>
             </div>
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px;">
                 <div class="form-group">
                     <label for="edit_qtd">Quantidade *</label>
-                    <input type="number" id="edit_qtd" name="quantidade" min="0" required class="input-standard">
+                    <input type="text" id="edit_qtd" name="quantidade" required class="input-standard" inputmode="numeric">
+                    <div id="err_edit_qtd"></div>
                 </div>
                 <div class="form-group">
                     <label for="edit_tarja">Tarja</label>
@@ -183,7 +215,58 @@
             </div>
             <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px;">
                 <button type="button" class="btn-secondary" onclick="fecharModal('modal-edit')">Cancelar</button>
-                <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Atualizar</button>
+                <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Atualizar Dados</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Registrar Baixa no Estoque -->
+<div id="modal-baixa" class="modal-overlay" style="display:none;">
+    <div class="modal-box" style="max-width:550px;">
+        <div class="modal-header">
+            <h3><i class="fas fa-minus-circle" style="color:#f59e0b;"></i> Registrar Baixa de Estoque</h3>
+            <button type="button" class="modal-close" onclick="fecharModal('modal-baixa')">&times;</button>
+        </div>
+        <form id="form-baixa" method="POST" class="modern-form" style="padding:10px 0;">
+            <div class="form-group" style="margin-bottom:12px;">
+                <label>Medicamento Selecionado</label>
+                <input type="text" id="baixa_med_nome" class="input-standard" readonly style="opacity:0.9; background:rgba(255,255,255,0.05) !important;">
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px;">
+                <div class="form-group">
+                    <label>Lote / Validade</label>
+                    <input type="text" id="baixa_med_info" class="input-standard" readonly style="opacity:0.9; background:rgba(255,255,255,0.05) !important;">
+                </div>
+                <div class="form-group">
+                    <label>Estoque Atual Disponível</label>
+                    <input type="text" id="baixa_med_estoque" class="input-standard" readonly style="font-weight:700; color:#38bdf8; background:rgba(56,189,248,0.1) !important;">
+                </div>
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px;">
+                <div class="form-group">
+                    <label for="baixa_qtd">Qtd. a Retirar / Baixar *</label>
+                    <input type="text" id="baixa_qtd" name="quantidade_baixa" required placeholder="Ex: 10" class="input-standard" inputmode="numeric" autocomplete="off">
+                    <div id="err_baixa_qtd"></div>
+                </div>
+                <div class="form-group">
+                    <label for="baixa_motivo">Motivo da Baixa *</label>
+                    <select id="baixa_motivo" name="motivo" class="input-standard" required>
+                        <option value="Dispensação a Paciente">Dispensação a Paciente</option>
+                        <option value="Medicamento Vencido / Descarte">Medicamento Vencido / Descarte</option>
+                        <option value="Avaria / Embalagem Violada">Avaria / Embalagem Violada</option>
+                        <option value="Transferência de Unidade">Transferência de Unidade</option>
+                        <option value="Ajuste de Inventário">Ajuste de Inventário</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group" style="margin-bottom:16px;">
+                <label for="baixa_obs">Observações / Justificativa</label>
+                <textarea id="baixa_obs" name="observacoes" rows="2" placeholder="Informe observações adicionais..." class="input-standard" style="resize:none;"></textarea>
+            </div>
+            <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px;">
+                <button type="button" class="btn-secondary" onclick="fecharModal('modal-baixa')">Cancelar</button>
+                <button type="submit" class="btn-primary" style="background:#f59e0b; border-color:#d97706; color:#111827; font-weight:700;"><i class="fas fa-check"></i> Confirmar Baixa</button>
             </div>
         </form>
     </div>
@@ -191,6 +274,23 @@
 
 <script>
     let tarjaAtual = '';
+    let estoqueMaximoBaixa = 0;
+
+    function abrirModal(id) {
+        const el = document.getElementById(id);
+        if (el) {
+            el.style.display = 'flex';
+            el.classList.add('active');
+        }
+    }
+
+    function fecharModal(id) {
+        const el = document.getElementById(id);
+        if (el) {
+            el.style.display = 'none';
+            el.classList.remove('active');
+        }
+    }
 
     function filtrarTarja(tarja, btn) {
         tarjaAtual = tarja;
@@ -256,13 +356,238 @@
 
     function editarMed(med) {
         document.getElementById('form-edit').action = '/inventario/editar/' + med.id;
-        document.getElementById('edit_nome').value = med.nome;
-        document.getElementById('edit_lote').value = med.lote;
-        document.getElementById('edit_validade').value = med.data_validade;
-        document.getElementById('edit_qtd').value = med.quantidade;
+        document.getElementById('edit_nome').value = med.nome || '';
+        document.getElementById('edit_lote').value = med.lote || '';
+        document.getElementById('edit_validade').value = med.data_validade || '';
+        document.getElementById('edit_qtd').value = med.quantidade !== undefined ? med.quantidade : '';
         document.getElementById('edit_tarja').value = med.tarja || 'Sem Tarja';
+        
+        limparErros('form-edit');
         abrirModal('modal-edit');
     }
+
+    function abrirModalBaixa(med) {
+        document.getElementById('form-baixa').action = '/inventario/baixa/' + med.id;
+        document.getElementById('baixa_med_nome').value = med.nome;
+        document.getElementById('baixa_med_info').value = `Lote: ${med.lote} | Val: ${med.data_validade}`;
+        document.getElementById('baixa_med_estoque').value = `${med.quantidade} un.`;
+        document.getElementById('baixa_qtd').value = '';
+        document.getElementById('baixa_obs').value = '';
+        
+        estoqueMaximoBaixa = parseInt(med.quantidade, 10) || 0;
+        
+        limparErros('form-baixa');
+        abrirModal('modal-baixa');
+    }
+
+    // =========================================================================
+    // VALIDAÇÃO EM TEMPO REAL E MÁSCARAS AUTOMÁTICAS COM DESTAQUE EM VERMELHO
+    // =========================================================================
+
+    function mostrarErroCampo(inputEl, msgErr, idContainerErr) {
+        if (!inputEl) return;
+        inputEl.classList.add('input-error');
+        inputEl.classList.add('is-invalid');
+        
+        if (idContainerErr) {
+            const errDiv = document.getElementById(idContainerErr);
+            if (errDiv) {
+                errDiv.innerHTML = `<small class="field-error-msg"><i class="fas fa-exclamation-circle"></i> ${msgErr}</small>`;
+            }
+        }
+    }
+
+    function limparErroCampo(inputEl, idContainerErr) {
+        if (!inputEl) return;
+        inputEl.classList.remove('input-error');
+        inputEl.classList.remove('is-invalid');
+        
+        if (idContainerErr) {
+            const errDiv = document.getElementById(idContainerErr);
+            if (errDiv) errDiv.innerHTML = '';
+        }
+    }
+
+    function limparErros(idForm) {
+        const form = document.getElementById(idForm);
+        if (!form) return;
+        form.querySelectorAll('.input-error, .is-invalid').forEach(el => {
+            el.classList.remove('input-error');
+            el.classList.remove('is-invalid');
+        });
+        form.querySelectorAll('[id^="err_"]').forEach(el => {
+            el.innerHTML = '';
+        });
+    }
+
+    // Validação do Lote (Máscara automática para Caixa Alta e caracteres seguros + Validação visual)
+    function validarLote(inputEl, idErr) {
+        // Máscara automática: converte para maiúsculas e remove caracteres especiais inválidos
+        let val = inputEl.value.toUpperCase().replace(/[^A-Z0-9\-\/]/g, '');
+        if (inputEl.value !== val) {
+            inputEl.value = val;
+        }
+
+        if (!val || val.trim().length < 2) {
+            mostrarErroCampo(inputEl, 'O Lote é obrigatório (mínimo de 2 caracteres).', idErr);
+            return false;
+        } else {
+            limparErroCampo(inputEl, idErr);
+            return true;
+        }
+    }
+
+    // Validação da Data de Validade (Verifica se está preenchida e válida)
+    function validarValidade(inputEl, idErr) {
+        const val = inputEl.value;
+        if (!val) {
+            mostrarErroCampo(inputEl, 'A Data de Validade é obrigatória.', idErr);
+            return false;
+        }
+
+        const dataVal = new Date(val);
+        if (isNaN(dataVal.getTime())) {
+            mostrarErroCampo(inputEl, 'Data de Validade inválida.', idErr);
+            return false;
+        }
+
+        limparErroCampo(inputEl, idErr);
+        return true;
+    }
+
+    // Validação de Quantidade de Estoque (Apenas inteiros não-negativos)
+    function validarQuantidade(inputEl, idErr) {
+        // Máscara automática: remove caracteres não numéricos
+        let valDigits = inputEl.value.replace(/\D/g, '');
+        if (inputEl.value !== valDigits) {
+            inputEl.value = valDigits;
+        }
+
+        if (valDigits === '') {
+            mostrarErroCampo(inputEl, 'A Quantidade é obrigatória.', idErr);
+            return false;
+        }
+
+        const num = parseInt(valDigits, 10);
+        if (isNaN(num) || num < 0) {
+            mostrarErroCampo(inputEl, 'A Quantidade deve ser um número inteiro >= 0.', idErr);
+            return false;
+        }
+
+        limparErroCampo(inputEl, idErr);
+        return true;
+    }
+
+    // Validação de Quantidade para Baixa (Inteiro > 0 e <= Estoque Atual)
+    function validarQuantidadeBaixa(inputEl, idErr) {
+        // Máscara automática
+        let valDigits = inputEl.value.replace(/\D/g, '');
+        if (inputEl.value !== valDigits) {
+            inputEl.value = valDigits;
+        }
+
+        if (valDigits === '') {
+            mostrarErroCampo(inputEl, 'Informe a quantidade para dar baixa.', idErr);
+            return false;
+        }
+
+        const num = parseInt(valDigits, 10);
+        if (isNaN(num) || num <= 0) {
+            mostrarErroCampo(inputEl, 'A quantidade para baixa deve ser maior que zero.', idErr);
+            return false;
+        }
+
+        if (num > estoqueMaximoBaixa) {
+            mostrarErroCampo(inputEl, `A quantidade (${num} un.) excede o estoque disponível (${estoqueMaximoBaixa} un.).`, idErr);
+            return false;
+        }
+
+        limparErroCampo(inputEl, idErr);
+        return true;
+    }
+
+    function validarNomeComercial(inputEl, idErr) {
+        const val = (inputEl.value || '').trim();
+        if (!val) {
+            mostrarErroCampo(inputEl, 'O Nome Comercial é obrigatório.', idErr);
+            return false;
+        }
+        limparErroCampo(inputEl, idErr);
+        return true;
+    }
+
+    // Event Listeners de Validação em Tempo Real para Formulários
+    document.addEventListener('DOMContentLoaded', () => {
+        // CADASTRO
+        const addNome = document.getElementById('med_nome');
+        const addLote = document.getElementById('med_lote');
+        const addVal = document.getElementById('med_validade');
+        const addQtd = document.getElementById('med_qtd');
+        const formAdd = document.getElementById('form-add');
+
+        if (addNome) addNome.addEventListener('input', () => validarNomeComercial(addNome, 'err_med_nome'));
+        if (addLote) addLote.addEventListener('input', () => validarLote(addLote, 'err_med_lote'));
+        if (addVal)  addVal.addEventListener('change', () => validarValidade(addVal, 'err_med_validade'));
+        if (addQtd)  addQtd.addEventListener('input', () => validarQuantidade(addQtd, 'err_med_qtd'));
+
+        if (formAdd) {
+            formAdd.addEventListener('submit', (e) => {
+                const okNome = validarNomeComercial(addNome, 'err_med_nome');
+                const okLote = validarLote(addLote, 'err_med_lote');
+                const okVal  = validarValidade(addVal, 'err_med_validade');
+                const okQtd  = validarQuantidade(addQtd, 'err_med_qtd');
+
+                if (!okNome || !okLote || !okVal || !okQtd) {
+                    e.preventDefault();
+                    const primeInvalido = formAdd.querySelector('.input-error');
+                    if (primeInvalido) primeInvalido.focus();
+                }
+            });
+        }
+
+        // EDIÇÃO
+        const editNome = document.getElementById('edit_nome');
+        const editLote = document.getElementById('edit_lote');
+        const editVal = document.getElementById('edit_validade');
+        const editQtd = document.getElementById('edit_qtd');
+        const formEdit = document.getElementById('form-edit');
+
+        if (editNome) editNome.addEventListener('input', () => validarNomeComercial(editNome, 'err_edit_nome'));
+        if (editLote) editLote.addEventListener('input', () => validarLote(editLote, 'err_edit_lote'));
+        if (editVal)  editVal.addEventListener('change', () => validarValidade(editVal, 'err_edit_validade'));
+        if (editQtd)  editQtd.addEventListener('input', () => validarQuantidade(editQtd, 'err_edit_qtd'));
+
+        if (formEdit) {
+            formEdit.addEventListener('submit', (e) => {
+                const okNome = validarNomeComercial(editNome, 'err_edit_nome');
+                const okLote = validarLote(editLote, 'err_edit_lote');
+                const okVal  = validarValidade(editVal, 'err_edit_validade');
+                const okQtd  = validarQuantidade(editQtd, 'err_edit_qtd');
+
+                if (!okNome || !okLote || !okVal || !okQtd) {
+                    e.preventDefault();
+                    const primeInvalido = formEdit.querySelector('.input-error');
+                    if (primeInvalido) primeInvalido.focus();
+                }
+            });
+        }
+
+        // BAIXA DE ESTOQUE
+        const baixaQtd = document.getElementById('baixa_qtd');
+        const formBaixa = document.getElementById('form-baixa');
+
+        if (baixaQtd) baixaQtd.addEventListener('input', () => validarQuantidadeBaixa(baixaQtd, 'err_baixa_qtd'));
+
+        if (formBaixa) {
+            formBaixa.addEventListener('submit', (e) => {
+                const okBaixa = validarQuantidadeBaixa(baixaQtd, 'err_baixa_qtd');
+                if (!okBaixa) {
+                    e.preventDefault();
+                    baixaQtd.focus();
+                }
+            });
+        }
+    });
 </script>
 
 <%- include('layout/footer') %>

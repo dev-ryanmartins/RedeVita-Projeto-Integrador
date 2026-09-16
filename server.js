@@ -178,19 +178,14 @@ app.post(['/cadastro', '/auth/cadastro'], (req, res) => {
         });
     }
 
-    // Cria e insere o novo usuário
-    const novoId = Math.max(0, ...db.usuarios.map(u => u.id || 0)) + 1;
-    const novoUsuario = {
-        id: novoId,
+    // Cria e insere o novo usuário em SQLite
+    const novoUsuario = db.adicionarUsuario({
         nome: nome.trim(),
         cpf: cleanCpf,
         email: (email || `${cleanCpf}@redevita.local`).trim().toLowerCase(),
         senha: senha,
-        cargo: cargo || 'Voluntário',
-        ativo: true
-    };
-
-    db.usuarios.push(novoUsuario);
+        cargo: cargo || 'Voluntário'
+    });
     db.adicionarLog(novoUsuario.nome, 'Cadastro', `Novo usuário registrado no sistema (${novoUsuario.cargo})`, req.ip);
 
     return res.redirect('/login?cadastrado=1');
@@ -444,11 +439,46 @@ app.all(['/logout', '/auth/logout'], (req, res) => {
 app.get(['/dashboard', '/inventory/dashboard'], requireAuth, (req, res) => {
     try {
         const stats = db.getDashboardStats();
-        const ultimosMedicamentos = db.medicamentos.slice(0, 5);
+        const ultimosMedicamentos = db.medicamentos ? db.medicamentos.slice(0, 5) : [];
+        const proximos_vencimento = db.medicamentos ? db.medicamentos.filter(m => m.status_semaforo === 1 || m.status_semaforo === 2).slice(0, 5) : [];
+        
+        const estoque_status = {};
+        if (db.medicamentos) {
+            db.medicamentos.forEach(m => {
+                const cat = m.tarja || 'Livre';
+                estoque_status[cat] = (estoque_status[cat] || 0) + (m.quantidade || 0);
+            });
+        }
+
+        const validade_status = {
+            'Vencidos': db.medicamentos ? db.medicamentos.filter(m => m.status_semaforo === 2).length : 0,
+            'Próximo Vencimento': db.medicamentos ? db.medicamentos.filter(m => m.status_semaforo === 1).length : 0,
+            'Seguros': db.medicamentos ? db.medicamentos.filter(m => m.status_semaforo === 0).length : 0
+        };
+
+        const labels_doacoes = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'];
+        const doacoes_mensais = [12, 18, 25, 30, 22, 35];
+
         res.render('dashboard', {
             stats,
+            total: stats.totalMedicamentos,
+            alertas: stats.alertasVencimento,
+            estoque: stats.totalEstoque,
+            total_doacoes: stats.totalDoacoes,
+            total_pacientes: stats.totalPacientes,
+            total_medicos: stats.totalMedicos,
+            total_farmacias: stats.totalFarmacias,
             ultimosMedicamentos,
-            iotDispositivos: db.iotDispositivos
+            medicamentos: ultimosMedicamentos,
+            proximos_vencimento,
+            ultimos_medicos: db.medicos ? db.medicos.slice(0, 5) : [],
+            ultimas_farmacias: db.farmacias ? db.farmacias.slice(0, 5) : [],
+            now: new Date(),
+            labels_doacoes,
+            doacoes_mensais,
+            estoque_status,
+            validade_status,
+            iotDispositivos: db.iotDispositivos || []
         });
     } catch (err) {
         console.error('Erro no Dashboard:', err);
@@ -470,37 +500,103 @@ app.get(['/inventario', '/inventory/medicamentos', '/inventory/listar_medicament
 });
 
 app.post('/inventario/adicionar', requireAuth, (req, res) => {
-    const { nome, lote, data_validade, quantidade, tarja, principio_ativo } = req.body;
-    db.adicionarMedicamento({
-        nome,
-        lote,
-        data_validade,
-        quantidade,
-        tarja,
-        principio_ativo
-    });
-    db.adicionarLog(req.session.user.nome, 'Adicionar Medicamento', `Cadastrado medicamento: ${nome} (Lote: ${lote})`, req.ip);
-    setFlash(req, `Medicamento "${nome}" cadastrado com sucesso!`);
-    res.redirect('/inventario');
+    try {
+        const { nome, lote, data_validade, quantidade, tarja, principio_ativo } = req.body;
+        const responsavel = req.session && req.session.user ? req.session.user.nome : 'Sistema';
+
+        if (!nome || !lote || !data_validade || quantidade === undefined || quantidade === '') {
+            setFlash(req, 'Preencha todos os campos obrigatórios (Nome, Lote, Validade e Quantidade).', 'danger');
+            return res.redirect('/inventario');
+        }
+
+        const med = db.adicionarMedicamento({
+            nome,
+            lote,
+            data_validade,
+            quantidade,
+            tarja,
+            principio_ativo,
+            responsavel
+        });
+
+        db.adicionarLog(responsavel, 'Adicionar Medicamento', `Cadastrado medicamento: ${nome} (Lote: ${lote})`, req.ip);
+        setFlash(req, `Medicamento "${nome}" cadastrado com sucesso no banco de dados!`);
+        
+        if (req.xhr || req.headers.accept?.includes('json')) {
+            return res.json({ success: true, medicamento: med });
+        }
+        res.redirect('/inventario');
+    } catch (err) {
+        console.error('Erro ao adicionar medicamento:', err);
+        setFlash(req, err.message || 'Erro ao cadastrar medicamento.', 'danger');
+        res.redirect('/inventario');
+    }
 });
 
 app.post('/inventario/editar/:id', requireAuth, (req, res) => {
-    const id = parseInt(req.params.id, 10);
-    const { nome, lote, data_validade, quantidade, tarja } = req.body;
-    db.atualizarMedicamento(id, { nome, lote, data_validade, quantidade, tarja });
-    db.adicionarLog(req.session.user.nome, 'Editar Medicamento', `Atualizado medicamento ID ${id}`, req.ip);
-    setFlash(req, `Medicamento atualizado com sucesso!`);
-    res.redirect('/inventario');
+    try {
+        const id = parseInt(req.params.id, 10);
+        const { nome, lote, data_validade, quantidade, tarja, principio_ativo } = req.body;
+        const responsavel = req.session && req.session.user ? req.session.user.nome : 'Sistema';
+
+        const med = db.atualizarMedicamento(id, { nome, lote, data_validade, quantidade, tarja, principio_ativo });
+        db.adicionarLog(responsavel, 'Editar Medicamento', `Atualizado medicamento ID ${id} (${nome || 'Sem nome'})`, req.ip);
+        setFlash(req, `Medicamento atualizado com sucesso!`);
+
+        if (req.xhr || req.headers.accept?.includes('json')) {
+            return res.json({ success: true, medicamento: med });
+        }
+        res.redirect('/inventario');
+    } catch (err) {
+        console.error('Erro ao editar medicamento:', err);
+        setFlash(req, err.message || 'Erro ao atualizar medicamento.', 'danger');
+        res.redirect('/inventario');
+    }
+});
+
+app.post('/inventario/baixa/:id', requireAuth, (req, res) => {
+    try {
+        const id = parseInt(req.params.id, 10);
+        const { quantidade_baixa, motivo, observacoes } = req.body;
+        const responsavel = req.session && req.session.user ? req.session.user.nome : 'Operador';
+
+        const medAtualizado = db.baixaMedicamento(id, quantidade_baixa, motivo, observacoes, responsavel);
+        setFlash(req, `Baixa de ${quantidade_baixa} un. realizada com sucesso para "${medAtualizado.nome}"!`);
+
+        if (req.xhr || req.headers.accept?.includes('json')) {
+            return res.json({ success: true, medicamento: medAtualizado });
+        }
+        res.redirect('/inventario');
+    } catch (err) {
+        console.error('Erro ao processar baixa:', err);
+        setFlash(req, err.message || 'Erro ao registrar baixa de estoque.', 'danger');
+        if (req.xhr || req.headers.accept?.includes('json')) {
+            return res.status(400).json({ success: false, error: err.message });
+        }
+        res.redirect('/inventario');
+    }
 });
 
 app.post('/inventario/deletar/:id', requireAuth, (req, res) => {
-    const id = parseInt(req.params.id, 10);
-    const med = db.medicamentos.find(m => m.id === id);
-    const nome = med ? med.nome : `ID ${id}`;
-    db.removerMedicamento(id);
-    db.adicionarLog(req.session.user.nome, 'Excluir Medicamento', `Excluído medicamento: ${nome}`, req.ip);
-    setFlash(req, `Medicamento "${nome}" excluído.`, 'warning');
-    res.redirect('/inventario');
+    try {
+        const id = parseInt(req.params.id, 10);
+        const med = db.medicamentos.find(m => m.id === id);
+        const nome = med ? med.nome : `ID ${id}`;
+        const responsavel = req.session && req.session.user ? req.session.user.nome : 'Sistema';
+
+        db.removerMedicamento(id);
+        db.adicionarLog(responsavel, 'Excluir Medicamento', `Excluído medicamento: ${nome}`, req.ip);
+        setFlash(req, `Medicamento "${nome}" removido do estoque.`, 'warning');
+
+        if (req.xhr || req.headers.accept?.includes('json')) {
+            return res.json({ success: true, id });
+        }
+        res.redirect('/inventario');
+    } catch (err) {
+        console.error('Erro ao remover medicamento:', err);
+        setFlash(req, 'Erro ao excluir medicamento.', 'danger');
+        res.redirect('/inventario');
+    }
 });
 
 app.get('/inventario/exportar-csv', requireAuth, (req, res) => {

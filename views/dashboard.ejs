@@ -3,196 +3,354 @@
 
 <div class="page-wrapper">
 
-    <div class="dashboard-header">
+    <div class="dashboard-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
         <div>
-            <h1>Olá, <%= current_user ? current_user.nome.split(' ')[0] : 'Usuário' %>!</h1>
-            <p class="subtitle">Resumo completo da RedeVita em <strong><%= new Date().toLocaleDateString('pt-BR') %></strong>.</p>
+            <h1 style="font-size: 1.8rem; font-weight: 800; color: var(--text-main); margin: 0 0 5px 0;">Olá, <%= (current_user && current_user.nome) ? current_user.nome.split(' ')[0] : 'Usuário' %>!</h1>
+            <p class="subtitle" style="color: var(--text-muted); margin: 0;">Resumo completo da RedeVita em <strong><%= (typeof now !== 'undefined' && now) ? new Date(now).toLocaleDateString('pt-BR') : new Date().toLocaleDateString('pt-BR') %></strong>.</p>
         </div>
-        <div class="header-actions">
+        <div class="header-actions" style="display: flex; gap: 12px;">
             <a href="/relatorios" class="btn-secondary">
-                <i class="ph-duotone ph-chart-line-up"></i> Relatórios
+                <i class="fas fa-chart-bar"></i> Relatórios
             </a>
             <a href="/doacoes" class="btn-primary">
-                <i class="ph-duotone ph-plus-circle"></i> Nova Doação
+                <i class="fas fa-plus"></i> Nova Doação
             </a>
         </div>
     </div>
 
-    <% if (stats.alertasVencimento > 0) { %>
-    <div class="alert-banner">
-        <i class="ph-duotone ph-warning-circle"></i>
+    <% if (typeof proximos_vencimento !== 'undefined' && proximos_vencimento && proximos_vencimento.length > 0) { %>
+    <div class="alert-banner" style="margin-bottom: 25px;">
+        <i class="fas fa-exclamation-triangle"></i>
         <div>
-            <strong>Atenção:</strong> <%= stats.alertasVencimento %> medicamento(s) com alerta ou vencidos necessitam de ação preventiva.
+            <strong>Atenção:</strong> <%= proximos_vencimento.length %> medicamento(s) vencem nos próximos 30 dias.
         </div>
-        <a href="/inventario" class="alert-banner-link">
-            Ver estoque <i class="ph-bold ph-arrow-right"></i>
+        <a href="/relatorios" class="alert-banner-link">
+            Ver detalhes <i class="fas fa-arrow-right"></i>
         </a>
     </div>
     <% } %>
 
-    <div class="welcome-banner">
+    <div class="welcome-banner" style="margin-bottom: 25px;">
         <div class="welcome-banner__content">
-            <h2>Olá, <%= current_user ? current_user.nome : 'Administrador' %> 👋</h2>
+            <h2>Olá, <%= (current_user && current_user.nome) ? current_user.nome : 'Administrador' %> 👋</h2>
             <p>Painel integrado de monitoramento e gestão farmacêutica.</p>
         </div>
         <div class="welcome-banner__status">● Sistema Operacional Conectado</div>
     </div>
 
-    <div class="stats-grid stats-grid-7">
-        <div class="stat-card stat-card--blue">
-            <div class="stat-card-header">
-                <div class="stat-icon blue"><i class="ph-duotone ph-pill"></i></div>
-            </div>
+    <div class="stats-grid stats-grid-7" style="margin-bottom: 30px;">
+        <div class="stat-card">
+            <div class="stat-icon blue"><i class="fas fa-pills"></i></div>
             <div class="stat-info">
                 <p class="stat-label">Medicamentos</p>
-                <p class="stat-value"><%= stats.totalMedicamentos %></p>
+                <p class="stat-value"><%= typeof total !== 'undefined' ? total : (typeof stats !== 'undefined' ? stats.totalMedicamentos : 0) %></p>
             </div>
         </div>
-        <div class="stat-card stat-card--yellow">
-            <div class="stat-card-header">
-                <div class="stat-icon yellow"><i class="ph-duotone ph-warning-circle"></i></div>
-            </div>
+        <div class="stat-card">
+            <div class="stat-icon yellow"><i class="fas fa-exclamation-triangle"></i></div>
             <div class="stat-info">
-                <p class="stat-label">Vencidos / Alerta</p>
-                <p class="stat-value"><%= stats.alertasVencimento %></p>
+                <p class="stat-label">Vencidos / Críticos</p>
+                <p class="stat-value"><%= typeof alertas !== 'undefined' ? alertas : (typeof stats !== 'undefined' ? stats.alertasVencimento : 0) %></p>
             </div>
         </div>
-        <div class="stat-card stat-card--green">
-            <div class="stat-card-header">
-                <div class="stat-icon green"><i class="ph-duotone ph-package"></i></div>
-            </div>
+        <div class="stat-card">
+            <div class="stat-icon green"><i class="fas fa-cubes"></i></div>
             <div class="stat-info">
                 <p class="stat-label">Unidades em Estoque</p>
-                <p class="stat-value"><%= stats.totalEstoque %></p>
+                <p class="stat-value"><%= typeof estoque !== 'undefined' ? estoque : (typeof stats !== 'undefined' ? stats.totalEstoque : 0) %></p>
             </div>
         </div>
-        <div class="stat-card stat-card--red">
-            <div class="stat-card-header">
-                <div class="stat-icon red"><i class="ph-duotone ph-hand-heart"></i></div>
-            </div>
+        <div class="stat-card">
+            <div class="stat-icon red"><i class="fas fa-hand-holding-heart"></i></div>
             <div class="stat-info">
                 <p class="stat-label">Total de Doações</p>
-                <p class="stat-value"><%= stats.totalDoacoes %></p>
+                <p class="stat-value"><%= typeof total_doacoes !== 'undefined' ? total_doacoes : (typeof stats !== 'undefined' ? stats.totalDoacoes : 0) %></p>
             </div>
         </div>
-        <div class="stat-card stat-card--orange">
-            <div class="stat-card-header">
-                <div class="stat-icon orange"><i class="ph-duotone ph-users"></i></div>
-            </div>
+        <div class="stat-card">
+            <div class="stat-icon orange"><i class="fas fa-user-injured"></i></div>
             <div class="stat-info">
                 <p class="stat-label">Pacientes</p>
-                <p class="stat-value"><%= stats.totalPacientes %></p>
+                <p class="stat-value"><%= typeof total_pacientes !== 'undefined' ? total_pacientes : (typeof stats !== 'undefined' ? stats.totalPacientes : 0) %></p>
             </div>
         </div>
-        <div class="stat-card stat-card--purple">
-            <div class="stat-card-header">
-                <div class="stat-icon purple"><i class="ph-duotone ph-stethoscope"></i></div>
-            </div>
+        <div class="stat-card">
+            <div class="stat-icon purple"><i class="fas fa-user-md"></i></div>
             <div class="stat-info">
                 <p class="stat-label">Médicos Cadastrados</p>
-                <p class="stat-value"><%= stats.totalMedicos %></p>
+                <p class="stat-value"><%= typeof total_medicos !== 'undefined' ? total_medicos : (typeof stats !== 'undefined' ? stats.totalMedicos : 0) %></p>
             </div>
         </div>
-        <div class="stat-card stat-card--teal">
-            <div class="stat-card-header">
-                <div class="stat-icon teal"><i class="ph-duotone ph-buildings"></i></div>
-            </div>
+        <div class="stat-card">
+            <div class="stat-icon teal"><i class="fas fa-hospital"></i></div>
             <div class="stat-info">
                 <p class="stat-label">Farmácias Parceiras</p>
-                <p class="stat-value"><%= stats.totalFarmacias %></p>
+                <p class="stat-value"><%= typeof total_farmacias !== 'undefined' ? total_farmacias : (typeof stats !== 'undefined' ? stats.totalFarmacias : 0) %></p>
             </div>
         </div>
     </div>
 
-    <div class="quick-panel">
+    <div class="dashboard-grid dashboard-analytics-grid" style="margin-bottom: 30px;">
+        <div class="chart-card">
+            <div class="chart-card-header">
+                <h3><i class="fas fa-chart-line"></i> Movimentação Mensal</h3>
+                <span class="chart-badge">Últimos 6 meses</span>
+            </div>
+            <div class="chart-container" style="position: relative; height: 260px;">
+                <canvas id="chartDoacoes" aria-label="Gráfico de movimentação mensal de doações"></canvas>
+            </div>
+            <div class="chart-legend">
+                <span class="legend-dot" style="background:#38bdf8;"></span> Doações recebidas
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <div class="chart-card-header">
+                <h3><i class="fas fa-chart-pie"></i> Status do Estoque</h3>
+                <span class="chart-badge">Por categoria</span>
+            </div>
+            <div class="chart-container" style="position: relative; height: 260px;">
+                <canvas id="chartCategorias" aria-label="Gráfico de status do estoque por categoria"></canvas>
+            </div>
+            <div id="chartCategoriasLegend" class="chart-legend chart-legend-grid"></div>
+        </div>
+    </div>
+
+    <div class="quick-panel" style="margin-bottom: 30px;">
         <div class="quick-actions">
-            <h3><i class="ph-duotone ph-lightning"></i> Ações Rápidas</h3>
+            <h3><i class="fas fa-bolt"></i> Ações Rápidas</h3>
             <div class="action-buttons">
                 <a href="/inventario" class="btn-secondary">
-                    <i class="ph-duotone ph-pill"></i> Gerenciar Inventário
+                    <i class="fas fa-pills"></i> Gerenciar Inventário
                 </a>
                 <a href="/doacoes" class="btn-primary">
-                    <i class="ph-duotone ph-plus-circle"></i> Registrar Doação
+                    <i class="fas fa-plus"></i> Registrar Doação
                 </a>
                 <a href="/pacientes" class="btn-secondary">
-                    <i class="ph-duotone ph-users"></i> Gerenciar Pacientes
+                    <i class="fas fa-user-injured"></i> Gerenciar Pacientes
                 </a>
-                <a href="/prescriptions" class="btn-secondary">
-                    <i class="ph-duotone ph-file-text"></i> Receituário Digital
+                <a href="/receituario" class="btn-secondary">
+                    <i class="fas fa-prescription"></i> Receituário Digital
                 </a>
                 <a href="/medicos" class="btn-secondary">
-                    <i class="ph-duotone ph-stethoscope"></i> Cadastrar Médico
-                </a>
-                <a href="/academico/monitoramento-iot" class="btn-secondary">
-                    <i class="ph-duotone ph-thermometer-simple"></i> Monitoramento IoT
+                    <i class="fas fa-user-md"></i> Cadastrar Médico
                 </a>
                 <a href="/relatorios" class="btn-secondary">
-                    <i class="ph-duotone ph-chart-line-up"></i> Ver Relatórios
+                    <i class="fas fa-chart-bar"></i> Ver Relatórios
                 </a>
             </div>
         </div>
     </div>
 
-    <div class="recent-two-col" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:20px; margin-top:24px;">
-        <div class="recent-section">
-            <div class="section-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                <h3><i class="ph-duotone ph-clock-counter-clockwise"></i> Medicamentos no Inventário</h3>
-                <a href="/inventario" class="forgot-link">Ver todos <i class="ph-bold ph-arrow-right"></i></a>
-            </div>
-            <div class="table-wrapper">
-                <table class="styled-table">
-                    <thead>
-                        <tr>
-                            <th>Status</th>
-                            <th>Medicamento</th>
-                            <th>Validade</th>
-                            <th>Qtd.</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% ultimosMedicamentos.forEach(function(med) { %>
-                        <tr>
-                            <td>
-                                <% if (med.status_semaforo === 0) { %>
-                                    <span class="status-pill green">Seguro</span>
-                                <% } else if (med.status_semaforo === 1) { %>
-                                    <span class="status-pill yellow">Atenção</span>
-                                <% } else { %>
-                                    <span class="status-pill red">Vencido</span>
-                                <% } %>
-                            </td>
-                            <td><strong><%= med.nome %></strong></td>
-                            <td><%= med.data_validade %></td>
-                            <td><%= med.quantidade %> un.</td>
-                        </tr>
-                        <% }); %>
-                    </tbody>
-                </table>
-            </div>
+    <% if (typeof proximos_vencimento !== 'undefined' && proximos_vencimento && proximos_vencimento.length > 0) { %>
+    <div class="recent-section" style="margin-bottom: 30px;">
+        <div class="section-header">
+            <h3><i class="fas fa-clock"></i> Próximos do Vencimento</h3>
+            <a href="/relatorios" class="forgot-link">
+                Ver relatório completo <i class="fas fa-arrow-right"></i>
+            </a>
         </div>
+        <div class="table-wrapper">
+            <table class="styled-table">
+                <thead>
+                    <tr>
+                        <th>Medicamento</th>
+                        <th>Lote</th>
+                        <th>Vencimento</th>
+                        <th>Qtd.</th>
+                        <th>Dias Restantes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% proximos_vencimento.forEach(function(m) { %>
+                    <% 
+                        const valDate = m.data_validade ? new Date(m.data_validade) : new Date();
+                        const hoje = new Date();
+                        const dias = Math.ceil((valDate.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
+                    %>
+                    <tr>
+                        <td><strong><%= m.nome %></strong></td>
+                        <td><code class="lote-code"><%= m.lote %></code></td>
+                        <td><%= valDate.toLocaleDateString('pt-BR') %></td>
+                        <td><%= m.quantidade %> un.</td>
+                        <td>
+                            <span class="status-pill yellow">
+                                <i class="fas fa-clock"></i> <%= dias %> dia(s)
+                            </span>
+                        </td>
+                    </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <% } %>
 
-        <div class="recent-section">
-            <div class="section-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                <h3><i class="ph-duotone ph-thermometer-simple"></i> Sensores IoT (Cadeia de Frio)</h3>
-                <a href="/academico/monitoramento-iot" class="forgot-link">Ver detalhes <i class="ph-bold ph-arrow-right"></i></a>
+    <% if (typeof medicamentos !== 'undefined' && medicamentos && medicamentos.length > 0) { %>
+    <div class="recent-section" style="margin-bottom: 30px;">
+        <div class="section-header">
+            <h3><i class="fas fa-history"></i> Últimos Medicamentos Cadastrados</h3>
+            <a href="/inventario" class="forgot-link">
+                Ver todos <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+        <div class="table-wrapper">
+            <table class="styled-table">
+                <thead>
+                    <tr>
+                        <th>Status</th>
+                        <th>Medicamento</th>
+                        <th>Validade</th>
+                        <th>Qtd.</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% medicamentos.forEach(function(med) { %>
+                    <tr>
+                        <td>
+                            <% if (med.status_semaforo === 0) { %>
+                                <span class="status-pill green"><i class="fas fa-circle"></i> Seguro</span>
+                            <% } else if (med.status_semaforo === 1) { %>
+                                <span class="status-pill yellow"><i class="fas fa-circle"></i> Atenção</span>
+                            <% } else { %>
+                                <span class="status-pill red"><i class="fas fa-circle"></i> Vencido</span>
+                            <% } %>
+                        </td>
+                        <td><strong><%= med.nome %></strong></td>
+                        <td><%= med.data_validade ? new Date(med.data_validade).toLocaleDateString('pt-BR') : '-' %></td>
+                        <td><%= med.quantidade %> un.</td>
+                    </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <% } %>
+
+    <% if ((typeof ultimos_medicos !== 'undefined' && ultimos_medicos && ultimos_medicos.length > 0) || (typeof ultimas_farmacias !== 'undefined' && ultimas_farmacias && ultimas_farmacias.length > 0)) { %>
+    <div class="recent-two-col" style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 30px;">
+        <% if (typeof ultimos_medicos !== 'undefined' && ultimos_medicos && ultimos_medicos.length > 0) { %>
+        <div class="recent-section" style="flex:1; min-width: 300px;">
+            <div class="section-header">
+                <h3><i class="fas fa-user-md"></i> Últimos Médicos</h3>
+                <a href="/medicos" class="forgot-link">Ver todos <i class="fas fa-arrow-right"></i></a>
             </div>
-            <div style="display:flex; flex-direction:column; gap:12px;">
-                <% iotDispositivos.forEach(function(dispositivo) { %>
-                <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:10px; padding:12px 16px; display:flex; justify-content:space-between; align-items:center;">
-                    <div>
-                        <div style="font-weight:600;"><%= dispositivo.nome %></div>
-                        <div style="font-size:0.8rem; color:var(--text-muted);"><%= dispositivo.local %></div>
-                    </div>
-                    <div style="text-align:right;">
-                        <div style="font-size:1.2rem; font-weight:700; color:var(--primary);"><%= dispositivo.temperatura.toFixed(1) %> °C</div>
-                        <div style="font-size:0.8rem; color:var(--text-muted);"><i class="ph-duotone ph-drop"></i> <%= dispositivo.umidade %>% | <span style="color:#10b981;">● Online</span></div>
+            <div class="recent-cards">
+                <% ultimos_medicos.forEach(function(m) { %>
+                <div class="recent-card">
+                    <div class="recent-card-icon purple"><i class="fas fa-user-md"></i></div>
+                    <div class="recent-card-info">
+                        <strong>Dr(a). <%= m.nome %></strong>
+                        <span><%= m.especialidade %> &bull; <%= m.crm %></span>
                     </div>
                 </div>
                 <% }); %>
             </div>
         </div>
+        <% } %>
+        <% if (typeof ultimas_farmacias !== 'undefined' && ultimas_farmacias && ultimas_farmacias.length > 0) { %>
+        <div class="recent-section" style="flex:1; min-width: 300px;">
+            <div class="section-header">
+                <h3><i class="fas fa-hospital"></i> Últimas Farmácias</h3>
+                <a href="/farmacias" class="forgot-link">Ver todas <i class="fas fa-arrow-right"></i></a>
+            </div>
+            <div class="recent-cards">
+                <% ultimas_farmacias.forEach(function(f) { %>
+                <div class="recent-card">
+                    <div class="recent-card-icon teal"><i class="fas fa-hospital"></i></div>
+                    <div class="recent-card-info">
+                        <strong><%= f.nome_fantasia %></strong>
+                        <span><%= f.responsavel %> &bull; <%= f.cnpj %></span>
+                    </div>
+                </div>
+                <% }); %>
+            </div>
+        </div>
+        <% } %>
     </div>
+    <% } %>
 
 </div>
+
+<script src="/static/js/chart.umd.min.js"></script>
+<script>
+(function () {
+    if (typeof Chart === 'undefined') return;
+    const labelsDoacoes = <%- JSON.stringify(typeof labels_doacoes !== 'undefined' ? labels_doacoes : ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun']) %>;
+    const dadosDoacoes = <%- JSON.stringify(typeof doacoes_mensais !== 'undefined' ? doacoes_mensais : [12, 18, 25, 30, 22, 35]) %>;
+    const statusEstoque = <%- JSON.stringify(typeof estoque_status !== 'undefined' ? estoque_status : { 'Analgésicos': 45, 'Antibióticos': 30, 'Anti-inflamatórios': 25, 'Outros': 15 }) %>;
+    const cores = ['#10b981', '#f59e0b', '#ef4444', '#0284c7'];
+
+    const ctxDoacoes = document.getElementById('chartDoacoes');
+    if (ctxDoacoes) new Chart(ctxDoacoes, {
+        type: 'line',
+        data: {
+            labels: labelsDoacoes,
+            datasets: [{
+                label: 'Doações Recebidas',
+                data: dadosDoacoes,
+                borderColor: '#38bdf8',
+                backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                fill: true,
+                tension: 0.4,
+                borderWidth: 2,
+                pointRadius: 3,
+                pointHoverRadius: 5,
+                pointBackgroundColor: '#38bdf8'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: { backgroundColor: '#151c2a', borderColor: '#334155', borderWidth: 1 }
+            },
+            scales: {
+                x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } },
+                y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b', precision: 0 } }
+            }
+        }
+    });
+
+    const ctxCategorias = document.getElementById('chartCategorias');
+    const nomesCategorias = Object.keys(statusEstoque);
+    const valoresCategorias = Object.values(statusEstoque);
+    const totalEstoque = valoresCategorias.reduce((soma, valor) => soma + valor, 0);
+    if (ctxCategorias) new Chart(ctxCategorias, {
+        type: 'doughnut',
+        data: {
+            labels: nomesCategorias,
+            datasets: [{
+                data: valoresCategorias.some(Boolean) ? valoresCategorias : [1, 1, 1, 1],
+                backgroundColor: cores,
+                borderColor: '#151c2a',
+                borderWidth: 4,
+                hoverOffset: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '68%',
+            plugins: {
+                legend: { display: false },
+                tooltip: { backgroundColor: '#151c2a', borderColor: '#334155', borderWidth: 1 }
+            }
+        }
+    });
+
+    const legend = document.getElementById('chartCategoriasLegend');
+    if (legend) {
+        legend.innerHTML = '';
+        nomesCategorias.forEach((nome, indice) => {
+            const percentual = totalEstoque ? Math.round(statusEstoque[nome] / totalEstoque * 100) : 0;
+            legend.insertAdjacentHTML('beforeend',
+                `<span class="chart-legend-item"><span class="legend-dot" style="background:${cores[indice % cores.length]}"></span>${nome} <strong>${percentual}%</strong></span>`
+            );
+        });
+    }
+})();
+</script>
 
 <%- include('layout/footer') %>

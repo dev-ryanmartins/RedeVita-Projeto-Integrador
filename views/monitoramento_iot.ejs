@@ -16,6 +16,102 @@
         </div>
     </div>
 
+    <!-- Bloco do Gráfico de Variação Térmica Premium IoT -->
+    <div class="card mb-4" style="background: linear-gradient(180deg, rgba(30, 41, 59, 0.6) 0%, rgba(21, 28, 42, 0.95) 100%), var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin-top: 20px; box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5), 0 0 1px rgba(56, 189, 248, 0.2); backdrop-filter: blur(8px); position: relative; overflow: hidden;">
+        <!-- Elemento de brilho sutil de fundo -->
+        <div style="position: absolute; top: -80px; right: -80px; width: 220px; height: 220px; background: radial-gradient(circle, rgba(56, 189, 248, 0.12) 0%, transparent 70%); pointer-events: none;"></div>
+        <div style="position: absolute; bottom: -80px; left: -80px; width: 220px; height: 220px; background: radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 70%); pointer-events: none;"></div>
+
+        <div class="card-body" style="position: relative; z-index: 1;">
+            <!-- Cabeçalho com controles e filtro de tempo -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 14px;">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="width: 36px; height: 36px; border-radius: 10px; background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.25); display: flex; align-items: center; justify-content: center; color: #38bdf8; font-size: 1.25rem;">
+                            <i class="ph-duotone ph-chart-line-up"></i>
+                        </span>
+                        <div>
+                            <h3 style="font-size: 1.2rem; font-weight: 700; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 8px;">
+                                Variação Térmica em Tempo Real
+                            </h3>
+                            <p style="font-size: 0.8rem; color: var(--text-muted); margin: 2px 0 0 0;">
+                                Curva contínua de monitoramento de estabilidade da Cadeia de Frio (RDC 430/2020)
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <span class="status-pill green" style="font-size: 0.75rem; padding: 6px 12px; border-radius: 20px;">
+                        ● AO VIVO • TELEMETRIA ATIVA
+                    </span>
+                    <div style="display: flex; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); border-radius: 10px; padding: 3px; gap: 3px;">
+                        <button type="button" class="btn-period active" onclick="alterarPeriodoGrafico('24h', this)" style="background: rgba(56, 189, 248, 0.2); border: 1px solid rgba(56, 189, 248, 0.4); color: #38bdf8; font-size: 0.78rem; font-weight: 600; padding: 4px 12px; border-radius: 7px; cursor: pointer; transition: all 0.2s ease;">24 Horas</button>
+                        <button type="button" class="btn-period" onclick="alterarPeriodoGrafico('7d', this)" style="background: transparent; border: 1px solid transparent; color: var(--text-muted); font-size: 0.78rem; font-weight: 600; padding: 4px 12px; border-radius: 7px; cursor: pointer; transition: all 0.2s ease;">7 Dias</button>
+                        <button type="button" class="btn-period" onclick="alterarPeriodoGrafico('30d', this)" style="background: transparent; border: 1px solid transparent; color: var(--text-muted); font-size: 0.78rem; font-weight: 600; padding: 4px 12px; border-radius: 7px; cursor: pointer; transition: all 0.2s ease;">30 Dias</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mini Painel de Métricas e Filtro Dinâmico de Sensores -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 20px;">
+                <div id="kpi-camara" onclick="toggleDataset(0)" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 10px; padding: 12px 14px; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: space-between;">
+                    <div>
+                        <div style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em; display: flex; align-items: center; gap: 6px;">
+                            <span style="width: 8px; height: 8px; border-radius: 50%; background: #38bdf8; display: inline-block;"></span>
+                            Câmara Fria Central
+                        </div>
+                        <div style="font-size: 1.35rem; font-weight: 800; color: #38bdf8; margin-top: 2px;">
+                            4.2 °C <span style="font-size: 0.75rem; font-weight: 500; color: #10b981;">(Ideal 2-8°C)</span>
+                        </div>
+                    </div>
+                    <i class="ph-duotone ph-eye" id="eye-camara" style="color: #38bdf8; font-size: 1.2rem;"></i>
+                </div>
+
+                <div id="kpi-geladeira" onclick="toggleDataset(1)" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 10px; padding: 12px 14px; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: space-between;">
+                    <div>
+                        <div style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em; display: flex; align-items: center; gap: 6px;">
+                            <span style="width: 8px; height: 8px; border-radius: 50%; background: #10b981; display: inline-block;"></span>
+                            Geladeira Vacinas
+                        </div>
+                        <div style="font-size: 1.35rem; font-weight: 800; color: #10b981; margin-top: 2px;">
+                            5.1 °C <span style="font-size: 0.75rem; font-weight: 500; color: #10b981;">(Estável)</span>
+                        </div>
+                    </div>
+                    <i class="ph-duotone ph-eye" id="eye-geladeira" style="color: #10b981; font-size: 1.2rem;"></i>
+                </div>
+
+                <div id="kpi-ambiente" onclick="toggleDataset(2)" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(245, 158, 11, 0.35); border-radius: 10px; padding: 12px 14px; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: space-between;">
+                    <div>
+                        <div style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em; display: flex; align-items: center; gap: 6px;">
+                            <span style="width: 8px; height: 8px; border-radius: 50%; background: #f59e0b; display: inline-block;"></span>
+                            Sensor Ambiente
+                        </div>
+                        <div style="font-size: 1.35rem; font-weight: 800; color: #f59e0b; margin-top: 2px;">
+                            22.4 °C <span style="font-size: 0.75rem; font-weight: 500; color: #94a3b8;">(15-25°C)</span>
+                        </div>
+                    </div>
+                    <i class="ph-duotone ph-eye" id="eye-ambiente" style="color: #f59e0b; font-size: 1.2rem;"></i>
+                </div>
+            </div>
+
+            <!-- Canvas com Altura Expandida e Moldura Suave -->
+            <div style="position: relative; height: 340px; width: 100%; background: rgba(11, 15, 23, 0.5); border-radius: 12px; padding: 16px; border: 1px solid rgba(255, 255, 255, 0.05);">
+                <canvas id="iotChart"></canvas>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; font-size: 0.78rem; color: var(--text-muted);">
+                <span style="display: flex; align-items: center; gap: 6px;">
+                    <i class="ph-duotone ph-info" style="color: #38bdf8;"></i>
+                    Linha contínua de referência normativa RDC 430: Zona segura de refrigeração entre 2.0°C e 8.0°C.
+                </span>
+                <button type="button" onclick="atualizarLeiturasDinamicas()" style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.25); color: #38bdf8; font-size: 0.75rem; padding: 4px 10px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                    <i class="ph-duotone ph-arrows-clockwise"></i> Atualizar Telemetria
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:20px; margin-top:20px;">
         <% iotDispositivos.forEach(function(disp) { %>
         <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:20px; display:flex; flex-direction:column; gap:16px;">
@@ -65,5 +161,276 @@
         </div>
     </div>
 </div>
+
+<script src="/static/js/chart.umd.min.js"></script>
+<script>
+// Dados padronizados por período para telemetria contínua
+const dadosTelemetria = {
+    '24h': {
+        labels: ['00:00', '02:00', '04:00', '06:00', '08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00', '22:00', '24:00'],
+        camara: [4.2, 4.1, 4.0, 4.3, 4.5, 5.0, 4.8, 4.6, 4.4, 4.2, 4.1, 4.3, 4.2],
+        geladeira: [5.1, 5.2, 4.9, 5.0, 5.3, 5.5, 5.2, 5.1, 5.0, 5.1, 5.2, 5.0, 5.1],
+        ambiente: [22.4, 21.8, 21.5, 22.0, 23.5, 25.0, 25.4, 25.1, 24.0, 23.2, 22.8, 22.5, 22.4]
+    },
+    '7d': {
+        labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
+        camara: [4.1, 4.3, 4.2, 4.0, 4.4, 4.2, 4.1],
+        geladeira: [5.0, 5.2, 5.1, 4.9, 5.3, 5.0, 5.1],
+        ambiente: [22.0, 23.1, 22.5, 21.9, 24.2, 23.0, 22.4]
+    },
+    '30d': {
+        labels: ['Semana 1', 'Semana 2', 'Semana 3', 'Semana 4'],
+        camara: [4.2, 4.1, 4.3, 4.2],
+        geladeira: [5.1, 5.0, 5.2, 5.1],
+        ambiente: [22.5, 23.0, 22.8, 22.4]
+    }
+};
+
+let periodoAtual = '24h';
+
+function inicializarGrafico() {
+    const canvas = document.getElementById('iotChart');
+    if (!canvas || typeof Chart === 'undefined') return;
+
+    const ctx = canvas.getContext('2d');
+
+    if (window.iotChartInstance) {
+        window.iotChartInstance.destroy();
+    }
+
+    // Gradients vibrantes de preenchimento
+    const gradientCamara = ctx.createLinearGradient(0, 0, 0, 300);
+    gradientCamara.addColorStop(0, 'rgba(56, 189, 248, 0.45)');
+    gradientCamara.addColorStop(0.7, 'rgba(56, 189, 248, 0.08)');
+    gradientCamara.addColorStop(1, 'rgba(56, 189, 248, 0.0)');
+
+    const gradientGeladeira = ctx.createLinearGradient(0, 0, 0, 300);
+    gradientGeladeira.addColorStop(0, 'rgba(16, 185, 129, 0.4)');
+    gradientGeladeira.addColorStop(0.7, 'rgba(16, 185, 129, 0.06)');
+    gradientGeladeira.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
+
+    const gradientAmbiente = ctx.createLinearGradient(0, 0, 0, 300);
+    gradientAmbiente.addColorStop(0, 'rgba(245, 158, 11, 0.25)');
+    gradientAmbiente.addColorStop(1, 'rgba(245, 158, 11, 0.0)');
+
+    const dataset = dadosTelemetria[periodoAtual];
+
+    window.iotChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: dataset.labels,
+            datasets: [
+                {
+                    label: 'Câmara Fria Central 01 (°C)',
+                    data: dataset.camara,
+                    borderColor: '#38bdf8',
+                    borderWidth: 3,
+                    backgroundColor: gradientCamara,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointHoverRadius: 8,
+                    pointBackgroundColor: '#38bdf8',
+                    pointBorderColor: '#0f172a',
+                    pointBorderWidth: 2,
+                    pointHoverBorderWidth: 3,
+                    pointHoverBorderColor: '#ffffff'
+                },
+                {
+                    label: 'Geladeira Vacinas & Insulinas (°C)',
+                    data: dataset.geladeira,
+                    borderColor: '#10b981',
+                    borderWidth: 3,
+                    backgroundColor: gradientGeladeira,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointHoverRadius: 8,
+                    pointBackgroundColor: '#10b981',
+                    pointBorderColor: '#0f172a',
+                    pointBorderWidth: 2,
+                    pointHoverBorderWidth: 3,
+                    pointHoverBorderColor: '#ffffff'
+                },
+                {
+                    label: 'Sensor Temperatura Ambiente (°C)',
+                    data: dataset.ambiente,
+                    borderColor: '#f59e0b',
+                    borderWidth: 2,
+                    borderDash: [6, 6],
+                    backgroundColor: gradientAmbiente,
+                    fill: false,
+                    tension: 0.4,
+                    pointRadius: 3,
+                    pointHoverRadius: 7,
+                    pointBackgroundColor: '#f59e0b',
+                    pointBorderColor: '#0f172a',
+                    pointBorderWidth: 2
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: {
+                duration: 1000,
+                easing: 'easeOutQuart'
+            },
+            interaction: {
+                mode: 'index',
+                intersect: false
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    align: 'end',
+                    labels: {
+                        color: '#94a3b8',
+                        usePointStyle: true,
+                        pointStyle: 'circle',
+                        padding: 18,
+                        font: { family: 'Inter', size: 12, weight: '600' }
+                    }
+                },
+                tooltip: {
+                    enabled: true,
+                    backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                    titleColor: '#f8fafc',
+                    bodyColor: '#cbd5e1',
+                    borderColor: '#334155',
+                    borderWidth: 1,
+                    padding: 14,
+                    cornerRadius: 10,
+                    titleFont: { family: 'Inter', size: 13, weight: '700' },
+                    bodyFont: { family: 'Inter', size: 12 },
+                    boxPadding: 6,
+                    usePointStyle: true,
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            let value = context.parsed.y;
+                            let status = '';
+                            if (label.includes('Ambiente')) {
+                                status = value <= 25 ? ' [Dentro do Padrão Ambiente]' : ' [Alerta Térmico]';
+                            } else {
+                                status = (value >= 2.0 && value <= 8.0) ? ' [Conforme RDC 430]' : ' [Fora da Faixa de Frio]';
+                            }
+                            return ` ${label}: ${value.toFixed(1)} °C${status}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        color: 'rgba(51, 65, 85, 0.3)',
+                        drawBorder: false
+                    },
+                    ticks: {
+                        color: '#94a3b8',
+                        font: { family: 'Inter', size: 11, weight: '500' }
+                    }
+                },
+                y: {
+                    min: 0,
+                    max: 30,
+                    grid: {
+                        color: 'rgba(51, 65, 85, 0.3)',
+                        drawBorder: false
+                    },
+                    ticks: {
+                        color: '#94a3b8',
+                        stepSize: 5,
+                        font: { family: 'Inter', size: 11, weight: '500' },
+                        callback: function(value) {
+                            return value + ' °C';
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Temperatura (°C)',
+                        color: '#64748b',
+                        font: { family: 'Inter', size: 11, weight: '600' }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function toggleDataset(index) {
+    if (!window.iotChartInstance) return;
+    const chart = window.iotChartInstance;
+    const isVisible = chart.isDatasetVisible(index);
+
+    if (isVisible) {
+        chart.hide(index);
+    } else {
+        chart.show(index);
+    }
+
+    // Atualiza feedback nos KPI Cards
+    const cards = ['kpi-camara', 'kpi-geladeira', 'kpi-ambiente'];
+    const eyes = ['eye-camara', 'eye-geladeira', 'eye-ambiente'];
+    const cardEl = document.getElementById(cards[index]);
+    const eyeEl = document.getElementById(eyes[index]);
+
+    if (cardEl && eyeEl) {
+        if (isVisible) {
+            cardEl.style.opacity = '0.4';
+            eyeEl.className = 'ph-duotone ph-eye-slash';
+        } else {
+            cardEl.style.opacity = '1';
+            eyeEl.className = 'ph-duotone ph-eye';
+        }
+    }
+}
+
+function alterarPeriodoGrafico(periodo, btn) {
+    periodoAtual = periodo;
+    
+    // Atualiza estilo dos botões
+    document.querySelectorAll('.btn-period').forEach(b => {
+        b.style.background = 'transparent';
+        b.style.borderColor = 'transparent';
+        b.style.color = 'var(--text-muted)';
+        b.classList.remove('active');
+    });
+
+    if (btn) {
+        btn.style.background = 'rgba(56, 189, 248, 0.2)';
+        btn.style.borderColor = 'rgba(56, 189, 248, 0.4)';
+        btn.style.color = '#38bdf8';
+        btn.classList.add('active');
+    }
+
+    if (window.iotChartInstance) {
+        const dataset = dadosTelemetria[periodoAtual];
+        window.iotChartInstance.data.labels = dataset.labels;
+        window.iotChartInstance.data.datasets[0].data = dataset.camara;
+        window.iotChartInstance.data.datasets[1].data = dataset.geladeira;
+        window.iotChartInstance.data.datasets[2].data = dataset.ambiente;
+        window.iotChartInstance.update();
+    }
+}
+
+function atualizarLeiturasDinamicas() {
+    if (!window.iotChartInstance) return;
+    const dataset = window.iotChartInstance.data.datasets;
+
+    dataset[0].data = dataset[0].data.map(val => +(val + (Math.random() * 0.4 - 0.2)).toFixed(1));
+    dataset[1].data = dataset[1].data.map(val => +(val + (Math.random() * 0.4 - 0.2)).toFixed(1));
+    dataset[2].data = dataset[2].data.map(val => +(val + (Math.random() * 0.6 - 0.3)).toFixed(1));
+
+    window.iotChartInstance.update('active');
+}
+
+document.addEventListener('DOMContentLoaded', inicializarGrafico);
+
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    inicializarGrafico();
+}
+</script>
 
 <%- include('layout/footer') %>

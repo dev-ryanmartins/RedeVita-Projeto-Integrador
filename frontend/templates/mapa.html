@@ -1,0 +1,946 @@
+{% extends "base.html" %}
+{% block title %}Mapa de Saúde — RedeVita{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/leaflet.css') }}" />
+
+<style>
+  .mapa-layout {
+    display: flex;
+    height: calc(100vh - 62px);
+    overflow: hidden;
+  }
+
+  .mapa-sidebar {
+    width: 320px;
+    min-width: 270px;
+    background: rgba(15, 23, 42, 0.95);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 10;
+    flex-shrink: 0;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+
+  .mapa-sidebar-header {
+    padding: 16px 18px 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .mapa-sidebar-header h2 {
+    font-size: 1rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    color: #e2e8f0;
+  }
+  .mapa-sidebar-header h2 i { color: #38bdf8; }
+
+  .mapa-search-bar { display: flex; gap: 8px; }
+
+  .mapa-search-input {
+    flex: 1;
+    padding: 9px 16px;
+    background: rgba(15, 23, 42, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    border-radius: 8px;
+    color: #e2e8f0;
+    font-size: 0.86rem;
+    outline: none;
+    box-shadow: none;
+    transition: border-color 0.2s;
+    font-family: inherit;
+  }
+  .mapa-search-input::placeholder { color: #64748b; }
+  .mapa-search-input:focus { border-color: #38bdf8; box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.15); }
+
+  .mapa-search-btn {
+    padding: 9px 13px;
+    background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 0.88rem;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .mapa-search-btn:hover { background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); }
+
+  .mapa-filters {
+    padding: 12px 18px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .mapa-filter-section { display: flex; flex-direction: column; gap: 6px; }
+
+  .mapa-filter-label {
+    font-size: 0.68rem;
+    color: #64748b;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+  }
+
+  .mapa-filter-options { display: flex; flex-direction: column; gap: 5px; }
+
+  .mapa-filter-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: #cbd5e1;
+    user-select: none;
+  }
+
+  .mapa-filter-item input[type="checkbox"] { display: none; }
+
+  .filter-dot {
+    width: 11px; height: 11px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    border: 2px solid rgba(255,255,255,0.2);
+    transition: opacity 0.2s;
+  }
+  .filter-dot.blue    { background: #38bdf8; }
+  .filter-dot.green   { background: #10b981; }
+  .filter-dot.red     { background: #ef4444; }
+  .filter-dot.orange  { background: #f59e0b; }
+  .filter-dot.teal    { background: #14b8a6; }
+
+  .mapa-filter-item input:not(:checked) ~ .filter-dot { opacity: 0.25; }
+  .mapa-filter-item input:not(:checked) ~ span:not(.filter-dot) { color: #64748b; }
+
+  .filter-count {
+    margin-left: auto;
+    font-size: 0.72rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 1px 7px;
+    color: #64748b;
+    min-width: 22px;
+    text-align: center;
+  }
+
+  .acesso-pills {
+    display: flex; gap: 6px;
+  }
+  .acesso-pill {
+    flex: 1; padding: 5px 0;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    color: #64748b;
+    font-size: 0.75rem; font-weight: 600;
+    cursor: pointer; transition: all 0.2s;
+    text-align: center;
+  }
+  .acesso-pill.active { border-color: #38bdf8; color: #38bdf8; background: rgba(56, 189, 248, 0.1); }
+  .acesso-pill:hover:not(.active) { border-color: #38bdf8; color: #38bdf8; }
+
+  .mapa-results { flex: 1; overflow-y: auto; padding: 0; }
+  .mapa-results::-webkit-scrollbar { width: 4px; }
+  .mapa-results::-webkit-scrollbar-track { background: transparent; }
+  .mapa-results::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 4px; }
+
+  .mapa-results-header {
+    padding: 10px 18px 7px;
+    font-size: 0.68rem;
+    color: #64748b;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    position: sticky; top: 0;
+    background: rgba(15, 23, 42, 0.95);
+    z-index: 1;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+
+  .mapa-result-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    padding: 10px 18px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .mapa-result-item:hover { background: rgba(255, 255, 255, 0.05); }
+  .mapa-result-item:last-child { border-bottom: none; }
+  .mapa-result-item.hidden { display: none; }
+
+  .result-icon {
+    width: 32px; height: 32px;
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.82rem;
+    flex-shrink: 0; margin-top: 1px;
+  }
+  .result-icon.blue   { background: rgba(56, 189, 248, 0.15);  color: #38bdf8; }
+  .result-icon.green  { background: rgba(16, 185, 129, 0.15);  color: #10b981; }
+  .result-icon.red    { background: rgba(239, 68, 68, 0.15);   color: #ef4444; }
+  .result-icon.orange { background: rgba(245, 158, 11, 0.15);  color: #f59e0b; }
+  .result-icon.teal   { background: rgba(20, 184, 166, 0.15);  color: #14b8a6; }
+
+  .result-info { min-width: 0; flex: 1; }
+  .result-name {
+    font-size: 0.85rem; font-weight: 600;
+    color: #e2e8f0;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .result-address {
+    font-size: 0.76rem; color: #64748b;
+    margin-top: 1px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .result-badges { display: flex; gap: 4px; margin-top: 4px; flex-wrap: wrap; }
+  .result-badge {
+    font-size: 0.67rem; padding: 1px 6px;
+    border-radius: 7px; font-weight: 700;
+    white-space: nowrap;
+  }
+  .result-badge.blue   { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.25); }
+  .result-badge.priv   { background: rgba(245, 158, 11, 0.1);  color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2); font-size: 0.63rem; }
+
+  #map, #mapa-container {
+    width: 100%;
+    height: 100%;
+    min-height: 500px;
+    border-radius: 12px;
+    background: #0f172a;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+
+  .mapa-canvas {
+    flex: 1;
+    position: relative;
+    min-height: 500px;
+    height: 100%;
+  }
+
+  .mapa-canvas #map {
+    width: 100%;
+    height: 100%;
+    min-height: 500px;
+    border-radius: 12px;
+    background: #0f172a;
+  }
+
+  .mapa-loading-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(15, 23, 42, 0.9);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(8px);
+  }
+
+  .mapa-spinner {
+    width: 40px; height: 40px;
+    border: 3px solid rgba(56, 189, 248, 0.3);
+    border-top-color: #38bdf8;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 16px;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .mapa-loading-overlay p {
+    color: #cbd5e1;
+    font-size: 0.9rem;
+    margin: 0;
+  }
+
+  .mapa-loading-overlay.hidden {
+    display: none;
+  }
+
+  .mapa-reset-btn {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+    border: none;
+    color: white;
+    cursor: pointer;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+    transition: all 0.2s;
+  }
+
+  .mapa-reset-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 16px rgba(14, 165, 233, 0.4);
+  }
+
+  .mapa-status-bar {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: #cbd5e1;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 100;
+    backdrop-filter: blur(8px);
+  }
+
+  .mapa-empty-results {
+    padding: 40px 20px;
+    text-align: center;
+    color: #64748b;
+  }
+
+  .mapa-empty-results i {
+    font-size: 2rem;
+    margin-bottom: 12px;
+    opacity: 0.5;
+  }
+
+  .mapa-empty-results p {
+    margin: 0;
+    font-size: 0.85rem;
+  }
+
+  @media (max-width: 768px) {
+    .mapa-sidebar {
+      width: 100%;
+      height: 40%;
+      order: 2;
+    }
+
+    .mapa-canvas {
+      height: 60%;
+      order: 1;
+    }
+
+    .mapa-layout {
+      flex-direction: column;
+    }
+
+    .mapa-reset-btn {
+      bottom: 80px;
+      right: 10px;
+    }
+
+    .mapa-status-bar {
+      bottom: 10px;
+      left: 10px;
+      right: 10px;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mapa-layout">
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="mapa-sidebar">
+    <div class="mapa-sidebar-header">
+      <h2><i class="fas fa-map-marked-alt"></i> Mapa de Saúde</h2>
+      <div class="mapa-search-bar">
+        <input type="text" id="mapaSearch" class="mapa-search-input"
+               placeholder="Buscar por CEP ou endereço…" autocomplete="off" maxlength="120">
+        <button class="mapa-search-btn" id="mapaSearchBtn" title="Buscar">
+          <i class="fas fa-search"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="mapa-filters">
+      <!-- Filtro: tipo de acesso -->
+      <div class="mapa-filter-section">
+        <span class="mapa-filter-label">Tipo de serviço</span>
+        <div class="acesso-pills">
+          <button class="acesso-pill active" data-acesso="todos" onclick="setAcesso('todos',this)">Todos</button>
+          <button class="acesso-pill" data-acesso="publico" onclick="setAcesso('publico',this)"><i class="fas fa-building" style="font-size:.7rem;margin-right:3px;"></i>Público</button>
+          <button class="acesso-pill" data-acesso="privado" onclick="setAcesso('privado',this)"><i class="fas fa-lock" style="font-size:.65rem;margin-right:3px;"></i>Privado</button>
+        </div>
+      </div>
+
+      <!-- Filtro: camadas -->
+      <div class="mapa-filter-section">
+        <span class="mapa-filter-label">Exibir no mapa</span>
+        <div class="mapa-filter-options">
+          <label class="mapa-filter-item">
+            <input type="checkbox" id="filterRedevita" checked onchange="toggleLayer('redevita',this.checked)">
+            <span class="filter-dot blue"></span>
+            <span>Pontos de Doação (RedeVita)</span>
+            <span class="filter-count" id="countRedevita">0</span>
+          </label>
+          <label class="mapa-filter-item">
+            <input type="checkbox" id="filterUPA" checked onchange="toggleLayer('upa',this.checked)">
+            <span class="filter-dot orange"></span>
+            <span>UPA — Pronto Atendimento</span>
+            <span class="filter-count" id="countUPA">0</span>
+          </label>
+          <label class="mapa-filter-item">
+            <input type="checkbox" id="filterUBS" checked onchange="toggleLayer('ubs',this.checked)">
+            <span class="filter-dot teal"></span>
+            <span>UBS / Posto de Saúde</span>
+            <span class="filter-count" id="countUBS">0</span>
+          </label>
+          <label class="mapa-filter-item">
+            <input type="checkbox" id="filterHospital" checked onchange="toggleLayer('hospital',this.checked)">
+            <span class="filter-dot red"></span>
+            <span>Hospital / Clínica</span>
+            <span class="filter-count" id="countHospital">0</span>
+          </label>
+          <label class="mapa-filter-item">
+            <input type="checkbox" id="filterFarmacias" checked onchange="toggleLayer('farmacia',this.checked)">
+            <span class="filter-dot green"></span>
+            <span>Farmácias</span>
+            <span class="filter-count" id="countFarmacias">0</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="mapa-results" id="mapaResults">
+      <div class="mapa-results-header">
+        <span>Resultados próximos</span>
+        <span id="mapaResultCount" style="font-size:0.72rem;color:#64748b;">—</span>
+      </div>
+      <div class="mapa-empty-results" id="mapaEmptyState">
+        <i class="fas fa-map-pin"></i>
+        Aguardando localização…
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── MAP ── -->
+  <div class="mapa-canvas">
+    <div class="mapa-loading-overlay" id="mapaLoading">
+      <div class="mapa-spinner"></div>
+      <p>Carregando Mapa de Saúde…</p>
+    </div>
+
+    <div id="map"></div>
+
+    <!-- Botão Resetar Localização -->
+    <button class="mapa-reset-btn" id="btnReset" title="Resetar localização" onclick="resetLocalizacao()">
+      <i class="fas fa-crosshairs"></i>
+    </button>
+
+    <div class="mapa-status-bar" id="mapaStatusBar">
+      <i class="fas fa-circle" style="font-size:0.45rem;"></i>
+      <span id="mapaStatusText">Obtendo sua localização…</span>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/leaflet.js') }}"></script>
+<script>
+(function () {
+
+  const FARMACIAS_REDEVITA = {{ farmacias_json | safe }};
+  const API_KEY = '{{ api_key }}';
+  const DEFAULT_LAT = {{ default_lat }};
+  const DEFAULT_LNG = {{ default_lng }};
+
+  const COLOR = {
+    redevita: '#38bdf8', upa: '#f59e0b', ubs: '#14b8a6', hospital: '#ef4444', farmacia: '#10b981',
+  };
+  const ICON_FA = {
+    redevita: 'fa-hand-holding-heart', upa: 'fa-ambulance', ubs: 'fa-clinic-medical',
+    hospital: 'fa-hospital', farmacia: 'fa-pills',
+  };
+  const LABEL = {
+    redevita: 'Ponto de Doação', upa: 'UPA', ubs: 'UBS / Posto de Saúde',
+    hospital: 'Hospital / Clínica', farmacia: 'Farmácia',
+  };
+  const COUNT_ID = {
+    redevita: 'countRedevita', upa: 'countUPA', ubs: 'countUBS',
+    hospital: 'countHospital', farmacia: 'countFarmacias',
+  };
+
+  let map = null;
+  let userLat = null, userLng = null;
+  let userMarker = null;
+  let markers = { redevita: [], upa: [], ubs: [], hospital: [], farmacia: [] };
+  let filtroAcesso = 'todos';
+  const contadores = { redevita: 0, upa: 0, ubs: 0, hospital: 0, farmacia: 0 };
+
+  function setStatus(msg) { document.getElementById('mapaStatusText').textContent = msg; }
+  function hideLoading() { document.getElementById('mapaLoading').classList.add('hidden'); }
+
+  function incCount(tipo) {
+    contadores[tipo]++;
+    document.getElementById(COUNT_ID[tipo]).textContent = contadores[tipo];
+    atualizarTotal();
+  }
+
+  function resetCount(tipo) {
+    contadores[tipo] = 0;
+    document.getElementById(COUNT_ID[tipo]).textContent = 0;
+  }
+
+  function atualizarTotal() {
+    const total = Object.values(contadores).reduce((a, b) => a + b, 0);
+    document.getElementById('mapaResultCount').textContent = total + ' locais';
+  }
+
+  function addResultItem(nome, endereco, tipo, acesso, lat, lng) {
+    const container = document.getElementById('mapaResults');
+    const empty = document.getElementById('mapaEmptyState');
+    if (empty) empty.remove();
+
+    const cor = COLOR[tipo] || '#38bdf8';
+    const icon = ICON_FA[tipo] || 'fa-map-pin';
+    const label = LABEL[tipo] || tipo;
+    const acessoBadge = acesso === 'publico'
+      ? '<span class="result-badge pub">Público</span>'
+      : '<span class="result-badge priv">Privado</span>';
+
+    const item = document.createElement('div');
+    item.className = 'mapa-result-item';
+    item.dataset.acesso = acesso;
+    item.dataset.tipo = tipo;
+    item.innerHTML = `
+      <div class="result-icon ${cor}"><i class="fas ${icon}"></i></div>
+      <div class="result-info">
+        <div class="result-name" title="${nome}">${nome}</div>
+        <div class="result-address" title="${endereco}">${endereco || 'Endereço não disponível'}</div>
+        <div class="result-badges">
+          <span class="result-badge ${cor}">${label}</span>
+          ${acessoBadge}
+        </div>
+      </div>`;
+    item.addEventListener('click', () => {
+      if (map) {
+        map.setCenter({ lat: lat, lng: lng });
+        map.setZoom(16);
+      }
+    });
+    container.appendChild(item);
+    aplicarFiltroAcesso();
+  }
+
+  function setAcesso(acesso, btn) {
+    filtroAcesso = acesso;
+    document.querySelectorAll('.acesso-pill').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    aplicarFiltroAcesso();
+  }
+  window.setAcesso = setAcesso;
+
+  function aplicarFiltroAcesso() {
+    document.querySelectorAll('.mapa-result-item').forEach(item => {
+      if (filtroAcesso === 'todos') {
+        item.classList.remove('hidden');
+      } else {
+        item.classList.toggle('hidden', item.dataset.acesso !== filtroAcesso);
+      }
+    });
+    const visiveis = document.querySelectorAll('.mapa-result-item:not(.hidden)').length;
+    document.getElementById('mapaResultCount').textContent = visiveis + ' locais';
+  }
+
+  function toggleLayer(tipo, visible) {
+    markers[tipo].forEach(marker => {
+      marker.setMap(visible ? map : null);
+    });
+  }
+  window.toggleLayer = toggleLayer;
+
+  function popupHTML(nome, endereco, tipo, acesso) {
+    const cor = COLOR[tipo] || '#38bdf8';
+    const acessoStr = acesso === 'publico' ? '🏛️ Público' : '🔒 Privado';
+    return `<div style="font-family:Inter,sans-serif;min-width:190px;max-width:240px">
+      <strong style="color:${cor};font-size:0.9rem">${nome}</strong><br>
+      <span style="color:#aaa;font-size:0.78rem">${endereco || 'Endereço não disponível'}</span>
+      <br><span style="color:#888;font-size:0.73rem">${LABEL[tipo] || tipo} · ${acessoStr}</span>
+    </div>`;
+  }
+
+  function loadGoogleMaps() {
+    if (!API_KEY || API_KEY.trim() === '') {
+      setStatus('Chave de API Google Maps não configurada. Configure GOOGLE_MAPS_API_KEY no ambiente.');
+      hideLoading();
+      const mapDiv = document.getElementById('map');
+      if (mapDiv) {
+        mapDiv.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#64748b;font-size:0.9rem;">Mapa indisponível - API Key não configurada</div>';
+      }
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${API_KEY}&callback=initMap`;
+    script.async = true;
+    script.defer = true;
+    script.onerror = () => {
+      setStatus('Erro ao carregar Google Maps. Verifique sua conexão.');
+      hideLoading();
+      const mapDiv = document.getElementById('map');
+      if (mapDiv) {
+        mapDiv.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;padding:20px;background:rgba(15,23,42,0.7);backdrop-filter:blur(12px);border:1px solid rgba(56,189,248,0.2);border-radius:12px;color:#64748b;font-size:0.9rem;"><i class="fas fa-map-marked-alt" style="font-size:2rem;color:#38bdf8;"></i><span>Erro ao carregar Google Maps</span><span style="font-size:0.8rem;">Verifique sua conexão</span></div>';
+      }
+    };
+    script.onload = () => {
+      // Força o redimensionamento após o carregamento do script
+      setTimeout(() => {
+        if (window.google && window.google.maps) {
+          google.maps.event.triggerOnce(window.map, 'idle', () => {
+            if (window.map) {
+              window.map.setCenter(window.map.getCenter());
+            }
+          });
+        }
+      }, 500);
+    };
+    document.head.appendChild(script);
+  }
+
+  window.initMap = function() {
+    try {
+      // Verifica se o contentor do mapa tem altura antes de inicializar
+      const mapDiv = document.getElementById('map');
+      if (!mapDiv) {
+        setStatus('Erro: Elemento do mapa não encontrado');
+        hideLoading();
+        return;
+      }
+
+      // Força o contentor a ter altura explícita
+      const computedStyle = window.getComputedStyle(mapDiv);
+      const height = computedStyle.height;
+      if (height === '0px' || height === 'auto') {
+        mapDiv.style.height = '500px';
+        mapDiv.style.width = '100%';
+      }
+
+      // Força o mapa a recalcular tamanho após carregamento
+      setTimeout(() => {
+        if (map) {
+          google.maps.event.trigger(map, 'resize');
+        }
+      }, 100);
+
+      map = new google.maps.Map(mapDiv, {
+        center: { lat: DEFAULT_LAT, lng: DEFAULT_LNG },
+        zoom: 13,
+        styles: [
+          {
+            "featureType": "all",
+            "elementType": "geometry",
+            "stylers": [{"color": "#0f172a"}]
+          },
+          {
+            "featureType": "all",
+            "elementType": "labels.text.fill",
+            "stylers": [{"color": "#cbd5e1"}]
+          },
+          {
+            "featureType": "all",
+            "elementType": "labels.text.stroke",
+            "stylers": [{"color": "#0f172a"}]
+          },
+          {
+            "featureType": "administrative",
+            "elementType": "geometry",
+            "stylers": [{"color": "#1e293b"}]
+          },
+          {
+            "featureType": "road",
+            "elementType": "geometry",
+            "stylers": [{"color": "#1e293b"}]
+          },
+          {
+            "featureType": "road",
+            "elementType": "geometry.stroke",
+            "stylers": [{"color": "#0f172a"}]
+          },
+          {
+            "featureType": "water",
+            "elementType": "geometry",
+            "stylers": [{"color": "#0c4a6e"}]
+          },
+          {
+            "featureType": "poi",
+            "elementType": "geometry",
+            "stylers": [{"color": "#1e293b"}]
+          }
+        ]
+      });
+      
+      map.addListener('tilesloaded', function() {
+        hideLoading();
+      });
+      
+      map.addListener('idle', function() {
+        hideLoading();
+      });
+      
+      map.addListener('tileloaderror', function() {
+        setStatus('Aviso: Alguns tiles do mapa não puderam ser carregados devido a instabilidade de rede');
+      });
+
+      FARMACIAS_REDEVITA.forEach(farmacia => {
+        addFarmaciaMarker(farmacia);
+      });
+
+      hideLoading();
+      setStatus('Mapa carregado com sucesso');
+
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            userLat = position.coords.latitude;
+            userLng = position.coords.longitude;
+            updateUserLocation();
+          },
+          (error) => {
+            setStatus('Localização não disponível');
+          }
+        );
+      }
+
+    } catch (error) {
+      setStatus('Erro ao inicializar mapa: ' + error.message);
+      hideLoading();
+    }
+  };
+
+  function addFarmaciaMarker(farmacia) {
+    if (!map) return;
+
+    const marker = new google.maps.Marker({
+      position: { lat: farmacia.lat, lng: farmacia.lng },
+      map: map,
+      title: farmacia.nome,
+      icon: {
+        path: google.maps.SymbolPath.CIRCLE,
+        scale: 8,
+        fillColor: COLOR.farmacia,
+        fillOpacity: 0.8,
+        strokeColor: '#ffffff',
+        strokeWeight: 2
+      }
+    });
+
+    const infoWindow = new google.maps.InfoWindow({
+      content: popupHTML(farmacia.nome, farmacia.endereco, 'farmacia', 'privado')
+    });
+
+    marker.addListener('click', () => {
+      infoWindow.open(map, marker);
+    });
+
+    markers.farmacia.push(marker);
+    incCount('farmacia');
+    addResultItem(farmacia.nome, farmacia.endereco, 'farmacia', 'privado', farmacia.lat, farmacia.lng);
+  }
+
+  function updateUserLocation() {
+    if (!map || !userLat || !userLng) return;
+
+    if (userMarker) {
+      userMarker.setMap(null);
+    }
+
+    userMarker = new google.maps.Marker({
+      position: { lat: userLat, lng: userLng },
+      map: map,
+      title: 'Sua localização',
+      icon: {
+        path: google.maps.SymbolPath.CIRCLE,
+        scale: 10,
+        fillColor: '#f59e0b',
+        fillOpacity: 0.9,
+        strokeColor: '#ffffff',
+        strokeWeight: 3
+      }
+    });
+
+    map.setCenter({ lat: userLat, lng: userLng });
+    map.setZoom(15);
+    setStatus('Localização encontrada');
+  }
+
+  function resetLocalizacao() {
+    if (map) {
+      map.setCenter({ lat: DEFAULT_LAT, lng: DEFAULT_LNG });
+      map.setZoom(13);
+      setStatus('Localização resetada');
+    }
+  }
+  window.resetLocalizacao = resetLocalizacao;
+
+  document.getElementById('mapaSearchBtn').addEventListener('click', performSearch);
+  document.getElementById('mapaSearch').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') performSearch();
+  });
+
+  function performSearch() {
+    const searchTerm = document.getElementById('mapaSearch').value.trim();
+    if (!searchTerm || !map) return;
+
+    const service = new google.maps.places.PlacesService(map);
+    service.textSearch({ query: searchTerm + ', Brasil' }, (results, status) => {
+      if (status === google.maps.places.PlacesServiceStatus.OK && results[0]) {
+        const place = results[0];
+        map.setCenter(place.geometry.location);
+        map.setZoom(16);
+        setStatus('Localização encontrada: ' + place.name);
+
+        const searchMarker = new google.maps.Marker({
+          position: place.geometry.location,
+          map: map,
+          title: place.name,
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 10,
+            fillColor: '#f59e0b',
+            fillOpacity: 0.8,
+            strokeColor: '#ffffff',
+            strokeWeight: 2
+          }
+        });
+
+        const infoWindow = new google.maps.InfoWindow({
+          content: `<div style="font-family:Inter,sans-serif;">
+            <strong style="color:#f59e0b;font-size:0.9rem">${place.name}</strong><br>
+            <span style="color:#aaa;font-size:0.78rem">${place.formatted_address || ''}</span>
+          </div>`
+        });
+
+        searchMarker.addListener('click', () => {
+          infoWindow.open(map, searchMarker);
+        });
+
+        searchNearbyHealthFacilities(place.geometry.location);
+
+      } else {
+        setStatus('Localização não encontrada');
+      }
+    });
+  }
+
+  function searchNearbyHealthFacilities(location) {
+    if (!map) return;
+
+    const service = new google.maps.places.PlacesService(map);
+
+    service.nearbySearch({
+      location: location,
+      radius: 5000,
+      type: 'pharmacy'
+    }, (results, status) => {
+      if (status === google.maps.places.PlacesServiceStatus.OK) {
+        results.forEach(place => {
+          if (!place.geometry || !place.geometry.location) return;
+
+          const marker = new google.maps.Marker({
+            position: place.geometry.location,
+            map: map,
+            title: place.name,
+            icon: {
+              path: google.maps.SymbolPath.CIRCLE,
+              scale: 6,
+              fillColor: COLOR.farmacia,
+              fillOpacity: 0.6,
+              strokeColor: '#ffffff',
+              strokeWeight: 1
+            }
+          });
+
+          const infoWindow = new google.maps.InfoWindow({
+            content: popupHTML(place.name, place.formatted_address, 'farmacia', 'privado')
+          });
+
+          marker.addListener('click', () => {
+            infoWindow.open(map, marker);
+          });
+
+          markers.farmacia.push(marker);
+          addResultItem(place.name, place.formatted_address, 'farmacia', 'privado',
+                       place.geometry.location.lat(), place.geometry.location.lng());
+        });
+        incCount('farmacia');
+      }
+    });
+
+    service.nearbySearch({
+      location: location,
+      radius: 10000,
+      type: 'hospital'
+    }, (results, status) => {
+      if (status === google.maps.places.PlacesServiceStatus.OK) {
+        results.forEach(place => {
+          if (!place.geometry || !place.geometry.location) return;
+
+          const marker = new google.maps.Marker({
+            position: place.geometry.location,
+            map: map,
+            title: place.name,
+            icon: {
+              path: google.maps.SymbolPath.CIRCLE,
+              scale: 8,
+              fillColor: COLOR.hospital,
+              fillOpacity: 0.6,
+              strokeColor: '#ffffff',
+              strokeWeight: 1
+            }
+          });
+
+          const infoWindow = new google.maps.InfoWindow({
+            content: popupHTML(place.name, place.formatted_address, 'hospital', 'publico')
+          });
+
+          marker.addListener('click', () => {
+            infoWindow.open(map, marker);
+          });
+
+          markers.hospital.push(marker);
+          addResultItem(place.name, place.formatted_address, 'hospital', 'publico',
+                       place.geometry.location.lat(), place.geometry.location.lng());
+        });
+        incCount('hospital');
+      }
+    });
+  }
+
+  loadGoogleMaps();
+
+})();
+</script>
+{% endblock %}

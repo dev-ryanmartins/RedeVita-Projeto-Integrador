@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+{% block title %}Notificações — RedeVita{% endblock %}
+
+{% block extra_css %}
+<style>
+.notif-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 28px;
+}
+@media (max-width: 768px) { .notif-grid { grid-template-columns: 1fr; } }
+
+.notif-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+}
+.notif-card h3 {
+    font-size: 1rem; font-weight: 700;
+    margin-bottom: 18px; display: flex; align-items: center; gap: 8px;
+}
+
+.twilio-status {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 5px 14px; border-radius: 20px;
+    font-size: 0.8rem; font-weight: 600; margin-bottom: 20px;
+}
+.twilio-ok    { background: rgba(39,174,96,.15); color: #2ecc71; border: 1px solid rgba(39,174,96,.3); }
+.twilio-error { background: rgba(231,76,60,.12); color: #e74c3c; border: 1px solid rgba(231,76,60,.3); }
+
+.med-expiry-table {
+    width: 100%; border-collapse: collapse; font-size: 0.83rem;
+}
+.med-expiry-table th {
+    color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase;
+    letter-spacing: .04em; padding: 6px 10px; text-align: left;
+    border-bottom: 1px solid var(--border);
+}
+.med-expiry-table td {
+    padding: 9px 10px; border-bottom: 1px solid rgba(255,255,255,.04);
+}
+.med-expiry-table tr:last-child td { border-bottom: none; }
+
+.badge-vencido  { background: rgba(192,57,43,.2); color: #ff6b6b; padding: 2px 8px; border-radius: 10px; font-size: 0.72rem; font-weight: 700; }
+.badge-critico  { background: rgba(231,76,60,.15); color: #e74c3c; padding: 2px 8px; border-radius: 10px; font-size: 0.72rem; font-weight: 700; }
+.badge-atencao  { background: rgba(241,196,15,.12); color: #f5cb2f; padding: 2px 8px; border-radius: 10px; font-size: 0.72rem; font-weight: 700; }
+
+.canal-selector {
+    display: flex; gap: 10px; margin-bottom: 14px;
+}
+.canal-btn {
+    flex: 1; padding: 10px; border-radius: var(--radius);
+    border: 2px solid var(--border); background: var(--bg-input);
+    color: var(--text-muted); font-size: 0.85rem; font-weight: 600;
+    cursor: pointer; transition: var(--transition); text-align: center;
+}
+.canal-btn.selected { border-color: var(--primary); color: var(--primary); background: rgba(52,152,219,.08); }
+.canal-btn i { margin-right: 6px; }
+
+.config-hint {
+    background: rgba(52,152,219,.08);
+    border: 1px solid rgba(52,152,219,.25);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    font-size: 0.83rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+}
+.config-hint code {
+    background: rgba(255,255,255,.07);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 0.8rem;
+    color: var(--text-main);
+}
+.empty-med { text-align: center; padding: 20px; color: var(--text-muted); font-size: 0.85rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title"><i class="fas fa-bell"></i> Notificações</h1>
+        <p class="page-subtitle">Alertas automáticos de vencimento e estoque crítico</p>
+    </div>
+</div>
+
+<!-- Status dos canais -->
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:24px;">
+    {% if mail_ok %}
+    <span class="twilio-status twilio-ok"><i class="fas fa-envelope"></i> E-mail configurado</span>
+    {% else %}
+    <span class="twilio-status twilio-error"><i class="fas fa-envelope"></i> E-mail não configurado</span>
+    {% endif %}
+    {% if twilio_ok %}
+    <span class="twilio-status twilio-ok"><i class="fas fa-mobile-alt"></i> Twilio configurado</span>
+    {% else %}
+    <span class="twilio-status twilio-error"><i class="fas fa-mobile-alt"></i> Twilio não configurado</span>
+    {% endif %}
+</div>
+
+<div class="notif-grid">
+    <!-- Painel de envio -->
+    <div class="notif-card">
+        <h3><i class="fas fa-paper-plane" style="color: var(--primary);"></i> Enviar Alerta</h3>
+
+        <form action="{{ url_for('notificacoes.enviar') }}" method="POST">
+            <label style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 8px; display:block;">Canal</label>
+            <div class="canal-selector">
+                <button type="button" class="canal-btn {% if mail_ok %}selected{% endif %}" id="btn-email"
+                        onclick="selecionarCanal('email')" {% if not mail_ok %}disabled title="Configure MAIL_USERNAME e MAIL_PASSWORD"{% endif %}>
+                    <i class="fas fa-envelope"></i> E-mail
+                </button>
+                <button type="button" class="canal-btn {% if not mail_ok and twilio_ok %}selected{% endif %}" id="btn-sms"
+                        onclick="selecionarCanal('sms')" {% if not twilio_ok %}disabled title="Configure o Twilio"{% endif %}>
+                    <i class="fas fa-sms"></i> SMS
+                </button>
+                <button type="button" class="canal-btn" id="btn-whatsapp"
+                        onclick="selecionarCanal('whatsapp')" {% if not twilio_ok %}disabled title="Configure o Twilio"{% endif %}>
+                    <i class="fab fa-whatsapp"></i> WhatsApp
+                </button>
+            </div>
+
+            <input type="hidden" name="canal" id="canal-hidden"
+                   value="{{ 'email' if mail_ok else 'sms' }}">
+
+            <!-- Campo e-mail -->
+            <div class="form-group" id="campo-email" style="{{ '' if mail_ok else 'display:none' }}">
+                <label>E-mail de Destino <span class="required">*</span></label>
+                <div class="input-with-icon">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" name="email_destino" placeholder="admin@redevita.com.br">
+                </div>
+            </div>
+
+            <!-- Campo telefone -->
+            <div class="form-group" id="campo-telefone" style="{{ 'display:none' if mail_ok else '' }}">
+                <label>Número de Destino <span class="required">*</span></label>
+                <div class="input-with-icon">
+                    <i class="fas fa-phone"></i>
+                    <input type="tel" name="telefone" placeholder="+55 11 99999-9999">
+                </div>
+                <small style="color: var(--text-muted); font-size: 0.75rem;">Formato: +55 DDD Número</small>
+            </div>
+
+            <div class="form-group">
+                <label>Alertas de vencimento nos próximos</label>
+                <select name="dias">
+                    <option value="15">15 dias</option>
+                    <option value="30" selected>30 dias</option>
+                    <option value="60">60 dias</option>
+                    <option value="90">90 dias</option>
+                </select>
+            </div>
+
+            {% if not mail_ok and not twilio_ok %}
+            <div class="config-hint" style="margin-bottom:14px;">
+                <strong>Configure ao menos um canal:</strong><br><br>
+                <strong>E-mail:</strong> <code>MAIL_USERNAME</code> e <code>MAIL_PASSWORD</code><br>
+                <strong>SMS/WhatsApp:</strong> <code>TWILIO_ACCOUNT_SID</code>, <code>TWILIO_AUTH_TOKEN</code>, <code>TWILIO_FROM_NUMBER</code>
+            </div>
+            {% endif %}
+
+            <button type="submit" class="btn-primary" style="width:100%;"
+                    {% if not mail_ok and not twilio_ok %}disabled{% endif %}>
+                <i class="fas fa-paper-plane"></i> Enviar Alerta
+            </button>
+        </form>
+    </div>
+
+    <!-- Vencendo em 30 dias -->
+    <div class="notif-card">
+        <h3><i class="fas fa-exclamation-circle" style="color:#e74c3c;"></i>
+            Vencendo em 30 dias
+            {% if meds_30 %}
+            <span style="background:rgba(231,76,60,.15);color:#e74c3c;padding:2px 8px;border-radius:10px;font-size:.75rem;">{{ meds_30|length }}</span>
+            {% endif %}
+        </h3>
+        {% if meds_30 %}
+        <table class="med-expiry-table">
+            <thead><tr><th>Medicamento</th><th>Validade</th><th>Qtd</th><th>Status</th></tr></thead>
+            <tbody>
+                {% for m in meds_30 %}
+                {% set dias_rest = (m.data_validade - hoje).days %}
+                <tr>
+                    <td><strong>{{ m.nome }}</strong><br><span style="font-size:.75rem;color:var(--text-muted)">Lote {{ m.lote }}</span></td>
+                    <td style="white-space:nowrap">{{ m.data_validade.strftime('%d/%m/%Y') }}</td>
+                    <td>{{ m.quantidade }}</td>
+                    <td>
+                        {% if dias_rest < 0 %}<span class="badge-vencido">Vencido</span>
+                        {% elif dias_rest <= 7 %}<span class="badge-critico">{{ dias_rest }}d</span>
+                        {% else %}<span class="badge-atencao">{{ dias_rest }}d</span>{% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-med"><i class="fas fa-check-circle" style="color:var(--success);font-size:1.5rem;display:block;margin-bottom:8px;"></i>Nenhum vencendo em 30 dias.</div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Vencidos com estoque -->
+{% if meds_venc %}
+<div class="card" style="margin-bottom:24px;border-left:3px solid #e74c3c;">
+    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+        <h3 style="font-size:1rem;font-weight:700;margin:0;color:#e74c3c;">
+            <i class="fas fa-skull-crossbones"></i> Vencidos com Estoque — Descarte Obrigatório
+        </h3>
+        <span style="background:rgba(231,76,60,.15);color:#e74c3c;padding:2px 10px;border-radius:10px;font-size:.78rem;font-weight:700;">{{ meds_venc|length }} item(s)</span>
+    </div>
+    <table class="med-expiry-table">
+        <thead><tr><th>Medicamento</th><th>Princípio Ativo</th><th>Lote</th><th>Venceu em</th><th>Qtd</th></tr></thead>
+        <tbody>
+            {% for m in meds_venc %}
+            <tr>
+                <td><strong>{{ m.nome }}</strong></td>
+                <td style="color:var(--text-muted)">{{ m.principio_ativo or '—' }}</td>
+                <td><code>{{ m.lote }}</code></td>
+                <td style="color:#e74c3c;font-weight:600">{{ m.data_validade.strftime('%d/%m/%Y') }}</td>
+                <td>{{ m.quantidade }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<!-- Estoque crítico -->
+{% if meds_baixo %}
+<div class="card" style="margin-bottom:24px;border-left:3px solid #3498db;">
+    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+        <h3 style="font-size:1rem;font-weight:700;margin:0;color:#3498db;">
+            <i class="fas fa-box-open"></i> Estoque Crítico — ≤ 10 unidades
+        </h3>
+        <span style="background:rgba(52,152,219,.15);color:#3498db;padding:2px 10px;border-radius:10px;font-size:.78rem;font-weight:700;">{{ meds_baixo|length }} item(s)</span>
+    </div>
+    <table class="med-expiry-table">
+        <thead><tr><th>Medicamento</th><th>Lote</th><th>Validade</th><th>Qtd</th></tr></thead>
+        <tbody>
+            {% for m in meds_baixo %}
+            <tr>
+                <td><strong>{{ m.nome }}</strong></td>
+                <td><code>{{ m.lote }}</code></td>
+                <td>{{ m.data_validade.strftime('%d/%m/%Y') }}</td>
+                <td style="font-weight:700;color:{% if m.quantidade <= 3 %}#e74c3c{% else %}#3498db{% endif %}">{{ m.quantidade }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<!-- Vencendo entre 30 e 60 dias -->
+{% if meds_60 and meds_60|length > meds_30|length %}
+<div class="card" style="margin-bottom:24px;">
+    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+        <h3 style="font-size:1rem;font-weight:700;margin:0;"><i class="fas fa-calendar-alt" style="color:#f5cb2f;"></i> Vencendo entre 30 e 60 dias</h3>
+        <span style="color:var(--text-muted);font-size:.82rem;">{{ meds_60|length - meds_30|length }} item(s)</span>
+    </div>
+    <table class="med-expiry-table">
+        <thead><tr><th>Medicamento</th><th>Princípio Ativo</th><th>Lote</th><th>Validade</th><th>Qtd</th></tr></thead>
+        <tbody>
+            {% for m in meds_60 %}{% if (m.data_validade - hoje).days > 30 %}
+            <tr>
+                <td><strong>{{ m.nome }}</strong></td>
+                <td style="color:var(--text-muted)">{{ m.principio_ativo or '—' }}</td>
+                <td><code>{{ m.lote }}</code></td>
+                <td>{{ m.data_validade.strftime('%d/%m/%Y') }}</td>
+                <td>{{ m.quantidade }}</td>
+            </tr>
+            {% endif %}{% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function selecionarCanal(canal) {
+    document.getElementById('canal-hidden').value = canal;
+    ['email','sms','whatsapp'].forEach(c => {
+        const btn = document.getElementById('btn-' + c);
+        if (btn) btn.classList.toggle('selected', c === canal);
+    });
+    document.getElementById('campo-email').style.display   = canal === 'email' ? '' : 'none';
+    document.getElementById('campo-telefone').style.display = canal !== 'email' ? '' : 'none';
+}
+</script>
+{% endblock %}

@@ -1,0 +1,278 @@
+{% extends "base.html" %}
+{% block title %}Relatórios - RedeVita{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header">
+        <div>
+            <h2><i class="fas fa-chart-bar"></i> Relatórios e Exportação</h2>
+            <p class="page-subtitle">Visualize alertas e exporte dados em CSV/PDF para análise.</p>
+        </div>
+        <div style="display:flex; gap:10px;">
+            <a href="{{ url_for('relatorios.exportar_sumario_pdf') }}" class="btn-primary">
+                <i class="fas fa-file-pdf"></i> Sumário PDF
+            </a>
+        </div>
+    </div>
+
+    <div class="stats-grid" style="margin-bottom: 32px;">
+        <div class="stat-card">
+            <div class="stat-icon blue"><i class="fas fa-pills"></i></div>
+            <div class="stat-info">
+                <p class="stat-label">Medicamentos</p>
+                <p class="stat-value">{{ total_medicamentos }}</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon red"><i class="fas fa-hand-holding-heart"></i></div>
+            <div class="stat-info">
+                <p class="stat-label">Doações</p>
+                <p class="stat-value">{{ total_doacoes }}</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon purple"><i class="fas fa-user-md"></i></div>
+            <div class="stat-info">
+                <p class="stat-label">Médicos</p>
+                <p class="stat-value">{{ total_medicos }}</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon teal"><i class="fas fa-hospital"></i></div>
+            <div class="stat-info">
+                <p class="stat-label">Farmácias</p>
+                <p class="stat-value">{{ total_farmacias }}</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon orange"><i class="fas fa-user-injured"></i></div>
+            <div class="stat-info">
+                <p class="stat-label">Pacientes</p>
+                <p class="stat-value">{{ total_pacientes }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="reports-main-area">
+            {% if proximos_vencimento %}
+            <div class="alert-section">
+                <div class="section-header">
+                    <h3><i class="fas fa-exclamation-triangle"></i> Medicamentos Próximos do Vencimento</h3>
+                    <span class="chart-badge warning-badge">{{ proximos_vencimento|length }} item(s)</span>
+                </div>
+                <div class="table-wrapper" style="margin-bottom:24px;">
+                    <table class="styled-table">
+                        <thead>
+                            <tr>
+                                <th>Medicamento</th>
+                                <th>Lote</th>
+                                <th>Vencimento</th>
+                                <th>Qtd.</th>
+                                <th>Dias Restantes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for m in proximos_vencimento %}
+                            {% set dias = (m.data_validade - hoje).days %}
+                            <tr>
+                                <td><strong>{{ m.nome }}</strong></td>
+                                <td><code class="lote-code">{{ m.lote }}</code></td>
+                                <td>{{ m.data_validade.strftime('%d/%m/%Y') }}</td>
+                                <td>{{ m.quantidade }} un.</td>
+                                <td>
+                                    <span class="status-pill yellow">
+                                        <i class="fas fa-clock"></i> {{ dias }} dia(s)
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% else %}
+            <div class="quick-actions" style="text-align:center; padding: 30px; margin-bottom:24px;">
+                <i class="fas fa-check-circle" style="font-size:2rem; color: var(--success); display:block; margin-bottom:10px;"></i>
+                <p style="color: var(--text-muted);">Nenhum medicamento próximo do vencimento (nos próximos 30 dias).</p>
+            </div>
+            {% endif %}
+
+            {% if vencidos %}
+            <div class="section-header">
+                <h3><i class="fas fa-times-circle"></i> Medicamentos Vencidos</h3>
+                <span class="chart-badge danger-badge">{{ vencidos|length }} item(s)</span>
+            </div>
+            <div class="table-wrapper">
+                <table class="styled-table">
+                    <thead>
+                        <tr>
+                            <th>Medicamento</th>
+                            <th>Lote</th>
+                            <th>Vencimento</th>
+                            <th>Qtd.</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for m in vencidos %}
+                        <tr>
+                            <td><strong>{{ m.nome }}</strong></td>
+                            <td><code class="lote-code">{{ m.lote }}</code></td>
+                            <td><span class="status-pill red">{{ m.data_validade.strftime('%d/%m/%Y') }}</span></td>
+                            <td>{{ m.quantidade }} un.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+
+            <!-- Cartões de Relatórios Individuais -->
+            <div class="reports-grid">
+                <div class="report-card">
+                    <div class="report-card-content">
+                        <div class="report-card-info">
+                            <h4 class="report-card-title">
+                                <i class="fas fa-pills"></i> Inventário Geral de Medicamentos
+                            </h4>
+                            <p class="report-card-description">
+                                Lista completa de todos os medicamentos em estoque com detalhes de lote, validade e quantidade.
+                            </p>
+                        </div>
+                        <div class="report-card-actions">
+                            <a href="{{ url_for('relatorios.exportar_medicamentos') }}" class="btn-report" data-export-button>
+                                <i class="fas fa-file-csv"></i> CSV
+                            </a>
+                            <a href="{{ url_for('relatorios.exportar_medicamentos_pdf') }}" class="btn-report" data-export-button>
+                                <i class="fas fa-file-pdf"></i> PDF
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="report-card">
+                    <div class="report-card-content">
+                        <div class="report-card-info">
+                            <h4 class="report-card-title">
+                                <i class="fas fa-user-md"></i> Cadastro de Médicos
+                            </h4>
+                            <p class="report-card-description">
+                                Relatório completo dos profissionais médicos cadastrados com CRM, especialidade e contato.
+                            </p>
+                        </div>
+                        <div class="report-card-actions">
+                            <a href="{{ url_for('relatorios.exportar_medicos') }}" class="btn-report" data-export-button>
+                                <i class="fas fa-file-csv"></i> CSV
+                            </a>
+                            <a href="{{ url_for('relatorios.exportar_medicos_pdf') }}" class="btn-report" data-export-button>
+                                <i class="fas fa-file-pdf"></i> PDF
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="report-card">
+                    <div class="report-card-content">
+                        <div class="report-card-info">
+                            <h4 class="report-card-title">
+                                <i class="fas fa-hospital"></i> Farmácias Parceiras
+                            </h4>
+                            <p class="report-card-description">
+                                Lista de farmácias parceiras com CNPJ, responsável técnico e endereço completo.
+                            </p>
+                        </div>
+                        <div class="report-card-actions">
+                            <a href="{{ url_for('relatorios.exportar_farmacias') }}" class="btn-report" data-export-button>
+                                <i class="fas fa-file-csv"></i> CSV
+                            </a>
+                            <a href="{{ url_for('relatorios.exportar_farmacias_pdf') }}" class="btn-report" data-export-button>
+                                <i class="fas fa-file-pdf"></i> PDF
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="report-card">
+                    <div class="report-card-content">
+                        <div class="report-card-info">
+                            <h4 class="report-card-title">
+                                <i class="fas fa-user-injured"></i> Histórico de Pacientes
+                            </h4>
+                            <p class="report-card-description">
+                                Registro de pacientes atendidos com CPF, data de nascimento e histórico de prescrições.
+                            </p>
+                        </div>
+                        <div class="report-card-actions">
+                            <a href="{{ url_for('relatorios.exportar_pacientes') }}" class="btn-report" data-export-button>
+                                <i class="fas fa-file-csv"></i> CSV
+                            </a>
+                            <a href="{{ url_for('relatorios.exportar_pacientes_pdf') }}" class="btn-report" data-export-button>
+                                <i class="fas fa-file-pdf"></i> PDF
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="report-card">
+                    <div class="report-card-content">
+                        <div class="report-card-info">
+                            <h4 class="report-card-title">
+                                <i class="fas fa-hand-holding-heart"></i> Histórico de Doações e Triagem
+                            </h4>
+                            <p class="report-card-description">
+                                Registro completo de doações recebidas, triagem sanitária e status de aprovação.
+                            </p>
+                        </div>
+                        <div class="report-card-actions">
+                            <a href="{{ url_for('relatorios.exportar_doacoes') }}" class="btn-report" data-export-button>
+                                <i class="fas fa-file-csv"></i> CSV
+                            </a>
+                            <a href="{{ url_for('relatorios.exportar_doacoes_pdf') }}" class="btn-report" data-export-button>
+                                <i class="fas fa-file-pdf"></i> PDF
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="report-card">
+                    <div class="report-card-content">
+                        <div class="report-card-info">
+                            <h4 class="report-card-title">
+                                <i class="fas fa-print"></i> Impressão de Página
+                            </h4>
+                            <p class="report-card-description">
+                                Imprima a visualização atual da página com as estatísticas e alertas exibidos.
+                            </p>
+                        </div>
+                        <div class="report-card-actions">
+                            <button onclick="window.print()" class="btn-report">
+                                <i class="fas fa-print"></i> Imprimir
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('[data-export-button]').forEach((button) => {
+    button.addEventListener('click', () => {
+        if (button.dataset.downloading === 'true') return;
+        button.dataset.downloading = 'true';
+        button.dataset.originalLabel = button.textContent.trim();
+        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Baixando...';
+        button.setAttribute('aria-busy', 'true');
+        window.setTimeout(() => {
+            button.innerHTML = '<svg class="download-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg> ' + button.dataset.originalLabel;
+            button.removeAttribute('aria-busy');
+            button.dataset.downloading = 'false';
+        }, 1000);
+    });
+});
+</script>
+{% endblock %}

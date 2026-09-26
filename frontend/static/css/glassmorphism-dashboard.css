@@ -1,0 +1,891 @@
+/* ==========================================================================
+   REDEVITA GLASSMORPHISM DASHBOARD - CORPORATE EXECUTIVE DESIGN
+   ========================================================================== */
+
+/* ==========================================================================
+   GLASSMORPHISM VARIABLES & UTILITIES
+   ========================================================================== */
+:root {
+    --glass-light: rgba(255, 255, 255, 0.05);
+    --glass-medium: rgba(255, 255, 255, 0.08);
+    --glass-heavy: rgba(255, 255, 255, 0.12);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    --glass-blur: 20px;
+    --glass-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+}
+
+/* Glassmorphism Base Class */
+.glass-card {
+    background: var(--glass-gradient);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    box-shadow: var(--glass-shadow);
+    transition: all 0.3s ease;
+}
+
+.glass-card:hover {
+    border-color: rgba(56, 189, 248, 0.3);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+    transform: translateY(-2px);
+}
+
+/* Deep Glassmorphism for Dashboard Cards */
+.glass-deep {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.8) 100%);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.glass-deep:hover {
+    border-color: rgba(56, 189, 248, 0.25);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* ==========================================================================
+   MODERN DASHBOARD LAYOUT
+   ========================================================================== */
+.page-wrapper {
+    padding: 24px 32px;
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+/* Corporate Dashboard Header */
+.dashboard-header-corporate {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 32px;
+    gap: 24px;
+}
+
+.dashboard-header-content h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: white;
+    margin: 0 0 8px 0;
+    background: linear-gradient(135deg, #ffffff 0%, #94a3b8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.dashboard-header-content .subtitle {
+    font-size: 0.9rem;
+    color: #64748b;
+    margin: 0;
+}
+
+.dashboard-header-actions {
+    display: flex;
+    gap: 12px;
+}
+
+/* Corporate Button Styles */
+.btn-corporate {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    border: 1px solid transparent;
+}
+
+.btn-corporate-primary {
+    background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+    color: white;
+    box-shadow: 0 4px 16px rgba(56, 189, 248, 0.3);
+    border: 1px solid rgba(56, 189, 248, 0.4);
+}
+
+.btn-corporate-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(56, 189, 248, 0.4);
+}
+
+.btn-corporate-secondary {
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.btn-corporate-secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+/* ==========================================================================
+   ALERT BANNER - GLASSMORPHISM STYLE
+   ========================================================================== */
+.alert-banner-corporate {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, rgba(244, 63, 94, 0.15) 0%, rgba(15, 23, 42, 0.9) 100%);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(244, 63, 94, 0.3);
+    border-radius: 16px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 20px rgba(244, 63, 94, 0.2);
+}
+
+/* ==========================================================================
+   TIME FILTER CONTAINER - DASHBOARD HEADER
+   ========================================================================== */
+.dashboard-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.time-filter-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 16px;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+}
+
+.time-filter-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #94a3b8;
+}
+
+.time-filter-label i {
+    font-size: 0.95rem;
+    color: #38bdf8;
+}
+
+.time-filter-buttons {
+    display: flex;
+    gap: 6px;
+}
+
+.time-filter-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #94a3b8;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.time-filter-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.12);
+    color: #cbd5e1;
+    transform: translateY(-1px);
+}
+
+.time-filter-btn.active {
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.25) 0%, rgba(56, 189, 248, 0.15) 100%);
+    border-color: rgba(56, 189, 248, 0.4);
+    color: #38bdf8;
+    box-shadow: 0 2px 8px rgba(56, 189, 248, 0.2);
+}
+
+/* ==========================================================================
+   STAT TREND INDICATORS - BI STYLE
+   ========================================================================== */
+.stat-info-corporate {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.alert-banner-content {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.alert-banner-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: rgba(244, 63, 94, 0.2);
+    color: #f43f5e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.alert-banner-text strong {
+    display: block;
+    color: #fda4af;
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin-bottom: 2px;
+}
+
+.alert-banner-text span {
+    color: #e2e8f0;
+    font-size: 0.85rem;
+}
+
+.alert-banner-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    background: rgba(244, 63, 94, 0.2);
+    border: 1px solid rgba(244, 63, 94, 0.4);
+    color: #fda4af;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.alert-banner-action:hover {
+    background: rgba(244, 63, 94, 0.3);
+    color: white;
+}
+
+/* ==========================================================================
+   WELCOME BANNER - GLASSMORPHISM
+   ========================================================================== */
+.welcome-banner-corporate {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 28px;
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.1) 0%, rgba(15, 23, 42, 0.95) 100%);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    border-radius: 20px;
+    margin-bottom: 24px;
+    box-shadow: 0 8px 32px rgba(56, 189, 248, 0.15);
+}
+
+.welcome-banner-content h2 {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: white;
+    margin: 0 0 8px 0;
+}
+
+.welcome-banner-content p {
+    font-size: 0.9rem;
+    color: #94a3b8;
+    margin: 0;
+}
+
+.welcome-banner-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #10b981;
+    white-space: nowrap;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #10b981;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.2); }
+}
+
+/* ==========================================================================
+   MODERN STATS GRID - GLASSMORPHISM CARDS
+   ========================================================================== */
+.stats-grid-corporate {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 32px;
+}
+
+.stat-card-corporate {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.8) 100%);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card-corporate::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+}
+
+.stat-card-corporate:hover {
+    transform: translateY(-4px);
+    border-color: rgba(56, 189, 248, 0.25);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+.stat-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.stat-icon-corporate {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    transition: all 0.3s ease;
+}
+
+.stat-icon-corporate i,
+.stat-icon-corporate .fas,
+.stat-icon-corporate .fa {
+    font-size: 1.4rem;
+    line-height: 1;
+    display: block;
+    text-align: center;
+    vertical-align: middle;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* Force icon visibility in all dashboard components */
+.alert-banner-icon i,
+.alert-banner-icon .fas,
+.alert-banner-icon .fa,
+.recent-card-icon-corporate i,
+.recent-card-icon-corporate .fas,
+.recent-card-icon-corporate .fa,
+.chart-card-header-corporate h3 i,
+.chart-card-header-corporate h3 .fas,
+.chart-card-header-corporate h3 .fa,
+.action-btn-corporate i,
+.action-btn-corporate .fas,
+.action-btn-corporate .fa,
+.status-pill-corporate i,
+.status-pill-corporate .fas,
+.status-pill-corporate .fa {
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    line-height: 1 !important;
+    vertical-align: middle !important;
+    text-align: center !important;
+}
+
+/* Icon container fixes */
+.alert-banner-icon,
+.recent-card-icon-corporate {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.stat-icon-corporate.blue {
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.2) 0%, rgba(56, 189, 248, 0.1) 100%);
+    color: #38bdf8;
+    border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.stat-icon-corporate.yellow {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(245, 158, 11, 0.1) 100%);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.stat-icon-corporate.green {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0.1) 100%);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.stat-icon-corporate.red {
+    background: linear-gradient(135deg, rgba(244, 63, 94, 0.2) 0%, rgba(244, 63, 94, 0.1) 100%);
+    color: #f43f5e;
+    border: 1px solid rgba(244, 63, 94, 0.3);
+}
+
+.stat-icon-corporate.orange {
+    background: linear-gradient(135deg, rgba(249, 115, 22, 0.2) 0%, rgba(249, 115, 22, 0.1) 100%);
+    color: #f97316;
+    border: 1px solid rgba(249, 115, 22, 0.3);
+}
+
+.stat-icon-corporate.purple {
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(168, 85, 247, 0.1) 100%);
+    color: #a855f7;
+    border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+.stat-icon-corporate.teal {
+    background: linear-gradient(135deg, rgba(20, 184, 166, 0.2) 0%, rgba(20, 184, 166, 0.1) 100%);
+    color: #14b8a6;
+    border: 1px solid rgba(20, 184, 166, 0.3);
+}
+
+.stat-card-corporate:hover .stat-icon-corporate {
+    transform: scale(1.1);
+}
+
+.stat-info-corporate {
+    flex: 1;
+}
+
+.stat-value-corporate {
+    font-size: 2rem;
+    font-weight: 800;
+    color: white;
+    line-height: 1;
+    margin-bottom: 4px;
+    font-variant-numeric: tabular-nums;
+}
+
+.stat-label-corporate {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.stat-trend {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 6px;
+    margin-top: 8px;
+}
+
+.stat-trend.positive {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+}
+
+.stat-trend.negative {
+    background: rgba(244, 63, 94, 0.15);
+    color: #f43f5e;
+}
+
+/* ==========================================================================
+   CHART CARDS - GLASSMORPHISM STYLE
+   ========================================================================== */
+.charts-grid-corporate {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 24px;
+    margin-bottom: 32px;
+}
+
+.chart-card-corporate {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.8) 100%);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+}
+
+.chart-card-corporate:hover {
+    border-color: rgba(56, 189, 248, 0.2);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+.chart-card-header-corporate {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.chart-card-header-corporate h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: white;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.chart-card-header-corporate h3 i {
+    color: #38bdf8;
+}
+
+.chart-badge-corporate {
+    padding: 4px 12px;
+    background: rgba(56, 189, 248, 0.15);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #38bdf8;
+}
+
+.chart-container-corporate {
+    height: 280px;
+    position: relative;
+    margin-bottom: 16px;
+}
+
+.chart-legend-corporate {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.legend-item-corporate {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8rem;
+    color: #94a3b8;
+}
+
+.legend-dot-corporate {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+/* ==========================================================================
+   QUICK ACTIONS PANEL - GLASSMORPHISM
+   ========================================================================== */
+.quick-panel-corporate {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.8) 100%);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 24px;
+    margin-bottom: 32px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.quick-panel-corporate h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: white;
+    margin: 0 0 20px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.quick-panel-corporate h3 i {
+    color: #fbbf24;
+}
+
+.action-buttons-corporate {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+}
+
+.action-btn-corporate {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: white;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.action-btn-corporate:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(56, 189, 248, 0.3);
+    transform: translateY(-2px);
+    color: #38bdf8;
+}
+
+.action-btn-corporate.primary {
+    background: rgba(56, 189, 248, 0.15);
+    border-color: rgba(56, 189, 248, 0.3);
+    color: #38bdf8;
+}
+
+.action-btn-corporate.primary:hover {
+    background: rgba(56, 189, 248, 0.25);
+    color: #38bdf8;
+}
+
+/* ==========================================================================
+   TABLE STYLES - GLASSMORPHISM
+   ========================================================================== */
+.table-wrapper-corporate {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.8) 100%);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+}
+
+.styled-table-corporate {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.styled-table-corporate thead {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.styled-table-corporate th {
+    text-align: left;
+    padding: 16px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.styled-table-corporate td {
+    padding: 16px;
+    font-size: 0.9rem;
+    color: #e2e8f0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.styled-table-corporate tbody tr:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.styled-table-corporate tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Status Pills */
+.status-pill-corporate {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.status-pill-corporate.green {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.status-pill-corporate.yellow {
+    background: rgba(245, 158, 11, 0.15);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.status-pill-corporate.red {
+    background: rgba(244, 63, 94, 0.15);
+    color: #f43f5e;
+    border: 1px solid rgba(244, 63, 94, 0.3);
+}
+
+/* ==========================================================================
+   RECENT CARDS - GLASSMORPHISM
+   ========================================================================== */
+.recent-cards-corporate {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.recent-card-corporate {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    transition: all 0.2s ease;
+}
+
+.recent-card-corporate:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(56, 189, 248, 0.2);
+    transform: translateX(4px);
+}
+
+.recent-card-icon-corporate {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.recent-card-icon-corporate.purple {
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(168, 85, 247, 0.1) 100%);
+    color: #a855f7;
+    border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+.recent-card-icon-corporate.teal {
+    background: linear-gradient(135deg, rgba(20, 184, 166, 0.2) 0%, rgba(20, 184, 166, 0.1) 100%);
+    color: #14b8a6;
+    border: 1px solid rgba(20, 184, 166, 0.3);
+}
+
+.recent-card-info-corporate {
+    flex: 1;
+    min-width: 0;
+}
+
+.recent-card-info-corporate strong {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 4px;
+}
+
+.recent-card-info-corporate span {
+    font-size: 0.8rem;
+    color: #64748b;
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN
+   ========================================================================== */
+@media (max-width: 1024px) {
+    .stats-grid-corporate {
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 16px;
+    }
+    
+    .charts-grid-corporate {
+        grid-template-columns: 1fr;
+    }
+    
+    .action-buttons-corporate {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .page-wrapper {
+        padding: 16px 20px;
+    }
+    
+    .dashboard-header-corporate {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .dashboard-header-actions {
+        width: 100%;
+        flex-direction: column;
+    }
+    
+    .btn-corporate {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .stats-grid-corporate {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+    
+    .stat-card-corporate {
+        padding: 16px;
+    }
+    
+    .stat-value-corporate {
+        font-size: 1.5rem;
+    }
+    
+    .welcome-banner-corporate {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+    
+    .alert-banner-corporate {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .alert-banner-action {
+        width: 100%;
+        justify-content: center;
+    }
+}

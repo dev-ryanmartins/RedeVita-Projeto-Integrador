@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% from "_brand_logo.html" import brand_logo %}
+{% block title %}Página não encontrada - RedeVita{% endblock %}
+
+{% block content %}
+<div class="error-page">
+    {{ brand_logo(url_for('index'), true) }}
+    <div class="error-icon">
+        <i class="fas fa-map-signs"></i>
+    </div>
+    <h1 class="error-code">404</h1>
+    <h2>Página não encontrada</h2>
+    <p>O endereço que você tentou acessar não existe ou foi removido.</p>
+    <div class="error-actions">
+        <a href="{{ url_for('index') }}" class="btn-primary">
+            <i class="fas fa-home"></i> Voltar ao Início
+        </a>
+        {% if current_user.is_authenticated %}
+        <a href="{{ url_for('inventory.dashboard') }}" class="btn-secondary">
+            <i class="fas fa-tachometer-alt"></i> Ir ao Dashboard
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

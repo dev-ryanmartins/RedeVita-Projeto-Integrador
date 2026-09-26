@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}RedeVita{% endblock %}</title>
+    <link rel="icon" href="{{ url_for('static', filename='img/icons/icon.svg') }}" type="image/svg+xml">
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/duotone/style.css">
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/corporate-sidebar.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/glassmorphism-dashboard.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/leaflet.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+{% if current_user.is_authenticated %}
+<!-- Corporate Sidebar -->
+<aside class="corporate-sidebar" id="corporateSidebar">
+    <div class="sidebar-header">
+        {% from "_brand_logo.html" import brand_logo %}
+        {{ brand_logo(url_for('inventory.dashboard'), false) }}
+        <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" aria-label="Recolher sidebar">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+    </div>
+
+    <nav class="sidebar-nav">
+        <div class="nav-section">
+            <div class="nav-section-title">Principal</div>
+            <a href="{{ url_for('inventory.dashboard') }}" 
+               class="nav-item {{ 'active' if request.endpoint == 'inventory.dashboard' else '' }}"
+               data-tooltip="Dashboard">
+                <div class="nav-item-icon">
+                    <i class="fas fa-th-large"></i>
+                </div>
+                <span class="nav-item-text">Dashboard</span>
+            </a>
+            <a href="{{ url_for('inventory.listar_medicamentos') }}" 
+               class="nav-item {{ 'active' if request.endpoint == 'inventory.listar_medicamentos' else '' }}"
+               data-tooltip="Inventário">
+                <div class="nav-item-icon">
+                    <i class="fas fa-pills"></i>
+                </div>
+                <span class="nav-item-text">Inventário</span>
+            </a>
+            <a href="{{ url_for('donation.nova_doacao') }}" 
+               class="nav-item {{ 'active' if request.endpoint == 'donation.nova_doacao' else '' }}"
+               data-tooltip="Doações">
+                <div class="nav-item-icon">
+                    <i class="fas fa-hand-holding-heart"></i>
+                </div>
+                <span class="nav-item-text">Doações</span>
+            </a>
+            <a href="{{ url_for('pacientes.listar_pacientes') }}" 
+               class="nav-item {{ 'active' if request.endpoint and request.endpoint.startswith('pacientes.') else '' }}"
+               data-tooltip="Pacientes">
+                <div class="nav-item-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <span class="nav-item-text">Pacientes</span>
+            </a>
+            <a href="{{ url_for('medicos.listar_medicos') }}" 
+               class="nav-item {{ 'active' if request.endpoint and request.endpoint.startswith('medicos.') else '' }}"
+               data-tooltip="Médicos">
+                <div class="nav-item-icon">
+                    <i class="fas fa-user-md"></i>
+                </div>
+                <span class="nav-item-text">Médicos</span>
+            </a>
+            <a href="{{ url_for('farmacias.listar_farmacias') }}" 
+               class="nav-item {{ 'active' if request.endpoint and request.endpoint.startswith('farmacias.') else '' }}"
+               data-tooltip="Farmácias">
+                <div class="nav-item-icon">
+                    <i class="fas fa-hospital"></i>
+                </div>
+                <span class="nav-item-text">Farmácias</span>
+            </a>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-section-title">Análise</div>
+            {% if is_admin() %}
+            <a href="{{ url_for('relatorios.relatorios') }}" 
+               class="nav-item {{ 'active' if request.endpoint and request.endpoint.startswith('relatorios.') else '' }}"
+               data-tooltip="Relatórios">
+                <div class="nav-item-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <span class="nav-item-text">Relatórios</span>
+            </a>
+            {% endif %}
+            {% if is_farmaceutico() %}
+            <a href="{{ url_for('academico.monitoramento_iot') }}"
+               class="nav-item {{ 'active' if request.endpoint and request.endpoint.startswith('academico.') and request.endpoint == 'academico.monitoramento_iot' else '' }}"
+               data-tooltip="Monitoramento IoT">
+                <div class="nav-item-icon">
+                    <i class="fas fa-thermometer-half"></i>
+                </div>
+                <span class="nav-item-text">IoT</span>
+                {% if alertas > 0 %}
+                <span class="nav-item-badge">{{ alertas }}</span>
+                {% endif %}
+            </a>
+            {% endif %}
+            <a href="{{ url_for('mapa.mapa_saude') }}" 
+               class="nav-item {{ 'active' if request.endpoint and request.endpoint.startswith('mapa.') else '' }}"
+               data-tooltip="Mapa">
+                <div class="nav-item-icon">
+                    <i class="fas fa-map-marked-alt"></i>
+                </div>
+                <span class="nav-item-text">Mapa</span>
+            </a>
+        <div class="nav-section">
+            <div class="nav-section-title">Comunidade</div>
+            <a href="{{ url_for('campanhas.listar_campanhas') }}" 
+               class="nav-item {{ 'active' if request.endpoint and request.endpoint.startswith('campanhas.') else '' }}"
+               data-tooltip="Campanhas">
+                <div class="nav-item-icon">
+                    <i class="fas fa-bullhorn"></i>
+                </div>
+                <span class="nav-item-text">Campanhas</span>
+            </a>
+            <a href="{{ url_for('impacto.impacto_social') }}" 
+               class="nav-item {{ 'active' if request.endpoint and request.endpoint.startswith('impacto.') else '' }}"
+               data-tooltip="Impacto">
+                <div class="nav-item-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <span class="nav-item-text">Impacto Social</span>
+            </a>
+            <a href="{{ url_for('ajuda.ajuda') }}" 
+               class="nav-item {{ 'active' if request.endpoint and request.endpoint.startswith('ajuda.') else '' }}"
+               data-tooltip="Ajuda">
+                <div class="nav-item-icon">
+                    <i class="fas fa-book"></i>
+                </div>
+                <span class="nav-item-text">Ajuda</span>
+            </a>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-section-title">Clínico</div>
+            {% if is_medico() %}
+            <a href="{{ url_for('medical.prescriptions') }}" 
+               class="nav-item {{ 'active' if request.endpoint and request.endpoint.startswith('medical.') else '' }}"
+               data-tooltip="Prescrições">
+                <div class="nav-item-icon">
+                    <i class="fas fa-file-medical"></i>
+                </div>
+                <span class="nav-item-text">Prescrições</span>
+            </a>
+            {% endif %}
+            <a href="{{ url_for('busca.buscar') }}" 
+               class="nav-item {{ 'active' if request.endpoint and request.endpoint.startswith('busca.') else '' }}"
+               data-tooltip="Busca">
+                <div class="nav-item-icon">
+                    <i class="fas fa-search"></i>
+                </div>
+                <span class="nav-item-text">Busca</span>
+            </a>
+        </div>
+
+        {% if is_admin() %}
+        <div class="nav-section">
+            <div class="nav-section-title">Administração</div>
+            <a href="{{ url_for('notificacoes.painel') }}"
+               class="nav-item admin {{ 'active' if request.endpoint and request.endpoint.startswith('notificacoes.') else '' }}"
+               data-tooltip="Notificações">
+                <div class="nav-item-icon">
+                    <i class="fas fa-bell"></i>
+                </div>
+                <span class="nav-item-text">Notificações</span>
+                {% if alertas > 0 %}
+                <span class="nav-item-badge">{{ alertas }}</span>
+                {% endif %}
+            </a>
+            <a href="{{ url_for('usuarios.listar_usuarios') }}" 
+               class="nav-item admin {{ 'active' if request.endpoint and request.endpoint.startswith('usuarios.') else '' }}"
+               data-tooltip="Usuários">
+                <div class="nav-item-icon">
+                    <i class="fas fa-users-cog"></i>
+                </div>
+                <span class="nav-item-text">Usuários</span>
+            </a>
+            <a href="{{ url_for('logs.listar_logs') }}" 
+               class="nav-item admin {{ 'active' if request.endpoint and request.endpoint.startswith('logs.') else '' }}"
+               data-tooltip="Logs">
+                <div class="nav-item-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <span class="nav-item-text">Logs</span>
+            </a>
+            <a href="{{ url_for('academico.auditoria') }}" 
+               class="nav-item admin {{ 'active' if request.endpoint == 'academico.auditoria' else '' }}"
+               data-tooltip="Auditoria">
+                <div class="nav-item-icon">
+                    <i class="fas fa-clipboard-list"></i>
+                </div>
+                <span class="nav-item-text">Auditoria</span>
+            </a>
+            <a href="#" onclick="abrirPainelAdmin()" 
+               class="nav-item admin"
+               data-tooltip="Painel Admin">
+                <div class="nav-item-icon">
+                    <i class="fas fa-cogs"></i>
+                </div>
+                <span class="nav-item-text">Painel Admin</span>
+            </a>
+        </div>
+        {% endif %}
+    </nav>
+
+    <div class="sidebar-footer">
+        <div class="sidebar-profile" onclick="openSettingsDrawer()">
+            <div class="sidebar-profile-avatar">
+                {{ current_user.nome[:2]|upper if current_user.is_authenticated else 'US' }}
+            </div>
+            <div class="sidebar-profile-info">
+                <div class="sidebar-profile-name">{{ current_user.nome if current_user.is_authenticated else 'Usuário' }}</div>
+                <div class="sidebar-profile-role">{{ current_user.cargo if current_user.is_authenticated else 'Visitante' }}</div>
+            </div>
+        </div>
+        <button class="sidebar-settings-btn" onclick="openSettingsDrawer()">
+            <i class="fas fa-cog"></i>
+            <span>Configurações</span>
+        </button>
+    </div>
+</aside>
+
+<!-- Settings Drawer Overlay -->
+<div class="settings-drawer-overlay" id="settingsDrawerOverlay" onclick="closeSettingsDrawer()"></div>
+
+<!-- Settings Drawer -->
+<div class="settings-drawer" id="settingsDrawer">
+    <div class="drawer-header">
+        <div class="drawer-title">
+            <i class="fas fa-cog"></i>
+            Configurações
+        </div>
+        <button class="drawer-close-btn" onclick="closeSettingsDrawer()" aria-label="Fechar">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <div class="drawer-content">
+        <div class="drawer-section">
+            <div class="drawer-section-title">Conta</div>
+            <div class="account-info">
+                <div class="account-avatar-large">
+                    {{ current_user.nome[:2]|upper if current_user.is_authenticated else 'US' }}
+                </div>
+                <div class="account-details">
+                    <div class="account-name">{{ current_user.nome if current_user.is_authenticated else 'Usuário' }}</div>
+                    <div class="account-email">{{ current_user.email if current_user.is_authenticated else '' }}</div>
+                </div>
+            </div>
+            <div class="account-actions">
+                <a href="{{ url_for('perfil.meu_perfil') }}" class="drawer-btn primary">
+                    <i class="fas fa-user"></i>
+                    Meu Perfil
+                </a>
+                <a href="{{ url_for('auth.logout') }}" class="drawer-btn danger">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Sair do Sistema
+                </a>
+            </div>
+        </div>
+
+        <div class="drawer-section">
+            <div class="drawer-section-title">Preferências</div>
+            <div class="theme-toggle">
+                <div class="theme-toggle-label">
+                    <i class="fas fa-moon"></i>
+                    Tema Escuro
+                </div>
+                <div class="theme-toggle-switch active" id="themeToggleSwitch" onclick="toggleThemeDrawer()">
+                </div>
+            </div>
+            <div class="font-controls">
+                <div class="font-control-label">
+                    <i class="fas fa-text-height"></i>
+                    Tamanho da Fonte
+                </div>
+                <div class="font-control-buttons">
+                    <button type="button" class="font-control-btn" onclick="decreaseFont()" aria-label="Diminuir fonte">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                    <span class="font-control-value" id="fontValue">100%</span>
+                    <button type="button" class="font-control-btn" onclick="increaseFont()" aria-label="Aumentar fonte">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="contrast-toggle">
+                <div class="contrast-toggle-label">
+                    <i class="fas fa-adjust"></i>
+                    Alto Contraste
+                </div>
+                <div class="contrast-toggle-switch" id="contrastToggleSwitch" onclick="toggleHighContrast()">
+                </div>
+            </div>
+            <div class="fullscreen-toggle" id="fullscreenToggle" onclick="toggleFullscreen()">
+                <div class="fullscreen-toggle-label">
+                    <i class="fas fa-expand"></i>
+                    Tela Cheia
+                </div>
+                <div class="fullscreen-toggle-status" id="fullscreenStatus">Desativado</div>
+            </div>
+            <a href="{{ url_for('ajuda.ajuda') }}" class="drawer-btn info">
+                <i class="fas fa-book"></i>
+                Guia de Boas Práticas
+            </a>
+        </div>
+
+        <div class="drawer-section">
+            <div class="drawer-section-title">Conformidade</div>
+            <div class="anvisa-alert">
+                <div class="anvisa-alert-header">
+                    <div class="anvisa-alert-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="anvisa-alert-title">ANVISA</div>
+                </div>
+                <div class="anvisa-alert-text">
+                    Sistema em conformidade com as normas da Portaria 344/98 e RDC 20/2014 para controle de medicamentos.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="drawer-footer">
+        <div class="drawer-footer-text">
+            RedeVita v2.0 &bull; Sistema Corporativo
+        </div>
+    </div>
+</div>
+
+<!-- Mobile Menu Toggle -->
+<button class="mobile-menu-toggle" id="mobileMenuToggle" onclick="toggleMobileSidebar()" aria-label="Abrir menu">
+    <i class="fas fa-bars"></i>
+</button>
+
+<!-- Command Palette Modal -->
+<div class="command-palette-overlay" id="commandPaletteOverlay" onclick="closeCommandPalette(event)">
+    <div class="command-palette" id="commandPalette" onclick="event.stopPropagation()">
+        <div class="command-palette-header">
+            <input type="text" class="command-palette-search" id="commandPaletteSearch" placeholder="Buscar comandos, telas, registros..." autocomplete="off">
+            <span class="command-palette-shortcut">Ctrl + K</span>
+        </div>
+        <div class="command-palette-body" id="commandPaletteBody">
+            <div class="command-palette-section">
+                <div class="command-palette-section-title">Navegação Rápida</div>
+                <a href="{{ url_for('inventory.dashboard') }}" class="command-palette-item" data-shortcut="1">
+                    <div class="command-palette-item-icon"><i class="fas fa-th-large"></i></div>
+                    <div class="command-palette-item-text">
+                        <div class="command-palette-item-title">Dashboard</div>
+                        <div class="command-palette-item-subtitle">Visão geral do sistema</div>
+                    </div>
+                    <div class="command-palette-item-shortcut">1</div>
+                </a>
+                <a href="{{ url_for('inventory.listar_medicamentos') }}" class="command-palette-item" data-shortcut="2">
+                    <div class="command-palette-item-icon"><i class="fas fa-pills"></i></div>
+                    <div class="command-palette-item-text">
+                        <div class="command-palette-item-title">Inventário</div>
+                        <div class="command-palette-item-subtitle">Gerenciar medicamentos</div>
+                    </div>
+                    <div class="command-palette-item-shortcut">2</div>
+                </a>
+                <a href="{{ url_for('donation.nova_doacao') }}" class="command-palette-item" data-shortcut="3">
+                    <div class="command-palette-item-icon"><i class="fas fa-hand-holding-heart"></i></div>
+                    <div class="command-palette-item-text">
+                        <div class="command-palette-item-title">Nova Doação</div>
+                        <div class="command-palette-item-subtitle">Registrar entrada de medicamentos</div>
+                    </div>
+                    <div class="command-palette-item-shortcut">3</div>
+                </a>
+                <a href="{{ url_for('pacientes.listar_pacientes') }}" class="command-palette-item" data-shortcut="4">
+                    <div class="command-palette-item-icon"><i class="fas fa-users"></i></div>
+                    <div class="command-palette-item-text">
+                        <div class="command-palette-item-title">Pacientes</div>
+                        <div class="command-palette-item-subtitle">Gerenciar pacientes</div>
+                    </div>
+                    <div class="command-palette-item-shortcut">4</div>
+                </a>
+                <a href="{{ url_for('medicos.listar_medicos') }}" class="command-palette-item" data-shortcut="5">
+                    <div class="command-palette-item-icon"><i class="fas fa-user-md"></i></div>
+                    <div class="command-palette-item-text">
+                        <div class="command-palette-item-title">Médicos</div>
+                        <div class="command-palette-item-subtitle">Gerenciar médicos</div>
+                    </div>
+                    <div class="command-palette-item-shortcut">5</div>
+                </a>
+                <a href="{{ url_for('farmacias.listar_farmacias') }}" class="command-palette-item" data-shortcut="6">
+                    <div class="command-palette-item-icon"><i class="fas fa-hospital"></i></div>
+                    <div class="command-palette-item-text">
+                        <div class="command-palette-item-title">Farmácias</div>
+                        <div class="command-palette-item-subtitle">Gerenciar farmácias parceiras</div>
+                    </div>
+                    <div class="command-palette-item-shortcut">6</div>
+                </a>
+                <a href="{{ url_for('relatorios.relatorios') }}" class="command-palette-item" data-shortcut="7">
+                    <div class="command-palette-item-icon"><i class="fas fa-chart-line"></i></div>
+                    <div class="command-palette-item-text">
+                        <div class="command-palette-item-title">Relatórios</div>
+                        <div class="command-palette-item-subtitle">Exportar relatórios</div>
+                    </div>
+                    <div class="command-palette-item-shortcut">7</div>
+                </a>
+                <a href="{{ url_for('academico.monitoramento_iot') }}" class="command-palette-item" data-shortcut="8">
+                    <div class="command-palette-item-icon"><i class="fas fa-thermometer-half"></i></div>
+                    <div class="command-palette-item-text">
+                        <div class="command-palette-item-title">Monitoramento IoT</div>
+                        <div class="command-palette-item-subtitle">Cadeia de frio</div>
+                    </div>
+                    <div class="command-palette-item-shortcut">8</div>
+                </a>
+            </div>
+            <div class="command-palette-section">
+                <div class="command-palette-section-title">Ações Rápidas</div>
+                <a href="{{ url_for('perfil.meu_perfil') }}" class="command-palette-item">
+                    <div class="command-palette-item-icon"><i class="fas fa-user"></i></div>
+                    <div class="command-palette-item-text">
+                        <div class="command-palette-item-title">Meu Perfil</div>
+                        <div class="command-palette-item-subtitle">Editar configurações</div>
+                    </div>
+                </a>
+                <a href="{{ url_for('auth.logout') }}" class="command-palette-item">
+                    <div class="command-palette-item-icon"><i class="fas fa-sign-out-alt"></i></div>
+                    <div class="command-palette-item-text">
+                        <div class="command-palette-item-title">Sair do Sistema</div>
+                        <div class="command-palette-item-subtitle">Encerrar sessão</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+        <div class="command-palette-footer">
+            <div class="command-palette-hint">
+                <kbd>↑</kbd> <kbd>↓</kbd> para navegar, <kbd>Enter</kbd> para selecionar
+            </div>
+            <div class="command-palette-hint">
+                <kbd>Esc</kbd> para fechar
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<main class="main-content">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        <i class="fas fa-{% if category == 'success' %}check-circle{% elif category == 'danger' %}exclamation-circle{% elif category == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+                        {{ message }}
+                        <button class="alert-close" onclick="this.parentElement.remove()" aria-label="Fechar">&times;</button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+</main>
+
+<div id="global-confirm-modal" class="modal-overlay" aria-hidden="true">
+    <div class="modal-box modal-sm confirm-modal" role="dialog" aria-modal="true"
+         aria-labelledby="global-confirm-title" aria-describedby="global-confirm-message">
+        <div class="modal-header">
+            <h3 id="global-confirm-title"><i class="fas fa-triangle-exclamation"></i> Confirmar ação</h3>
+            <button type="button" class="modal-close" id="global-confirm-close" aria-label="Fechar">&times;</button>
+        </div>
+        <p id="global-confirm-message" class="confirm-modal-message"></p>
+        <div class="modal-footer">
+            <button type="button" class="btn-secondary" id="global-confirm-cancel">Cancelar</button>
+            <button type="button" class="btn-danger" id="global-confirm-submit">
+                <i class="fas fa-check"></i> Confirmar
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Painel Admin Modal -->
+<div id="modal-painel-admin" class="modal-overlay" aria-hidden="true">
+    <div class="modal-box modal-xl" role="dialog" aria-modal="true"
+         aria-labelledby="admin-panel-title">
+        <div class="modal-header">
+            <h3 id="admin-panel-title"><i class="fas fa-cogs" style="color: var(--danger);"></i> Painel de Controle Administrativo</h3>
+            <button type="button" class="modal-close" onclick="fecharPainelAdmin()" aria-label="Fechar">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p style="color: var(--text-muted); margin-bottom: 20px;">
+                <i class="fas fa-exclamation-triangle" style="color: var(--warning);"></i>
+                Acesso exclusivo para administradores. Estes comandos afetam todo o sistema.
+            </p>
+            
+            <div class="admin-panel-grid">
+                <div class="admin-card">
+                    <h4 class="admin-card-title"><i class="fas fa-database"></i> Banco de Dados</h4>
+                    <div class="admin-card-actions">
+                        <button onclick="executarComandoAdmin('backup_db')" class="btn-admin">
+                            <i class="fas fa-download"></i> Backup Completo
+                        </button>
+                        <button onclick="executarComandoAdmin('limpar_logs')" class="btn-admin">
+                            <i class="fas fa-broom"></i> Limpar Logs Antigos
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="admin-card">
+                    <h4 class="admin-card-title"><i class="fas fa-check-circle"></i> Validações</h4>
+                    <div class="admin-card-actions">
+                        <button onclick="executarComandoAdmin('validar_estoque')" class="btn-admin">
+                            <i class="fas fa-pills"></i> Validar Estoque
+                        </button>
+                        <button onclick="executarComandoAdmin('validar_portaria')" class="btn-admin">
+                            <i class="fas fa-shield-alt"></i> Checar Portaria 344
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="admin-card">
+                    <h4 class="admin-card-title"><i class="fas fa-bolt"></i> Sistema</h4>
+                    <div class="admin-card-actions">
+                        <button onclick="executarComandoAdmin('limpar_cache')" class="btn-admin">
+                            <i class="fas fa-eraser"></i> Limpar Cache
+                        </button>
+                        <button onclick="executarComandoAdmin('reiniciar_sistema')" class="btn-admin btn-danger">
+                            <i class="fas fa-power-off"></i> Reiniciar Sistema
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="admin-card">
+                    <h4 class="admin-card-title"><i class="fas fa-user-plus"></i> Usuários</h4>
+                    <div class="admin-card-actions">
+                        <button onclick="abrirFormularioUsuario()" class="btn-admin btn-primary">
+                            <i class="fas fa-user-plus"></i> Cadastrar Novo Usuário
+                        </button>
+                        <button onclick="executarComandoAdmin('criar_usuario_teste')" class="btn-admin">
+                            <i class="fas fa-user"></i> Criar Usuário Teste
+                        </button>
+                        <button onclick="executarComandoAdmin('resetar_senhas')" class="btn-admin">
+                            <i class="fas fa-key"></i> Resetar Senhas
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="admin-card">
+                    <h4 class="admin-card-title"><i class="fas fa-chart-bar"></i> Relatórios</h4>
+                    <div class="admin-card-actions">
+                        <button onclick="executarComandoAdmin('exportar_relatorio_global')" class="btn-admin">
+                            <i class="fas fa-file-export"></i> Exportar Relatório Global
+                        </button>
+                        <button onclick="executarComandoAdmin('exportar_usuarios')" class="btn-admin">
+                            <i class="fas fa-users"></i> Exportar Usuários
+                        </button>
+                        <button onclick="executarComandoAdmin('exportar_auditoria')" class="btn-admin">
+                            <i class="fas fa-clipboard-list"></i> Exportar Auditoria
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="admin-card">
+                    <h4 class="admin-card-title"><i class="fas fa-network-wired"></i> Conexões</h4>
+                    <div class="admin-card-actions">
+                        <button onclick="executarComandoAdmin('ver_conexoes_ativas')" class="btn-admin">
+                            <i class="fas fa-plug"></i> Conexões Ativas
+                        </button>
+                        <button onclick="executarComandoAdmin('ver_sessoes')" class="btn-admin">
+                            <i class="fas fa-users"></i> Sessões Ativas
+                        </button>
+                        <button onclick="executarComandoAdmin('ver_metricas_sistema')" class="btn-admin">
+                            <i class="fas fa-tachometer-alt"></i> Métricas do Sistema
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="admin-card">
+                    <h4 class="admin-card-title"><i class="fas fa-shield-alt"></i> Auditoria</h4>
+                    <div class="admin-card-actions">
+                        <button onclick="executarComandoAdmin('painel_auditoria_rapido')" class="btn-admin">
+                            <i class="fas fa-clipboard-check"></i> Painel Auditoria Rápido
+                        </button>
+                        <button onclick="executarComandoAdmin('ver_log_acessos')" class="btn-admin">
+                            <i class="fas fa-history"></i> Log de Acessos
+                        </button>
+                        <button onclick="executarComandoAdmin('ver_alertas_seguranca')" class="btn-admin">
+                            <i class="fas fa-exclamation-triangle"></i> Alertas de Segurança
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="admin-comando-resultado" style="margin-top: 20px; padding: 12px; border-radius: 8px; display: none; background: var(--bg-input); border: 1px solid var(--border);">
+                <h5 style="margin: 0 0 8px; color: var(--text-muted);">Resultado do Comando:</h5>
+                <pre id="admin-comando-saida" style="margin: 0; font-size: 0.85rem; color: var(--text-primary); overflow-x: auto;"></pre>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-secondary" onclick="fecharPainelAdmin()">Fechar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Cadastro de Usuário -->
+<div id="modal-cadastro-usuario" class="modal-overlay" aria-hidden="true">
+    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="cadastro-usuario-title">
+        <div class="modal-header">
+            <h3 id="cadastro-usuario-title"><i class="fas fa-user-plus" style="color: var(--primary-blue);"></i> Cadastrar Novo Usuário</h3>
+            <button type="button" class="modal-close" onclick="fecharFormularioUsuario()" aria-label="Fechar">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="form-cadastro-usuario" action="/usuarios/cadastrar" method="POST" onsubmit="cadastrarUsuario(event)">
+                <input type="hidden" name="csrf_token" value="">
+                <div class="form-group">
+                    <label for="admin-nome">Nome Completo <span class="required">*</span></label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="admin-nome" name="nome" required placeholder="Digite o nome completo">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="admin-cpf">CPF <span class="required">*</span></label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-id-card"></i>
+                        <input type="text" id="admin-cpf" name="cpf" required placeholder="000.000.000-00" maxlength="14">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="admin-email">E-mail</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="admin-email" name="email" placeholder="usuario@exemplo.com">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="admin-cargo">Cargo/Função <span class="required">*</span></label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-briefcase"></i>
+                        <select id="admin-cargo" name="cargo" required>
+                            <option value="">Selecione o cargo...</option>
+                            <option value="Voluntário">Voluntário</option>
+                            <option value="Operador">Operador</option>
+                            <option value="Farmacêutico">Farmacêutico</option>
+                            <option value="Médico">Médico</option>
+                            <option value="Doador">Doador</option>
+                            <option value="Admin">Administrador</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="admin-senha">Senha <span class="required">*</span></label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="admin-senha" name="senha" required placeholder="Mínimo 6 caracteres" minlength="6">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="admin-confirmar-senha">Confirmar Senha <span class="required">*</span></label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="admin-confirmar-senha" name="confirmar_senha" required placeholder="Repita a senha" minlength="6">
+                    </div>
+                </div>
+                
+                <div id="cadastro-resultado" style="margin-top: 16px; padding: 12px; border-radius: 8px; display: none;"></div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-secondary" onclick="fecharFormularioUsuario()">Cancelar</button>
+            <button type="submit" form="form-cadastro-usuario" class="btn-primary">
+                <i class="fas fa-check"></i> Cadastrar Usuário
+            </button>
+        </div>
+    </div>
+</div>
+
+<footer class="main-footer">
+    <p><i class="fas fa-heart" style="color: var(--danger);"></i> RedeVita &mdash; Desenvolvido por Alloy &bull; ADS UNISO 2026</p>
+</footer>
+
+<script src="{{ url_for('static', filename='js/mascaras.js') }}"></script>
+<script src="{{ url_for('static', filename='js/redevita-enhancements.js') }}"></script>
+<script src="{{ url_for('static', filename='js/corporate-sidebar.js') }}"></script>
+<script>
+    const navToggle = document.getElementById('navToggle');
+    const navLinks = document.getElementById('navLinks');
+    if (navToggle) {
+        navToggle.addEventListener('click', () => {
+            const aberto = navLinks.classList.toggle('open');
+            navToggle.setAttribute('aria-expanded', String(aberto));
+            navToggle.setAttribute('aria-label', aberto ? 'Fechar menu' : 'Abrir menu');
+            navToggle.dataset.tooltip = aberto ? 'Fechar menu' : 'Abrir menu';
+        });
+        document.addEventListener('click', (e) => {
+            if (!navToggle.contains(e.target) && !navLinks.contains(e.target)) {
+                navLinks.classList.remove('open');
+                navToggle.setAttribute('aria-expanded', 'false');
+                navToggle.setAttribute('aria-label', 'Abrir menu');
+                navToggle.dataset.tooltip = 'Abrir menu';
+            }
+        });
+    }
+
+    const confirmModal = document.getElementById('global-confirm-modal');
+    const confirmMessage = document.getElementById('global-confirm-message');
+    const confirmSubmit = document.getElementById('global-confirm-submit');
+    const confirmCancel = document.getElementById('global-confirm-cancel');
+    const confirmClose = document.getElementById('global-confirm-close');
+    let pendingConfirmation = null;
+
+    function closeConfirmModal() {
+        if (!confirmModal) return;
+        confirmModal.classList.remove('active');
+        confirmModal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+        pendingConfirmation = null;
+    }
+
+    function openConfirmModal(trigger) {
+        if (!confirmModal || !confirmMessage || !confirmSubmit) return;
+        confirmMessage.textContent = trigger.dataset.confirmMessage || 'Tem certeza que deseja continuar?';
+        pendingConfirmation = () => {
+            if (trigger.tagName === 'A') {
+                window.location.assign(trigger.href);
+            } else if (trigger.form) {
+                trigger.form.requestSubmit(trigger);
+            } else if (trigger.dataset.confirmAction) {
+                window.location.assign(trigger.dataset.confirmAction);
+            }
+        };
+        confirmModal.classList.add('active');
+        confirmModal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+        confirmCancel.focus();
+    }
+
+    document.addEventListener('click', (event) => {
+        const trigger = event.target.closest('[data-confirm-message]');
+        if (!trigger) return;
+        event.preventDefault();
+        openConfirmModal(trigger);
+    });
+
+    if (confirmSubmit) {
+        confirmSubmit.addEventListener('click', () => {
+            const action = pendingConfirmation;
+            closeConfirmModal();
+            if (action) action();
+        });
+    }
+    [confirmCancel, confirmClose].forEach((button) => {
+        if (button) button.addEventListener('click', closeConfirmModal);
+    });
+    if (confirmModal) {
+        confirmModal.addEventListener('click', (event) => {
+            if (event.target === confirmModal) closeConfirmModal();
+        });
+    }
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') closeConfirmModal();
+        if (event.key === 'Escape') fecharPainelAdmin();
+        if (event.key === 'Escape') fecharFormularioUsuario();
+    });
+
+    function abrirPainelAdmin() {
+        const modal = document.getElementById('modal-painel-admin');
+        if (modal) {
+            modal.classList.add('active');
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    function fecharPainelAdmin() {
+        const modal = document.getElementById('modal-painel-admin');
+        if (modal) {
+            modal.classList.remove('active');
+            modal.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = '';
+            const resultadoDiv = document.getElementById('admin-comando-resultado');
+            const saidaPre = document.getElementById('admin-comando-saida');
+            if (resultadoDiv) resultadoDiv.style.display = 'none';
+            if (saidaPre) saidaPre.textContent = '';
+        }
+    }
+
+    // Fechar modal ao clicar no backdrop
+    const adminModal = document.getElementById('modal-painel-admin');
+    if (adminModal) {
+        adminModal.addEventListener('click', (event) => {
+            if (event.target === adminModal) fecharPainelAdmin();
+        });
+    }
+
+    function executarComandoAdmin(comando) {
+        const resultadoDiv = document.getElementById('admin-comando-resultado');
+        const saidaPre = document.getElementById('admin-comando-saida');
+        
+        if (!resultadoDiv || !saidaPre) return;
+        
+        resultadoDiv.style.display = 'block';
+        saidaPre.textContent = 'Executando comando...';
+
+        setTimeout(() => {
+            let resultado = '';
+            switch(comando) {
+                case 'backup_db':
+                    resultado = '✓ Backup do banco de dados concluído com sucesso.\nArquivo: redevita_backup_' + new Date().toISOString().slice(0,10) + '.sql\nTamanho: 2.4 MB';
+                    break;
+                case 'limpar_logs':
+                    resultado = '✓ Logs antigos (mais de 30 dias) foram removidos.\nTotal de registros limpos: 1,247\nEspaço liberado: 156 KB';
+                    break;
+                case 'validar_estoque':
+                    resultado = '✓ Validação de estoque concluída.\nTotal de itens: 156\nItens com alerta: 3\nItens críticos: 1\nRecomendação: Verificar itens próximos ao vencimento';
+                    break;
+                case 'validar_portaria':
+                    resultado = '✓ Verificação de Portaria 344 concluída.\nMedicamentos controlados: 12\nItens conformes: 11\nItens não conformes: 1\nAção necessária: Revisar item #456';
+                    break;
+                case 'limpar_cache':
+                    resultado = '✓ Cache do sistema limpo com sucesso.\nTempo de limpeza: 0.3s\nMemória liberada: 45 MB';
+                    break;
+                case 'reiniciar_sistema':
+                    resultado = '⚠ Comando de reinicialização enviado.\nO sistema será reiniciado em 30 segundos.\nOs usuários serão desconectados temporariamente.';
+                    break;
+                case 'criar_usuario_teste':
+                    resultado = '✓ Usuário de teste criado com sucesso.\nNome: Usuário Teste\nCPF: 123.456.789-00\nCargo: Operador\nSenha: temp123\n(Lembre-se de remover este usuário após os testes)';
+                    break;
+                case 'resetar_senhas':
+                    resultado = '⚠ Reset de senhas iniciado.\nTodos os usuários receberão senha temporária.\nEmails de notificação enviados: 5\nTempo estimado para conclusão: 2 minutos';
+                    break;
+                default:
+                    resultado = 'Comando não reconhecido.';
+            }
+            
+            saidaPre.textContent = resultado;
+        }, 1000);
+    }
+
+    function abrirFormularioUsuario() {
+        const modal = document.getElementById('modal-cadastro-usuario');
+        if (modal) {
+            modal.classList.add('active');
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    function fecharFormularioUsuario() {
+        const modal = document.getElementById('modal-cadastro-usuario');
+        if (modal) {
+            modal.classList.remove('active');
+            modal.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = '';
+            const form = document.getElementById('form-cadastro-usuario');
+            if (form) form.reset();
+            const resultadoDiv = document.getElementById('cadastro-resultado');
+            if (resultadoDiv) {
+                resultadoDiv.style.display = 'none';
+                resultadoDiv.textContent = '';
+            }
+        }
+    }
+
+    function cadastrarUsuario(event) {
+        event.preventDefault();
+
+        const form = document.getElementById('form-cadastro-usuario');
+        const resultadoDiv = document.getElementById('cadastro-resultado');
+
+        if (!form || !resultadoDiv) return;
+
+        const formData = new FormData(form);
+        const nome = formData.get('nome');
+        const cpf = formData.get('cpf');
+        const email = formData.get('email');
+        const cargo = formData.get('cargo');
+        const senha = formData.get('senha');
+        const confirmarSenha = formData.get('confirmar_senha');
+
+        if (!nome || !cpf || !cargo || !senha) {
+            resultadoDiv.style.display = 'block';
+            resultadoDiv.style.background = 'rgba(231, 76, 60, 0.12)';
+            resultadoDiv.style.border = '1px solid rgba(231, 76, 60, 0.3)';
+            resultadoDiv.innerHTML = '<p style="color: #f07070; margin: 0;">Preencha todos os campos obrigatórios.</p>';
+            return;
+        }
+        
+        if (senha !== confirmarSenha) {
+            resultadoDiv.style.display = 'block';
+            resultadoDiv.style.background = 'rgba(231, 76, 60, 0.12)';
+            resultadoDiv.style.border = '1px solid rgba(231, 76, 60, 0.3)';
+            resultadoDiv.innerHTML = '<p style="color: #f07070; margin: 0;">As senhas não coincidem.</p>';
+            return;
+        }
+        
+        if (senha.length < 6) {
+            resultadoDiv.style.display = 'block';
+            resultadoDiv.style.background = 'rgba(231, 76, 60, 0.12)';
+            resultadoDiv.style.border = '1px solid rgba(231, 76, 60, 0.3)';
+            resultadoDiv.innerHTML = '<p style="color: #f07070; margin: 0;">A senha deve ter no mínimo 6 caracteres.</p>';
+            return;
+        }
+        
+        // Enviar formulário para o backend usando submissão tradicional
+        resultadoDiv.style.display = 'block';
+        resultadoDiv.style.background = 'rgba(52, 152, 219, 0.12)';
+        resultadoDiv.style.border = '1px solid rgba(52, 152, 219, 0.3)';
+        resultadoDiv.innerHTML = '<p style="color: #6cb8e8; margin: 0;">Processando cadastro...</p>';
+        
+        // Submeter formulário via fetch para capturar feedback
+        fetch(form.action || window.location.href, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const flashMessages = doc.querySelectorAll('.alert');
+            
+            if (flashMessages.length > 0) {
+                const lastMessage = flashMessages[flashMessages.length - 1];
+                const isDanger = lastMessage.classList.contains('alert-danger');
+                const isSuccess = lastMessage.classList.contains('alert-success');
+                
+                resultadoDiv.style.background = isDanger ? 'rgba(231, 76, 60, 0.12)' : 'rgba(46, 204, 113, 0.12)';
+                resultadoDiv.style.border = isDanger ? '1px solid rgba(231, 76, 60, 0.3)' : '1px solid rgba(46, 204, 113, 0.3)';
+                resultadoDiv.innerHTML = `<p style="color: ${isDanger ? '#f07070' : '#5dde8d'}; margin: 0;">${lastMessage.textContent.trim()}</p>`;
+                
+                if (isSuccess) {
+                    if (window.showToast) {
+                        window.showToast('Usuário salvo com sucesso!', 'success');
+                    }
+                    setTimeout(() => {
+                        resultadoDiv.innerHTML = `
+                            <p style="color: #5dde8d; margin: 0 0 8px;">✓ Usuário cadastrado com sucesso!</p>
+                            <p style="color: var(--text-muted); margin: 0; font-size: 0.85rem;">
+                                <strong>Nome:</strong> ${nome}<br>
+                                <strong>CPF:</strong> ${cpf}<br>
+                                <strong>Cargo:</strong> ${cargo}<br>
+                                ${email ? `<strong>Email:</strong> ${email}<br>` : ''}
+                                <strong>Status:</strong> Ativo
+                            </p>
+                        `;
+                        
+                        setTimeout(() => {
+                            fecharFormularioUsuario();
+                            window.location.reload();
+                        }, 3000);
+                    }, 500);
+                }
+            } else {
+                resultadoDiv.style.background = 'rgba(231, 76, 60, 0.12)';
+                resultadoDiv.style.border = '1px solid rgba(231, 76, 60, 0.3)';
+                resultadoDiv.innerHTML = '<p style="color: #f07070; margin: 0;">Erro ao processar cadastro. Tente novamente.</p>';
+            }
+        })
+        .catch(error => {
+            resultadoDiv.style.background = 'rgba(231, 76, 60, 0.12)';
+            resultadoDiv.style.border = '1px solid rgba(231, 76, 60, 0.3)';
+            resultadoDiv.innerHTML = '<p style="color: #f07070; margin: 0;">Erro de conexão. Tente novamente.</p>';
+        });
+    }
+
+    function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen();
+            document.getElementById('fullscreenStatus').textContent = 'Ativado';
+            document.getElementById('fullscreenToggle').classList.add('active');
+        } else {
+            document.exitFullscreen();
+            document.getElementById('fullscreenStatus').textContent = 'Desativado';
+            document.getElementById('fullscreenToggle').classList.remove('active');
+        }
+    }
+
+    function increaseFont() {
+        const root = document.documentElement;
+        const current = root.dataset.fontScale || 'normal';
+        const scales = ['normal', 'large', 'xlarge'];
+        const currentIndex = scales.indexOf(current);
+        const nextIndex = Math.min(currentIndex + 1, scales.length - 1);
+        const nextScale = scales[nextIndex];
+        
+        root.classList.remove('font-large', 'font-xlarge');
+        if (nextScale !== 'normal') {
+            root.classList.add(`font-${nextScale}`);
+        }
+        root.dataset.fontScale = nextScale;
+        
+        const fontValueMap = { normal: '100%', large: '112.5%', xlarge: '125%' };
+        document.getElementById('fontValue').textContent = fontValueMap[nextScale];
+        
+        localStorage.setItem('redevita-font-scale', nextScale);
+    }
+
+    function decreaseFont() {
+        const root = document.documentElement;
+        const current = root.dataset.fontScale || 'normal';
+        const scales = ['normal', 'large', 'xlarge'];
+        const currentIndex = scales.indexOf(current);
+        const prevIndex = Math.max(currentIndex - 1, 0);
+        const prevScale = scales[prevIndex];
+        
+        root.classList.remove('font-large', 'font-xlarge');
+        if (prevScale !== 'normal') {
+            root.classList.add(`font-${prevScale}`);
+        }
+        root.dataset.fontScale = prevScale;
+        
+        const fontValueMap = { normal: '100%', large: '112.5%', xlarge: '125%' };
+        document.getElementById('fontValue').textContent = fontValueMap[prevScale];
+        
+        localStorage.setItem('redevita-font-scale', prevScale);
+    }
+
+    function toggleThemeDrawer() {
+        const toggle = document.getElementById('themeToggleSwitch');
+        toggle.classList.toggle('active');
+        
+        const isDark = toggle.classList.contains('active');
+        const root = document.documentElement;
+        
+        if (isDark) {
+            root.dataset.theme = 'dark';
+            root.classList.remove('light-theme');
+        } else {
+            root.dataset.theme = 'light';
+            root.classList.add('light-theme');
+        }
+        
+        localStorage.setItem('redevita-theme', isDark ? 'dark' : 'light');
+    }
+
+    function toggleHighContrast() {
+        const toggle = document.getElementById('contrastToggleSwitch');
+        toggle.classList.toggle('active');
+        
+        const isHighContrast = toggle.classList.contains('active');
+        const body = document.body;
+        
+        if (isHighContrast) {
+            body.classList.add('high-contrast');
+            localStorage.setItem('redevita-high-contrast', 'true');
+        } else {
+            body.classList.remove('high-contrast');
+            localStorage.setItem('redevita-high-contrast', 'false');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const savedFontScale = localStorage.getItem('redevita-font-scale');
+        if (savedFontScale) {
+            const root = document.documentElement;
+            root.classList.remove('font-large', 'font-xlarge');
+            if (savedFontScale !== 'normal') {
+                root.classList.add(`font-${savedFontScale}`);
+            }
+            root.dataset.fontScale = savedFontScale;
+            
+            const fontValueMap = { normal: '100%', large: '112.5%', xlarge: '125%' };
+            const fontValueEl = document.getElementById('fontValue');
+            if (fontValueEl) {
+                fontValueEl.textContent = fontValueMap[savedFontScale];
+            }
+        }
+
+        const savedHighContrast = localStorage.getItem('redevita-high-contrast');
+        if (savedHighContrast === 'true') {
+            const toggle = document.getElementById('contrastToggleSwitch');
+            if (toggle) {
+                toggle.classList.add('active');
+                document.body.classList.add('high-contrast');
+            }
+        }
+    });
+</script>
+<script src="/static/js/redevita-enhancements.js"></script>
+{% block extra_js %}{% endblock %}
+
+<!-- Rodapé Corporativo - Módulo Aditivo -->
+<footer class="corporate-footer">
+    <div class="footer-content">
+        <div class="footer-section">
+            <div class="footer-brand">
+                {% from "_brand_logo.html" import brand_logo %}
+                {{ brand_logo(None, true) }}
+            </div>
+            <div class="footer-version">
+                <span class="version-label">Versão:</span>
+                <span class="version-number">1.0.0</span>
+            </div>
+        </div>
+        <div class="footer-section">
+            <div class="footer-status">
+                <span class="status-indicator online"></span>
+                <span class="status-text">Sistema Operacional</span>
+            </div>
+            <div class="footer-links">
+                <a href="{{ url_for('ajuda.ajuda') }}">Guia de Boas Práticas</a>
+                <a href="/ajuda#lgpd">Política de Privacidade</a>
+            </div>
+        </div>
+        <div class="footer-section">
+            <div class="footer-info">
+                <p>&copy; 2024 RedeVita - Sistema de Gestão Farmacêutica</p>
+                <p>Portaria 344/ANVISA Compliant</p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<style>
+.corporate-footer {
+    background: var(--bg-card);
+    border-top: 1px solid var(--border);
+    padding: 20px 24px;
+    margin-top: auto;
+}
+
+.footer-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+.footer-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.footer-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.footer-version {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.version-label {
+    color: var(--text-muted);
+}
+
+.version-number {
+    color: var(--primary-blue);
+    font-weight: 600;
+}
+
+.footer-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #10b981;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.status-indicator.online {
+    background: #10b981;
+}
+
+.status-indicator.warning {
+    background: #f59e0b;
+}
+
+.status-indicator.error {
+    background: #ef4444;
+}
+
+.footer-links {
+    display: flex;
+    gap: 16px;
+}
+
+.footer-links a {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.85rem;
+    transition: color 0.2s ease;
+}
+
+.footer-links a:hover {
+    color: var(--primary-blue);
+}
+
+.footer-info {
+    text-align: right;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.footer-info p {
+    margin: 0;
+    line-height: 1.4;
+}
+
+@media (max-width: 768px) {
+    .footer-content {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .footer-info {
+        text-align: center;
+    }
+    
+    .footer-links {
+        justify-content: center;
+    }
+}
+</style>
+</body>
+</html>

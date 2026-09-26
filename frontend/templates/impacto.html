@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+{% block title %}Impacto Social - RedeVita{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="dashboard-header-corporate">
+        <div class="dashboard-header-content">
+            <h1>Impacto Social e Sustentabilidade</h1>
+            <p class="subtitle">Métricas consolidadas do impacto da RedeVita na comunidade.</p>
+        </div>
+    </div>
+
+    <div class="stats-grid-corporate">
+        <div class="stat-card-corporate">
+            <div class="stat-card-header">
+                <div class="stat-icon-corporate blue">
+                    <i class="fas fa-users"></i>
+                </div>
+            </div>
+            <div class="stat-info-corporate">
+                <div class="stat-value-corporate">{{ pacientes_beneficiados }}</div>
+                <div class="stat-label-corporate">Pacientes Beneficiados</div>
+                <div class="stat-trend-indicator trend-up">
+                    <i class="fas fa-arrow-up"></i> +12%
+                </div>
+            </div>
+        </div>
+        <div class="stat-card-corporate">
+            <div class="stat-card-header">
+                <div class="stat-icon-corporate green">
+                    <i class="fas fa-leaf"></i>
+                </div>
+            </div>
+            <div class="stat-info-corporate">
+                <div class="stat-value-corporate">{{ residuos_evitados_kg }} kg</div>
+                <div class="stat-label-corporate">Resíduos Evitados</div>
+                <div class="stat-trend-indicator trend-up">
+                    <i class="fas fa-arrow-up"></i> +8%
+                </div>
+            </div>
+        </div>
+        <div class="stat-card-corporate">
+            <div class="stat-card-header">
+                <div class="stat-icon-corporate yellow">
+                    <i class="fas fa-pills"></i>
+                </div>
+            </div>
+            <div class="stat-info-corporate">
+                <div class="stat-value-corporate">{{ medicamentos_salvos }}</div>
+                <div class="stat-label-corporate">Medicamentos Salvos</div>
+                <div class="stat-trend-indicator trend-up">
+                    <i class="fas fa-arrow-up"></i> +15%
+                </div>
+            </div>
+        </div>
+        <div class="stat-card-corporate">
+            <div class="stat-card-header">
+                <div class="stat-icon-corporate red">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+            </div>
+            <div class="stat-info-corporate">
+                <div class="stat-value-corporate">{{ medicamentos_vencidos }}</div>
+                <div class="stat-label-corporate">Medicamentos Vencidos</div>
+                <div class="stat-trend-indicator trend-down">
+                    <i class="fas fa-arrow-down"></i> -5%
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="charts-grid-corporate">
+        <div class="chart-card-corporate">
+            <div class="chart-card-header-corporate">
+                <h3><i class="fas fa-chart-area"></i> Evolução de Impacto</h3>
+                <span class="chart-badge-corporate">Últimos 6 meses</span>
+            </div>
+            <div class="chart-container-corporate">
+                <canvas id="chartImpacto" aria-label="Gráfico de evolução de impacto"></canvas>
+            </div>
+            <div class="chart-legend-corporate">
+                <div class="legend-item-corporate">
+                    <div class="legend-dot-corporate" style="background:#38bdf8;"></div>
+                    Pacientes Beneficiados
+                </div>
+                <div class="legend-item-corporate">
+                    <div class="legend-dot-corporate" style="background:#10b981;"></div>
+                    Resíduos Evitados (kg)
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-card-corporate">
+            <div class="chart-card-header-corporate">
+                <h3><i class="fas fa-chart-pie"></i> Distribuição de Impacto</h3>
+                <span class="chart-badge-corporate">Por categoria</span>
+            </div>
+            <div class="chart-container-corporate">
+                <canvas id="chartDistribuicao" aria-label="Gráfico de distribuição de impacto"></canvas>
+            </div>
+            <div id="chartDistribuicaoLegend" class="chart-legend-corporate"></div>
+        </div>
+
+        <div class="chart-card-corporate">
+            <div class="chart-card-header-corporate">
+                <h3><i class="fas fa-chart-bar"></i> Métricas de Sustentabilidade</h3>
+                <span class="chart-badge-corporate">Mensal</span>
+            </div>
+            <div class="chart-container-corporate">
+                <canvas id="chartSustentabilidade" aria-label="Gráfico de métricas de sustentabilidade"></canvas>
+            </div>
+            <div class="chart-legend-corporate">
+                <div class="legend-item-corporate">
+                    <div class="legend-dot-corporate" style="background:#f59e0b;"></div>
+                    Doações Realizadas
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="welcome-banner-corporate">
+        <div class="welcome-banner-content">
+            <h2><i class="fas fa-globe-americas"></i> Impacto Ambiental Positivo</h2>
+            <p>A RedeVita contribui para a redução de resíduos farmacêuticos no meio ambiente através da gestão eficiente de medicamentos.</p>
+        </div>
+        <div class="welcome-banner-status">
+            <div class="status-dot"></div>
+            Sustentabilidade Ativa
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/chart.umd.min.js') }}"></script>
+<script>
+(function () {
+    if (typeof Chart === 'undefined') return;
+    
+    // Gráfico de Evolução de Impacto
+    const ctxImpacto = document.getElementById('chartImpacto');
+    if (ctxImpacto) {
+        new Chart(ctxImpacto, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
+                datasets: [
+                    {
+                        label: 'Pacientes Beneficiados',
+                        data: [120, 150, 180, 210, 240, {{ pacientes_beneficiados }}],
+                        borderColor: '#38bdf8',
+                        backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Resíduos Evitados (kg)',
+                        data: [5.2, 6.8, 7.5, 8.2, 9.1, {{ residuos_evitados_kg }}],
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: true, position: 'bottom' },
+                    tooltip: { backgroundColor: '#151c2a', borderColor: '#334155', borderWidth: 1 }
+                },
+                scales: {
+                    x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } },
+                    y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } }
+                }
+            }
+        });
+    }
+
+    // Gráfico de Distribuição
+    const ctxDistribuicao = document.getElementById('chartDistribuicao');
+    if (ctxDistribuicao) {
+        new Chart(ctxDistribuicao, {
+            type: 'doughnut',
+            data: {
+                labels: ['Pacientes', 'Farmácias', 'Doações', 'Medicamentos'],
+                datasets: [{
+                    data: [{{ total_pacientes }}, {{ total_farmacias }}, {{ total_doacoes }}, {{ total_medicamentos }}],
+                    backgroundColor: ['#38bdf8', '#10b981', '#f59e0b', '#ef4444'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { 
+                        backgroundColor: '#151c2a', 
+                        borderColor: '#334155', 
+                        borderWidth: 1,
+                        callbacks: {
+                            label: function(context) {
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const value = context.parsed;
+                                const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                                return `${context.label}: ${value} (${percentage}%)`;
+                            }
+                        }
+                    }
+                },
+                cutout: '65%'
+            }
+        });
+    }
+
+    // Gráfico de Sustentabilidade
+    const ctxSustentabilidade = document.getElementById('chartSustentabilidade');
+    if (ctxSustentabilidade) {
+        new Chart(ctxSustentabilidade, {
+            type: 'bar',
+            data: {
+                labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
+                datasets: [{
+                    label: 'Doações Realizadas',
+                    data: [8, 12, 15, 18, 22, {{ doacoes_mes }}],
+                    backgroundColor: '#f59e0b',
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { backgroundColor: '#151c2a', borderColor: '#334155', borderWidth: 1 }
+                },
+                scales: {
+                    x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } },
+                    y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } }
+                }
+            }
+        });
+    }
+})();
+</script>
+{% endblock %}

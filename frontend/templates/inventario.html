@@ -1,0 +1,598 @@
+{% extends "base.html" %}
+{% block title %}Inventário - RedeVita{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header">
+        <div>
+            <h2><i class="fas fa-pills"></i> Inventário de Medicamentos</h2>
+            <p class="page-subtitle">Gerencie o estoque de medicamentos cadastrados.</p>
+        </div>
+        <div style="display:flex; gap:10px;">
+            <div style="display:flex; gap:8px;">
+                <a href="{{ url_for('relatorios.exportar_medicamentos') }}" class="btn-secondary"
+                   style="justify-content:center;" data-export-button>
+                    <svg class="download-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg> CSV
+                </a>
+                <a href="{{ url_for('relatorios.exportar_medicamentos_pdf') }}" class="btn-secondary"
+                   style="justify-content:center;" data-export-button>
+                    <svg class="download-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg> PDF
+                </a>
+            </div>
+            <button class="btn-primary" onclick="abrirModal('modal-add')">
+                <i class="fas fa-plus"></i> Novo Medicamento
+            </button>
+        </div>
+    </div>
+
+    <div class="table-toolbar" role="search">
+        <div class="search-input-wrapper relative">
+            <i class="fas fa-search" aria-hidden="true"></i>
+            <input type="search" id="inventory-table-search" data-table-search="inventory-table"
+                   placeholder="Buscar medicamento, lote ou status" autocomplete="off">
+        </div>
+        <div style="display:flex; gap:8px; align-items:center;">
+            <label style="font-size:0.85rem; color:var(--text-muted);">Filtro Tarja:</label>
+            <div class="filter-chips" id="filtro-tarja-chips">
+                <button class="filter-chip active" data-tarja="" onclick="aplicarFiltroTarja('')">Todos</button>
+                <button class="filter-chip" data-tarja="Sem Tarja" onclick="aplicarFiltroTarja('Sem Tarja')">Sem Tarja</button>
+                <button class="filter-chip" data-tarja="Tarja Amarela" onclick="aplicarFiltroTarja('Tarja Amarela')">Amarela</button>
+                <button class="filter-chip" data-tarja="Tarja Vermelha" onclick="aplicarFiltroTarja('Tarja Vermelha')">Vermelha</button>
+                <button class="filter-chip" data-tarja="Portaria 344" onclick="aplicarFiltroTarja('Portaria 344')">Portaria 344</button>
+            </div>
+        </div>
+        <span class="table-search-hint">Filtra os itens desta página sem recarregar.</span>
+    </div>
+    <div class="table-wrapper">
+        <table class="styled-table" id="inventory-table">
+            <thead>
+                <tr>
+                    <th>Status</th>
+                    <th>Medicamento</th>
+                    <th>Lote</th>
+                    <th>Validade</th>
+                    <th>Qtd.</th>
+                    <th>Tarja</th>
+                    <th style="text-align:center;">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for med in medicamentos %}
+                <tr data-tarja="{{ med.tarja or '' }}">
+                    <td>
+                        {% if med.status_semaforo == 0 %}
+                            <span class="status-pill green"><i class="fas fa-circle"></i> Seguro</span>
+                        {% elif med.status_semaforo == 1 %}
+                            <span class="status-pill yellow"><i class="fas fa-circle"></i> Atenção</span>
+                        {% else %}
+                            <span class="status-pill red"><i class="fas fa-circle"></i> Vencido</span>
+                        {% endif %}
+                    </td>
+                    <td><strong>{{ med.nome }}</strong>
+                        {% if med.referencia %}
+                        <span class="compliance-info" data-tooltip="Registo ANVISA: {{ med.referencia.registro_ms or '—' }} | Classe: {{ med.referencia.classe_terapeutica or '—' }}">
+                            <i class="fas fa-info-circle" style="color: var(--primary-blue); font-size: 0.75rem; margin-left: 4px;"></i>
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td><code class="lote-code">{{ med.lote }}</code></td>
+                    <td>{{ med.data_validade.strftime('%d/%m/%Y') }}</td>
+                    <td>{{ med.quantidade }} un.</td>
+                    <td>
+                        {% if med.tarja == 'Portaria 344' %}
+                            <span class="status-pill red" style="background: rgba(192,57,43,.15); color: #ef4444; border: 1px solid rgba(192,57,43,.4);">
+                                <i class="fas fa-skull-crossbones"></i> Portaria 344
+                            </span>
+                            <span class="compliance-info" data-tooltip="Receita 'B' Especial (Azul) ou 'A' (Amarela) | Lista C1/C2">
+                                <i class="fas fa-shield-alt" style="color: var(--warning); font-size: 0.75rem; margin-left: 4px;"></i>
+                            </span>
+                        {% elif med.tarja == 'Tarja Vermelha' %}
+                            <span class="status-pill" style="background: rgba(239,68,68,.15); color: #ef4444; border: 1px solid rgba(239,68,68,.4);">
+                                <i class="fas fa-exclamation-triangle"></i> Tarja Vermelha
+                            </span>
+                        {% elif med.tarja == 'Tarja Amarela' %}
+                            <span class="status-pill yellow" style="background: rgba(245,158,11,.15); color: #f59e0b; border: 1px solid rgba(245,158,11,.4);">
+                                <i class="fas fa-prescription"></i> Tarja Amarela
+                            </span>
+                        {% else %}
+                            <span class="status-pill" style="background: rgba(16,185,129,.15); color: #10b981; border: 1px solid rgba(16,185,129,.4);">
+                                <i class="fas fa-check-circle"></i> Sem Tarja
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td style="text-align:center;">
+                        <div class="action-btns">
+                            <button class="btn-icon btn-timeline"
+                                title="Ver Histórico"
+                                onclick="abrirTimeline({{ med.id }}, '{{ med.nome }}', '{{ med.lote }}')">
+                                <i class="fas fa-history"></i>
+                            </button>
+                            <button class="btn-icon btn-edit"
+                                title="Editar"
+                                onclick="abrirEdicao({{ med.id }}, '{{ med.nome }}', '{{ med.lote }}', '{{ med.data_validade.strftime('%Y-%m-%d') }}', {{ med.quantidade }})">
+                                <i class="fas fa-pen"></i>
+                            </button>
+                            <button class="btn-icon btn-delete"
+                                title="Excluir"
+                                onclick="confirmarExclusao({{ med.id }}, '{{ med.nome }}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="empty-state">
+                        <i class="fas fa-box-open"></i>
+                        <p>Nenhum medicamento cadastrado ainda.</p>
+                        <button class="btn-primary" onclick="abrirModal('modal-add')">Cadastrar o primeiro</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="modal-add" class="modal-overlay" onclick="fecharModalFora(event, 'modal-add')">
+    <div class="modal-box modal-lg">
+        <div class="modal-header">
+            <h3><i class="fas fa-plus-circle"></i> Novo Medicamento</h3>
+            <button class="modal-close" onclick="fecharModal('modal-add')">&times;</button>
+        </div>
+        <form action="{{ url_for('inventory.novo_medicamento') }}" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-grid">
+                <div class="form-group form-group-full">
+                    <label>Nome do Medicamento <span class="required">*</span></label>
+                    <div class="autocomplete-wrapper" style="position: relative;">
+                        <div class="input-with-icon relative">
+                            <i class="fas fa-search" aria-hidden="true"></i>
+                            <input type="text" name="nome" id="nome-medicamento" placeholder="Ex: Dipirona 500mg" required maxlength="100" autocomplete="off">
+                        </div>
+                        <div id="sugestoes-dropdown" class="sugestoes-dropdown hidden"></div>
+                    </div>
+                    <div id="alerta-receita" class="alerta-receita hidden">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span id="mensagem-receita"></span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Lote <span class="required">*</span></label>
+                    <input type="text" name="lote" placeholder="Ex: L2024001" required maxlength="50">
+                </div>
+                <div class="form-group">
+                    <label>Quantidade <span class="required">*</span></label>
+                    <input type="number" name="quantidade" min="0" placeholder="100" required>
+                </div>
+                <div class="form-group">
+                    <label>Data de Validade <span class="required">*</span></label>
+                    <input type="date" name="data_validade" required>
+                </div>
+                <div class="form-group">
+                    <label>Registro MS (Opcional)</label>
+                    <input type="text" name="registro_ms" placeholder="Ex: 1234567890123" maxlength="20">
+                    <small style="color: var(--text-muted); font-size: 0.75rem;">Será validado na base da ANVISA conforme RDC 430/2020</small>
+                </div>
+            </div>
+            <div class="form-group form-group-footer">
+                <label style="display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox" name="refrigerado" value="1" style="width: auto;">
+                    <span>Armazenamento Refrigerado (Temperatura Controlada)</span>
+                </label>
+                <small style="color: var(--text-muted); font-size: 0.75rem;">Marque se o medicamento requer armazenamento em geladeira (2°C a 8°C)</small>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="fecharModal('modal-add')">Cancelar</button>
+                <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Cadastrar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="modal-edit" class="modal-overlay" onclick="fecharModalFora(event, 'modal-edit')">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3><i class="fas fa-pen"></i> Editar Medicamento</h3>
+            <button class="modal-close" onclick="fecharModal('modal-edit')">&times;</button>
+        </div>
+        <form id="form-edit" action="" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-group">
+                <label>Nome do Medicamento <span class="required">*</span></label>
+                <input type="text" id="edit-nome" name="nome" required maxlength="100">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Lote <span class="required">*</span></label>
+                    <input type="text" id="edit-lote" name="lote" required maxlength="50">
+                </div>
+                <div class="form-group">
+                    <label>Quantidade <span class="required">*</span></label>
+                    <input type="number" id="edit-qtd" name="quantidade" min="0" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Data de Validade <span class="required">*</span></label>
+                <input type="date" id="edit-validade" name="data_validade" required>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="fecharModal('modal-edit')">Cancelar</button>
+                <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Salvar Alterações</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="modal-delete" class="modal-overlay" onclick="fecharModalFora(event, 'modal-delete')">
+    <div class="modal-box modal-sm">
+        <div class="modal-header">
+            <h3><i class="fas fa-trash"></i> Confirmar Exclusão</h3>
+            <button class="modal-close" onclick="fecharModal('modal-delete')">&times;</button>
+        </div>
+        <p id="delete-msg" style="color: var(--text-muted); margin-bottom: 24px;"></p>
+        <form id="form-delete" action="" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="fecharModal('modal-delete')">Cancelar</button>
+                <button type="submit" class="btn-danger"><i class="fas fa-trash"></i> Excluir</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="modal-timeline" class="modal-overlay" onclick="fecharModalFora(event, 'modal-timeline')">
+    <div class="modal-box modal-lg">
+        <div class="modal-header">
+            <h3><i class="fas fa-history"></i> Linha do Tempo do Lote</h3>
+            <button class="modal-close" onclick="fecharModal('modal-timeline')">&times;</button>
+        </div>
+        <div id="timeline-content" style="color: var(--text-muted);">
+            <div style="text-align: center; padding: 40px;">
+                <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary);"></i>
+                <p style="margin-top: 16px;">Carregando histórico...</p>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-secondary" onclick="fecharModal('modal-timeline')">Fechar</button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let debounceTimer;
+let medicamentosCache = [];
+
+// Garantir que o DOM está carregado antes de anexar eventos
+document.addEventListener('DOMContentLoaded', function() {
+    const inputNome = document.getElementById('nome-medicamento');
+    
+    if (inputNome) {
+        // Autocomplete inteligente com API ANVISA
+        inputNome.addEventListener('input', function(e) {
+            const termo = e.target.value.trim();
+            const dropdown = document.getElementById('sugestoes-dropdown');
+            
+            clearTimeout(debounceTimer);
+            
+            if (termo.length < 2) {
+                dropdown.classList.add('hidden');
+                dropdown.innerHTML = '';
+                return;
+            }
+            
+            dropdown.classList.remove('hidden');
+            dropdown.innerHTML = '<div class="sugestao-loading"><i class="fas fa-spinner fa-spin"></i> Buscando...</div>';
+            
+            debounceTimer = setTimeout(() => {
+                buscarMedicamentosANVISA(termo);
+            }, 300);
+        });
+    }
+});
+
+// Fechar dropdown ao clicar fora
+document.addEventListener('click', function(e) {
+    const wrapper = document.querySelector('.autocomplete-wrapper');
+    const dropdown = document.getElementById('sugestoes-dropdown');
+    
+    if (wrapper && !wrapper.contains(e.target)) {
+        dropdown.classList.add('hidden');
+    }
+});
+
+// Fechar dropdown ao pressionar ESC
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const dropdown = document.getElementById('sugestoes-dropdown');
+        dropdown.classList.add('hidden');
+    }
+});
+
+async function buscarMedicamentosANVISA(termo) {
+    try {
+        const response = await fetch(`/api/medicamentos/buscar?q=${encodeURIComponent(termo)}&limite=10`, {
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+        const dropdown = document.getElementById('sugestoes-dropdown');
+        
+        if (data.success && data.data && data.data.length > 0) {
+            medicamentosCache = data.data;
+            renderizarSugestoes(data.data);
+        } else {
+            dropdown.innerHTML = '<div class="sugestao-vazia">Nenhum medicamento encontrado na base de referência</div>';
+        }
+    } catch (error) {
+        console.error('Erro ao buscar medicamentos:', error);
+        const dropdown = document.getElementById('sugestoes-dropdown');
+        // Não exibe mensagem de erro, apenas usa fallback silencioso
+        dropdown.innerHTML = '<div class="sugestao-vazia">Nenhum medicamento encontrado na base de referência</div>';
+    }
+}
+
+function renderizarSugestoes(medicamentos) {
+    const dropdown = document.getElementById('sugestoes-dropdown');
+    dropdown.innerHTML = '';
+    
+    medicamentos.forEach(med => {
+        const item = document.createElement('div');
+        item.className = 'sugestao-item';
+        item.dataset.nome = med.nome;
+        item.dataset.principioAtivo = med.principio_ativo || '';
+        item.dataset.tipo = med.tipo || '';
+        item.dataset.tarja = med.tarja || 'Sem Tarja';
+        item.dataset.fonte = med.fonte || '';
+        
+        // Define classe da fonte com base no tipo
+        let fonteClass = 'interno';
+        if (med.fonte === 'ANVISA') {
+            fonteClass = 'anvisa';
+        } else if (med.fonte === 'Referência') {
+            fonteClass = 'referencia';
+        }
+        
+        item.innerHTML = `
+            <div class="sugestao-nome">${med.nome}</div>
+            <div class="sugestao-detalhes">
+                ${med.principio_ativo ? `<span>Princípio: ${med.principio_ativo}</span>` : ''}
+                ${med.tipo ? `<span> | Tipo: ${med.tipo}</span>` : ''}
+                <span class="sugestao-fonte ${fonteClass}">${med.fonte}</span>
+            </div>
+        `;
+        
+        item.addEventListener('click', function() {
+            selecionarMedicamento(med);
+        });
+        
+        dropdown.appendChild(item);
+    });
+}
+
+function selecionarMedicamento(med) {
+    const inputNome = document.getElementById('nome-medicamento');
+    const dropdown = document.getElementById('sugestoes-dropdown');
+    
+    // Preencher nome
+    inputNome.value = med.nome;
+    
+    // Fechar dropdown
+    dropdown.classList.add('hidden');
+    
+    // Verificar receita obrigatória
+    verificarReceitaObrigatoria(med.nome, med.tarja || 'Sem Tarja');
+}
+
+// Verificar receita obrigatória ao selecionar medicamento
+document.getElementById('nome-medicamento').addEventListener('change', function(e) {
+    const nome = e.target.value.trim();
+    const tarja = document.querySelector('select[name="tarja"]')?.value || 'Sem Tarja';
+    
+    if (nome) {
+        verificarReceitaObrigatoria(nome, tarja);
+    }
+});
+
+async function verificarReceitaObrigatoria(nome, tarja) {
+    try {
+        const response = await fetch('/api/medicamentos/verificar-receita', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nome, tarja })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.data) {
+            const alertaDiv = document.getElementById('alerta-receita');
+            const mensagemSpan = document.getElementById('mensagem-receita');
+            
+            if (data.data.alerta) {
+                alertaDiv.classList.remove('hidden');
+                alertaDiv.classList.add('active');
+                mensagemSpan.textContent = data.data.mensagem;
+                
+                if (data.data.exige_receita) {
+                    alertaDiv.classList.add('alerta-critico');
+                } else {
+                    alertaDiv.classList.remove('alerta-critico');
+                }
+            } else {
+                alertaDiv.classList.add('hidden');
+                alertaDiv.classList.remove('active');
+            }
+        }
+    } catch (error) {
+        console.error('Erro ao verificar receita:', error);
+    }
+}
+
+function abrirModal(id) {
+    document.getElementById(id).classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+function fecharModal(id) {
+    document.getElementById(id).classList.remove('active');
+    document.body.style.overflow = '';
+}
+function fecharModalFora(event, id) {
+    if (event.target.id === id) fecharModal(id);
+}
+function abrirEdicao(id, nome, lote, validade, qtd) {
+    document.getElementById('form-edit').action = `/medicamento/${id}/editar`;
+    document.getElementById('edit-nome').value = nome;
+    document.getElementById('edit-lote').value = lote;
+    document.getElementById('edit-validade').value = validade;
+    document.getElementById('edit-qtd').value = qtd;
+    abrirModal('modal-edit');
+}
+function confirmarExclusao(id, nome) {
+    document.getElementById('form-delete').action = `/medicamento/${id}/excluir`;
+    document.getElementById('delete-msg').textContent = `Tem certeza que deseja excluir "${nome}"? Esta ação não pode ser desfeita.`;
+    abrirModal('modal-delete');
+}
+function abrirTimeline(id, nome, lote) {
+    document.getElementById('timeline-content').innerHTML = `
+        <div style="text-align: center; padding: 40px;">
+            <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary);"></i>
+            <p style="margin-top: 16px;">Carregando histórico...</p>
+        </div>
+    `;
+    abrirModal('modal-timeline');
+    
+    fetch(`/api/medicamento/${id}/timeline`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                renderTimeline(data.data.timeline, nome, lote);
+            } else {
+                document.getElementById('timeline-content').innerHTML = `
+                    <div style="text-align: center; padding: 40px;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 2rem; color: var(--danger);"></i>
+                        <p style="margin-top: 16px;">Erro ao carregar histórico</p>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            document.getElementById('timeline-content').innerHTML = `
+                <div style="text-align: center; padding: 40px;">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 2rem; color: var(--danger);"></i>
+                    <p style="margin-top: 16px;">Erro ao carregar histórico</p>
+                </div>
+            `;
+        });
+}
+function renderTimeline(timeline, nome, lote) {
+    let html = `
+        <div style="margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border);">
+            <h4 style="color: var(--text-main); margin-bottom: 8px;">${nome}</h4>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Lote: <code class="lote-code">${lote}</code></p>
+        </div>
+        <div class="timeline-container">
+    `;
+    
+    if (timeline.length === 0) {
+        html += `
+            <div style="text-align: center; padding: 40px;">
+                <i class="fas fa-clock" style="font-size: 2rem; color: var(--text-muted);"></i>
+                <p style="margin-top: 16px;">Nenhum registro encontrado</p>
+            </div>
+        `;
+    } else {
+        timeline.forEach(item => {
+            const icon = getTimelineIcon(item.tipo);
+            const color = getTimelineColor(item.tipo);
+            html += `
+                <div class="timeline-item">
+                    <div class="timeline-marker" style="background: ${color};">
+                        <i class="fas ${icon}"></i>
+                    </div>
+                    <div class="timeline-content">
+                        <div class="timeline-date">${item.data}</div>
+                        <div class="timeline-title">${item.titulo}</div>
+                        <div class="timeline-description">${item.descricao}</div>
+                    </div>
+                </div>
+            `;
+        });
+    }
+    
+    html += '</div>';
+    document.getElementById('timeline-content').innerHTML = html;
+}
+function getTimelineIcon(tipo) {
+    const icons = {
+        'entrada': 'fa-plus',
+        'doacao': 'fa-hand-holding-heart',
+        'dispensacao': 'fa-prescription-bottle',
+        'receita': 'fa-file-medical',
+        'movimentacao': 'fa-exchange-alt',
+        'auditoria': 'fa-clipboard-check'
+    };
+    return icons[tipo] || 'fa-info-circle';
+}
+function getTimelineColor(tipo) {
+    const colors = {
+        'entrada': 'var(--success)',
+        'doacao': 'var(--primary)',
+        'dispensacao': 'var(--warning)',
+        'receita': 'var(--primary-blue)',
+        'movimentacao': 'var(--warning)',
+        'auditoria': 'var(--text-muted)'
+    };
+    return colors[tipo] || 'var(--text-muted)';
+}
+function aplicarFiltroTarja(tarja) {
+    document.querySelectorAll('.filter-chip').forEach(chip => {
+        chip.classList.remove('active');
+        if (chip.getAttribute('data-tarja') === tarja) {
+            chip.classList.add('active');
+        }
+    });
+    
+    const rows = document.querySelectorAll('#inventory-table tbody tr');
+    
+    rows.forEach(row => {
+        if (row.classList.contains('empty-state')) return;
+        
+        const rowTarja = row.getAttribute('data-tarja') || '';
+        
+        const tarjaMatch = !tarja || rowTarja === tarja;
+        
+        row.style.display = tarjaMatch ? '' : 'none';
+    });
+}
+function aplicarFiltros() {
+    const filtroTarja = document.getElementById('filtro-tarja').value;
+    const rows = document.querySelectorAll('#inventory-table tbody tr');
+    
+    rows.forEach(row => {
+        if (row.classList.contains('empty-state')) return;
+        
+        const tarja = row.getAttribute('data-tarja') || '';
+        
+        const tarjaMatch = !filtroTarja || tarja === filtroTarja;
+        
+        row.style.display = tarjaMatch ? '' : 'none';
+    });
+}
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        ['modal-add', 'modal-edit', 'modal-delete'].forEach(fecharModal);
+    }
+});
+</script>
+{% endblock %}

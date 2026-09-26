@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+{% block title %}Ajuda - RedeVita{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header">
+        <div>
+            <h2><i class="fas fa-question-circle"></i> Central de Ajuda</h2>
+            <p class="page-subtitle">FAQ Operacional e Suporte Técnico</p>
+        </div>
+    </div>
+
+    <div class="help-container">
+        <div class="help-section">
+            <h3><i class="fas fa-cogs"></i> Operacional</h3>
+            <div class="accordion">
+                <div class="accordion-item">
+                    <button class="accordion-header" onclick="toggleAccordion(this)">
+                        <span>Como cadastrar um novo medicamento?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="accordion-content">
+                        <p>Acesse o menu <strong>Inventário</strong> e clique em <strong>Novo Medicamento</strong>. Preencha os dados obrigatórios: nome, lote, data de validade, quantidade e tarja. O sistema calcula automaticamente o status do semáforo sanitário.</p>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <button class="accordion-header" onclick="toggleAccordion(this)">
+                        <span>Como registrar uma doação?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="accordion-content">
+                        <p>Vá até a seção <strong>Doações</strong> no menu lateral. Informe o nome do medicamento, tipo, quantidade e destinatário. Para medicamentos controlados, será necessária a aprovação do farmacêutico.</p>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <button class="accordion-header" onclick="toggleAccordion(this)">
+                        <span>Como cadastrar um paciente?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="accordion-content">
+                        <p>Na seção <strong>Pacientes</strong>, clique em <strong>Novo Paciente</strong>. Preencha nome completo, CPF, data de nascimento e endereço. É necessário aceitar a política de privacidade conforme LGPD.</p>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <button class="accordion-header" onclick="toggleAccordion(this)">
+                        <span>Como alterar meu cargo ou permissões?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="accordion-content">
+                        <p>Apenas administradores podem alterar cargos. Entre em contato com o administrador do sistema através do painel de Administração.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="help-section">
+            <h3><i class="fas fa-shield-alt"></i> Regras ANVISA</h3>
+            <div class="accordion">
+                <div class="accordion-item">
+                    <button class="accordion-header" onclick="toggleAccordion(this)">
+                        <span>O que é a Portaria 344/ANVISA?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="accordion-content">
+                        <p>A Portaria 344/ANVISA regulamenta o controle de medicamentos sujeitos a controle especial. Define listas de substâncias, receitas específicas e requisitos de armazenamento.</p>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <button class="accordion-header" onclick="toggleAccordion(this)">
+                        <span>Quais são as listas de controle?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="accordion-content">
+                        <ul>
+                            <li><strong>Lista C1:</strong> Substâncias entorpecentes (ex: morfina, codeína)</li>
+                            <li><strong>Lista C2:</strong> Substâncias psicotrópicas (ex: diazepam, clonazepam)</li>
+                            <li><strong>Lista C3:</strong> Substâncias imunossupressoras</li>
+                            <li><strong>Lista C4:</strong> Substâncias anti-retrovirais</li>
+                            <li><strong>Lista C5:</strong> Anabolizantes</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <button class="accordion-header" onclick="toggleAccordion(this)">
+                        <span>Como funciona o Semáforo Sanitário?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="accordion-content">
+                        <p>O sistema calcula automaticamente:</p>
+                        <ul>
+                            <li><strong>Verde:</strong> Medicamentos com mais de 30 dias de validade</li>
+                            <li><strong>Amarelo:</strong> Medicamentos vencendo em até 30 dias</li>
+                            <li><strong>Vermelho:</strong> Medicamentos vencidos (bloqueio automático de doações)</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <button class="accordion-header" onclick="toggleAccordion(this)">
+                        <span>Quais receitas são necessárias?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="accordion-content">
+                        <ul>
+                            <li><strong>Receita 'B' Especial (Azul):</strong> Portaria 344</li>
+                            <li><strong>Receita 'A' (Amarela):</strong> Tarja Vermelha</li>
+                            <li><strong>Receita de Controle Especial (Branca):</strong> Tarja Vermelha</li>
+                            <li><strong>Receita Simples:</strong> Tarja Amarela</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="help-section">
+            <h3><i class="fas fa-user-shield"></i> LGPD e Privacidade</h3>
+            <div class="accordion">
+                <div class="accordion-item">
+                    <button class="accordion-header" onclick="toggleAccordion(this)">
+                        <span>Quais dados são coletados?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="accordion-content">
+                        <p>O sistema coleta apenas dados necessários para a operação:</p>
+                        <ul>
+                            <li>Dados de identificação (nome, CPF)</li>
+                            <li>Dados de contato (telefone, email)</li>
+                            <li>Dados de saúde (medicamentos, prescrições)</li>
+                            <li>Dados de acesso (login, senha criptografada)</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <button class="accordion-header" onclick="toggleAccordion(this)">
+                        <span>Como são protegidos os dados?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="accordion-content">
+                        <p>Utilizamos criptografia para senhas, controle de acesso por cargo e logging de todas as operações sensíveis. O acesso aos dados é restrito aos usuários autorizados.</p>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <button class="accordion-header" onclick="toggleAccordion(this)">
+                        <span>Posso solicitar exclusão dos meus dados?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="accordion-content">
+                        <p>Sim, conforme a LGPD, você pode solicitar a exclusão dos seus dados através do administrador do sistema. Entraremos em contato em até 15 dias úteis.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="help-section">
+            <h3><i class="fas fa-headset"></i> Suporte Técnico</h3>
+            <div class="accordion">
+                <div class="accordion-item">
+                    <button class="accordion-header" onclick="toggleAccordion(this)">
+                        <span>Como relatar um problema técnico?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="accordion-content">
+                        <p>Entre em contato com o suporte técnico:</p>
+                        <ul>
+                            <li><strong>Email:</strong> suporte@redevita.local</li>
+                            <li><strong>Telefone:</strong> (XX) XXXX-XXXX</li>
+                            <li><strong>Horário:</strong> Segunda a Sexta, 8h às 18h</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <button class="accordion-header" onclick="toggleAccordion(this)">
+                        <span>O sistema está lento?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="accordion-content">
+                        <p>Tente as seguintes soluções:</p>
+                        <ul>
+                            <li>Limpe o cache do navegador</li>
+                            <li>Verifique sua conexão de internet</li>
+                            <li>Feche outras abas pesadas</li>
+                            <li>Entre em contato com o suporte se o problema persistir</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <button class="accordion-header" onclick="toggleAccordion(this)">
+                        <span>Esqueci minha senha?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="accordion-content">
+                        <p>Na tela de login, clique em <strong>Esqueci minha senha</strong>. Digite seu email e siga as instruções enviadas para redefinir sua senha.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.help-container {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.help-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+.help-section h3 {
+    color: var(--text-primary);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.1rem;
+}
+
+.accordion {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.accordion-item {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.accordion-header {
+    width: 100%;
+    padding: 16px;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    font-weight: 500;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.accordion-header:hover {
+    background: rgba(56, 189, 248, 0.05);
+}
+
+.accordion-header i {
+    transition: transform 0.3s ease;
+}
+
+.accordion-header.active i {
+    transform: rotate(180deg);
+}
+
+.accordion-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+.accordion-content.active {
+    max-height: 500px;
+}
+
+.accordion-content p,
+.accordion-content ul {
+    padding: 0 16px 16px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin: 0;
+}
+
+.accordion-content ul {
+    padding-left: 36px;
+}
+
+.accordion-content li {
+    margin-bottom: 4px;
+}
+
+.accordion-content strong {
+    color: var(--primary-blue);
+}
+</style>
+
+<script>
+function toggleAccordion(header) {
+    const content = header.nextElementSibling;
+    const icon = header.querySelector('i');
+    
+    header.classList.toggle('active');
+    content.classList.toggle('active');
+    
+    // Fecha outros itens
+    const allHeaders = document.querySelectorAll('.accordion-header');
+    const allContents = document.querySelectorAll('.accordion-content');
+    
+    allHeaders.forEach((h, index) => {
+        if (h !== header) {
+            h.classList.remove('active');
+            allContents[index].classList.remove('active');
+        }
+    });
+}
+</script>
+{% endblock %}

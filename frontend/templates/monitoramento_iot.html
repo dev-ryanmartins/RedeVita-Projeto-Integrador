@@ -1,0 +1,526 @@
+{% extends "base.html" %}
+{% block title %}Monitoramento IoT - RedeVita{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/academic.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-wrapper academic-page" data-iot-monitor>
+    <div class="academic-intro">
+        <div>
+            <h2><i class="fas fa-temperature-half"></i> Monitoramento IoT</h2>
+            <p>Simulação complementar da temperatura e umidade dos ambientes de armazenamento. Os cartões são atualizados automaticamente.</p>
+        </div>
+        <div class="academic-actions">
+            <a href="{{ url_for('inventory.dashboard') }}" class="btn-secondary"><i class="fas fa-arrow-left"></i> Dashboard</a>
+            <button type="button" class="btn-primary" data-iot-refresh><i class="fas fa-rotate"></i> Atualizar agora</button>
+            <button type="button" class="btn-secondary" onclick="abrirModal('modal-novo-registro')"><i class="fas fa-plus"></i> Novo Registro</button>
+            <button type="button" class="btn-danger" onclick="simularAlertaTermico()"><i class="fas fa-bell"></i> Simular Alerta</button>
+        </div>
+    </div>
+
+    <!-- Simulador de Falha IoT Interativo -->
+    <div class="iot-simulator-container">
+        <div class="iot-simulator-header">
+            <div class="iot-simulator-title">
+                <i class="fas fa-flask"></i>
+                Simulador de Falha IoT
+            </div>
+        </div>
+        <div class="iot-simulator-controls">
+            <button type="button" class="iot-simulator-btn warning" onclick="simularVariacaoTermica('warning')">
+                <i class="fas fa-thermometer-quarter"></i>
+                Simular Alerta (8-10°C)
+            </button>
+            <button type="button" class="iot-simulator-btn critical" onclick="simularVariacaoTermica('critical')">
+                <i class="fas fa-thermometer-full"></i>
+                Simular Crítico (>10°C)
+            </button>
+            <button type="button" class="iot-simulator-btn warning" onclick="simularVariacaoTermica('cold')">
+                <i class="fas fa-snowflake"></i>
+                Simular Frio (<2°C)
+            </button>
+            <button type="button" class="iot-simulator-btn network" onclick="simularFalhaRede()">
+                <i class="fas fa-wifi"></i>
+                Simular Falha de Rede
+            </button>
+            <button type="button" class="iot-simulator-btn emergency" onclick="simularEmergenciaRDC()">
+                <i class="fas fa-exclamation-circle"></i>
+                Disparo RDC 430
+            </button>
+            <button type="button" class="iot-simulator-btn reset" onclick="simularVariacaoTermica('normal')">
+                <i class="fas fa-check"></i>
+                Restaurar Normal
+            </button>
+        </div>
+        <div class="iot-simulator-status" id="iotSimulatorStatus">
+            Clique em um botão para simular variação térmica e testar os alertas do painel.
+        </div>
+    </div>
+
+    <div class="iot-summary-grid" aria-live="polite">
+        <div class="iot-summary-card">
+            <strong data-iot-total>{{ sensores|length }}</strong>
+            <span>Sensores conectados</span>
+        </div>
+        <div class="iot-summary-card {% if alertas %}is-alert{% endif %}" data-iot-alert-card>
+            <strong data-iot-alerts>{{ alertas }}</strong>
+            <span>Alertas ativos</span>
+        </div>
+        <div class="iot-summary-card">
+            <strong data-iot-battery>98%</strong>
+            <span>Status da bateria</span>
+        </div>
+        <div class="iot-summary-card">
+            <strong data-iot-humidity>52%</strong>
+            <span>Taxa de umidade média</span>
+        </div>
+        <div class="iot-summary-card">
+            <strong data-iot-status>Operacional</strong>
+            <span>Status da simulação</span>
+        </div>
+    </div>
+
+    <!-- Gráfico de Variação Térmica -->
+    <div class="iot-chart-section">
+        <div class="section-header">
+            <h3><i class="fas fa-chart-line"></i> Variação Térmica em Tempo Real</h3>
+            <span class="chart-badge">Últimas 24h</span>
+        </div>
+        <div class="chart-container">
+            <canvas id="chartTermico" aria-label="Gráfico de variação térmica"></canvas>
+        </div>
+    </div>
+
+    <!-- Gráfico de Histórico de Telemetria -->
+    <div class="iot-chart-section">
+        <div class="section-header">
+            <h3><i class="fas fa-history"></i> Histórico de Telemetria</h3>
+            <select id="sensorSelector" class="sensor-select" onchange="carregarHistoricoSensor()">
+                <option value="geladeira_principal">Geladeira Principal</option>
+                <option value="geladeira_secundaria">Geladeira Secundária</option>
+                <option value="almoxarifado">Almoxarifado</option>
+            </select>
+            <span class="chart-badge">Últimas 24 leituras</span>
+        </div>
+        <div class="chart-container">
+            <canvas id="chartHistorico" aria-label="Gráfico de histórico de telemetria"></canvas>
+        </div>
+    </div>
+
+    <div class="iot-sensor-grid" data-iot-sensors>
+        {% for sensor in sensores %}
+        <article class="iot-sensor-card" data-sensor-key="{{ sensor.sensor_key }}">
+            <div class="iot-sensor-header">
+                <div>
+                    <h3>{{ sensor.sensor_id }}</h3>
+                    <p>{{ sensor.localizacao }}</p>
+                </div>
+                <span class="status-pill {% if sensor.status == 'NORMAL' %}green{% elif 'CRÍTICO' in sensor.status %}red{% else %}yellow{% endif %}" data-iot-status-pill>{{ sensor.status }}</span>
+            </div>
+            <div class="iot-reading-grid">
+                <div class="iot-reading">
+                    <span>Temperatura</span>
+                    <strong data-iot-temperature>{{ sensor.temperatura }} °C</strong>
+                    <span class="iot-badge {% if sensor.temperatura >= 2 and sensor.temperatura <= 8 %}badge-green{% elif sensor.temperatura >= 1 and sensor.temperatura <= 10 %}badge-yellow{% else %}badge-red{% endif %}">
+                        {% if sensor.temperatura >= 2 and sensor.temperatura <= 8 %}Ideal{% elif sensor.temperatura >= 1 and sensor.temperatura <= 10 %}Alerta{% else %}Crítico{% endif %}
+                    </span>
+                </div>
+                <div class="iot-reading">
+                    <span>Umidade</span>
+                    <strong data-iot-humidity>{{ sensor.umidade }}%</strong>
+                </div>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    <p class="iot-last-update">Última atualização: <time data-iot-updated datetime="{{ atualizado_em }}">{{ atualizado_em }}</time></p>
+
+    <!-- Modal de Novo Registro Térmico -->
+    <div id="modal-novo-registro" class="modal-overlay" onclick="fecharModalFora(event, 'modal-novo-registro')">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3><i class="fas fa-temperature-half"></i> Novo Registro Térmico</h3>
+                <button class="modal-close" onclick="fecharModal('modal-novo-registro')">&times;</button>
+            </div>
+            <form id="form-novo-registro" action="{{ url_for('academico.novo_registro_termico') }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="form-group">
+                    <label>Farmácia Vinculada <span class="required">*</span></label>
+                    <select name="farmacia_id" required>
+                        <option value="">Selecione uma farmácia</option>
+                        {% for farmacia in farmacias %}
+                        <option value="{{ farmacia.id }}">{{ farmacia.nome_fantasia }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Temperatura (°C) <span class="required">*</span></label>
+                        <input type="number" name="temperatura" step="0.1" min="-10" max="40" required placeholder="2-8°C ideal">
+                    </div>
+                    <div class="form-group">
+                        <label>Umidade (%) <span class="required">*</span></label>
+                        <input type="number" name="umidade" step="1" min="0" max="100" required placeholder="30-70% ideal">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Status do Refrigerador <span class="required">*</span></label>
+                    <select name="status" required>
+                        <option value="NORMAL">Normal (Operacional)</option>
+                        <option value="ALERTA">Alerta (Oscilação)</option>
+                        <option value="CRÍTICO">Crítico (Fora da faixa)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Tipo do Item Armazenado <span class="required">*</span></label>
+                    <input type="text" name="tipo_item" required placeholder="Ex: Insulina, Vacina, Antibiótico...">
+                </div>
+                <div class="form-group">
+                    <label>Nome Específico do Lote/Medicamento <span class="required">*</span></label>
+                    <input type="text" name="nome_lote" required placeholder="Ex: Lote ABC123, Glargina...">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="fecharModal('modal-novo-registro')">Cancelar</button>
+                    <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Registrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Alerta de Temperatura -->
+    <div id="alerta-termico" class="alerta-termico hidden">
+        <div class="alerta-content">
+            <i class="fas fa-exclamation-triangle"></i>
+            <div>
+                <h4>Alerta Térmico Crítico!</h4>
+                <p>Temperatura fora da faixa regulatória da Anvisa (2°C a 8°C). Ação imediata necessária.</p>
+            </div>
+            <button class="btn-danger" onclick="fecharAlerta()">Reconhecer</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/monitoramento_iot.js') }}"></script>
+<script src="{{ url_for('static', filename='js/chart.umd.min.js') }}"></script>
+<script>
+function abrirModal(id) {
+    document.getElementById(id).classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+function fecharModal(id) {
+    document.getElementById(id).classList.remove('active');
+    document.body.style.overflow = '';
+}
+function fecharModalFora(event, id) {
+    if (event.target.id === id) fecharModal(id);
+}
+function simularAlertaTermico() {
+    const alerta = document.getElementById('alerta-termico');
+    alerta.classList.remove('hidden');
+    alerta.classList.add('active');
+}
+function fecharAlerta() {
+    const alerta = document.getElementById('alerta-termico');
+    alerta.classList.add('hidden');
+    alerta.classList.remove('active');
+}
+
+// Simulador de Falha IoT Interativo
+function simularVariacaoTermica(tipo) {
+    const statusElement = document.getElementById('iotSimulatorStatus');
+    const sensores = document.querySelectorAll('[data-sensor-key]');
+
+    let novaTemperatura = 5; // temperatura padrão
+    let novoStatus = 'NORMAL';
+    let mensagem = '';
+
+    switch(tipo) {
+        case 'warning':
+            novaTemperatura = 9 + Math.random() * 1; // 9-10°C
+            novoStatus = 'ALERTA';
+            mensagem = '⚠️ Simulação: Temperatura elevada (9-10°C) - Alerta ativado';
+            break;
+        case 'critical':
+            novaTemperatura = 11 + Math.random() * 5; // 11-16°C
+            novoStatus = 'CRÍTICO';
+            mensagem = '🚨 Simulação: Temperatura crítica (>10°C) - Crítico ativado';
+            break;
+        case 'cold':
+            novaTemperatura = -1 + Math.random() * 2; // -1 a 1°C
+            novoStatus = 'CRÍTICO';
+            mensagem = '❄️ Simulação: Temperatura muito baixa (<2°C) - Crítico ativado';
+            break;
+        case 'normal':
+            novaTemperatura = 4 + Math.random() * 2; // 4-6°C
+            novoStatus = 'NORMAL';
+            mensagem = '✅ Simulação: Temperatura normalizada (4-6°C) - Sistema estável';
+            break;
+    }
+
+    // Atualizar todos os sensores com a nova temperatura
+    sensores.forEach(sensor => {
+        const tempElement = sensor.querySelector('[data-iot-temperature]');
+        const statusElement = sensor.querySelector('[data-iot-status-pill]');
+        const badgeElement = sensor.querySelector('.iot-badge');
+
+        if (tempElement) {
+            tempElement.textContent = novaTemperatura.toFixed(1) + ' °C';
+        }
+
+        if (statusElement) {
+            statusElement.textContent = novoStatus;
+            statusElement.className = 'status-pill ' + (novoStatus === 'NORMAL' ? 'green' : novoStatus === 'CRÍTICO' ? 'red' : 'yellow');
+        }
+
+        if (badgeElement) {
+            if (novaTemperatura >= 2 && novaTemperatura <= 8) {
+                badgeElement.textContent = 'Ideal';
+                badgeElement.className = 'iot-badge badge-green';
+            } else if (novaTemperatura >= 1 && novaTemperatura <= 10) {
+                badgeElement.textContent = 'Alerta';
+                badgeElement.className = 'iot-badge badge-yellow';
+            } else {
+                badgeElement.textContent = 'Crítico';
+                badgeElement.className = 'iot-badge badge-red';
+            }
+        }
+    });
+
+    // Atualizar contador de alertas
+    const alertCountElement = document.querySelector('[data-iot-alerts]');
+    const alertCardElement = document.querySelector('[data-iot-alert-card]');
+    if (alertCountElement) {
+        const novoAlertas = novoStatus === 'NORMAL' ? 0 : sensores.length;
+        alertCountElement.textContent = novoAlertas;
+        if (alertCardElement) {
+            if (novoAlertas > 0) {
+                alertCardElement.classList.add('is-alert');
+            } else {
+                alertCardElement.classList.remove('is-alert');
+            }
+        }
+    }
+
+    // Atualizar status do simulador
+    if (statusElement) {
+        statusElement.textContent = mensagem;
+        statusElement.classList.add('active');
+        setTimeout(() => {
+            statusElement.classList.remove('active');
+        }, 3000);
+    }
+
+    // Se for crítico, mostrar alerta principal
+    if (tipo === 'critical' || tipo === 'cold') {
+        simularAlertaTermico();
+    }
+}
+
+function simularFalhaRede() {
+    const statusElement = document.getElementById('iotSimulatorStatus');
+    const sensores = document.querySelectorAll('[data-sensor-key]');
+    
+    sensores.forEach(sensor => {
+        const statusElement = sensor.querySelector('[data-iot-status-pill]');
+        if (statusElement) {
+            statusElement.textContent = 'OFFLINE';
+            statusElement.className = 'status-pill red';
+        }
+    });
+
+    if (statusElement) {
+        statusElement.textContent = '📡 Simulação: Falha de rede detectada - Sensores offline';
+        statusElement.classList.add('active');
+        setTimeout(() => {
+            statusElement.classList.remove('active');
+        }, 3000);
+    }
+}
+
+function simularEmergenciaRDC() {
+    const statusElement = document.getElementById('iotSimulatorStatus');
+    
+    if (statusElement) {
+        statusElement.textContent = '🚨 Simulação: Disparo de emergência RDC 430 - Alerta crítico ativado';
+        statusElement.classList.add('active');
+        setTimeout(() => {
+            statusElement.classList.remove('active');
+        }, 3000);
+    }
+    
+    simularAlertaTermico();
+}
+
+// Gráfico de Variação Térmica
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('chartTermico');
+    if (ctx && typeof Chart !== 'undefined') {
+        // Dados simulados de variação térmica
+        const horas = Array.from({length: 24}, (_, i) => `${i}:00`);
+        const temperaturas = horas.map(() => 4 + Math.random() * 3); // 4-7°C
+        const umidades = horas.map(() => 45 + Math.random() * 20); // 45-65%
+        
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: horas,
+                datasets: [{
+                    label: 'Temperatura (°C)',
+                    data: temperaturas,
+                    borderColor: '#3498db',
+                    backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 2,
+                    yAxisID: 'y'
+                }, {
+                    label: 'Umidade (%)',
+                    data: umidades,
+                    borderColor: '#2ecc71',
+                    backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 2,
+                    yAxisID: 'y1'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            color: '#94a3b8',
+                            usePointStyle: true
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: '#151c2a',
+                        borderColor: '#334155',
+                        borderWidth: 1
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { color: 'rgba(255,255,255,0.05)' },
+                        ticks: { color: '#64748b' }
+                    },
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        grid: { color: 'rgba(255,255,255,0.05)' },
+                        ticks: { color: '#64748b' },
+                        title: {
+                            display: true,
+                            text: 'Temperatura (°C)',
+                            color: '#64748b'
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        grid: { drawOnChartArea: false },
+                        ticks: { color: '#64748b' },
+                        title: {
+                            display: true,
+                            text: 'Umidade (%)',
+                            color: '#64748b'
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Inicializa gráfico de histórico
+    const ctxHistorico = document.getElementById('chartHistorico');
+    if (ctxHistorico && typeof Chart !== 'undefined') {
+        window.chartHistoricoInstance = new Chart(ctxHistorico, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Temperatura (°C)',
+                    data: [],
+                    borderColor: '#3498db',
+                    backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            color: '#94a3b8',
+                            usePointStyle: true
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: '#151c2a',
+                        borderColor: '#334155',
+                        borderWidth: 1
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { color: 'rgba(255,255,255,0.05)' },
+                        ticks: { color: '#64748b' }
+                    },
+                    y: {
+                        grid: { color: 'rgba(255,255,255,0.05)' },
+                        ticks: { color: '#64748b' },
+                        title: {
+                            display: true,
+                            text: 'Temperatura (°C)',
+                            color: '#64748b'
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Carrega histórico inicial
+        carregarHistoricoSensor();
+    }
+});
+
+// Função para carregar histórico de um sensor
+async function carregarHistoricoSensor() {
+    const sensorKey = document.getElementById('sensorSelector').value;
+    
+    try {
+        const response = await fetch(`/api/v1/monitoramento-iot/historico/${sensorKey}?limite=24`);
+        const data = await response.json();
+        
+        if (data.success && window.chartHistoricoInstance) {
+            const labels = data.historico.map((h, i) => `Leitura ${i + 1}`);
+            const temperaturas = data.historico.map(h => h.temperatura);
+            
+            window.chartHistoricoInstance.data.labels = labels;
+            window.chartHistoricoInstance.data.datasets[0].data = temperaturas;
+            window.chartHistoricoInstance.update();
+        }
+    } catch (error) {
+        console.error('Erro ao carregar histórico:', error);
+    }
+}
+</script>
+{% endblock %}

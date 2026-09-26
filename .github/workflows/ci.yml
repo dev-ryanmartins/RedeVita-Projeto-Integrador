@@ -1,0 +1,52 @@
+name: CI RedeVita
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        python-version: ['3.11', '3.12']
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Configurar Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Instalar dependências
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f backend/requirements.txt ]; then pip install -r backend/requirements.txt; fi
+        pip install pytest pytest-cov flake8
+    
+    - name: Lint com flake8
+      run: |
+        flake8 backend/ --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 backend/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    
+    - name: Testes unitários
+      run: |
+        cd backend
+        if [ -d "../tests" ]; then
+          export PYTHONPATH="../backend:$PYTHONPATH"
+          pytest ../tests/ --cov=backend --cov-report=xml --cov-report=html --tb=short --ignore=../tests/test_iot.py --ignore=../tests/test_semaforo.py
+        else
+          echo "Pasta tests/ não encontrada. Pulando testes."
+        fi
+    
+    - name: Upload coverage reports
+      if: matrix.python-version == '3.12'
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella

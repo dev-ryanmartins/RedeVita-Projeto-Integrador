@@ -1,0 +1,637 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - RedeVita{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/glassmorphism-dashboard.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+
+    <div class="dashboard-header-corporate">
+        <div class="dashboard-header-content">
+            <h1>Olá, {{ (current_user.nome.split()[0] if current_user.is_authenticated else 'Usuário') }}!</h1>
+            <p class="subtitle">Resumo completo da RedeVita em
+                <strong>{{ now.strftime('%d/%m/%Y') if now else '' }}</strong>.</p>
+        </div>
+        <div class="dashboard-header-actions">
+            <div class="time-filter-container">
+                <span class="time-filter-label"><i class="ph ph-calendar"></i> Período:</span>
+                <div class="time-filter-buttons">
+                    <button class="time-filter-btn active" data-period="today" onclick="filterPeriod('today')">Hoje</button>
+                    <button class="time-filter-btn" data-period="7days" onclick="filterPeriod('7days')">7 Dias</button>
+                    <button class="time-filter-btn" data-period="month" onclick="filterPeriod('month')">Este Mês</button>
+                </div>
+            </div>
+            <a href="{{ url_for('relatorios.relatorios') }}" class="btn-corporate btn-corporate-secondary">
+                <i class="fas fa-chart-bar"></i> Relatórios
+            </a>
+            <a href="{{ url_for('donation.nova_doacao') }}" class="btn-corporate btn-corporate-primary">
+                <i class="fas fa-plus"></i> Nova Doação
+            </a>
+            <a href="{{ url_for('inventory.exportar_csv') }}" class="btn-corporate btn-corporate-secondary">
+                <i class="fas fa-download"></i> Exportar CSV
+            </a>
+        </div>
+    </div>
+
+    {% if proximos_vencimento %}
+    <div class="alert-banner-corporate">
+        <div class="alert-banner-content">
+            <div class="alert-banner-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="alert-banner-text">
+                <strong>Atenção:</strong> {{ proximos_vencimento|length }} medicamento(s) vencem nos próximos 30 dias.
+            </div>
+        </div>
+        <a href="{{ url_for('relatorios.relatorios') }}" class="alert-banner-action">
+            Ver detalhes <i class="fas fa-arrow-right"></i>
+        </a>
+    </div>
+    {% endif %}
+
+    <div class="welcome-banner-corporate">
+        <div class="welcome-banner-content">
+            <h2>Olá, {{ current_user.nome if current_user.is_authenticated else 'Administrador' }} 👋</h2>
+            <p>Painel integrado de monitoramento e gestão farmacêutica.</p>
+        </div>
+        <div class="welcome-banner-status">
+            <div class="status-dot"></div>
+            Sistema Operacional
+        </div>
+    </div>
+
+    <div class="stats-grid-corporate">
+        <div class="stat-card-corporate">
+            <div class="stat-card-header">
+                <div class="stat-icon-corporate blue">
+                    <i class="fas fa-pills"></i>
+                </div>
+            </div>
+            <div class="stat-info-corporate">
+                <div class="stat-value-corporate">{{ total|default(0) }}</div>
+                <div class="stat-label-corporate">Medicamentos</div>
+                <div class="stat-trend-indicator trend-up">
+                    <i class="fas fa-arrow-up"></i> +8%
+                </div>
+            </div>
+        </div>
+        <div class="stat-card-corporate">
+            <div class="stat-card-header">
+                <div class="stat-icon-corporate yellow">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+            </div>
+            <div class="stat-info-corporate">
+                <div class="stat-value-corporate">{{ alertas|default(0) }}</div>
+                <div class="stat-label-corporate">Vencidos / Alerta</div>
+                <div class="stat-trend-indicator {% if alertas > 0 %}trend-down{% else %}trend-up{% endif %}">
+                    <i class="fas fa-arrow-{% if alertas > 0 %}up{% else %}down{% endif %}"></i> {% if alertas > 0 %}+{{ alertas }}{% else %}-0{% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="stat-card-corporate">
+            <div class="stat-card-header">
+                <div class="stat-icon-corporate green">
+                    <i class="fas fa-boxes"></i>
+                </div>
+            </div>
+            <div class="stat-info-corporate">
+                <div class="stat-value-corporate">{{ estoque|default(0) }}</div>
+                <div class="stat-label-corporate">Unidades em Estoque</div>
+                <div class="stat-trend-indicator trend-up">
+                    <i class="fas fa-arrow-up"></i> +12%
+                </div>
+            </div>
+        </div>
+        <div class="stat-card-corporate">
+            <div class="stat-card-header">
+                <div class="stat-icon-corporate red">
+                    <i class="fas fa-hand-holding-heart"></i>
+                </div>
+            </div>
+            <div class="stat-info-corporate">
+                <div class="stat-value-corporate">{{ total_doacoes|default(0) }}</div>
+                <div class="stat-label-corporate">Total de Doações</div>
+                <div class="stat-trend-indicator trend-up">
+                    <i class="fas fa-arrow-up"></i> +15%
+                </div>
+            </div>
+        </div>
+        <div class="stat-card-corporate">
+            <div class="stat-card-header">
+                <div class="stat-icon-corporate orange">
+                    <i class="fas fa-users"></i>
+                </div>
+            </div>
+            <div class="stat-info-corporate">
+                <div class="stat-value-corporate">{{ total_pacientes|default(0) }}</div>
+                <div class="stat-label-corporate">Pacientes</div>
+                <div class="stat-trend-indicator trend-up">
+                    <i class="fas fa-arrow-up"></i> +5%
+                </div>
+            </div>
+        </div>
+        <div class="stat-card-corporate">
+            <div class="stat-card-header">
+                <div class="stat-icon-corporate purple">
+                    <i class="fas fa-user-md"></i>
+                </div>
+            </div>
+            <div class="stat-info-corporate">
+                <div class="stat-value-corporate">{{ total_medicos|default(0) }}</div>
+                <div class="stat-label-corporate">Médicos Cadastrados</div>
+                <div class="stat-trend-indicator trend-neutral">
+                    <i class="fas fa-minus"></i> 0%
+                </div>
+            </div>
+        </div>
+        <div class="stat-card-corporate">
+            <div class="stat-card-header">
+                <div class="stat-icon-corporate teal">
+                    <i class="fas fa-hospital"></i>
+                </div>
+            </div>
+            <div class="stat-info-corporate">
+                <div class="stat-value-corporate">{{ total_farmacias|default(0) }}</div>
+                <div class="stat-label-corporate">Farmácias Parceiras</div>
+                <div class="stat-trend-indicator trend-up">
+                    <i class="fas fa-arrow-up"></i> +3%
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stock Prediction Widget -->
+    <div class="stock-prediction-widget">
+        <div class="stock-prediction-header">
+            <div class="stock-prediction-title">
+                <i class="fas fa-brain"></i>
+                Previsão de Estoque
+            </div>
+            <span class="stock-prediction-badge">IA</span>
+        </div>
+        <div class="stock-prediction-content">
+            <div class="stock-prediction-item">
+                <div class="stock-prediction-item-header">
+                    <div class="stock-prediction-item-icon"><i class="fas fa-pills"></i></div>
+                    <div class="stock-prediction-item-name">Medicamentos Críticos</div>
+                </div>
+                <div class="stock-prediction-item-value">{{ sem_estoque|default(0) }}</div>
+                <div class="stock-prediction-item-trend risk">
+                    <i class="fas fa-exclamation-triangle"></i> Risco de falta
+                </div>
+            </div>
+            <div class="stock-prediction-item">
+                <div class="stock-prediction-item-header">
+                    <div class="stock-prediction-item-icon"><i class="fas fa-clock"></i></div>
+                    <div class="stock-prediction-item-name">Vencimento em 30 dias</div>
+                </div>
+                <div class="stock-prediction-item-value">{{ proximos_vencimento|length }}</div>
+                <div class="stock-prediction-item-trend warning">
+                    <i class="fas fa-arrow-up"></i> Atenção
+                </div>
+            </div>
+            <div class="stock-prediction-item">
+                <div class="stock-prediction-item-header">
+                    <div class="stock-prediction-item-icon"><i class="fas fa-chart-line"></i></div>
+                    <div class="stock-prediction-item-name">Tendência de Consumo</div>
+                </div>
+                <div class="stock-prediction-item-value">+12%</div>
+                <div class="stock-prediction-item-trend safe">
+                    <i class="fas fa-arrow-up"></i> Crescimento
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Widget de KPIs - Métricas de Doações e Impacto (Módulo Aditivo) -->
+    <div class="kpi-widget-corporate">
+        <div class="kpi-widget-header">
+            <h3><i class="fas fa-chart-area"></i> Métricas de Impacto</h3>
+            <span class="kpi-widget-badge">KPIs</span>
+        </div>
+        <div class="kpi-widget-content">
+            <div class="kpi-chart-container">
+                <canvas id="chartKPI" aria-label="Gráfico de métricas de impacto"></canvas>
+            </div>
+            <div class="kpi-legend">
+                <div class="kpi-legend-item">
+                    <div class="kpi-legend-dot" style="background: #38bdf8;"></div>
+                    <span>Doações Realizadas</span>
+                </div>
+                <div class="kpi-legend-item">
+                    <div class="kpi-legend-dot" style="background: #10b981;"></div>
+                    <span>Pacientes Beneficiados</span>
+                </div>
+                <div class="kpi-legend-item">
+                    <div class="kpi-legend-dot" style="background: #f59e0b;"></div>
+                    <span>Farmácias Atendidas</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="charts-grid-corporate">
+        <div class="chart-card-corporate">
+            <div class="chart-card-header-corporate">
+                <h3><i class="fas fa-chart-line"></i> Movimentação Mensal</h3>
+                <span class="chart-badge-corporate">Últimos 6 meses</span>
+            </div>
+            <div class="chart-container-corporate">
+                <canvas id="chartDoacoes" aria-label="Gráfico de movimentação mensal de doações"></canvas>
+            </div>
+            <div class="chart-legend-corporate">
+                <div class="legend-item-corporate">
+                    <div class="legend-dot-corporate" style="background:#38bdf8;"></div>
+                    Doações recebidas
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-card-corporate">
+            <div class="chart-card-header-corporate">
+                <h3><i class="fas fa-chart-pie"></i> Status do Estoque</h3>
+                <span class="chart-badge-corporate">Por categoria</span>
+            </div>
+            <div class="chart-container-corporate">
+                <canvas id="chartCategorias" aria-label="Gráfico de status do estoque por categoria"></canvas>
+            </div>
+            <div id="chartCategoriasLegend" class="chart-legend-corporate"></div>
+        </div>
+
+        <div class="chart-card-corporate">
+            <div class="chart-card-header-corporate">
+                <h3><i class="fas fa-calendar-times"></i> Alerta de Validade</h3>
+                <span class="chart-badge-corporate">Status de vencimento</span>
+            </div>
+            <div class="chart-container-corporate">
+                <canvas id="chartValidade" aria-label="Gráfico de alerta de validade"></canvas>
+            </div>
+            <div class="chart-legend-corporate">
+                <div class="legend-item-corporate">
+                    <div class="legend-dot-corporate" style="background:#ef4444;"></div>
+                    Vencidos
+                </div>
+                <div class="legend-item-corporate">
+                    <div class="legend-dot-corporate" style="background:#f59e0b;"></div>
+                    Próximo Vencimento
+                </div>
+                <div class="legend-item-corporate">
+                    <div class="legend-dot-corporate" style="background:#10b981;"></div>
+                    Seguros
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="quick-panel-corporate">
+        <h3><i class="fas fa-bolt"></i> Ações Rápidas</h3>
+        <div class="action-buttons-corporate">
+            <a href="{{ url_for('inventory.listar_medicamentos') }}" class="action-btn-corporate">
+                <i class="fas fa-pills"></i> Gerenciar Inventário
+            </a>
+            <a href="{{ url_for('donation.nova_doacao') }}" class="action-btn-corporate primary">
+                <i class="fas fa-plus"></i> Registrar Doação
+            </a>
+            <a href="{{ url_for('pacientes.listar_pacientes') }}" class="action-btn-corporate">
+                <i class="fas fa-users"></i> Gerenciar Pacientes
+            </a>
+            <a href="{{ url_for('pacientes.receituario') }}" class="action-btn-corporate">
+                <i class="fas fa-file-prescription"></i> Receituário Digital
+            </a>
+            <a href="{{ url_for('medicos.listar_medicos') }}" class="action-btn-corporate">
+                <i class="fas fa-user-md"></i> Cadastrar Médico
+            </a>
+            <a href="{{ url_for('relatorios.relatorios') }}" class="action-btn-corporate">
+                <i class="fas fa-chart-bar"></i> Ver Relatórios
+            </a>
+        </div>
+    </div>
+
+    {% if proximos_vencimento %}
+    <div class="recent-section">
+        <div class="section-header">
+            <h3><i class="fas fa-clock"></i> Próximos do Vencimento</h3>
+            <a href="{{ url_for('relatorios.relatorios') }}" class="forgot-link">
+                Ver relatório completo <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+        <div class="table-wrapper-corporate">
+            <table class="styled-table-corporate">
+                <thead>
+                    <tr>
+                        <th>Medicamento</th>
+                        <th>Lote</th>
+                        <th>Vencimento</th>
+                        <th>Qtd.</th>
+                        <th>Dias Restantes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for m in proximos_vencimento %}
+                    {% set dias = (m.data_validade - now).days %}
+                    <tr>
+                        <td><strong>{{ m.nome }}</strong></td>
+                        <td><code class="lote-code">{{ m.lote }}</code></td>
+                        <td>{{ m.data_validade.strftime('%d/%m/%Y') }}</td>
+                        <td>{{ m.quantidade }} un.</td>
+                        <td>
+                            <span class="status-pill-corporate yellow">
+                                <i class="fas fa-clock"></i> {{ dias }} dia(s)
+                            </span>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5" style="text-align: center; color: #94a3b8; padding: 2rem;">Nenhum medicamento próximo ao vencimento.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if medicamentos %}
+    <div class="recent-section">
+        <div class="section-header">
+            <h3><i class="fas fa-history"></i> Últimos Medicamentos Cadastrados</h3>
+            <a href="{{ url_for('inventory.listar_medicamentos') }}" class="forgot-link">
+                Ver todos <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+        <div class="table-wrapper-corporate">
+            <table class="styled-table-corporate">
+                <thead>
+                    <tr>
+                        <th>Status</th>
+                        <th>Medicamento</th>
+                        <th>Validade</th>
+                        <th>Qtd.</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for med in medicamentos %}
+                    <tr>
+                        <td>
+                            {% if med.status_semaforo == 0 %}
+                                <span class="status-pill-corporate green"><i class="fas fa-check-circle"></i> Seguro</span>
+                            {% elif med.status_semaforo == 1 %}
+                                <span class="status-pill-corporate yellow"><i class="fas fa-exclamation-triangle"></i> Atenção</span>
+                            {% else %}
+                                <span class="status-pill-corporate red"><i class="fas fa-times-circle"></i> Vencido</span>
+                            {% endif %}
+                        </td>
+                        <td><strong>{{ med.nome }}</strong></td>
+                        <td>{{ med.data_validade.strftime('%d/%m/%Y') }}</td>
+                        <td>{{ med.quantidade }} un.</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4" style="text-align: center; color: #94a3b8; padding: 2rem;">Nenhum medicamento cadastrado ainda.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if ultimos_medicos or ultimas_farmacias %}
+    <div class="recent-two-col">
+        {% if ultimos_medicos %}
+        <div class="recent-section" style="flex:1;">
+            <div class="section-header">
+                <h3><i class="fas fa-user-md"></i> Últimos Médicos</h3>
+                <a href="{{ url_for('medicos.listar_medicos') }}" class="forgot-link">Ver todos <i class="fas fa-arrow-right"></i></a>
+            </div>
+            <div class="recent-cards-corporate">
+                {% for m in ultimos_medicos %}
+                <div class="recent-card-corporate">
+                    <div class="recent-card-icon-corporate purple"><i class="fas fa-user-md"></i></div>
+                    <div class="recent-card-info-corporate">
+                        <strong>Dr(a). {{ m.nome }}</strong>
+                        <span>{{ m.especialidade }} &bull; {{ m.crm }}</span>
+                    </div>
+                </div>
+                {% else %}
+                <div style="text-align: center; color: #94a3b8; padding: 2rem;">Nenhum médico cadastrado ainda.</div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        {% if ultimas_farmacias %}
+        <div class="recent-section" style="flex:1;">
+            <div class="section-header">
+                <h3><i class="fas fa-hospital"></i> Últimas Farmácias</h3>
+                <a href="{{ url_for('farmacias.listar_farmacias') }}" class="forgot-link">Ver todas <i class="fas fa-arrow-right"></i></a>
+            </div>
+            <div class="recent-cards-corporate">
+                {% for f in ultimas_farmacias %}
+                <div class="recent-card-corporate">
+                    <div class="recent-card-icon-corporate teal"><i class="fas fa-hospital"></i></div>
+                    <div class="recent-card-info-corporate">
+                        <strong>{{ f.nome_fantasia }}</strong>
+                        <span>{{ f.responsavel }} &bull; {{ f.cnpj }}</span>
+                    </div>
+                </div>
+                {% else %}
+                <div style="text-align: center; color: #94a3b8; padding: 2rem;">Nenhuma farmácia cadastrada ainda.</div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/chart.umd.min.js') }}"></script>
+<script>
+(function () {
+    if (typeof Chart === 'undefined') return;
+    const labelsDoacoes = {{ labels_doacoes|tojson }};
+    const dadosDoacoes = {{ doacoes_mensais|tojson }};
+    const statusEstoque = {{ estoque_status|tojson }};
+    const cores = ['#10b981', '#f59e0b', '#ef4444', '#0284c7'];
+
+    const ctxDoacoes = document.getElementById('chartDoacoes');
+    if (ctxDoacoes) new Chart(ctxDoacoes, {
+        type: 'line',
+        data: {
+            labels: labelsDoacoes,
+            datasets: [{
+                label: 'Doações Recebidas',
+                data: dadosDoacoes,
+                borderColor: '#38bdf8',
+                backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                fill: true,
+                tension: 0.4,
+                borderWidth: 2,
+                pointRadius: 3,
+                pointHoverRadius: 5,
+                pointBackgroundColor: '#38bdf8'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: { backgroundColor: '#151c2a', borderColor: '#334155', borderWidth: 1 }
+            },
+            scales: {
+                x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } },
+                y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b', precision: 0 } }
+            }
+        }
+    });
+
+    const ctxCategorias = document.getElementById('chartCategorias');
+    const nomesCategorias = Object.keys(statusEstoque);
+    const valoresCategorias = Object.values(statusEstoque);
+    const totalEstoque = valoresCategorias.reduce((soma, valor) => soma + valor, 0);
+    if (ctxCategorias) new Chart(ctxCategorias, {
+        type: 'doughnut',
+        data: {
+            labels: nomesCategorias,
+            datasets: [{
+                data: valoresCategorias.some(Boolean) ? valoresCategorias : [1, 1, 1, 1],
+                backgroundColor: cores,
+                borderColor: '#151c2a',
+                borderWidth: 4,
+                hoverOffset: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '68%',
+            plugins: {
+                legend: { display: false },
+                tooltip: { backgroundColor: '#151c2a', borderColor: '#334155', borderWidth: 1 }
+            }
+        }
+    });
+
+    const legend = document.getElementById('chartCategoriasLegend');
+    if (legend) {
+        nomesCategorias.forEach((nome, indice) => {
+            const percentual = totalEstoque ? Math.round(statusEstoque[nome] / totalEstoque * 100) : 0;
+            legend.insertAdjacentHTML('beforeend',
+                `<span class="chart-legend-item"><span class="legend-dot" style="background:${cores[indice]}"></span>${nome} <strong>${percentual}%</strong></span>`
+            );
+        });
+    }
+
+    // Gráfico de Alerta de Validade
+    const validadeStatus = {{ validade_status|tojson }};
+    const ctxValidade = document.getElementById('chartValidade');
+    if (ctxValidade) new Chart(ctxValidade, {
+        type: 'doughnut',
+        data: {
+            labels: ['Vencidos', 'Próximo Vencimento', 'Seguros'],
+            datasets: [{
+                data: [
+                    validadeStatus['Vencidos'] || 0,
+                    validadeStatus['Próximo Vencimento'] || 0,
+                    validadeStatus['Seguros'] || 0
+                ],
+                backgroundColor: ['#ef4444', '#f59e0b', '#10b981'],
+                borderColor: '#151c2a',
+                borderWidth: 4,
+                hoverOffset: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '65%',
+            plugins: {
+                legend: { display: false },
+                tooltip: { 
+                    backgroundColor: '#151c2a', 
+                    borderColor: '#334155', 
+                    borderWidth: 1,
+                    callbacks: {
+                        label: function(context) {
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const value = context.parsed;
+                            const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                            return `${context.label}: ${value} (${percentage}%)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Gráfico de KPIs - Módulo Aditivo
+    const ctxKPI = document.getElementById('chartKPI');
+    if (ctxKPI) {
+        const kpiData = {
+            labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
+            datasets: [
+                {
+                    label: 'Doações Realizadas',
+                    data: [12, 19, 3, 5, 2, 3],
+                    borderColor: '#38bdf8',
+                    backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                },
+                {
+                    label: 'Pacientes Beneficiados',
+                    data: [45, 67, 89, 34, 56, 78],
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                },
+                {
+                    label: 'Farmácias Atendidas',
+                    data: [8, 12, 15, 10, 14, 18],
+                    borderColor: '#f59e0b',
+                    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }
+            ]
+        };
+
+        new Chart(ctxKPI, {
+            type: 'line',
+            data: kpiData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { 
+                        display: true,
+                        position: 'bottom',
+                        labels: { color: '#64748b' }
+                    },
+                    tooltip: { 
+                        backgroundColor: '#151c2a', 
+                        borderColor: '#334155', 
+                        borderWidth: 1 
+                    }
+                },
+                scales: {
+                    x: { 
+                        grid: { color: 'rgba(255,255,255,0.05)' }, 
+                        ticks: { color: '#64748b' } 
+                    },
+                    y: { 
+                        beginAtZero: true, 
+                        grid: { color: 'rgba(255,255,255,0.05)' }, 
+                        ticks: { color: '#64748b' } 
+                    }
+                }
+            }
+        });
+    }
+})();
+</script>
+{% endblock %}

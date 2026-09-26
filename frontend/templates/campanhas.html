@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+{% block title %}Campanhas - RedeVita{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header">
+        <div>
+            <h2><i class="fas fa-bullhorn"></i> Central de Campanhas</h2>
+            <p class="page-subtitle">Gerencie campanhas de arrecadação e alertas comunitários.</p>
+        </div>
+        <div style="display:flex; gap:10px;">
+            {% if is_admin() %}
+            <button class="btn-primary" onclick="abrirModal('modal-add')">
+                <i class="fas fa-plus"></i> Nova Campanha
+            </button>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="stats-grid-corporate">
+        <div class="stat-card-corporate">
+            <div class="stat-card-header">
+                <div class="stat-icon-corporate blue">
+                    <i class="fas fa-hand-holding-heart"></i>
+                </div>
+            </div>
+            <div class="stat-info-corporate">
+                <div class="stat-value-corporate">{{ arrecadacao }}</div>
+                <div class="stat-label-corporate">Arrecadações Ativas</div>
+            </div>
+        </div>
+        <div class="stat-card-corporate">
+            <div class="stat-card-header">
+                <div class="stat-icon-corporate red">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+            </div>
+            <div class="stat-info-corporate">
+                <div class="stat-value-corporate">{{ alertas }}</div>
+                <div class="stat-label-corporate">Alertas Ativos</div>
+            </div>
+        </div>
+        <div class="stat-card-corporate">
+            <div class="stat-card-header">
+                <div class="stat-icon-corporate green">
+                    <i class="fas fa-info-circle"></i>
+                </div>
+            </div>
+            <div class="stat-info-corporate">
+                <div class="stat-value-corporate">{{ informativos }}</div>
+                <div class="stat-label-corporate">Informativos Ativos</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-toolbar" role="search">
+        <div class="search-input-wrapper relative">
+            <i class="fas fa-search" aria-hidden="true"></i>
+            <input type="search" id="campanhas-table-search" data-table-search="campanhas-table"
+                   placeholder="Buscar campanha por título ou tipo" autocomplete="off">
+        </div>
+        <div style="display:flex; gap:8px; align-items:center;">
+            <label style="font-size:0.85rem; color:var(--text-muted);">Filtro Tipo:</label>
+            <div class="filter-chips" id="filtro-tipo-chips">
+                <button class="filter-chip active" data-tipo="" onclick="aplicarFiltroTipo('')">Todos</button>
+                <button class="filter-chip" data-tipo="arrecadacao" onclick="aplicarFiltroTipo('arrecadacao')">Arrecadação</button>
+                <button class="filter-chip" data-tipo="alerta" onclick="aplicarFiltroTipo('alerta')">Alerta</button>
+                <button class="filter-chip" data-tipo="informativo" onclick="aplicarFiltroTipo('informativo')">Informativo</button>
+            </div>
+        </div>
+        <span class="table-search-hint">Filtra os itens desta página sem recarregar.</span>
+    </div>
+
+    <div class="table-wrapper">
+        <table class="styled-table" id="campanhas-table">
+            <thead>
+                <tr>
+                    <th>Status</th>
+                    <th>Tipo</th>
+                    <th>Título</th>
+                    <th>Período</th>
+                    <th style="text-align:center;">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for campanha in campanhas %}
+                <tr data-tipo="{{ campanha.tipo or '' }}">
+                    <td>
+                        {% if campanha.status == 'ativa' %}
+                        <span class="status-pill green"><i class="fas fa-circle"></i> Ativa</span>
+                        {% elif campanha.status == 'concluida' %}
+                        <span class="status-pill yellow"><i class="fas fa-circle"></i> Concluída</span>
+                        {% else %}
+                        <span class="status-pill red"><i class="fas fa-circle"></i> Cancelada</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if campanha.tipo == 'arrecadacao' %}
+                        <span class="status-pill blue"><i class="fas fa-hand-holding-heart"></i> Arrecadação</span>
+                        {% elif campanha.tipo == 'alerta' %}
+                        <span class="status-pill red"><i class="fas fa-exclamation-triangle"></i> Alerta</span>
+                        {% else %}
+                        <span class="status-pill green"><i class="fas fa-info-circle"></i> Informativo</span>
+                        {% endif %}
+                    </td>
+                    <td><strong>{{ campanha.titulo }}</strong></td>
+                    <td>
+                        <div style="font-size:0.85rem; color:var(--text-muted);">
+                            {{ campanha.data_inicio.strftime('%d/%m/%Y') }}
+                            {% if campanha.data_fim %}
+                            até {{ campanha.data_fim.strftime('%d/%m/%Y') }}
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td style="text-align:center;">
+                        <div class="action-btns">
+                            {% if is_admin() %}
+                            <button class="btn-icon btn-edit"
+                                title="Alterar Status"
+                                onclick="alterarStatus({{ campanha.id }}, '{{ campanha.status }}')">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="empty-state">
+                        <i class="fas fa-bullhorn"></i>
+                        <p>Nenhuma campanha cadastrada ainda.</p>
+                        {% if is_admin() %}
+                        <button class="btn-primary" onclick="abrirModal('modal-add')">Criar a primeira</button>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% if is_admin() %}
+<div id="modal-add" class="modal-overlay" onclick="fecharModalFora(event, 'modal-add')">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3><i class="fas fa-bullhorn"></i> Nova Campanha</h3>
+            <button class="modal-close" onclick="fecharModal('modal-add')">&times;</button>
+        </div>
+        <form action="{{ url_for('campanhas.nova_campanha') }}" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-group">
+                <label>Título <span class="required">*</span></label>
+                <div class="input-with-icon">
+                    <i class="fas fa-heading"></i>
+                    <input type="text" name="titulo" placeholder="Ex: Arrecadação de Antibióticos" required maxlength="200">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Tipo <span class="required">*</span></label>
+                <select name="tipo" required>
+                    <option value="" disabled selected>Selecione o tipo</option>
+                    <option value="arrecadacao">Arrecadação</option>
+                    <option value="alerta">Alerta</option>
+                    <option value="informativo">Informativo</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Data Início <span class="required">*</span></label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-calendar"></i>
+                        <input type="date" name="data_inicio" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Data Fim</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-calendar"></i>
+                        <input type="date" name="data_fim">
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Descrição <span class="required">*</span></label>
+                <textarea name="descricao" rows="4" placeholder="Descreva os detalhes da campanha..." required></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="fecharModal('modal-add')">Cancelar</button>
+                <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Criar Campanha</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<script>
+function abrirModal(modalId) {
+    document.getElementById(modalId).style.display = 'flex';
+}
+
+function fecharModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+}
+
+function fecharModalFora(event, modalId) {
+    if (event.target === document.getElementById(modalId)) {
+        fecharModal(modalId);
+    }
+}
+
+function aplicarFiltroTipo(tipo) {
+    const chips = document.querySelectorAll('#filtro-tipo-chips .filter-chip');
+    chips.forEach(chip => chip.classList.remove('active'));
+    
+    const selectedChip = document.querySelector(`#filtro-tipo-chips [data-tipo="${tipo}"]`);
+    if (selectedChip) selectedChip.classList.add('active');
+    
+    const rows = document.querySelectorAll('#campanhas-table tbody tr[data-tipo]');
+    rows.forEach(row => {
+        if (tipo === '' || row.dataset.tipo === tipo) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+function alterarStatus(campanhaId, statusAtual) {
+    if (confirm('Deseja alterar o status desta campanha?')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/campanha/${campanhaId}/toggle-status`;
+        
+        const csrfToken = document.querySelector('input[name="csrf_token"]')?.value;
+        if (csrfToken) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'csrf_token';
+            input.value = csrfToken;
+            form.appendChild(input);
+        }
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+</script>
+{% endblock %}

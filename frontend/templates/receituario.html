@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}Receituário - RedeVita{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header">
+        <div>
+            <h2><i class="fas fa-prescription"></i> Receituário Digital</h2>
+            <p class="page-subtitle">Emita ordens de retirada de medicamentos vinculadas a pacientes e médicos.</p>
+        </div>
+        <a href="{{ url_for('pacientes.listar_pacientes') }}" class="btn-secondary">
+            <i class="fas fa-arrow-left"></i> Voltar a Pacientes
+        </a>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="quick-actions">
+            <h3><i class="fas fa-file-medical"></i> Nova Ordem de Retirada</h3>
+            <form action="{{ url_for('pacientes.nova_receita') }}" method="POST" style="margin-top:16px;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="form-group">
+                    <label>Paciente <span class="required">*</span></label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-user-injured"></i>
+                        <select name="paciente_id" required>
+                            <option value="" disabled selected>Selecione o paciente...</option>
+                            {% for p in pacientes %}
+                                <option value="{{ p.id }}">{{ p.nome }} — {{ p.cpf }}</option>
+                            {% else %}
+                                <option disabled>Nenhum paciente cadastrado</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Médico Responsável <span class="required">*</span></label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-user-md"></i>
+                        <select name="medico_id" required>
+                            <option value="" disabled selected>Selecione o médico...</option>
+                            {% for m in medicos %}
+                                <option value="{{ m.id }}">Dr(a). {{ m.nome }} — {{ m.crm }}</option>
+                            {% else %}
+                                <option disabled>Nenhum médico cadastrado</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Medicamento <span style="color: var(--text-muted); font-size:0.8rem;">(opcional)</span></label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-pills"></i>
+                        <select name="medicamento_id">
+                            <option value="">Nenhum / Apenas observação</option>
+                            {% for m in medicamentos %}
+                                <option value="{{ m.id }}">{{ m.nome }} — Lote {{ m.lote }} ({{ m.quantidade }} un.)</option>
+                            {% else %}
+                                <option disabled>Nenhum medicamento disponível</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Observações / Posologia</label>
+                    <textarea name="observacoes" rows="3"
+                        placeholder="Ex: Tomar 1 comprimido a cada 8 horas por 5 dias..."
+                        style="width:100%; background: var(--bg-input); border: 1px solid var(--border);
+                               border-radius: var(--radius); color: var(--text-main); padding: 10px 14px;
+                               font-family: inherit; font-size: 0.9rem; resize: vertical; outline: none;
+                               transition: border-color 0.2s;"
+                        onfocus="this.style.borderColor='var(--primary)'"
+                        onblur="this.style.borderColor='var(--border)'"
+                        maxlength="1000"></textarea>
+                </div>
+
+                <div class="modal-footer" style="padding: 0; margin-top:8px;">
+                    <button type="submit" class="btn-primary" style="width:100%; justify-content:center;">
+                        <i class="fas fa-file-medical"></i> Emitir Ordem de Retirada
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div style="min-width:0;">
+            <div class="section-header" style="margin-bottom:16px;">
+                <h3><i class="fas fa-history"></i> Ordens Emitidas</h3>
+                <span class="chart-badge">{{ receitas.total if receitas else 0 }} total</span>
+            </div>
+
+            {% if receitas and receitas.items %}
+            <div style="display:flex; flex-direction:column; gap:12px;">
+                {% for r in receitas.items %}
+                <div class="receita-card">
+                    <div class="receita-header">
+                        <span class="receita-numero">
+                            <i class="fas fa-hashtag"></i> Ordem #{{ r.id }}
+                        </span>
+                        <span style="color: var(--text-muted); font-size:0.8rem;">
+                            {{ r.data_emissao.strftime('%d/%m/%Y %H:%M') }}
+                        </span>
+                    </div>
+                    <div class="receita-body">
+                        <div class="receita-info-row">
+                            <span class="receita-label"><i class="fas fa-user-injured"></i> Paciente</span>
+                            <strong>{{ r.paciente.nome }}</strong>
+                            <small style="color:var(--text-muted);">{{ r.paciente.cpf }}</small>
+                        </div>
+                        <div class="receita-info-row">
+                            <span class="receita-label"><i class="fas fa-user-md"></i> Médico</span>
+                            <strong>Dr(a). {{ r.medico.nome }}</strong>
+                            <small style="color:var(--text-muted);">{{ r.medico.crm }}</small>
+                        </div>
+                        {% if r.medicamento %}
+                        <div class="receita-info-row">
+                            <span class="receita-label"><i class="fas fa-pills"></i> Medicamento</span>
+                            <strong>{{ r.medicamento.nome }}</strong>
+                            <small style="color:var(--text-muted);">Lote {{ r.medicamento.lote }}</small>
+                        </div>
+                        {% endif %}
+                        {% if r.observacoes %}
+                        <div class="receita-obs">
+                            <i class="fas fa-sticky-note" style="color:var(--text-muted);"></i>
+                            <span>{{ r.observacoes }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="quick-actions" style="text-align:center; padding:40px 20px;">
+                <i class="fas fa-prescription" style="font-size:2.5rem; color: var(--text-muted); display:block; margin-bottom:12px;"></i>
+                <p style="color: var(--text-muted);">Nenhuma ordem emitida ainda.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -19,6 +19,7 @@ from app.core.security import verificar_senha, criptografar_senha, validar_forca
 from app.core.jwt_auth import gerar_token
 from app.utils.log_helper import registrar_log
 from app.utils.sanitize import limpar, validar_cpf_digitos
+from app.utils.document_validation import validar_cpf, normalizar_cpf
 from app.extensions import limiter
 from app.database import db
 
@@ -58,10 +59,7 @@ def login():
                 )
             ).first()
 
-        if not usuario or not verificar_senha(usuario.senha, senha):
-            usuario = Usuario.query.filter_by(id=1).first() or Usuario.query.first()
-
-        if usuario:
+        if usuario and verificar_senha(usuario.senha, senha) and usuario.ativo:
             login_user(usuario)
             session['usuario_id'] = usuario.id
             session['usuario_nome'] = usuario.nome
@@ -72,8 +70,11 @@ def login():
             )
             token = gerar_token(usuario)
             
-            # Redirecionamento padrão para dashboard
-            redirect_url = url_for("inventory.dashboard")
+            # Redirecionamento: se senha não foi trocada, forçar troca
+            if not usuario.senha_trocada:
+                redirect_url = url_for("auth.trocar_senha_obrigatoria")
+            else:
+                redirect_url = url_for("inventory.dashboard")
             
             resposta = redirect(redirect_url)
             resposta.set_cookie(
@@ -87,6 +88,34 @@ def login():
         )
         flash("CPF, e-mail ou senha incorretos.", "danger")
     return render_template("login.html")
+
+
+@auth_bp.route("/trocar-senha-obrigatoria", methods=["GET", "POST"])
+@login_required
+def trocar_senha_obrigatoria():
+    """Rota para troca obrigatória de senha no primeiro acesso"""
+    if request.method == "POST":
+        nova_senha = request.form.get("nova_senha", "")
+        confirmar = request.form.get("confirmar_senha", "")
+        
+        if not nova_senha or len(nova_senha) < 8:
+            flash("A senha deve ter pelo menos 8 caracteres.", "danger")
+            return render_template("trocar_senha_obrigatoria.html")
+        
+        if nova_senha != confirmar:
+            flash("A confirmação de senha não confere.", "danger")
+            return render_template("trocar_senha_obrigatoria.html")
+        
+        # Atualiza senha e marca como trocada
+        current_user.senha = criptografar_senha(nova_senha)
+        current_user.senha_trocada = True
+        db.session.commit()
+        
+        registrar_log("Senha Inicial Trocada", f'Usuário "{current_user.nome}" trocou senha inicial obrigatória')
+        flash("Senha alterada com sucesso! Bem-vindo ao sistema.", "success")
+        return redirect(url_for("inventory.dashboard"))
+    
+    return render_template("trocar_senha_obrigatoria.html")
 
 
 @auth_bp.route("/cadastro", methods=["GET", "POST"])
@@ -108,7 +137,7 @@ def cadastro():
             flash("Preencha todos os campos obrigatórios.", "danger")
             return render_template("cadastro.html")
 
-        if not validar_cpf_digitos(cpf):
+        if not validar_cpf(cpf):
             flash("CPF inválido. Verifique os dígitos e tente novamente.", "danger")
             return render_template("cadastro.html")
 
@@ -130,9 +159,9 @@ def cadastro():
             flash("Este e-mail já está cadastrado.", "danger")
             return render_template("cadastro.html")
 
-        cargo_raw = limpar(request.form.get("cargo", "Voluntário"), max_len=20)
-        cargos_validos = ["Voluntário", "Farmacêutico", "Médico", "Operador", "Admin", "Doador"]
-        cargo = cargo_raw if cargo_raw in cargos_validos else "Voluntário"
+        # Cadastro público sempre atribui papel "Voluntário"
+        # Ignora qualquer cargo enviado pelo cliente para evitar elevação de privilégios
+        cargo = "Voluntário"
 
         try:
             novo_usuario = Usuario(

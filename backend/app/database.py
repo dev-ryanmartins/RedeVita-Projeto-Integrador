@@ -3604,6 +3604,7 @@ def seed_medicamentos_referencia(app):
     """Popula / atualiza a tabela de referência ANVISA (upsert por nome_comercial)."""
     from app.models.medicamento_referencia import MedicamentoReferencia
     from app.models.campanha import Campanha
+    from app.models.qr_nonce import QRNonce
 
     with app.app_context():
         existentes = {r.nome_comercial for r in MedicamentoReferencia.query.all()}

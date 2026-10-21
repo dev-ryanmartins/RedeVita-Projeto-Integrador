@@ -13,6 +13,7 @@ class Usuario(db.Model, UserMixin):
     senha = db.Column(db.String(255), nullable=False)
     cargo = db.Column(db.String(50), default="Voluntário")
     ativo = db.Column(db.Boolean, default=True, nullable=True)
+    senha_trocada = db.Column(db.Boolean, default=True, nullable=False)
 
     def __repr__(self):
         return f"<Usuario {self.nome}>"

@@ -4,10 +4,19 @@ from app.database import db
 from main import create_app
 import sys
 import os
+import secrets
+import string
+from getpass import getpass
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'backend'))
 
-SENHA_PADRAO = 'admin123'
+
+def gerar_senha_forte(tamanho=12):
+    """Gera uma senha forte aleatória"""
+    alfabeto = string.ascii_letters + string.digits + "!@#$%^&*"
+    senha = ''.join(secrets.choice(alfabeto) for _ in range(tamanho))
+    return senha
+
 
 USUARIOS_TESTE = [
     {
@@ -42,31 +51,40 @@ USUARIOS_TESTE = [
     },
 ]
 
+print('=' * 55)
+print('  RedeVita — Configuração de Usuários de Teste')
+print('=' * 55)
+print()
+
+# Gera senha para todos os usuários
+senha = gerar_senha_forte()
+print(f'  Senha gerada para todos os usuários: {senha}')
+print('  Guarde esta senha com segurança.')
+print()
+
 app = create_app()
 
 with app.app_context():
-    print('=' * 55)
-    print('  RedeVita — Configuração de Usuários de Teste')
-    print('=' * 55)
-
     for dados in USUARIOS_TESTE:
         usuario = Usuario.query.filter_by(cpf=dados['cpf']).first()
 
         if usuario:
             usuario.nome = dados['nome']
             usuario.email = dados['email']
-            usuario.senha = criptografar_senha(SENHA_PADRAO)
+            usuario.senha = criptografar_senha(senha)
             usuario.cargo = dados['cargo']
             usuario.ativo = True
+            usuario.senha_trocada = True
             acao = 'ATUALIZADO'
         else:
             usuario = Usuario(
                 nome=dados['nome'],
                 cpf=dados['cpf'],
                 email=dados['email'],
-                senha=criptografar_senha(SENHA_PADRAO),
+                senha=criptografar_senha(senha),
                 cargo=dados['cargo'],
                 ativo=True,
+                senha_trocada=True
             )
             db.session.add(usuario)
             acao = 'CRIADO   '
@@ -79,7 +97,7 @@ with app.app_context():
                 dados["nome"]}')
 
     print('=' * 55)
-    print(f'  Senha de todos os usuários: {SENHA_PADRAO}')
+    print(f'  Senha de todos os usuários: {senha}')
     print('=' * 55)
     print()
     print('  Resumo de permissões por cargo:')

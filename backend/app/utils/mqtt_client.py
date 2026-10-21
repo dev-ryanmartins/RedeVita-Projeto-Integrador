@@ -265,6 +265,5 @@ def iniciar_mqtt_handler(message_callback: Optional[Callable] = None):
 
 def parar_mqtt_handler():
     """Para o handler MQTT global."""
-    global _mqtt_handler
     if _mqtt_handler:
         _mqtt_handler.stop()

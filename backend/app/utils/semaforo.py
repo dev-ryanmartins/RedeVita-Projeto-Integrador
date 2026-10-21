@@ -1,9 +1,24 @@
-from datetime import date
+from app.utils.medication_validation import get_current_date
 
 
 def calcular_status_semaforo(data_validade):
-    # Regra: Verde (0), Amarelo de 1 a 30 dias (1), Vermelho hoje/vencido (2)
-    hoje = date.today()
+    """
+    Calculate semaphore status based on expiration date.
+    
+    Uses the injectable time provider for consistent testing.
+    
+    Status codes:
+    - 0: Green (safe, > 30 days until expiration)
+    - 1: Yellow (warning, 1-30 days until expiration)
+    - 2: Red (expired or expiring today)
+    
+    Args:
+        data_validade: Expiration date.
+    
+    Returns:
+        Integer status code (0, 1, or 2).
+    """
+    hoje = get_current_date()
     dias_restantes = (data_validade - hoje).days
 
     if dias_restantes <= 0:

@@ -4,15 +4,15 @@ from urllib.parse import quote, unquote
 
 
 def validar_cpf(cpf):
-    cpf = re.sub(r"\D", "", cpf)
+    """Função legada para compatibilidade. Valida CPF com dígitos verificadores."""
+    from app.utils.document_validation import validar_cpf as validar_cpf_unificado
+    return validar_cpf_unificado(cpf)
 
-    if len(cpf) != 11:
-        return False
 
-    if cpf == cpf[0] * 11:
-        return False
-
-    return True
+def validar_cnpj(cnpj):
+    """Função legada para compatibilidade. Valida CNPJ numérico e alfanumérico."""
+    from app.utils.document_validation import validar_cnpj as validar_cnpj_unificado
+    return validar_cnpj_unificado(cnpj)
 
 
 def sanitizar_input_string(input_str, max_length=255):
@@ -63,21 +63,6 @@ def validar_nome(nome, min_length=2, max_length=100):
 
     nome_pattern = r'^[a-zA-ZÀ-ÿ\s\-\'\.]+$'
     return re.match(nome_pattern, nome) is not None
-
-
-def validar_cnpj(cnpj):
-    if not cnpj:
-        return True
-
-    cnpj = re.sub(r"\D", "", cnpj)
-
-    if len(cnpj) != 14:
-        return False
-
-    if cnpj == cnpj[0] * 14:
-        return False
-
-    return True
 
 
 def validar_quantidade(valor, min_val=0, max_val=10000):

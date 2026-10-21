@@ -39,6 +39,7 @@ def meu_perfil():
                 flash("A confirmação de senha não confere.", "danger")
                 return redirect(url_for("perfil.meu_perfil"))
             current_user.senha = criptografar_senha(nova_senha)
+            current_user.senha_trocada = True
             db.session.commit()
             registrar_log("Senha Alterada", "Usuário alterou sua própria senha")
             flash("Senha alterada com sucesso!", "success")

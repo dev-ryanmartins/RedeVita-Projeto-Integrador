@@ -20,6 +20,12 @@ from app.models.usuario import Usuario
 from app.schemas.med_schema import validar_entrada_medicamento
 from app.utils.log_helper import registrar_log
 from app.utils.semaforo import calcular_status_semaforo
+from app.utils.medication_validation import (
+    validate_batch_for_creation,
+    calculate_semaforo_status,
+    TARJAS_VALIDAS,
+    validate_batch_for_stock_reduction,
+)
 from app.utils.system_health import get_health_summary
 from app.utils.iot_telemetry import processar_leitura_iot, iot_simulator, autenticar_rfid
 from app.utils.pdf_generator import obter_gerador_pdf
@@ -27,8 +33,6 @@ from app.utils.anvisa_api import obter_cliente_anvisa, mapear_tarja_por_principi
 from app.extensions import limiter
 
 api_bp = Blueprint("api", __name__, url_prefix="/api")
-
-TARJAS_VALIDAS = ["Sem Tarja", "Tarja Amarela", "Tarja Vermelha", "Portaria 344"]
 
 
 def _get_pagination_params():
@@ -120,29 +124,45 @@ def listar_inventario():
 @farmaceutico_required
 def criar_medicamento_api():
     dados = request.get_json(silent=True) or {}
-    campos = {
-        "nome": str(dados.get("nome", "")).strip(),
-        "lote": str(dados.get("lote", "")).strip(),
-        "data_validade": str(dados.get("data_validade", "")).strip(),
-        "quantidade": str(dados.get("quantidade", "")).strip(),
-    }
-
-    valido, erros = validar_entrada_medicamento(campos)
-    if not valido:
-        return resposta_erro("Dados inválidos.", 422, detalhes=erros)
-
+    
+    nome = str(dados.get("nome", "")).strip()
+    lote = str(dados.get("lote", "")).strip()
+    data_validade_str = str(dados.get("data_validade", "")).strip()
+    quantidade_str = str(dados.get("quantidade", "")).strip()
     tarja = str(dados.get("tarja", "Sem Tarja")).strip()
-    if tarja not in TARJAS_VALIDAS:
-        tarja = "Sem Tarja"
+
+    # Parse date
+    try:
+        data_validade = datetime.strptime(data_validade_str, "%Y-%m-%d").date()
+    except ValueError:
+        return resposta_erro("Data de validade inválida. Use formato AAAA-MM-DD.", 422)
+
+    # Parse quantity
+    try:
+        quantidade = int(quantidade_str)
+    except ValueError:
+        return resposta_erro("Quantidade deve ser um número inteiro.", 422)
+
+    # Centralized domain validation
+    validacao = validate_batch_for_creation(
+        nome=nome,
+        lote=lote,
+        data_validade=data_validade,
+        quantidade=quantidade,
+        tarja=tarja
+    )
+    
+    if not validacao.is_valid:
+        return resposta_erro(validacao.error_message, 422)
 
     try:
-        data_dt = datetime.strptime(campos["data_validade"], "%Y-%m-%d").date()
+        status_semaforo = calculate_semaforo_status(data_validade)
         med = Medicamento(
-            nome=campos["nome"],
-            lote=campos["lote"],
-            data_validade=data_dt,
-            quantidade=int(campos["quantidade"]),
-            status_semaforo=calcular_status_semaforo(data_dt),
+            nome=nome,
+            lote=lote,
+            data_validade=data_validade,
+            quantidade=quantidade,
+            status_semaforo=status_semaforo,
             tarja=tarja,
             principio_ativo=dados.get("principio_ativo") or None,
             uso_continuo=bool(dados.get("uso_continuo")),
@@ -412,32 +432,38 @@ def triagem_entrada():
     doador = str(dados.get("doador", "")).strip() or "Não informado"
     observacoes = dados.get("observacoes")
 
-    if not nome or not lote or not data_validade_str or not quantidade_str:
-        return resposta_erro("Preencha todos os campos obrigatórios.", 422)
-
-    try:
-        quantidade = int(quantidade_str)
-        if quantidade <= 0:
-            raise ValueError
-    except ValueError:
-        return resposta_erro("Quantidade inválida.", 422)
-
+    # Parse date
     try:
         data_validade = datetime.strptime(data_validade_str, "%Y-%m-%d").date()
     except ValueError:
-        return resposta_erro("Data de validade inválida.", 422)
+        return resposta_erro("Data de validade inválida. Use formato AAAA-MM-DD.", 422)
 
-    if tarja not in TARJAS_VALIDAS:
-        tarja = "Sem Tarja"
+    # Parse quantity
+    try:
+        quantidade = int(quantidade_str)
+    except ValueError:
+        return resposta_erro("Quantidade deve ser um número inteiro.", 422)
+
+    # Centralized domain validation - rejects expired batches
+    validacao = validate_batch_for_creation(
+        nome=nome,
+        lote=lote,
+        data_validade=data_validade,
+        quantidade=quantidade,
+        tarja=tarja
+    )
+    
+    if not validacao.is_valid:
+        return resposta_erro(validacao.error_message, 422)
 
     try:
-        status = calcular_status_semaforo(data_validade)
+        status_semaforo = calculate_semaforo_status(data_validade)
         med = Medicamento(
             nome=nome,
             lote=lote,
             data_validade=data_validade,
             quantidade=quantidade,
-            status_semaforo=status,
+            status_semaforo=status_semaforo,
             tarja=tarja,
             principio_ativo=dados.get("principio_ativo") or None,
         )
@@ -450,9 +476,7 @@ def triagem_entrada():
         )
 
         aviso = "Medicamento adicionado ao estoque."
-        if status == 2:
-            aviso = f'"{nome}" adicionado, mas o lote está vencido.'
-        elif status == 1:
+        if status_semaforo == 1:
             aviso = f'"{nome}" adicionado. Lote próximo ao vencimento.'
 
         return resposta_ok(_serializar_medicamento(med), aviso, 201)

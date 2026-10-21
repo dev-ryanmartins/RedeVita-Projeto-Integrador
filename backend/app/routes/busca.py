@@ -26,8 +26,6 @@ def _atualizar_cache_busca():
     Atualiza o cache de busca em memória.
     Constrói dicionários para lookup O(1) por princípio ativo e referências.
     """
-    global _busca_cache
-    
     try:
         # Cache de medicamentos por nome e princípio ativo
         medicamentos = Medicamento.query.all()

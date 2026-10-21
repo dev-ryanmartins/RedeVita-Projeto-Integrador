@@ -23,15 +23,18 @@ from app.database import db
 from app.utils.semaforo import calcular_status_semaforo
 from app.schemas.med_schema import validar_entrada_medicamento
 from app.utils.log_helper import registrar_log
-from app.utils.semaforo import calcular_status_semaforo
 from app.utils.anvisa_api import consultar_regularidade_medicamento
 from app.utils.tarja_mapper import mapear_tarja_por_principio_ativo
+from app.utils.medication_validation import (
+    validate_batch_for_creation,
+    calculate_semaforo_status,
+    validate_batch_for_stock_reduction,
+    TARJAS_VALIDAS,
+)
 from app.core.decorators import admin_required, farmaceutico_required, voluntario_required, equipe_clinica_required, audit_critical_action
 from datetime import datetime, date
 
 inventory_bp = Blueprint("inventory", __name__)
-
-TARJAS_VALIDAS = ["Sem Tarja", "Tarja Amarela", "Tarja Vermelha", "Portaria 344"]
 TIPOS_RECEITA = [
     "Receita Simples",
     "Receita de Controle Especial (Branca)",
@@ -282,59 +285,56 @@ def exportar_csv_resumo():
 @audit_critical_action('CADASTRO_MEDICAMENTO')
 def novo_medicamento():
     """Cadastra um novo medicamento no estoque"""
-    dados_formulario = {
-        "nome": request.form.get("nome", "").strip(),
-        "lote": request.form.get("lote", "").strip(),
-        "data_validade": request.form.get("data_validade", "").strip(),
-        "quantidade": request.form.get("quantidade", "").strip(),
-    }
-
-    valido, erros = validar_entrada_medicamento(dados_formulario)
-    if not valido:
-        for erro in erros:
-            flash(erro, "danger")
-        return redirect(url_for("inventory.listar_medicamentos"))
-
+    nome = request.form.get("nome", "").strip()
+    lote = request.form.get("lote", "").strip()
+    data_validade_str = request.form.get("data_validade", "").strip()
+    quantidade_str = request.form.get("quantidade", "").strip()
     tarja = request.form.get("tarja", "Sem Tarja").strip()
     principio_ativo = request.form.get("principio_ativo", "").strip() or None
+
+    # Parse date
+    try:
+        data_validade = datetime.strptime(data_validade_str, "%Y-%m-%d").date()
+    except ValueError:
+        flash("Data de validade inválida. Use formato AAAA-MM-DD.", "danger")
+        return redirect(url_for("inventory.listar_medicamentos"))
+
+    # Parse quantity
+    try:
+        quantidade = int(quantidade_str)
+    except ValueError:
+        flash("Quantidade deve ser um número inteiro.", "danger")
+        return redirect(url_for("inventory.listar_medicamentos"))
+
+    # Centralized domain validation - rejects expired batches and unknown tarja
+    validacao = validate_batch_for_creation(
+        nome=nome,
+        lote=lote,
+        data_validade=data_validade,
+        quantidade=quantidade,
+        tarja=tarja
+    )
     
-    # Mapeamento automático de tarja por princípio ativo
-    tarja_mapeada = mapear_tarja_por_principio_ativo(dados_formulario["nome"], principio_ativo)
-    
-    # Se o usuário selecionou "Sem Tarja" mas o mapeamento indica controle, forçar a tarja correta
-    if tarja == "Sem Tarja" and tarja_mapeada != "Sem Tarja":
-        tarja = tarja_mapeada
-        flash(
-            f'⚠️ Tarja ajustada automaticamente para "{tarja}" com base no princípio ativo/nome do medicamento conforme regulamentação ANVISA.',
-            "warning"
-        )
-    elif tarja not in TARJAS_VALIDAS:
-        tarja = tarja_mapeada
-    else:
-        # Se o usuário selecionou uma tarja específica, respeitar mas verificar consistência
-        if tarja == "Sem Tarja" and tarja_mapeada != "Sem Tarja":
-            flash(
-                f'⚠️ Atenção: O medicamento "{dados_formulario["nome"]}" parece ser controlado ({tarja_mapeada}), mas foi classificado como "Sem Tarja". Verifique a classificação.',
-                "warning"
-            )
+    if not validacao.is_valid:
+        flash(validacao.error_message, "danger")
+        return redirect(url_for("inventory.listar_medicamentos"))
+
+    # Display warnings if any
+    for warning in validacao.warnings:
+        flash(warning, "warning")
 
     uso_continuo = request.form.get("uso_continuo") == "1"
     referencia_id = request.form.get("referencia_id", type=int) or None
     registro_ms = request.form.get("registro_ms", "").strip() or None
 
     try:
-        data_validade = datetime.strptime(dados_formulario["data_validade"], "%Y-%m-%d").date()
-        status_semaforo = calcular_status_semaforo(data_validade)
-        
-        if status_semaforo == 2:
-            flash("ERRO BLOQUEANTE: Não é possível cadastrar medicamentos vencidos (status Vermelho). Medicamento fora da validade regulatória.", "danger")
-            return redirect(url_for("inventory.listar_medicamentos"))
+        status_semaforo = calculate_semaforo_status(data_validade)
 
         novo_medicamento = Medicamento(
-            nome=dados_formulario["nome"],
-            lote=dados_formulario["lote"],
+            nome=nome,
+            lote=lote,
             data_validade=data_validade,
-            quantidade=int(dados_formulario["quantidade"]),
+            quantidade=quantidade,
             status_semaforo=status_semaforo,
             tarja=tarja,
             principio_ativo=principio_ativo,
@@ -383,7 +383,7 @@ def novo_medicamento():
         tipo_log = "Portaria 344 - Cadastro" if tarja == "Portaria 344" else "Novo Medicamento"
         registrar_log(
             tipo_log,
-            f'Medicamento "{dados_formulario["nome"]}" (Tarja: {tarja}, Lote: {dados_formulario["lote"]}) cadastrado',
+            f'Medicamento "{nome}" (Tarja: {tarja}, Lote: {lote}) cadastrado',
         )
         flash("Medicamento cadastrado com sucesso!", "success")
     except Exception:
@@ -403,34 +403,51 @@ def editar_medicamento(med_id):
         flash("Medicamento não encontrado.", "danger")
         return redirect(url_for("inventory.listar_medicamentos"))
 
-    dados_formulario = {
-        "nome": request.form.get("nome", "").strip(),
-        "lote": request.form.get("lote", "").strip(),
-        "data_validade": request.form.get("data_validade", "").strip(),
-        "quantidade": request.form.get("quantidade", "").strip(),
-    }
-
-    valido, erros = validar_entrada_medicamento(dados_formulario)
-    if not valido:
-        for erro in erros:
-            flash(erro, "danger")
-        return redirect(url_for("inventory.listar_medicamentos"))
-
+    nome = request.form.get("nome", "").strip()
+    lote = request.form.get("lote", "").strip()
+    data_validade_str = request.form.get("data_validade", "").strip()
+    quantidade_str = request.form.get("quantidade", "").strip()
     tarja = request.form.get("tarja", medicamento.tarja).strip()
-    if tarja not in TARJAS_VALIDAS:
-        tarja = medicamento.tarja
-
     principio_ativo = request.form.get("principio_ativo", "").strip() or None
     uso_continuo = request.form.get("uso_continuo") == "1"
 
+    # Parse date
     try:
-        data_validade = datetime.strptime(dados_formulario["data_validade"], "%Y-%m-%d").date()
+        data_validade = datetime.strptime(data_validade_str, "%Y-%m-%d").date()
+    except ValueError:
+        flash("Data de validade inválida. Use formato AAAA-MM-DD.", "danger")
+        return redirect(url_for("inventory.listar_medicamentos"))
 
-        medicamento.nome = dados_formulario["nome"]
-        medicamento.lote = dados_formulario["lote"]
+    # Parse quantity
+    try:
+        quantidade = int(quantidade_str)
+    except ValueError:
+        flash("Quantidade deve ser um número inteiro.", "danger")
+        return redirect(url_for("inventory.listar_medicamentos"))
+
+    # Centralized domain validation - rejects expired batches and unknown tarja
+    validacao = validate_batch_for_creation(
+        nome=nome,
+        lote=lote,
+        data_validade=data_validade,
+        quantidade=quantidade,
+        tarja=tarja
+    )
+    
+    if not validacao.is_valid:
+        flash(validacao.error_message, "danger")
+        return redirect(url_for("inventory.listar_medicamentos"))
+
+    # Display warnings if any
+    for warning in validacao.warnings:
+        flash(warning, "warning")
+
+    try:
+        medicamento.nome = nome
+        medicamento.lote = lote
         medicamento.data_validade = data_validade
-        medicamento.quantidade = int(dados_formulario["quantidade"])
-        medicamento.status_semaforo = calcular_status_semaforo(data_validade)
+        medicamento.quantidade = quantidade
+        medicamento.status_semaforo = calculate_semaforo_status(data_validade)
         medicamento.tarja = tarja
         medicamento.principio_ativo = principio_ativo
         medicamento.uso_continuo = uso_continuo
@@ -469,8 +486,15 @@ def baixar_estoque(med_id):
         flash("Informe uma quantidade válida (mínimo 1).", "danger")
         return redirect(url_for("inventory.listar_medicamentos"))
 
-    if quantidade_baixa > medicamento.quantidade:
-        flash(f"Estoque insuficiente. Disponível: {medicamento.quantidade} un.", "danger")
+    # Revalidate expiration at operation time - prevents stock reduction of expired batches
+    validacao_estoque = validate_batch_for_stock_reduction(
+        data_validade=medicamento.data_validade,
+        quantidade_solicitada=quantidade_baixa,
+        quantidade_disponivel=medicamento.quantidade
+    )
+    
+    if not validacao_estoque.is_valid:
+        flash(validacao_estoque.error_message, "danger")
         return redirect(url_for("inventory.listar_medicamentos"))
 
     if medicamento.controlado:
@@ -494,8 +518,21 @@ def baixar_estoque(med_id):
             return redirect(url_for("inventory.listar_medicamentos"))
 
     try:
-        medicamento.quantidade -= quantidade_baixa
-        db.session.commit()
+        # Use atomic stock reduction to prevent race conditions
+        from app.utils.medication_validation import atomic_reduce_stock_quantity
+        
+        success, new_quantity = atomic_reduce_stock_quantity(
+            db.session,
+            med_id,
+            quantidade_baixa
+        )
+        
+        if not success:
+            flash("Estoque insuficiente no momento da operação. Tente novamente.", "danger")
+            return redirect(url_for("inventory.listar_medicamentos"))
+        
+        # Refresh the medicamento object to get updated quantity
+        db.session.refresh(medicamento)
 
         detalhes_log = f'Baixa de {quantidade_baixa} un. de "{medicamento.nome}" — Motivo: {motivo_baixa or "não informado"}'
         if medicamento.controlado:

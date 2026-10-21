@@ -8,7 +8,8 @@ from app.core.decorators import (
     equipe_clinica_required,
 )
 from app.utils.log_helper import registrar_log
-from app.utils.validators import sanitizar_input_string, validar_cnpj, detectar_padroes_suspeitos
+from app.utils.validators import sanitizar_input_string, detectar_padroes_suspeitos
+from app.utils.document_validation import validar_cnpj, normalizar_cnpj, formatar_cnpj
 from app.core.decorators import audit_critical_action
 import re
 
@@ -21,7 +22,11 @@ _MAX_RESP = 150
 
 
 def _limpar_cnpj(cnpj: str) -> str:
-    return re.sub(r"\D", "", cnpj)
+    """
+    Normaliza CNPJ preservando letras alfanuméricas.
+    Remove apenas separadores (., /, -).
+    """
+    return re.sub(r'[./-]', '', cnpj).upper()
 
 
 def _validar_campos_farmacia(nome_fantasia, cnpj_raw, endereco, responsavel):
@@ -72,7 +77,7 @@ def nova_farmacia():
         flash("CNPJ inválido.", "danger")
         return redirect(url_for("farmacias.listar_farmacias"))
 
-    cnpj_fmt = f"{cnpj[:2]}.{cnpj[2:5]}.{cnpj[5:8]}/{cnpj[8:12]}-{cnpj[12:]}"
+    cnpj_fmt = formatar_cnpj(cnpj)
 
     if Farmacia.query.filter_by(cnpj=cnpj_fmt).first():
         flash(f'CNPJ "{cnpj_fmt}" já está cadastrado no sistema.', "danger")
@@ -129,7 +134,7 @@ def editar_farmacia(farmacia_id):
         flash("CNPJ inválido.", "danger")
         return redirect(url_for("farmacias.listar_farmacias"))
 
-    cnpj_fmt = f"{cnpj[:2]}.{cnpj[2:5]}.{cnpj[5:8]}/{cnpj[8:12]}-{cnpj[12:]}"
+    cnpj_fmt = formatar_cnpj(cnpj)
 
     existente = Farmacia.query.filter_by(cnpj=cnpj_fmt).first()
     if existente and existente.id != farmacia_id:

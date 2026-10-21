@@ -2,6 +2,7 @@ import re
 import html as _html
 import json
 from typing import Any, Dict, List, Union
+from app.utils.document_validation import validar_cpf, validar_cnpj, normalizar_cnpj
 
 _CTRL_RE = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x9f]")
 # Padrão para detectar tags HTML e scripts maliciosos
@@ -43,17 +44,12 @@ def limpar_inteiro(
 
 
 def validar_cpf_digitos(cpf: str) -> bool:
-    cpf = re.sub(r"\D", "", cpf)
-    if len(cpf) != 11 or cpf == cpf[0] * 11:
-        return False
-    for i in range(2):
-        soma = sum(int(cpf[j]) * (10 + i - j) for j in range(9 + i))
-        resto = (soma * 10) % 11
-        if resto == 10:
-            resto = 0
-        if int(cpf[9 + i]) != resto:
-            return False
-    return True
+    """
+    Wrapper para compatibilidade. Usa validar_cpf do serviço unificado.
+    
+    Deprecated: Use validar_cpf from document_validation directly.
+    """
+    return validar_cpf(cpf)
 
 
 def sanitizar_json_payload(payload: Union[Dict, List, str, Any]) -> Union[Dict, List, str]:
@@ -194,22 +190,22 @@ def validar_telefone(telefone: str) -> str:
 
 def sanitizar_cnpj(cnpj: str) -> str:
     """
-    Sanitiza e valida formato básico de CNPJ.
+    Sanitiza e valida CNPJ, preservando letras alfanuméricas.
     
     Args:
         cnpj: String de CNPJ
     
     Returns:
-        CNPJ sanitizado (apenas dígitos) ou string vazia se inválido
+        CNPJ normalizado (sem separadores, preservando letras) ou string vazia se inválido
     """
     if not isinstance(cnpj, str):
         return ""
     
-    # Remove tudo que não é dígito
-    digitos = re.sub(r'\D', '', cnpj)
+    # Usa o serviço unificado que preserva letras
+    cnpj_normalizado = normalizar_cnpj(cnpj)
     
-    # Valida tamanho (14 dígitos)
-    if len(digitos) == 14:
-        return digitos
+    # Valida usando o serviço unificado
+    if validar_cnpj(cnpj_normalizado):
+        return cnpj_normalizado
     
     return ""

@@ -42,11 +42,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function aplicarMascaraCNPJ(input) {
         input.addEventListener('input', (e) => {
-            let v = e.target.value.replace(/\D/g, '').slice(0, 14);
-            v = v.replace(/(\d{2})(\d)/, '$1.$2');
-            v = v.replace(/(\d{3})(\d)/, '$1.$2');
-            v = v.replace(/(\d{3})(\d)/, '$1/$2');
-            v = v.replace(/(\d{4})(\d{1,2})$/, '$1-$2');
+            // Preserva letras A-Z e dígitos, remove separadores
+            let v = e.target.value.replace(/[^A-Z0-9]/gi, '').toUpperCase().slice(0, 14);
+            // Aplica formatação visual (preserva letras)
+            if (v.length > 12) {
+                v = v.slice(0, 2) + '.' + v.slice(2, 5) + '.' + v.slice(5, 8) + '/' + v.slice(8, 12) + '-' + v.slice(12);
+            } else if (v.length > 8) {
+                v = v.slice(0, 2) + '.' + v.slice(2, 5) + '.' + v.slice(5, 8) + '/' + v.slice(8);
+            } else if (v.length > 5) {
+                v = v.slice(0, 2) + '.' + v.slice(2, 5) + '.' + v.slice(5);
+            } else if (v.length > 2) {
+                v = v.slice(0, 2) + '.' + v.slice(2);
+            }
             e.target.value = v;
         });
     }

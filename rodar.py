@@ -47,7 +47,8 @@ if __name__ == '__main__':
     print('  RedeVita rodando em modo local')
     print('====================================================')
     print(f'  Abra: http://localhost:{PORT}')
-    print('  Login inicial: 000.000.000-00 / admin123')
+    print('  Para provisionar o primeiro administrador, execute:')
+    print('    cd backend && python provision_admin.py')
     print('  Pressione CTRL+C para encerrar.')
     print('')
 

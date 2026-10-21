@@ -5,17 +5,20 @@ from app.models.medicamento import Medicamento
 from app.database import db
 from app.utils.log_helper import registrar_log
 from app.core.decorators import cargo_required, admin_required, operador_required, voluntario_required, equipe_clinica_required, audit_critical_action
-from app.utils.semaforo import calcular_status_semaforo
 from app.utils.email_service import email_service
 from app.utils.sms_service import sms_service
+from app.utils.medication_validation import (
+    validate_batch_for_creation,
+    calculate_semaforo_status,
+    validate_batch_for_stock_reduction,
+    TARJAS_VALIDAS,
+)
 from datetime import datetime
 import logging
 
 logger = logging.getLogger(__name__)
 
 donation_bp = Blueprint("donation", __name__)
-
-TARJAS_VALIDAS = ["Sem Tarja", "Tarja Amarela", "Tarja Vermelha", "Portaria 344"]
 
 
 @donation_bp.route("/doacoes", methods=["GET", "POST"])
@@ -58,39 +61,35 @@ def nova_doacao():
                 flash("ERRO BLOQUEANTE: Para medicamentos controlados (Portaria 344), é obrigatória a aprovação do farmacêutico responsável.", "danger")
                 return redirect(url_for("donation.nova_doacao"))
 
-        medicamento = Medicamento.query.filter(Medicamento.nome.ilike(f"%{medicamento_nome}%")).first()
+        # Search for medication by name - must exist for output operation
+        medicamentos = Medicamento.query.filter(Medicamento.nome.ilike(f"%{medicamento_nome}%")).all()
 
-        if not medicamento:
-            medicamento = Medicamento(
-                nome=medicamento_nome,
-                lote="DOACAO-" + datetime.now().strftime("%Y%m%d%H%M%S"),
-                data_validade=datetime.now().date(),
-                quantidade=qtd,
-                status_semaforo=0,
-                tarja="Sem Tarja",
-                principio_ativo=medicamento_tipo
-            )
+        if not medicamentos:
+            flash("ERRO BLOQUEANTE: Medicamento não encontrado no estoque. Não é possível registrar saída para um medicamento que não existe. Selecione um medicamento existente.", "danger")
+            return redirect(url_for("donation.nova_doacao"))
 
-            tipo_lower = medicamento_tipo.lower()
-            if any(keyword in tipo_lower for keyword in ['antibiotico', 'antidepressivo', 'anfetamina', 'opiaceo', 'benzodiazepin', 'controlado', 'psicotropico']):
-                medicamento.tarja = "Portaria 344"
-                flash("⚠️ ATENÇÃO: O tipo de medicamento sugere substância controlada pela Portaria 344/ANVISA. A aprovação do farmacêutico é obrigatória para esta doação.", "warning")
+        # Check for ambiguity - multiple matches
+        if len(medicamentos) > 1:
+            flash(f"ERRO BLOQUEANTE: Múltiplos medicamentos encontrados com o nome '{medicamento_nome}'. Selecione o lote específico para evitar ambiguidade. Correspondências: {', '.join([f'{m.nome} (Lote: {m.lote})' for m in medicamentos])}", "danger")
+            return redirect(url_for("donation.nova_doacao"))
 
-            db.session.add(medicamento)
-            db.session.flush()
-        else:
-            if medicamento.status_semaforo == 2:
-                flash("ERRO BLOQUEANTE: Não é possível doar medicamentos vencidos (status Vermelho). Medicamento fora da validade regulatória.", "danger")
-                return redirect(url_for("donation.nova_doacao"))
-            
-            if medicamento.quantidade < qtd:
-                flash("Quantidade insuficiente no estoque.", "danger")
-                return redirect(url_for("donation.nova_doacao"))
+        medicamento = medicamentos[0]
 
-            if medicamento.controlado:
-                flash("⚠️ ALERTA DE PORTARIA 344: Este medicamento é controlado pela ANVISA. A doação requer aprovação obrigatória do farmacêutico responsável.", "warning")
+        # Use centralized validation for stock reduction (includes expiration check)
+        validacao_saida = validate_batch_for_stock_reduction(
+            data_validade=medicamento.data_validade,
+            quantidade_solicitada=qtd,
+            quantidade_disponivel=medicamento.quantidade
+        )
 
-            medicamento.quantidade -= qtd
+        if not validacao_saida.is_valid:
+            flash(f"ERRO BLOQUEANTE: {validacao_saida.error_message}", "danger")
+            return redirect(url_for("donation.nova_doacao"))
+
+        if medicamento.controlado:
+            flash("⚠️ ALERTA DE PORTARIA 344: Este medicamento é controlado pela ANVISA. A doação requer aprovação obrigatória do farmacêutico responsável.", "warning")
+
+        medicamento.quantidade -= qtd
 
         try:
             registro = Doacao(
@@ -193,40 +192,46 @@ def triagem():
         doador = request.form.get("doador", "").strip() or "Não informado"
         observacoes = request.form.get("observacoes", "").strip() or None
 
-        if not nome or not lote or not data_validade_str or not quantidade_str:
-            flash("Preencha todos os campos obrigatórios.", "danger")
+        # Parse date
+        try:
+            data_validade = datetime.strptime(data_validade_str, "%Y-%m-%d").date()
+        except ValueError:
+            flash("Data de validade inválida. Use formato AAAA-MM-DD.", "danger")
             return redirect(url_for("donation.triagem"))
 
+        # Parse quantity
         try:
             quantidade = int(quantidade_str)
-            if quantidade <= 0:
-                raise ValueError
         except ValueError:
             flash("Quantidade inválida. Informe um número inteiro positivo.", "danger")
             return redirect(url_for("donation.triagem"))
 
-        try:
-            data_validade = datetime.strptime(data_validade_str, "%Y-%m-%d").date()
-        except ValueError:
-            flash("Data de validade inválida.", "danger")
+        # Centralized domain validation - rejects expired batches and unknown tarja
+        validacao = validate_batch_for_creation(
+            nome=nome,
+            lote=lote,
+            data_validade=data_validade,
+            quantidade=quantidade,
+            tarja=tarja
+        )
+        
+        if not validacao.is_valid:
+            flash(validacao.error_message, "danger")
             return redirect(url_for("donation.triagem"))
 
-        if tarja not in TARJAS_VALIDAS:
-            tarja = "Sem Tarja"
+        # Display warnings if any
+        for warning in validacao.warnings:
+            flash(warning, "warning")
 
         try:
-            status = calcular_status_semaforo(data_validade)
-            
-            if status == 2:
-                flash("ERRO BLOQUEANTE: Não é possível cadastrar medicamentos vencidos (status Vermelho). Medicamento fora da validade regulatória.", "danger")
-                return redirect(url_for("donation.triagem"))
+            status_semaforo = calculate_semaforo_status(data_validade)
             
             med = Medicamento(
                 nome=nome,
                 lote=lote,
                 data_validade=data_validade,
                 quantidade=quantidade,
-                status_semaforo=status,
+                status_semaforo=status_semaforo,
                 tarja=tarja,
                 principio_ativo=principio_ativo,
             )
@@ -257,12 +262,7 @@ def triagem():
             if doador and doador != "Não informado":
                 logger.info(f"Notificação de triagem aprovada para doador: {doador} - Medicamento: {nome}")
             
-            if status == 2:
-                flash(
-                    f'⚠ "{nome}" adicionado, mas atenção: o lote está VENCIDO.',
-                    "warning",
-                )
-            elif status == 1:
+            if status_semaforo == 1:
                 flash(
                     f'"{nome}" adicionado ao estoque. Lote próximo ao vencimento.',
                     "warning",

@@ -148,7 +148,11 @@ def create_app(config_overrides=None):
 
     @login_manager.user_loader
     def load_user(user_id):
-        return db.session.get(Usuario, int(user_id))
+        usuario = db.session.get(Usuario, int(user_id))
+        # Reject inactive users - invalidate their sessions
+        if usuario and not usuario.ativo:
+            return None
+        return usuario
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(inventory_bp)

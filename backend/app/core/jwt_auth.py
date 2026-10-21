@@ -14,9 +14,10 @@ def gerar_token(usuario):
         seconds=current_app.config.get("JWT_EXPIRATION", 3600)
     )
     payload = {
-        "sub": usuario.id,
+        "sub": str(usuario.id),
         "cpf": usuario.cpf,
         "cargo": usuario.cargo,
+        "cred_versao": usuario.credencial_versao,
         "exp": expira,
         "iat": datetime.now(timezone.utc),
     }
@@ -38,8 +39,14 @@ def decodificar_token(token):
 def obter_usuario_do_token(token):
     try:
         payload = decodificar_token(token)
-        return Usuario.query.get(int(payload["sub"]))
-    except (jwt.ExpiredSignatureError, jwt.InvalidTokenError, TypeError, ValueError):
+        usuario = Usuario.query.get(int(payload["sub"]))
+        # Check if user exists, is active, and token version matches
+        if not usuario or not usuario.ativo:
+            return None
+        if usuario.credencial_versao != payload.get("cred_versao", 1):
+            return None
+        return usuario
+    except (jwt.ExpiredSignatureError, jwt.InvalidTokenError, TypeError, ValueError, KeyError):
         return None
 
 

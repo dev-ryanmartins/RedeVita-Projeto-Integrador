@@ -133,9 +133,13 @@ def toggle_ativo(uid):
     try:
         ativo_atual = usuario.ativo is not False
         usuario.ativo = not ativo_atual
+        
+        # Increment credential version to invalidate all sessions and tokens
+        usuario.credencial_versao += 1
+        
         db.session.commit()
         status = "ativado" if usuario.ativo else "desativado"
-        registrar_log("Toggle Usuário", f'Usuário "{usuario.nome}" foi {status}')
+        registrar_log("Toggle Usuário", f'Usuário "{usuario.nome}" foi {status}, versão credencial incrementada')
         flash(f'Usuário "{usuario.nome}" {status} com sucesso.', "success")
     except Exception:
         db.session.rollback()

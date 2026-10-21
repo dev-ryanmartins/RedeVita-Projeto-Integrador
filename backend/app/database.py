@@ -3521,6 +3521,9 @@ def aplicar_migracoes_manuais(app):
                 conn, inspector, "usuarios", "ativo", "BOOLEAN DEFAULT TRUE"
             )
             _add_column_if_missing(
+                conn, inspector, "usuarios", "credencial_versao", "INTEGER DEFAULT 1 NOT NULL"
+            )
+            _add_column_if_missing(
                 conn, inspector, "farmacias", "razao_social", "VARCHAR(200)"
             )
             _add_column_if_missing(

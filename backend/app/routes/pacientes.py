@@ -485,7 +485,8 @@ def dar_baixa_receita(rid):
                 medicamento_nome=medicamento_nome
             )
             if notif_result.get('enviado'):
-                print(f"Notificação não enviada: {notif_result.get('mensagem')}")
+                # Log sanitizado - sem telefone
+                current_app.logger.warning(f"Notificação não enviada para paciente {receita.paciente.nome}: {notif_result.get('mensagem')}")
 
         flash(f"Receita #{receita.id} dispensada com sucesso!", "success")
     except Exception:

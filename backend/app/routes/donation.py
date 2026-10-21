@@ -253,9 +253,6 @@ def triagem():
                 f'"{nome}" (Lote {lote}, {quantidade} un.) recebido de "{doador}" e adicionado ao estoque'
                 + (f" | Obs: {observacoes}" if observacoes else ""),
             )
-
-            if doador and doador != "Não informado":
-                logger.info(f"Notificação de triagem aprovada para doador: {doador} - Medicamento: {nome}")
             
             if status == 2:
                 flash(

@@ -207,11 +207,10 @@ def recuperar_senha():
             "verificado": False,
         }
 
-        # Log seguro e auditoria
-        current_app.logger.info(f"[RedeVita Segurança] Código de recuperação gerado para {user_email}: {codigo}")
+        # Log seguro e auditoria - sem código em claro
         registrar_log(
             "Recuperação de Senha",
-            f'Código de verificação de 6 dígitos gerado para "{usuario.nome}" ({user_email}) — IP: {request.remote_addr}',
+            f'Código de verificação gerado para "{usuario.nome}" — IP: {request.remote_addr}',
         )
 
         return redirect(url_for("auth.verificar_codigo"))

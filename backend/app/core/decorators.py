@@ -221,6 +221,7 @@ def log_login_attempt(success=True):
     """
     Decorator específico para registrar tentativas de login.
     Regra de negócio: registrar todas as tentativas, bem-sucedidas ou não.
+    Não registra CPF integral ou credenciais sensíveis.
     """
     def decorator(f):
         @wraps(f)
@@ -232,8 +233,9 @@ def log_login_attempt(success=True):
                 from app.models.usuario import LogAtividade
                 from app.database import db
                 
-                # Obtém CPF do formulário
-                cpf = request.form.get('cpf', request.json.get('cpf', 'unknown'))
+                # Obtém identificador sanitizado (apenas primeiros 3 caracteres para identificação sem CPF completo)
+                identificador_raw = request.form.get('identificador', request.json.get('identificador', ''))
+                identificador_sanitizado = identificador_raw[:3] + "***" if len(identificador_raw) > 3 else "***"
                 
                 # Obtém IP
                 ip_address = request.remote_addr or '127.0.0.1'
@@ -244,10 +246,10 @@ def log_login_attempt(success=True):
                 # Determina status
                 status = "LOGIN_SUCESSO" if success else "LOGIN_FALHA"
                 
-                # Cria registro de log
+                # Cria registro de log sem CPF integral
                 log_entry = LogAtividade(
                     usuario_id=None,  # Será preenchido se login for bem-sucedido
-                    acao=f"{status} - CPF: {cpf}",
+                    acao=f"{status} - Identificador: {identificador_sanitizado}",
                     ip_address=ip_address,
                     user_agent=user_agent,
                     data_hora=datetime.utcnow()

@@ -59,33 +59,39 @@ def login():
             ).first()
 
         if not usuario or not verificar_senha(usuario.senha, senha):
-            usuario = Usuario.query.filter_by(id=1).first() or Usuario.query.first()
-
-        if usuario:
-            login_user(usuario)
-            session['usuario_id'] = usuario.id
-            session['usuario_nome'] = usuario.nome
-            session['usuario_cargo'] = usuario.cargo
             registrar_log(
-                "Login",
-                f'Usuário "{usuario.nome}" ({usuario.cargo}) fez login — IP: {request.remote_addr}',
+                "Login Falhou",
+                f'Tentativa de login inválida (Identificador: {identificador_raw[:3] if identificador_raw else "?"}***) — IP: {request.remote_addr}',
             )
-            token = gerar_token(usuario)
-            
-            # Redirecionamento padrão para dashboard
-            redirect_url = url_for("inventory.dashboard")
-            
-            resposta = redirect(redirect_url)
-            resposta.set_cookie(
-                "redevita_token", token, httponly=True, samesite="Lax", max_age=3600
-            )
-            return resposta
+            flash("CPF, e-mail ou senha incorretos.", "danger")
+            return render_template("login.html")
 
+        if not usuario.ativo:
+            registrar_log(
+                "Login Falhou",
+                f'Tentativa de login com conta inativa (Identificador: {identificador_raw[:3] if identificador_raw else "?"}***) — IP: {request.remote_addr}',
+            )
+            flash("Sua conta está inativa. Entre em contato com o administrador.", "danger")
+            return render_template("login.html")
+
+        login_user(usuario)
+        session['usuario_id'] = usuario.id
+        session['usuario_nome'] = usuario.nome
+        session['usuario_cargo'] = usuario.cargo
         registrar_log(
-            "Login Falhou",
-            f'Tentativa de login inválida (Identificador: {identificador_raw[:3] if identificador_raw else "?"}***) — IP: {request.remote_addr}',
+            "Login",
+            f'Usuário "{usuario.nome}" ({usuario.cargo}) fez login — IP: {request.remote_addr}',
         )
-        flash("CPF, e-mail ou senha incorretos.", "danger")
+        token = gerar_token(usuario)
+        
+        # Redirecionamento padrão para dashboard
+        redirect_url = url_for("inventory.dashboard")
+        
+        resposta = redirect(redirect_url)
+        resposta.set_cookie(
+            "redevita_token", token, httponly=True, samesite="Lax", max_age=3600
+        )
+        return resposta
     return render_template("login.html")
 
 

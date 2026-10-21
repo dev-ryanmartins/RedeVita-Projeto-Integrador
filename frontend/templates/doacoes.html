@@ -47,18 +47,17 @@
             <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-end;">
 
                 <div class="form-group" style="flex: 2; min-width: 240px;">
-                    <label for="medicamento_nome">Nome do Medicamento <span class="required">*</span></label>
+                    <label for="medicamento_id">Medicamento <span class="required">*</span></label>
                     <div class="input-with-icon">
                         <i class="fas fa-pills"></i>
-                        <input type="text" name="medicamento_nome" id="medicamento_nome" placeholder="Digite o nome do medicamento..." required>
-                    </div>
-                </div>
-
-                <div class="form-group" style="flex: 1; min-width: 180px;">
-                    <label for="medicamento_tipo">Tipo do Medicamento <span class="required">*</span></label>
-                    <div class="input-with-icon">
-                        <i class="fas fa-tag"></i>
-                        <input type="text" name="medicamento_tipo" id="medicamento_tipo" placeholder="Ex: Comprimido, Injetável..." required>
+                        <select name="medicamento_id" id="medicamento_id" required>
+                            <option value="">Selecione o medicamento...</option>
+                            {% for med in medicamentos %}
+                            <option value="{{ med.id }}" data-lote="{{ med.lote }}" data-validade="{{ med.data_validade.strftime('%d/%m/%Y') if med.data_validade else 'N/A' }}">
+                                {{ med.nome }} (Lote: {{ med.lote }}, Validade: {{ med.data_validade.strftime('%d/%m/%Y') if med.data_validade else 'N/A' }}, Estoque: {{ med.quantidade }})
+                            </option>
+                            {% endfor %}
+                        </select>
                     </div>
                 </div>
 

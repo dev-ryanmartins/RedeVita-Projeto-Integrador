@@ -104,7 +104,23 @@
     user-select: none;
   }
 
-  .mapa-filter-item input[type="checkbox"] { display: none; }
+  .mapa-filter-item input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .mapa-filter-item input[type="checkbox"]:focus ~ .filter-dot {
+    outline: 2px solid #38bdf8;
+    outline-offset: 2px;
+  }
 
   .filter-dot {
     width: 11px; height: 11px;
@@ -386,23 +402,23 @@
     <div class="mapa-filters">
       <!-- Filtro: tipo de acesso -->
       <div class="mapa-filter-section">
-        <span class="mapa-filter-label">Tipo de serviço</span>
-        <div class="acesso-pills">
-          <button class="acesso-pill active" data-acesso="todos" onclick="setAcesso('todos',this)">Todos</button>
-          <button class="acesso-pill" data-acesso="publico" onclick="setAcesso('publico',this)"><i class="fas fa-building" style="font-size:.7rem;margin-right:3px;"></i>Público</button>
-          <button class="acesso-pill" data-acesso="privado" onclick="setAcesso('privado',this)"><i class="fas fa-lock" style="font-size:.65rem;margin-right:3px;"></i>Privado</button>
+        <span class="mapa-filter-label" id="label-acesso">Tipo de serviço</span>
+        <div class="acesso-pills" role="group" aria-labelledby="label-acesso">
+          <button class="acesso-pill active" data-acesso="todos" onclick="setAcesso('todos',this)" aria-pressed="true">Todos</button>
+          <button class="acesso-pill" data-acesso="publico" onclick="setAcesso('publico',this)" aria-pressed="false"><i class="fas fa-building" style="font-size:.7rem;margin-right:3px;" aria-hidden="true"></i>Público</button>
+          <button class="acesso-pill" data-acesso="privado" onclick="setAcesso('privado',this)" aria-pressed="false"><i class="fas fa-lock" style="font-size:.65rem;margin-right:3px;" aria-hidden="true"></i>Privado</button>
         </div>
       </div>
 
       <!-- Filtro: camadas -->
       <div class="mapa-filter-section">
-        <span class="mapa-filter-label">Exibir no mapa</span>
-        <div class="mapa-filter-options">
-          <label class="mapa-filter-item">
-            <input type="checkbox" id="filterFarmacias" checked onchange="toggleLayer('farmacia',this.checked)">
+        <span class="mapa-filter-label" id="label-camadas">Exibir no mapa</span>
+        <div class="mapa-filter-options" role="group" aria-labelledby="label-camadas">
+          <label class="mapa-filter-item" for="filterFarmacias">
+            <input type="checkbox" id="filterFarmacias" checked onchange="toggleLayer('farmacia',this.checked)" aria-label="Exibir farmácias cadastradas no mapa">
             <span class="filter-dot green"></span>
             <span>Farmácias Cadastradas</span>
-            <span class="filter-count" id="countFarmacias">0</span>
+            <span class="filter-count" id="countFarmacias" aria-live="polite">0</span>
           </label>
         </div>
       </div>
@@ -524,8 +540,12 @@
 
   function setAcesso(acesso, btn) {
     filtroAcesso = acesso;
-    document.querySelectorAll('.acesso-pill').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.acesso-pill').forEach(b => {
+      b.classList.remove('active');
+      b.setAttribute('aria-pressed', 'false');
+    });
     btn.classList.add('active');
+    btn.setAttribute('aria-pressed', 'true');
     aplicarFiltroAcesso();
   }
   window.setAcesso = setAcesso;

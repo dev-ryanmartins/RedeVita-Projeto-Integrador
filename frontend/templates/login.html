@@ -41,34 +41,39 @@
 
                 {% with messages = get_flashed_messages(with_categories=true) %}
                     {% if messages %}
-                        {% for category, message in messages %}
-                            <div class="alert alert-{{ 'danger' if category == 'danger' or category == 'error' else category }}" style="margin-bottom:16px; display:flex; align-items:center; gap:8px;">
-                                <i class="fas fa-exclamation-circle"></i>
-                                <span>{{ message }}</span>
-                            </div>
-                        {% endfor %}
+                        <div id="flash-messages" role="alert" aria-live="polite">
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ 'danger' if category == 'danger' or category == 'error' else category }}" style="margin-bottom:16px; display:flex; align-items:center; gap:8px;">
+                                    <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
+                                    <span>{{ message }}</span>
+                                </div>
+                            {% endfor %}
+                        </div>
                     {% endif %}
                 {% endwith %}
 
-                <form action="{{ url_for('auth.login') }}" method="POST" class="modern-form">
+                <form action="{{ url_for('auth.login') }}" method="POST" class="modern-form" novalidate>
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                     <div class="form-group" style="margin-bottom:18px;">
                         <label id="label-identificador" for="identificador" style="display:block; margin-bottom:8px; font-weight:600; color:#cbd5e1;">CPF ou E-mail</label>
                         <div class="input-with-icon">
-                            <i class="fas fa-id-card"></i>
+                            <i class="fas fa-id-card" aria-hidden="true"></i>
                             <input type="text" name="identificador" id="identificador"
                                    placeholder="seu@email.com ou 000.000.000-00" value="000.000.000-00" required
-                                   autocomplete="username">
+                                   autocomplete="username" aria-required="true"
+                                   aria-describedby="{% if messages %}flash-messages{% endif %}">
                         </div>
                     </div>
 
                     <div class="form-group" style="margin-bottom:18px;">
-                        <label for="senha" style="display:block; margin-bottom:8px; font-weight:600; color:#cbd5e1;">Senha</label>
+                        <label id="label-senha" for="senha" style="display:block; margin-bottom:8px; font-weight:600; color:#cbd5e1;">Senha</label>
                         <div class="input-with-icon">
-                            <i class="fas fa-lock"></i>
+                            <i class="fas fa-lock" aria-hidden="true"></i>
                             <input type="password" name="senha" id="senha"
-                                   placeholder="••••••••" value="admin123" required autocomplete="current-password">
+                                   placeholder="••••••••" value="admin123" required autocomplete="current-password"
+                                   aria-required="true"
+                                   aria-describedby="{% if messages %}flash-messages{% endif %}">
                         </div>
                     </div>
 

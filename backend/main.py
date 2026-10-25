@@ -202,17 +202,16 @@ def create_app(config_overrides=None):
     @app.route('/health')
     @app.route('/api/v1/ping')
     def health_check():
+        """
+        Liveness probe: verifica apenas se o processo Flask está ativo.
+        Não depende de dependências externas ou banco de dados.
+        Sempre retorna 200 se o servidor está respondendo.
+        """
         from flask import jsonify
-        try:
-            db.session.execute(db.text('SELECT 1'))
-            db_status = 'healthy'
-        except Exception:
-            db_status = 'unhealthy'
-
         return jsonify({
             'status': 'ok',
-            'database': db_status,
-            'service': 'RedeVita'
+            'service': 'RedeVita',
+            'type': 'liveness'
         }), 200
 
     @app.context_processor

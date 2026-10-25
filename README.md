@@ -37,6 +37,14 @@ python main.py
 
 O servidor vai rodar em `http://127.0.0.1:5000`
 
+## Health Checks
+
+A aplicação fornece dois endpoints para monitoramento:
+
+- **Liveness** (`/health` ou `/api/v1/ping`): Verifica se o processo Flask está ativo. Não depende de banco de dados ou serviços externos. Sempre retorna 200 se o servidor está respondendo.
+
+- **Readiness** (`/healthz`): Verifica se a aplicação está pronta para atender requisições. Verifica a conexão com o banco de dados. Retorna 503 se o banco estiver indisponível.
+
 ### Passo 4: Acessar o sistema
 
 Abra o navegador em `http://127.0.0.1:5000`

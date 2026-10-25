@@ -335,6 +335,39 @@
         applyReadingMode(root.classList.contains('reading-simplified'), false);
     }
 
+    // Service Worker Registration
+    function registerServiceWorker() {
+        // Registrar apenas em contexto seguro (HTTPS ou localhost)
+        if ('serviceWorker' in navigator) {
+            const isSecureContext = window.location.protocol === 'https:' || 
+                                   window.location.hostname === 'localhost' ||
+                                   window.location.hostname === '127.0.0.1';
+            
+            if (!isSecureContext) {
+                console.log('PWA: Service Worker não registrado em contexto inseguro');
+                return;
+            }
+
+            navigator.serviceWorker.register('/static/sw.js')
+                .then((registration) => {
+                    console.log('PWA: Service Worker registrado com sucesso:', registration.scope);
+                })
+                .catch((error) => {
+                    console.log('PWA: Falha ao registrar Service Worker:', error);
+                    // Não quebra a aplicação se o registro falhar
+                });
+        } else {
+            console.log('PWA: Service Worker não suportado neste navegador');
+        }
+    }
+
+    // Registrar Service Worker após carregamento da página
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', registerServiceWorker);
+    } else {
+        registerServiceWorker();
+    }
+
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', syncUI);
     } else {

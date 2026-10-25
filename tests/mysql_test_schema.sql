@@ -61,6 +61,8 @@ CREATE TABLE IF NOT EXISTS pacientes (
   cpf VARCHAR(14) NOT NULL UNIQUE,
   data_nascimento DATE NOT NULL,
   endereco VARCHAR(255) NULL,
+  telefone VARCHAR(30) NULL,
+  email VARCHAR(150) NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

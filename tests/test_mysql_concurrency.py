@@ -303,7 +303,8 @@ class TestMySQLConcurrency:
             result = conn.execute(text("SELECT @@transaction_isolation"))
             isolation = result.fetchone()
             assert isolation is not None, "Should be able to query isolation level"
-            assert 'READ COMMITTED' in str(isolation[0]) or 'REPEATABLE READ' in str(isolation[0]), \
+            # MySQL 8.0 uses READ-COMMITTED (with hyphen), older versions used READ COMMITTED (with space)
+            assert 'READ-COMMITTED' in str(isolation[0]) or 'READ COMMITTED' in str(isolation[0]) or 'REPEATABLE READ' in str(isolation[0]), \
                 f"Expected READ COMMITTED or REPEATABLE READ, got {isolation[0]}"
     
     def test_concurrent_qr_consumption_mysql(self, mysql_session_factory):

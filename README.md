@@ -37,27 +37,31 @@ python main.py
 
 O servidor vai rodar em `http://127.0.0.1:5000`
 
-## Health Checks
+### Passo 4: Provisionar o primeiro administrador
 
-A aplicação fornece dois endpoints para monitoramento:
+Antes de acessar o sistema, execute o script de provisionamento para criar o primeiro administrador:
 
-- **Liveness** (`/health` ou `/api/v1/ping`): Verifica se o processo Flask está ativo. Não depende de banco de dados ou serviços externos. Sempre retorna 200 se o servidor está respondendo.
+```bash
+cd backend
+python provision_admin.py
+```
 
-- **Readiness** (`/healthz`): Verifica se a aplicação está pronta para atender requisições. Verifica a conexão com o banco de dados. Retorna 503 se o banco estiver indisponível.
+O script solicitará as credenciais do administrador e gerará uma senha forte aleatória. As credenciais serão exibidas uma única vez no terminal. **Guarde-as com segurança**.
 
-### Passo 4: Acessar o sistema
+**Nota:** Este procedimento só funciona quando não há administradores no banco. Após o primeiro provisionamento, novos administradores devem ser criados através da interface pelo administrador existente.
 
-Abra o navegador em `http://127.0.0.1:5000`
+### Passo 5: Acessar o sistema
 
-**Login inicial:**
-- CPF: `000.000.000-00`
-- Senha: `admin123`
+Abra o navegador em `http://127.0.0.1:5000` e faça login com as credenciais provisionadas.
+
+**Importante:** No primeiro acesso, você será solicitado a alterar a senha inicial por uma de sua escolha.
 
 ## Características
 
 - **Interface glassmorphism moderna** com tema escuro/claro
 - **RBAC (Role-Based Access Control)** para controle de acesso
-- **Validação de medicamentos** (ANVISA desabilitada até confirmação de contrato)
+- **Integração Google Maps** para visualização de farmácias
+- **Integração ANVISA** para validação de medicamentos
 - **Monitoramento IoT** simulado para cadeia de frio
 - **Banco SQLite** local (automático)
 - **Logs de auditoria** para rastreabilidade

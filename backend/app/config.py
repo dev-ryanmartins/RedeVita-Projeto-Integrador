@@ -1,15 +1,46 @@
 import os
+import sys
 from dotenv import load_dotenv
 
 load_dotenv()
 
 
 class Config:
-    SECRET_KEY = (
-        os.environ.get("SESSION_SECRET")
-        or os.environ.get("SECRET_KEY")
-        or "redevita_projeto_ads_2026"
-    )
+    ENV = os.environ.get("FLASK_ENV", "development")
+    DEBUG = os.environ.get("FLASK_DEBUG", "true").lower() == "true"
+    TESTING = os.environ.get("TESTING", "false").lower() == "true"
+
+    # SECRET_KEY for sessions - must be set in production
+    SECRET_KEY = os.environ.get("SESSION_SECRET") or os.environ.get("SECRET_KEY")
+    
+    # In production, fail fast if secret is not set or is weak
+    if ENV == "production":
+        if not SECRET_KEY or len(SECRET_KEY) < 32:
+            raise ValueError(
+                "SESSION_SECRET or SECRET_KEY must be set in production and must be at least 32 characters. "
+                "Set a strong, random secret in your environment variables."
+            )
+    elif not SECRET_KEY:
+        # Only allow weak fallback in development/testing
+        SECRET_KEY = "dev-secret-key-change-in-production-32chars-min"
+
+    # JWT_SECRET_KEY must be separate from session secret
+    JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY")
+    
+    if ENV == "production":
+        if not JWT_SECRET_KEY or len(JWT_SECRET_KEY) < 32:
+            raise ValueError(
+                "JWT_SECRET_KEY must be set in production and must be at least 32 characters. "
+                "Set a strong, random secret different from SESSION_SECRET."
+            )
+        if JWT_SECRET_KEY == SECRET_KEY:
+            raise ValueError(
+                "JWT_SECRET_KEY must be different from SESSION_SECRET. "
+                "Use separate secrets for session and JWT token signing."
+            )
+    elif not JWT_SECRET_KEY:
+        # In development, generate a different key than session
+        JWT_SECRET_KEY = SECRET_KEY + "-jwt-different"
 
     DATABASE_URL = os.environ.get("DATABASE_URL", "")
 
@@ -46,16 +77,22 @@ class Config:
 
     PERMANENT_SESSION_LIFETIME = 3600
 
+    # Session cookie security
     SESSION_COOKIE_SAMESITE = "Lax"
-    SESSION_COOKIE_SECURE = (
-        os.environ.get("SESSION_COOKIE_SECURE", "false").lower() == "true"
-    )
+    
+    # In production with HTTPS, cookies must be Secure
+    if ENV == "production":
+        SESSION_COOKIE_SECURE = True
+    else:
+        SESSION_COOKIE_SECURE = os.environ.get("SESSION_COOKIE_SECURE", "false").lower() == "true"
+    
     SESSION_COOKIE_HTTPONLY = True
 
-    WTF_CSRF_ENABLED = False
+    # CSRF protection - enabled by default for security
+    # Can be disabled in tests via config_overrides
+    WTF_CSRF_ENABLED = True
     WTF_CSRF_TIME_LIMIT = 3600
 
-    JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY", SECRET_KEY)
     JWT_EXPIRATION = int(os.environ.get("JWT_EXPIRATION", 3600))
 
     MAX_CONTENT_LENGTH = 10 * 1024 * 1024
@@ -70,3 +107,6 @@ class Config:
     CACHE_REDIS_PORT = int(os.environ.get("CACHE_REDIS_PORT", 6379))
     CACHE_REDIS_DB = int(os.environ.get("CACHE_REDIS_DB", 0))
     CACHE_REDIS_PASSWORD = os.environ.get("CACHE_REDIS_PASSWORD", None)
+
+    # QR Code expiration time in minutes (default 15 minutes)
+    QR_EXPIRATION_MINUTES = int(os.environ.get("QR_EXPIRATION_MINUTES", 15))

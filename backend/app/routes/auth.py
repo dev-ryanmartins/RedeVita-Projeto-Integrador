@@ -19,6 +19,7 @@ from app.core.security import verificar_senha, criptografar_senha, validar_forca
 from app.core.jwt_auth import gerar_token
 from app.utils.log_helper import registrar_log
 from app.utils.sanitize import limpar, validar_cpf_digitos
+from app.utils.document_validation import validar_cpf, normalizar_cpf
 from app.extensions import limiter
 from app.database import db
 
@@ -58,41 +59,63 @@ def login():
                 )
             ).first()
 
-        if not usuario or not verificar_senha(usuario.senha, senha):
+        if usuario and verificar_senha(usuario.senha, senha) and usuario.ativo:
+            login_user(usuario)
+            session['usuario_id'] = usuario.id
+            session['usuario_nome'] = usuario.nome
+            session['usuario_cargo'] = usuario.cargo
             registrar_log(
-                "Login Falhou",
-                f'Tentativa de login inválida (Identificador: {identificador_raw[:3] if identificador_raw else "?"}***) — IP: {request.remote_addr}',
+                "Login",
+                f'Usuário "{usuario.nome}" ({usuario.cargo}) fez login — IP: {request.remote_addr}',
             )
-            flash("CPF, e-mail ou senha incorretos.", "danger")
-            return render_template("login.html")
-
-        if not usuario.ativo:
-            registrar_log(
-                "Login Falhou",
-                f'Tentativa de login com conta inativa (Identificador: {identificador_raw[:3] if identificador_raw else "?"}***) — IP: {request.remote_addr}',
+            token = gerar_token(usuario)
+            
+            # Redirecionamento: se senha não foi trocada, forçar troca
+            if not usuario.senha_trocada:
+                redirect_url = url_for("auth.trocar_senha_obrigatoria")
+            else:
+                redirect_url = url_for("inventory.dashboard")
+            
+            resposta = redirect(redirect_url)
+            resposta.set_cookie(
+                "redevita_token", token, httponly=True, samesite="Lax", max_age=3600
             )
-            flash("Sua conta está inativa. Entre em contato com o administrador.", "danger")
-            return render_template("login.html")
+            return resposta
 
-        login_user(usuario)
-        session['usuario_id'] = usuario.id
-        session['usuario_nome'] = usuario.nome
-        session['usuario_cargo'] = usuario.cargo
         registrar_log(
-            "Login",
-            f'Usuário "{usuario.nome}" ({usuario.cargo}) fez login — IP: {request.remote_addr}',
+            "Login Falhou",
+            f'Tentativa de login inválida (Identificador: {identificador_raw[:3] if identificador_raw else "?"}***) — IP: {request.remote_addr}',
         )
-        token = gerar_token(usuario)
-        
-        # Redirecionamento padrão para dashboard
-        redirect_url = url_for("inventory.dashboard")
-        
-        resposta = redirect(redirect_url)
-        resposta.set_cookie(
-            "redevita_token", token, httponly=True, samesite="Lax", max_age=3600
-        )
-        return resposta
+        flash("CPF, e-mail ou senha incorretos.", "danger")
     return render_template("login.html")
+
+
+@auth_bp.route("/trocar-senha-obrigatoria", methods=["GET", "POST"])
+@login_required
+def trocar_senha_obrigatoria():
+    """Rota para troca obrigatória de senha no primeiro acesso"""
+    if request.method == "POST":
+        nova_senha = request.form.get("nova_senha", "")
+        confirmar = request.form.get("confirmar_senha", "")
+        
+        if not nova_senha or len(nova_senha) < 8:
+            flash("A senha deve ter pelo menos 8 caracteres.", "danger")
+            return render_template("trocar_senha_obrigatoria.html")
+        
+        if nova_senha != confirmar:
+            flash("A confirmação de senha não confere.", "danger")
+            return render_template("trocar_senha_obrigatoria.html")
+        
+        # Atualiza senha e marca como trocada
+        current_user.senha = criptografar_senha(nova_senha)
+        current_user.senha_trocada = True
+        db.session.commit()
+        
+        registrar_log("Senha Inicial Trocada", f'Usuário "{current_user.nome}" trocou senha inicial obrigatória')
+        flash("Senha alterada com sucesso! Bem-vindo ao sistema.", "success")
+        return redirect(url_for("inventory.dashboard"))
+    
+    return render_template("trocar_senha_obrigatoria.html")
 
 
 @auth_bp.route("/cadastro", methods=["GET", "POST"])
@@ -114,7 +137,7 @@ def cadastro():
             flash("Preencha todos os campos obrigatórios.", "danger")
             return render_template("cadastro.html")
 
-        if not validar_cpf_digitos(cpf):
+        if not validar_cpf(cpf):
             flash("CPF inválido. Verifique os dígitos e tente novamente.", "danger")
             return render_template("cadastro.html")
 
@@ -136,9 +159,9 @@ def cadastro():
             flash("Este e-mail já está cadastrado.", "danger")
             return render_template("cadastro.html")
 
-        cargo_raw = limpar(request.form.get("cargo", "Voluntário"), max_len=20)
-        cargos_validos = ["Voluntário", "Farmacêutico", "Médico", "Operador", "Admin", "Doador"]
-        cargo = cargo_raw if cargo_raw in cargos_validos else "Voluntário"
+        # Cadastro público sempre atribui papel "Voluntário"
+        # Ignora qualquer cargo enviado pelo cliente para evitar elevação de privilégios
+        cargo = "Voluntário"
 
         try:
             novo_usuario = Usuario(
@@ -207,10 +230,11 @@ def recuperar_senha():
             "verificado": False,
         }
 
-        # Log seguro e auditoria - sem código em claro
+        # Log seguro e auditoria
+        current_app.logger.info(f"[RedeVita Segurança] Código de recuperação gerado para {user_email}: {codigo}")
         registrar_log(
             "Recuperação de Senha",
-            f'Código de verificação gerado para "{usuario.nome}" — IP: {request.remote_addr}',
+            f'Código de verificação de 6 dígitos gerado para "{usuario.nome}" ({user_email}) — IP: {request.remote_addr}',
         )
 
         return redirect(url_for("auth.verificar_codigo"))

@@ -1,4 +1,3 @@
-import os
 import json
 import math
 from flask import Blueprint, render_template, current_app, request, jsonify
@@ -111,26 +110,17 @@ def mapa_saude():
 
             farmacias_json = json.dumps(pontos, ensure_ascii=False)
             current_app.cache.set(cache_key, farmacias_json, timeout=300)
-
-        api_key = os.environ.get("GOOGLE_MAPS_API_KEY", "")
         
+        # Não há mais dependência de Google Maps API Key
         default_lat = -23.5015
         default_lng = -47.4526
         
-        try:
-            default_lat = float(default_lat)
-            default_lng = float(default_lng)
-        except (TypeError, ValueError):
-            default_lat = -23.5015
-            default_lng = -47.4526
-        
-        return render_template("mapa.html", farmacias_json=farmacias_json, api_key=api_key,
+        return render_template("mapa.html", farmacias_json=farmacias_json,
                               default_lat=default_lat, default_lng=default_lng)
     except Exception as e:
         current_app.logger.error(f"Erro ao carregar mapa: {str(e)}")
         farmacias_json = "[]"
-        api_key = ""
-        return render_template("mapa.html", farmacias_json=farmacias_json, api_key=api_key,
+        return render_template("mapa.html", farmacias_json=farmacias_json,
                               default_lat=-23.5015, default_lng=-47.4526)
 
 

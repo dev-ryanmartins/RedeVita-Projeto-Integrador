@@ -399,33 +399,9 @@
         <span class="mapa-filter-label">Exibir no mapa</span>
         <div class="mapa-filter-options">
           <label class="mapa-filter-item">
-            <input type="checkbox" id="filterRedevita" checked onchange="toggleLayer('redevita',this.checked)">
-            <span class="filter-dot blue"></span>
-            <span>Pontos de Doação (RedeVita)</span>
-            <span class="filter-count" id="countRedevita">0</span>
-          </label>
-          <label class="mapa-filter-item">
-            <input type="checkbox" id="filterUPA" checked onchange="toggleLayer('upa',this.checked)">
-            <span class="filter-dot orange"></span>
-            <span>UPA — Pronto Atendimento</span>
-            <span class="filter-count" id="countUPA">0</span>
-          </label>
-          <label class="mapa-filter-item">
-            <input type="checkbox" id="filterUBS" checked onchange="toggleLayer('ubs',this.checked)">
-            <span class="filter-dot teal"></span>
-            <span>UBS / Posto de Saúde</span>
-            <span class="filter-count" id="countUBS">0</span>
-          </label>
-          <label class="mapa-filter-item">
-            <input type="checkbox" id="filterHospital" checked onchange="toggleLayer('hospital',this.checked)">
-            <span class="filter-dot red"></span>
-            <span>Hospital / Clínica</span>
-            <span class="filter-count" id="countHospital">0</span>
-          </label>
-          <label class="mapa-filter-item">
             <input type="checkbox" id="filterFarmacias" checked onchange="toggleLayer('farmacia',this.checked)">
             <span class="filter-dot green"></span>
-            <span>Farmácias</span>
+            <span>Farmácias Cadastradas</span>
             <span class="filter-count" id="countFarmacias">0</span>
           </label>
         </div>
@@ -473,32 +449,28 @@
 (function () {
 
   const FARMACIAS_REDEVITA = {{ farmacias_json | safe }};
-  const API_KEY = '{{ api_key }}';
   const DEFAULT_LAT = {{ default_lat }};
   const DEFAULT_LNG = {{ default_lng }};
 
   const COLOR = {
-    redevita: '#38bdf8', upa: '#f59e0b', ubs: '#14b8a6', hospital: '#ef4444', farmacia: '#10b981',
+    farmacia: '#10b981',
   };
   const ICON_FA = {
-    redevita: 'fa-hand-holding-heart', upa: 'fa-ambulance', ubs: 'fa-clinic-medical',
-    hospital: 'fa-hospital', farmacia: 'fa-pills',
+    farmacia: 'fa-pills',
   };
   const LABEL = {
-    redevita: 'Ponto de Doação', upa: 'UPA', ubs: 'UBS / Posto de Saúde',
-    hospital: 'Hospital / Clínica', farmacia: 'Farmácia',
+    farmacia: 'Farmácia Cadastrada',
   };
   const COUNT_ID = {
-    redevita: 'countRedevita', upa: 'countUPA', ubs: 'countUBS',
-    hospital: 'countHospital', farmacia: 'countFarmacias',
+    farmacia: 'countFarmacias',
   };
 
   let map = null;
   let userLat = null, userLng = null;
   let userMarker = null;
-  let markers = { redevita: [], upa: [], ubs: [], hospital: [], farmacia: [] };
+  let markers = { farmacia: [] };
   let filtroAcesso = 'todos';
-  const contadores = { redevita: 0, upa: 0, ubs: 0, hospital: 0, farmacia: 0 };
+  const contadores = { farmacia: 0 };
 
   function setStatus(msg) { document.getElementById('mapaStatusText').textContent = msg; }
   function hideLoading() { document.getElementById('mapaLoading').classList.add('hidden'); }
@@ -524,12 +496,9 @@
     const empty = document.getElementById('mapaEmptyState');
     if (empty) empty.remove();
 
-    const cor = COLOR[tipo] || '#38bdf8';
+    const cor = COLOR[tipo] || '#10b981';
     const icon = ICON_FA[tipo] || 'fa-map-pin';
     const label = LABEL[tipo] || tipo;
-    const acessoBadge = acesso === 'publico'
-      ? '<span class="result-badge pub">Público</span>'
-      : '<span class="result-badge priv">Privado</span>';
 
     const item = document.createElement('div');
     item.className = 'mapa-result-item';
@@ -542,13 +511,11 @@
         <div class="result-address" title="${endereco}">${endereco || 'Endereço não disponível'}</div>
         <div class="result-badges">
           <span class="result-badge ${cor}">${label}</span>
-          ${acessoBadge}
         </div>
       </div>`;
     item.addEventListener('click', () => {
       if (map) {
-        map.setCenter({ lat: lat, lng: lng });
-        map.setZoom(16);
+        map.setView([lat, lng], 16);
       }
     });
     container.appendChild(item);
@@ -577,62 +544,26 @@
 
   function toggleLayer(tipo, visible) {
     markers[tipo].forEach(marker => {
-      marker.setMap(visible ? map : null);
+      if (visible) {
+        marker.addTo(map);
+      } else {
+        map.removeLayer(marker);
+      }
     });
   }
   window.toggleLayer = toggleLayer;
 
-  function popupHTML(nome, endereco, tipo, acesso) {
-    const cor = COLOR[tipo] || '#38bdf8';
-    const acessoStr = acesso === 'publico' ? '🏛️ Público' : '🔒 Privado';
+  function popupHTML(nome, endereco, tipo) {
+    const cor = COLOR[tipo] || '#10b981';
     return `<div style="font-family:Inter,sans-serif;min-width:190px;max-width:240px">
       <strong style="color:${cor};font-size:0.9rem">${nome}</strong><br>
       <span style="color:#aaa;font-size:0.78rem">${endereco || 'Endereço não disponível'}</span>
-      <br><span style="color:#888;font-size:0.73rem">${LABEL[tipo] || tipo} · ${acessoStr}</span>
+      <br><span style="color:#888;font-size:0.73rem">${LABEL[tipo] || tipo}</span>
     </div>`;
   }
 
-  function loadGoogleMaps() {
-    if (!API_KEY || API_KEY.trim() === '') {
-      setStatus('Chave de API Google Maps não configurada. Configure GOOGLE_MAPS_API_KEY no ambiente.');
-      hideLoading();
-      const mapDiv = document.getElementById('map');
-      if (mapDiv) {
-        mapDiv.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#64748b;font-size:0.9rem;">Mapa indisponível - API Key não configurada</div>';
-      }
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${API_KEY}&callback=initMap`;
-    script.async = true;
-    script.defer = true;
-    script.onerror = () => {
-      setStatus('Erro ao carregar Google Maps. Verifique sua conexão.');
-      hideLoading();
-      const mapDiv = document.getElementById('map');
-      if (mapDiv) {
-        mapDiv.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;padding:20px;background:rgba(15,23,42,0.7);backdrop-filter:blur(12px);border:1px solid rgba(56,189,248,0.2);border-radius:12px;color:#64748b;font-size:0.9rem;"><i class="fas fa-map-marked-alt" style="font-size:2rem;color:#38bdf8;"></i><span>Erro ao carregar Google Maps</span><span style="font-size:0.8rem;">Verifique sua conexão</span></div>';
-      }
-    };
-    script.onload = () => {
-      // Força o redimensionamento após o carregamento do script
-      setTimeout(() => {
-        if (window.google && window.google.maps) {
-          google.maps.event.triggerOnce(window.map, 'idle', () => {
-            if (window.map) {
-              window.map.setCenter(window.map.getCenter());
-            }
-          });
-        }
-      }, 500);
-    };
-    document.head.appendChild(script);
-  }
-
-  window.initMap = function() {
+  function initMap() {
     try {
-      // Verifica se o contentor do mapa tem altura antes de inicializar
       const mapDiv = document.getElementById('map');
       if (!mapDiv) {
         setStatus('Erro: Elemento do mapa não encontrado');
@@ -648,72 +579,29 @@
         mapDiv.style.width = '100%';
       }
 
-      // Força o mapa a recalcular tamanho após carregamento
-      setTimeout(() => {
-        if (map) {
-          google.maps.event.trigger(map, 'resize');
+      // Inicializa mapa com Leaflet
+      map = L.map('map').setView([DEFAULT_LAT, DEFAULT_LNG], 13);
+
+      // Adiciona camada de mapa escuro (sem necessidade de API key)
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        subdomains: 'abcd',
+        maxZoom: 19
+      }).addTo(map);
+
+      // Se não houver farmácias cadastradas, mostra mensagem
+      if (!FARMACIAS_REDEVITA || FARMACIAS_REDEVITA.length === 0) {
+        const container = document.getElementById('mapaResults');
+        const empty = document.getElementById('mapaEmptyState');
+        if (empty) {
+          empty.innerHTML = '<i class="fas fa-map-pin"></i><p>Ainda não há farmácias cadastradas no sistema.</p>';
         }
-      }, 100);
-
-      map = new google.maps.Map(mapDiv, {
-        center: { lat: DEFAULT_LAT, lng: DEFAULT_LNG },
-        zoom: 13,
-        styles: [
-          {
-            "featureType": "all",
-            "elementType": "geometry",
-            "stylers": [{"color": "#0f172a"}]
-          },
-          {
-            "featureType": "all",
-            "elementType": "labels.text.fill",
-            "stylers": [{"color": "#cbd5e1"}]
-          },
-          {
-            "featureType": "all",
-            "elementType": "labels.text.stroke",
-            "stylers": [{"color": "#0f172a"}]
-          },
-          {
-            "featureType": "administrative",
-            "elementType": "geometry",
-            "stylers": [{"color": "#1e293b"}]
-          },
-          {
-            "featureType": "road",
-            "elementType": "geometry",
-            "stylers": [{"color": "#1e293b"}]
-          },
-          {
-            "featureType": "road",
-            "elementType": "geometry.stroke",
-            "stylers": [{"color": "#0f172a"}]
-          },
-          {
-            "featureType": "water",
-            "elementType": "geometry",
-            "stylers": [{"color": "#0c4a6e"}]
-          },
-          {
-            "featureType": "poi",
-            "elementType": "geometry",
-            "stylers": [{"color": "#1e293b"}]
-          }
-        ]
-      });
-      
-      map.addListener('tilesloaded', function() {
+        setStatus('Nenhuma farmácia cadastrada');
         hideLoading();
-      });
-      
-      map.addListener('idle', function() {
-        hideLoading();
-      });
-      
-      map.addListener('tileloaderror', function() {
-        setStatus('Aviso: Alguns tiles do mapa não puderam ser carregados devido a instabilidade de rede');
-      });
+        return;
+      }
 
+      // Adiciona marcadores de farmácias cadastradas
       FARMACIAS_REDEVITA.forEach(farmacia => {
         addFarmaciaMarker(farmacia);
       });
@@ -738,31 +626,24 @@
       setStatus('Erro ao inicializar mapa: ' + error.message);
       hideLoading();
     }
-  };
+  }
 
   function addFarmaciaMarker(farmacia) {
     if (!map) return;
 
-    const marker = new google.maps.Marker({
-      position: { lat: farmacia.lat, lng: farmacia.lng },
-      map: map,
-      title: farmacia.nome,
-      icon: {
-        path: google.maps.SymbolPath.CIRCLE,
-        scale: 8,
-        fillColor: COLOR.farmacia,
-        fillOpacity: 0.8,
-        strokeColor: '#ffffff',
-        strokeWeight: 2
-      }
-    });
+    const marker = L.circleMarker([farmacia.lat, farmacia.lng], {
+      radius: 150,
+      fillColor: COLOR.farmacia,
+      color: '#ffffff',
+      weight: 2,
+      opacity: 0.8,
+      fillOpacity: 0.6
+    }).addTo(map);
 
-    const infoWindow = new google.maps.InfoWindow({
-      content: popupHTML(farmacia.nome, farmacia.endereco, 'farmacia', 'privado')
-    });
+    marker.bindPopup(popupHTML(farmacia.nome, farmacia.endereco, 'farmacia'));
 
-    marker.addListener('click', () => {
-      infoWindow.open(map, marker);
+    marker.on('click', () => {
+      marker.openPopup();
     });
 
     markers.farmacia.push(marker);
@@ -774,32 +655,25 @@
     if (!map || !userLat || !userLng) return;
 
     if (userMarker) {
-      userMarker.setMap(null);
+      map.removeLayer(userMarker);
     }
 
-    userMarker = new google.maps.Marker({
-      position: { lat: userLat, lng: userLng },
-      map: map,
-      title: 'Sua localização',
-      icon: {
-        path: google.maps.SymbolPath.CIRCLE,
-        scale: 10,
-        fillColor: '#f59e0b',
-        fillOpacity: 0.9,
-        strokeColor: '#ffffff',
-        strokeWeight: 3
-      }
-    });
+    userMarker = L.circleMarker([userLat, userLng], {
+      radius: 200,
+      fillColor: '#f59e0b',
+      color: '#ffffff',
+      weight: 3,
+      opacity: 0.9,
+      fillOpacity: 0.9
+    }).addTo(map);
 
-    map.setCenter({ lat: userLat, lng: userLng });
-    map.setZoom(15);
+    map.setView([userLat, userLng], 15);
     setStatus('Localização encontrada');
   }
 
   function resetLocalizacao() {
     if (map) {
-      map.setCenter({ lat: DEFAULT_LAT, lng: DEFAULT_LNG });
-      map.setZoom(13);
+      map.setView([DEFAULT_LAT, DEFAULT_LNG], 13);
       setStatus('Localização resetada');
     }
   }
@@ -814,132 +688,22 @@
     const searchTerm = document.getElementById('mapaSearch').value.trim();
     if (!searchTerm || !map) return;
 
-    const service = new google.maps.places.PlacesService(map);
-    service.textSearch({ query: searchTerm + ', Brasil' }, (results, status) => {
-      if (status === google.maps.places.PlacesServiceStatus.OK && results[0]) {
-        const place = results[0];
-        map.setCenter(place.geometry.location);
-        map.setZoom(16);
-        setStatus('Localização encontrada: ' + place.name);
+    // Busca apenas nas farmácias cadastradas
+    const found = FARMACIAS_REDEVITA.find(f => 
+      f.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      f.endereco.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
-        const searchMarker = new google.maps.Marker({
-          position: place.geometry.location,
-          map: map,
-          title: place.name,
-          icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 10,
-            fillColor: '#f59e0b',
-            fillOpacity: 0.8,
-            strokeColor: '#ffffff',
-            strokeWeight: 2
-          }
-        });
-
-        const infoWindow = new google.maps.InfoWindow({
-          content: `<div style="font-family:Inter,sans-serif;">
-            <strong style="color:#f59e0b;font-size:0.9rem">${place.name}</strong><br>
-            <span style="color:#aaa;font-size:0.78rem">${place.formatted_address || ''}</span>
-          </div>`
-        });
-
-        searchMarker.addListener('click', () => {
-          infoWindow.open(map, searchMarker);
-        });
-
-        searchNearbyHealthFacilities(place.geometry.location);
-
-      } else {
-        setStatus('Localização não encontrada');
-      }
-    });
+    if (found) {
+      map.setView([found.lat, found.lng], 16);
+      setStatus('Farmácia encontrada: ' + found.nome);
+    } else {
+      setStatus('Farmácia não encontrada na base cadastrada');
+    }
   }
 
-  function searchNearbyHealthFacilities(location) {
-    if (!map) return;
-
-    const service = new google.maps.places.PlacesService(map);
-
-    service.nearbySearch({
-      location: location,
-      radius: 5000,
-      type: 'pharmacy'
-    }, (results, status) => {
-      if (status === google.maps.places.PlacesServiceStatus.OK) {
-        results.forEach(place => {
-          if (!place.geometry || !place.geometry.location) return;
-
-          const marker = new google.maps.Marker({
-            position: place.geometry.location,
-            map: map,
-            title: place.name,
-            icon: {
-              path: google.maps.SymbolPath.CIRCLE,
-              scale: 6,
-              fillColor: COLOR.farmacia,
-              fillOpacity: 0.6,
-              strokeColor: '#ffffff',
-              strokeWeight: 1
-            }
-          });
-
-          const infoWindow = new google.maps.InfoWindow({
-            content: popupHTML(place.name, place.formatted_address, 'farmacia', 'privado')
-          });
-
-          marker.addListener('click', () => {
-            infoWindow.open(map, marker);
-          });
-
-          markers.farmacia.push(marker);
-          addResultItem(place.name, place.formatted_address, 'farmacia', 'privado',
-                       place.geometry.location.lat(), place.geometry.location.lng());
-        });
-        incCount('farmacia');
-      }
-    });
-
-    service.nearbySearch({
-      location: location,
-      radius: 10000,
-      type: 'hospital'
-    }, (results, status) => {
-      if (status === google.maps.places.PlacesServiceStatus.OK) {
-        results.forEach(place => {
-          if (!place.geometry || !place.geometry.location) return;
-
-          const marker = new google.maps.Marker({
-            position: place.geometry.location,
-            map: map,
-            title: place.name,
-            icon: {
-              path: google.maps.SymbolPath.CIRCLE,
-              scale: 8,
-              fillColor: COLOR.hospital,
-              fillOpacity: 0.6,
-              strokeColor: '#ffffff',
-              strokeWeight: 1
-            }
-          });
-
-          const infoWindow = new google.maps.InfoWindow({
-            content: popupHTML(place.name, place.formatted_address, 'hospital', 'publico')
-          });
-
-          marker.addListener('click', () => {
-            infoWindow.open(map, marker);
-          });
-
-          markers.hospital.push(marker);
-          addResultItem(place.name, place.formatted_address, 'hospital', 'publico',
-                       place.geometry.location.lat(), place.geometry.location.lng());
-        });
-        incCount('hospital');
-      }
-    });
-  }
-
-  loadGoogleMaps();
+  // Inicializa o mapa
+  initMap();
 
 })();
 </script>

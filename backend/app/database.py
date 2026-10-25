@@ -3510,6 +3510,36 @@ def init_db(app):
     migrate.init_app(app, db)
 
 
+# ============================================================================
+# NOTA: MIGRAÇÕES DE SCHEMA (P1.12)
+# ============================================================================
+# 
+# A função aplicar_migracoes_manuais foi removida do startup da aplicação.
+# Gerenciamento de schema agora usa Flask-Migrate (Alembic).
+# 
+# Comandos de migração:
+#   cd backend
+#   flask --app main:create_app db migrate -m "descrição da mudança"
+#   flask --app main:create_app db upgrade
+#   flask --app main:create_app db downgrade
+#
+# Migration inicial manual foi criada em:
+#   backend/migrations/versions/001_schema_inicial.py
+#
+# As migrações manuais antigas foram movidas para:
+#   backend/migrations_custom/add_ativo_medicamentos.py
+#
+# Para ambientes de produção:
+#   1. Faça backup do banco antes de aplicar migrations
+#   2. Teste migrations em ambiente de staging primeiro
+#   3. Use 'flask db upgrade' para aplicar migrations
+#   4. Verifique a aplicação após upgrade
+#
+# ============================================================================
+# FIM DAS MIGRAÇÕES
+# ============================================================================
+
+
 def aplicar_migracoes_manuais(app):
     """Aplica colunas novas em tabelas existentes (seguro para SQLite e PostgreSQL)."""
     from sqlalchemy import inspect

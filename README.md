@@ -49,8 +49,7 @@ Abra o navegador em `http://127.0.0.1:5000`
 
 - **Interface glassmorphism moderna** com tema escuro/claro
 - **RBAC (Role-Based Access Control)** para controle de acesso
-- **Integração Google Maps** para visualização de farmácias
-- **Integração ANVISA** para validação de medicamentos
+- **Validação de medicamentos** (ANVISA desabilitada até confirmação de contrato)
 - **Monitoramento IoT** simulado para cadeia de frio
 - **Banco SQLite** local (automático)
 - **Logs de auditoria** para rastreabilidade

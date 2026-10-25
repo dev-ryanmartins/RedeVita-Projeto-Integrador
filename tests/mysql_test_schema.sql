@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS medicamentos (
   referencia_id INT NULL,
   ativo BOOLEAN DEFAULT TRUE,
   controlado BOOLEAN DEFAULT FALSE,
+  observacoes TEXT NULL,
   CONSTRAINT fk_medicamentos_referencia FOREIGN KEY (referencia_id) REFERENCES medicamento_referencia(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -60,6 +61,8 @@ CREATE TABLE IF NOT EXISTS pacientes (
   cpf VARCHAR(14) NOT NULL UNIQUE,
   data_nascimento DATE NOT NULL,
   endereco VARCHAR(255) NULL,
+  telefone VARCHAR(30) NULL,
+  email VARCHAR(150) NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -71,7 +74,11 @@ CREATE TABLE IF NOT EXISTS receitas (
   status VARCHAR(50) DEFAULT 'pendente',
   tipo_receita VARCHAR(50) NULL,
   data_prescricao DATE,
+  observacoes TEXT NULL,
+  data_emissao DATETIME NULL,
+  imagem_url VARCHAR(255) NULL,
   dispensada_em DATETIME NULL,
+  dispensada_por_id INT NULL,
   cancelado_em DATETIME NULL,
   cancelado_por_id INT NULL,
   CONSTRAINT fk_receitas_paciente FOREIGN KEY (paciente_id) REFERENCES pacientes(id) ON DELETE CASCADE,
@@ -100,13 +107,17 @@ CREATE TABLE IF NOT EXISTS doacoes (
 
 CREATE TABLE IF NOT EXISTS qr_nonces (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  token VARCHAR(64) NOT NULL UNIQUE,
-  receita_id INT NULL,
-  usuario_id INT NULL,
-  usado_em DATETIME NULL,
+  nonce VARCHAR(64) NOT NULL UNIQUE,
+  receita_id INT NOT NULL,
+  gerado_por_id INT NULL,
   expira_em DATETIME NOT NULL,
-  CONSTRAINT fk_qr_nonces_receita FOREIGN KEY (receita_id) REFERENCES receitas(id) ON DELETE SET NULL,
-  CONSTRAINT fk_qr_nonces_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL
+  usado BOOLEAN DEFAULT FALSE NOT NULL,
+  usado_em DATETIME NULL,
+  usado_por_id INT NULL,
+  criado_em DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+  CONSTRAINT fk_qr_nonces_receita FOREIGN KEY (receita_id) REFERENCES receitas(id) ON DELETE CASCADE,
+  CONSTRAINT fk_qr_nonces_gerado_por FOREIGN KEY (gerado_por_id) REFERENCES usuarios(id) ON DELETE SET NULL,
+  CONSTRAINT fk_qr_nonces_usado_por FOREIGN KEY (usado_por_id) REFERENCES usuarios(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS movimentos_estoque (
@@ -155,3 +166,7 @@ CREATE TABLE IF NOT EXISTS solicitacoes_estoque (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+-- Insert test user for QR nonce tests (usado_por_id FK)
+INSERT INTO usuarios (id, nome, cpf, email, senha, cargo, ativo, senha_trocada, credencial_versao)
+VALUES (1, 'Test Farmacêutico', '11122233344', 'farmaceutico@test.local', 'hashed_password', 'Farmacêutico', TRUE, TRUE, 1);

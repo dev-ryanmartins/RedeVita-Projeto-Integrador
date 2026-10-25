@@ -32,12 +32,13 @@ class TestEmailService:
             subject="Teste",
             body="Corpo do teste"
         )
-        
+
         result = email_service.send_email(message)
-        
-        assert result is True
-        assert len(email_service.sent_emails) == 1
-        assert email_service.sent_emails[0].to == "test@example.com"
+
+        # Quando SMTP não está configurado, retorna NOT_CONFIGURED
+        from backend.app.utils.email_service import EmailStatus
+        assert result.status == EmailStatus.NOT_CONFIGURED
+        assert "SMTP não configurado" in result.message
     
     @pytest.mark.skip(reason="Requires Flask app context, tested in integration")
     @patch('backend.app.utils.email_service.smtplib.SMTP')

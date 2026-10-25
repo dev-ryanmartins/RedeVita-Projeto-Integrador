@@ -268,14 +268,13 @@ class TestAPIQRCodeContract:
         
         data = response.get_json()
         assert 'erro' in data
-        assert 'codigo' in data['erro']
-        assert 'correlation_id' in data['erro']
+        # API agora usa nonce apenas, sem assinatura HMAC
+        assert "Dados do QR Code não fornecidos" in data['erro']
     
-    def test_qrcode_validate_assinatura_invalida(self, client, auth_usuario, app):
-        """POST /api/qrcode/validate deve validar assinatura."""
+    def test_qrcode_validate_sem_nonce(self, client, auth_usuario, app):
+        """POST /api/qrcode/validate deve retornar erro sem nonce."""
         payload = {
-            "data": {"type": "prescription", "id": 1},
-            "signature": "invalid_signature"
+            "nonce": ""
         }
         
         response = client.post('/api/qrcode/validate', json=payload)
@@ -283,5 +282,19 @@ class TestAPIQRCodeContract:
         
         data = response.get_json()
         assert 'erro' in data
-        assert 'codigo' in data['erro']
-        assert 'correlation_id' in data['erro']
+        # API retorna "Nonce do QR Code não fornecido"
+        assert "Nonce do QR Code não fornecido" in data['erro']
+    
+    def test_qrcode_validate_nonce_invalido(self, client, auth_usuario, app):
+        """POST /api/qrcode/validate deve rejeitar nonce inexistente."""
+        payload = {
+            "nonce": "nonce_inexistente_aleatorio"
+        }
+        
+        response = client.post('/api/qrcode/validate', json=payload)
+        assert response.status_code == 404
+        
+        data = response.get_json()
+        assert 'erro' in data
+        # API retorna "QR Code inválido ou não encontrado"
+        assert "QR Code inválido ou não encontrado" in data['erro']

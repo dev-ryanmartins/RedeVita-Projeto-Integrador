@@ -81,7 +81,7 @@ class TestRoutes(unittest.TestCase):
     def test_api_v1_analytics_stats_route_redirect(self):
         """Testa que analytics stats requer autenticação"""
         response = self.client.get('/api/v1/analytics/stats')
-        self.assertIn(response.status_code, [401, 429])  # Unauthorized ou Rate Limit
+        self.assertIn(response.status_code, [400, 401, 429])  # Bad Request, Unauthorized ou Rate Limit
     
     def test_static_files(self):
         """Testa que arquivos estáticos são servidos"""

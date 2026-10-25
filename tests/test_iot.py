@@ -413,13 +413,13 @@ class TestAutenticacaoRFID:
             'tag_uid': 'tag_inexistente123456789',
             'armario_id': 'CONTROLADOS'
         }
-        
+
         response = client.post('/api/iot/rfid-autenticar', json=payload)
-        
+
         assert response.status_code == 403
         data = response.get_json()
         assert data['success'] is False
-        assert 'Tag não reconhecida' in data['message']
+        assert 'Tag não reconhecida' in data['erro']['mensagem']
     
     def test_rfid_autenticar_tag_desativada(self, client, app, usuario_teste):
         """Testa falha com tag desativada."""
@@ -440,11 +440,11 @@ class TestAutenticacaoRFID:
         }
         
         response = client.post('/api/iot/rfid-autenticar', json=payload)
-        
+
         assert response.status_code == 403
         data = response.get_json()
         assert data['success'] is False
-        assert 'Tag desativada' in data['message']
+        assert 'Tag desativada' in data['erro']['mensagem']
     
     def test_rfid_autenticar_sem_privilegios(self, client, app):
         """Testa falha com usuário sem privilégios (paciente)."""
@@ -478,11 +478,11 @@ class TestAutenticacaoRFID:
         }
         
         response = client.post('/api/iot/rfid-autenticar', json=payload)
-        
+
         assert response.status_code == 403
         data = response.get_json()
         assert data['success'] is False
-        assert 'Privilégios insuficientes' in data['message']
+        assert 'Privilégios insuficientes' in data['erro']['mensagem']
     
     def test_rfid_autenticar_atualiza_ultimo_acesso(self, client, app, usuario_teste):
         """Testa que autenticação atualiza último acesso da tag."""

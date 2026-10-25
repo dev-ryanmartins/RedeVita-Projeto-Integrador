@@ -96,7 +96,7 @@ def nova_doacao():
             db.session.add(registro)
             db.session.commit()
             detalhe = (
-                f'{qtd} un. de "{medicamento.nome}" (Tipo: {medicamento.principio_ativo or medicamento_tipo}) '
+                f'{qtd} un. de "{medicamento.nome}" (Tipo: {medicamento.principio_ativo or medicamento.tarja}) '
                 f"por {current_user.nome} [{current_user.cargo_exibicao}] → {destinatario}"
             )
             if receita_medica:
@@ -136,6 +136,10 @@ def nova_doacao():
     except Exception:
         medicamentos = []
 
+    # Pagination parameters (for future use)
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 50, type=int)
+    
     data_inicio = request.args.get("data_inicio", "").strip()
     data_fim = request.args.get("data_fim", "").strip()
     

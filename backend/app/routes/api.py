@@ -1235,7 +1235,8 @@ def autenticar_rfid_iot():
                 f"Tag RFID não cadastrada tentou acessar armário {armario_id}: {tag_uid}"
             )
             return resposta_erro(
-                {"autorizado": False, "mensagem": "Acesso Negado à Trava Física - Tag não reconhecida"},
+                "TAG_NAO_RECONHECIDA",
+                "Acesso Negado à Trava Física - Tag não reconhecida",
                 403
             )
         
@@ -1246,7 +1247,8 @@ def autenticar_rfid_iot():
                 f"Tag RFID desativada tentou acessar armário {armario_id}: Usuário ID {tag_rfid.usuario_id}"
             )
             return resposta_erro(
-                {"autorizado": False, "mensagem": "Acesso Negado à Trava Física - Tag desativada"},
+                "TAG_DESATIVADA",
+                "Acesso Negado à Trava Física - Tag desativada",
                 403
             )
         
@@ -1255,7 +1257,8 @@ def autenticar_rfid_iot():
         
         if not usuario:
             return resposta_erro(
-                {"autorizado": False, "mensagem": "Acesso Negado à Trava Física - Usuário não encontrado"},
+                "USUARIO_NAO_ENCONTRADO",
+                "Acesso Negado à Trava Física - Usuário não encontrado",
                 403
             )
         
@@ -1267,7 +1270,8 @@ def autenticar_rfid_iot():
                 f"{usuario.nome} (Cargo: {usuario.cargo}) - Tag {tag_uid}"
             )
             return resposta_erro(
-                {"autorizado": False, "mensagem": "Acesso Negado à Trava Física - Privilégios insuficientes"},
+                "PRIVILEGIOS_INSUFICIENTES",
+                "Acesso Negado à Trava Física - Privilégios insuficientes",
                 403
             )
         

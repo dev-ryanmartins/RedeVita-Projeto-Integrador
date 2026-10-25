@@ -38,7 +38,7 @@ jobs:
         cd backend
         if [ -d "../tests" ]; then
           export PYTHONPATH="../backend:$PYTHONPATH"
-          pytest ../tests/ --cov=backend --cov-report=xml --cov-report=html --tb=short --ignore=../tests/test_iot.py --ignore=../tests/test_semaforo.py
+          pytest ../tests/ --cov=backend --cov-report=xml --cov-report=html --tb=short
         else
           echo "Pasta tests/ não encontrada. Pulando testes."
         fi

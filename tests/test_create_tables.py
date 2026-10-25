@@ -160,22 +160,22 @@ class TestCreateTablesDestructive:
 
 class TestCreateTablesMigrations:
     """Testes para uso de migrations existentes."""
-    
+
     def test_migration_add_ativo_preserva_dados(self, app):
         """Migration add_ativo_medicamentos preserva dados existentes."""
         with app.app_context():
             # A migration já existe e deve preservar dados
             # Este teste verifica que a migration existe e é executável
-            migration_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'backend', 'migrations', 'add_ativo_medicamentos.py')
+            migration_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'backend', 'migrations_custom', 'add_ativo_medicamentos.py')
             assert os.path.exists(migration_path)
-    
+
     def test_migration_add_ativo_nao_usa_drop_all(self, app):
         """Migration add_ativo_medicamentos não usa db.drop_all()."""
-        migration_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'backend', 'migrations', 'add_ativo_medicamentos.py')
-        
+        migration_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'backend', 'migrations_custom', 'add_ativo_medicamentos.py')
+
         with open(migration_path, 'r', encoding='utf-8') as f:
             content = f.read()
-        
+
         # Não deve conter drop_all
         assert 'drop_all' not in content.lower()
         assert 'drop_all()' not in content

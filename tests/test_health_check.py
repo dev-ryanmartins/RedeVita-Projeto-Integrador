@@ -67,6 +67,24 @@ class TestLivenessProbe:
             
             # Deve funcionar mesmo sem banco
             assert response.status_code == 200
+    
+    def test_liveness_nao_exibe_detalhes_erro(self, app):
+        """Liveness não expõe detalhes de erro (não deve ter erro mesmo)."""
+        with app.app_context():
+            client = app.test_client()
+            response = client.get('/health')
+            
+            data = response.get_json()
+            
+            # Liveness não deve ter campo de erro ou detalhes de conexão
+            assert 'error' not in data
+            assert 'database' not in data or 'error' not in data.get('database', {})
+            
+            # Não deve conter DSN, host, credenciais
+            response_str = str(data).lower()
+            assert 'password' not in response_str
+            assert 'username' not in response_str
+            assert 'host' not in response_str
 
 
 class TestReadinessProbe:
@@ -123,6 +141,86 @@ class TestReadinessProbe:
             assert 'host' not in response_str
             assert 'dsn' not in response_str
             assert 'error' not in data.get('services', {}).get('database', {})
+    
+    def test_readiness_nao_exibe_valores_canario_de_excecao(self, app):
+        """Readiness não expõe valores-canário (DSN, host, credencial) mesmo em falha."""
+        with app.app_context():
+            # Mock database execution para simular falha com valores-canário
+            from unittest.mock import patch
+            from sqlalchemy import text
+            
+            # Criar exceção com valores-canário na mensagem
+            class CanaryException(Exception):
+                def __str__(self):
+                    return "Connection failed: password=secret123, username=admin, host=db.example.com, port=3306"
+            
+            # Patch db.session.execute para lançar exceção com canary
+            with patch.object(db.session, 'execute', side_effect=CanaryException()):
+                client = app.test_client()
+                response = client.get('/healthz')
+                
+                data = response.get_json()
+                
+                # Valores-canário que não devem aparecer
+                canary_values = [
+                    'secret123',
+                    'admin',
+                    'db.example.com',
+                    '3306',
+                    'password=',
+                    'username=',
+                    'host=',
+                ]
+                
+                response_str = str(data).lower()
+                for canary in canary_values:
+                    assert canary.lower() not in response_str, f"Valor-canário '{canary}' vazou na resposta"
+    
+    def test_readiness_logs_sanitizados_sem_valores_canario(self, app):
+        """Logs sanitizados não contêm valores-canário de exceção."""
+        with app.app_context():
+            # Mock database execution para simular falha com valores-canário
+            from unittest.mock import patch
+            from sqlalchemy import text
+            import logging
+            from io import StringIO
+            
+            # Criar exceção com valores-canário na mensagem
+            class CanaryException(Exception):
+                def __str__(self):
+                    return "Connection failed: password=secret123, username=admin, host=db.example.com, port=3306"
+            
+            # Capturar logs
+            log_capture = StringIO()
+            handler = logging.StreamHandler(log_capture)
+            handler.setLevel(logging.WARNING)
+            logger = logging.getLogger('app.routes.health')
+            logger.addHandler(handler)
+            
+            try:
+                # Patch db.session.execute para lançar exceção com canary
+                with patch.object(db.session, 'execute', side_effect=CanaryException()):
+                    client = app.test_client()
+                    response = client.get('/healthz')
+                    
+                    # Verificar logs
+                    log_output = log_capture.getvalue().lower()
+                    
+                    # Valores-canário que não devem aparecer nos logs
+                    canary_values = [
+                        'secret123',
+                        'admin',
+                        'db.example.com',
+                        '3306',
+                        'password=',
+                        'username=',
+                        'host=',
+                    ]
+                    
+                    for canary in canary_values:
+                        assert canary.lower() not in log_output, f"Valor-canário '{canary}' vazou nos logs"
+            finally:
+                logger.removeHandler(handler)
 
 
 class TestHealthCheckDockerIntegration:

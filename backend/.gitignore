@@ -7,4 +7,7 @@ instance/
 *.sqlite3
 .DS_Store
 logs/
+# Ignorar migrations de desenvolvimento, mas permitir migrations de produção
+# Para permitir migrations de produção, use: !migrations/versions/*.py
+# Por enquanto, mantemos o diretório versions ignorado para evitar conflitos
 migrations/versions/

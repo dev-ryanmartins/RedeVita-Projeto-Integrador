@@ -14,7 +14,7 @@ if BACKEND_DIR not in sys.path:
     sys.path.insert(0, BACKEND_DIR)
 
 from app.config import Config
-from app.database import db, init_db, aplicar_migracoes_manuais
+from app.database import db, init_db
 from app.extensions import limiter, registrar_handlers_limite
 from app.models.usuario import Usuario
 from app.models.iot import LeituraIoT, TagRFID
@@ -271,8 +271,9 @@ def create_app(config_overrides=None):
         }
 
     with app.app_context():
+        # Não aplica migrations no startup - use 'flask db upgrade' para isso
+        # db.create_all() é seguro (cria apenas tabelas ausentes)
         db.create_all()
-        aplicar_migracoes_manuais(app)
         _criar_admin_inicial()
         from app.database import seed_medicamentos_referencia
         seed_medicamentos_referencia(app)

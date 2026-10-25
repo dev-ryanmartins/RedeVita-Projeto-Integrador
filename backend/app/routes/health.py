@@ -2,6 +2,9 @@ from flask import Blueprint, jsonify
 from datetime import datetime
 from app.database import db
 from sqlalchemy import text
+import logging
+
+logger = logging.getLogger(__name__)
 
 health_bp = Blueprint("health", __name__)
 
@@ -29,7 +32,9 @@ def readiness_check():
         health_status["services"]["database"] = {
             "status": "healthy",
         }
-    except Exception:
+    except Exception as e:
+        # Log sanitizado sem expor detalhes da exceção
+        logger.warning("Database health check failed: connection unavailable")
         health_status["services"]["database"] = {
             "status": "unhealthy",
         }

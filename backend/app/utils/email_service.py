@@ -13,8 +13,27 @@ from email.mime.text import MIMEText
 from typing import Optional, Dict, List
 from dataclasses import dataclass
 from concurrent.futures import ThreadPoolExecutor
+from enum import Enum
 
 logger = logging.getLogger(__name__)
+
+
+class EmailStatus(Enum):
+    """Estados de envio de e-mail."""
+    NOT_CONFIGURED = "not_configured"  # SMTP não configurado
+    LOCAL_CAPTURE = "local_capture"  # Capturado localmente (modo teste)
+    QUEUED = "queued"  # Enfileirado para envio assíncrono
+    ACCEPTED = "accepted"  # Aceito pelo servidor SMTP
+    FAILED = "failed"  # Falha de envio
+    TIMEOUT = "timeout"  # Timeout SMTP
+
+
+@dataclass
+class EmailResult:
+    """Resultado do envio de e-mail."""
+    status: EmailStatus
+    message: str = ""
+    details: Optional[str] = None
 
 
 @dataclass
@@ -29,20 +48,22 @@ class EmailMessage:
 class EmailService:
     """
     Serviço de e-mail para o RedeVita.
-    Implementa envio real via SMTP com fallback para simulação.
+    Implementa envio real via SMTP com captura local para testes.
     Implementa envio assíncrono via ThreadPoolExecutor.
     """
     
-    def __init__(self, max_workers: int = 4):
+    def __init__(self, max_workers: int = 4, local_capture_mode: bool = False):
         """
         Inicializa o serviço de e-mail.
         
         Args:
             max_workers: Número máximo de threads para envio assíncrono
+            local_capture_mode: Se True, captura e-mails localmente sem enviar (modo teste)
         """
         from flask import current_app
         self.executor = ThreadPoolExecutor(max_workers=max_workers)
         self.sent_emails: List[EmailMessage] = []
+        self.local_capture_mode = local_capture_mode
     
     def _get_smtp_config(self) -> dict:
         """Retorna configuração SMTP do Flask app."""
@@ -54,7 +75,8 @@ class EmailService:
                 'use_tls': current_app.config.get('MAIL_USE_TLS', True),
                 'username': current_app.config.get('MAIL_USERNAME', ''),
                 'password': current_app.config.get('MAIL_PASSWORD', ''),
-                'default_sender': current_app.config.get('MAIL_DEFAULT_SENDER', 'RedeVita <nao-responda@redevita.com>')
+                'default_sender': current_app.config.get('MAIL_DEFAULT_SENDER', 'RedeVita <nao-responda@redevita.com>'),
+                'test_mode': current_app.config.get('TESTING', False)
             }
         except RuntimeError:
             # Fora do contexto Flask
@@ -64,10 +86,15 @@ class EmailService:
                 'use_tls': True,
                 'username': '',
                 'password': '',
-                'default_sender': 'RedeVita <nao-responda@redevita.com>'
+                'default_sender': 'RedeVita <nao-responda@redevita.com>',
+                'test_mode': False
             }
     
-    def send_email(self, message: EmailMessage) -> bool:
+    def _is_smtp_configured(self, config: dict) -> bool:
+        """Verifica se SMTP está configurado com credenciais válidas."""
+        return bool(config['username'] and config['password'])
+    
+    def send_email(self, message: EmailMessage) -> EmailResult:
         """
         Envia uma mensagem de e-mail via SMTP real (síncrono).
         
@@ -75,18 +102,30 @@ class EmailService:
             message: Objeto EmailMessage com os dados do e-mail
         
         Returns:
-            True se enviado com sucesso, False caso contrário
+            EmailResult com status e detalhes
         """
         config = self._get_smtp_config()
         
-        # Se não houver credenciais, simula o envio
-        if not config['username'] or not config['password']:
-            logger.warning("[EMAIL SIMULADO] Credenciais SMTP não configuradas. Simulando envio.")
-            logger.info(f"[EMAIL SIMULADO] Para: {message.to}")
-            logger.info(f"[EMAIL SIMULADO] Assunto: {message.subject}")
-            logger.info(f"[EMAIL SIMULADO] Corpo: {message.body[:100]}...")
+        # Modo de captura local (teste) - só se explicitamente ativado
+        if self.local_capture_mode:
+            logger.info("[CAPTURA LOCAL] E-mail capturado localmente (modo teste)")
+            logger.info(f"[CAPTURA LOCAL] Para: {message.to}")
+            logger.info(f"[CAPTURA LOCAL] Assunto: {message.subject}")
             self.sent_emails.append(message)
-            return True
+            return EmailResult(
+                status=EmailStatus.LOCAL_CAPTURE,
+                message="E-mail capturado localmente (modo teste)",
+                details=f"Para: {message.to}, Assunto: {message.subject}"
+            )
+        
+        # SMTP não configurado
+        if not self._is_smtp_configured(config):
+            logger.error("[SMTP NÃO CONFIGURADO] Credenciais SMTP não configuradas. Envio não realizado.")
+            return EmailResult(
+                status=EmailStatus.NOT_CONFIGURED,
+                message="SMTP não configurado. E-mail não enviado.",
+                details="Configure MAIL_USERNAME e MAIL_PASSWORD"
+            )
         
         try:
             # Cria mensagem MIME
@@ -102,37 +141,77 @@ class EmailService:
             if message.html_body:
                 msg.attach(MIMEText(message.html_body, 'html'))
             
-            # Conecta ao servidor SMTP
-            with smtplib.SMTP(config['server'], config['port']) as server:
+            # Conecta ao servidor SMTP com timeout
+            with smtplib.SMTP(config['server'], config['port'], timeout=30) as server:
                 if config['use_tls']:
                     server.starttls()
                 server.login(config['username'], config['password'])
                 server.send_message(msg)
             
-            logger.info(f"E-mail enviado com sucesso para {message.to}")
+            logger.info(f"E-mail aceito pelo servidor SMTP para {message.to}")
             self.sent_emails.append(message)
-            return True
+            return EmailResult(
+                status=EmailStatus.ACCEPTED,
+                message="E-mail aceito pelo servidor SMTP",
+                details=f"Para: {message.to}"
+            )
                 
+        except smtplib.SMTPAuthenticationError as e:
+            logger.error(f"[ERRO SMTP] Falha de autenticação: {str(e)}")
+            return EmailResult(
+                status=EmailStatus.FAILED,
+                message="Falha de autenticação SMTP",
+                details="Verifique MAIL_USERNAME e MAIL_PASSWORD"
+            )
+        except smtplib.SMTPRecipientsRefused as e:
+            logger.error(f"[ERRO SMTP] Destinatário rejeitado: {str(e)}")
+            return EmailResult(
+                status=EmailStatus.FAILED,
+                message="Destinatário rejeitado pelo servidor SMTP",
+                details=str(e)
+            )
+        except smtplib.SMTPServerDisconnected as e:
+            logger.error(f"[ERRO SMTP] Servidor desconectado: {str(e)}")
+            return EmailResult(
+                status=EmailStatus.FAILED,
+                message="Servidor SMTP desconectado",
+                details=str(e)
+            )
+        except smtplib.SMTPException as e:
+            logger.error(f"[ERRO SMTP] Erro SMTP: {str(e)}")
+            return EmailResult(
+                status=EmailStatus.FAILED,
+                message="Erro no servidor SMTP",
+                details=str(e)
+            )
+        except TimeoutError as e:
+            logger.error(f"[ERRO SMTP] Timeout na conexão: {str(e)}")
+            return EmailResult(
+                status=EmailStatus.TIMEOUT,
+                message="Timeout na conexão SMTP",
+                details=str(e)
+            )
         except Exception as e:
-            logger.error(f"Erro ao enviar e-mail via SMTP: {str(e)}")
-            # Fallback para simulação em caso de erro
-            logger.warning("[FALLBACK] Simulando envio devido a erro SMTP.")
-            logger.info(f"[EMAIL SIMULADO] Para: {message.to}")
-            logger.info(f"[EMAIL SIMULADO] Assunto: {message.subject}")
-            self.sent_emails.append(message)
-            return True  # Retorna True para não quebrar o fluxo do usuário
+            logger.error(f"[ERRO] Erro ao enviar e-mail: {str(e)}")
+            return EmailResult(
+                status=EmailStatus.FAILED,
+                message="Erro ao enviar e-mail",
+                details=str(e)
+            )
     
-    def send_email_async(self, message: EmailMessage) -> None:
+    def send_email_async(self, message: EmailMessage, app_config: Optional[dict] = None) -> None:
         """
         Envia e-mail de forma assíncrona usando thread pool.
         Não bloqueia a rota HTTP - retorna imediatamente.
         
         Args:
             message: Objeto EmailMessage com os dados do e-mail
+            app_config: Configuração do app (opcional, para contexto assíncrono)
         """
         def _send():
             try:
-                self.send_email(message)
+                result = self.send_email(message)
+                logger.info(f"Envio assíncrono concluído: {result.status.value} - {result.message}")
             except Exception as e:
                 logger.error(f"Erro no envio assíncrono de e-mail: {str(e)}")
         
@@ -455,7 +534,7 @@ Este é um e-mail automático. Por favor, não responda.
         medicamento: str,
         quantidade: int,
         data_doacao: datetime
-    ) -> bool:
+    ) -> EmailResult:
         """
         Envia e-mail de confirmação de doação.
         
@@ -467,7 +546,7 @@ Este é um e-mail automático. Por favor, não responda.
             data_doacao: Data da doação
         
         Returns:
-            True se enviado com sucesso
+            EmailResult com status e detalhes
         """
         subject = "RedeVita - Confirmação de Doação Recebida"
         
@@ -529,7 +608,7 @@ Este é um e-mail automático. Por favor, não responda.
         to_email: str,
         nome_responsavel: str,
         medicamentos_vencendo: List[Dict[str, str]]
-    ) -> bool:
+    ) -> EmailResult:
         """
         Envia alerta de medicamentos próximos ao vencimento.
         
@@ -539,7 +618,7 @@ Este é um e-mail automático. Por favor, não responda.
             medicamentos_vencendo: Lista de dicts com nome, validade e quantidade
         
         Returns:
-            True se enviado com sucesso
+            EmailResult com status e detalhes
         """
         subject = "RedeVita - Alerta: Medicamentos Próximos ao Vencimento"
         
@@ -610,7 +689,7 @@ Este é um e-mail automático. Por favor, não responda.
         to_email: str,
         nome_responsavel: str,
         medicamentos_baixo_estoque: List[Dict[str, str]]
-    ) -> bool:
+    ) -> EmailResult:
         """
         Envia alerta de medicamentos com estoque baixo.
         
@@ -620,7 +699,7 @@ Este é um e-mail automático. Por favor, não responda.
             medicamentos_baixo_estoque: Lista de dicts com nome e quantidade
         
         Returns:
-            True se enviado com sucesso
+            EmailResult com status e detalhes
         """
         subject = "RedeVita - Alerta: Estoque Baixo"
         

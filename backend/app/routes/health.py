@@ -1,8 +1,9 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, current_app, g
 from datetime import datetime
 from app.database import db
 from sqlalchemy import text
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -42,3 +43,32 @@ def readiness_check():
         return jsonify(health_status), 503
 
     return jsonify(health_status), 200
+
+
+@health_bp.route("/metrics")
+def metrics_endpoint():
+    """
+    Endpoint de métricas básicas (apenas desenvolvimento/teste).
+    Exibe contagem de requisições, erros e latência média por endpoint.
+    Disponível apenas em ambiente de desenvolvimento/teste.
+    """
+    # Verificar se está em ambiente de desenvolvimento/teste
+    is_dev = os.environ.get('FLASK_ENV') == 'development' or \
+             os.environ.get('APP_DEBUG') == 'true' or \
+             current_app.debug
+    
+    if not is_dev:
+        return jsonify({
+            "error": "Metrics endpoint is only available in development/test environment"
+        }), 403
+    
+    # Obter métricas do middleware
+    from app.core.middleware import get_metrics
+    metrics = get_metrics()
+    
+    return jsonify({
+        "timestamp": datetime.utcnow().isoformat(),
+        "environment": "development",
+        "metrics": metrics,
+        "note": "These are in-memory metrics for development/testing only. Do not use for production monitoring."
+    }), 200

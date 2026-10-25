@@ -43,6 +43,7 @@ from app.routes.campanhas import campanhas_bp
 from app.routes.impacto import impacto_bp
 from app.routes.health import health_bp
 from app.core.error_handlers import registrar_handlers_api
+from app.core.middleware import request_id_middleware
 
 mail = Mail()
 csrf = CSRFProtect()
@@ -116,6 +117,9 @@ def create_app(config_overrides=None):
 
     logging.basicConfig(level=logging.WARNING)
     app.logger.setLevel(logging.WARNING)
+
+    # Aplicar middleware de request-id e logging estruturado
+    request_id_middleware(app)
 
     mail.init_app(app)
     init_db(app)

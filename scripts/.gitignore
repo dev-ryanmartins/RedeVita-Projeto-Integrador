@@ -1,0 +1,4 @@
+# Backup files (not to be committed)
+*.db
+*.sqlite
+*.sqlite3

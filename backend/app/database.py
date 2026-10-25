@@ -3524,6 +3524,21 @@ def aplicar_migracoes_manuais(app):
                 conn, inspector, "usuarios", "credencial_versao", "INTEGER DEFAULT 1 NOT NULL"
             )
             _add_column_if_missing(
+                conn, inspector, "doacoes", "cancelado", "BOOLEAN DEFAULT FALSE NOT NULL"
+            )
+            _add_column_if_missing(
+                conn, inspector, "doacoes", "cancelado_por_id", "INTEGER"
+            )
+            _add_column_if_missing(
+                conn, inspector, "doacoes", "cancelado_em", "TIMESTAMP"
+            )
+            _add_column_if_missing(
+                conn, inspector, "doacoes", "justificativa_cancelamento", "TEXT"
+            )
+            _add_column_if_missing(
+                conn, inspector, "doacoes", "compensacao_id", "INTEGER"
+            )
+            _add_column_if_missing(
                 conn, inspector, "farmacias", "razao_social", "VARCHAR(200)"
             )
             _add_column_if_missing(

@@ -284,15 +284,36 @@ def excluir_doacao(doacao_id):
     if not doacao:
         flash("Doação não encontrada.", "danger")
         return redirect(url_for("donation.nova_doacao"))
+    
+    # Não permitir exclusão física - usar compensação
+    if doacao.cancelado:
+        flash("Esta doação já foi cancelada.", "warning")
+        return redirect(url_for("donation.nova_doacao"))
+    
+    # Verificar se já tem compensação vinculada
+    if doacao.compensacao_id:
+        flash("Esta doação já possui uma compensação vinculada.", "warning")
+        return redirect(url_for("donation.nova_doacao"))
+    
     try:
-        detalhe = f'Doação #{doacao_id} ({doacao.quantidade} un. de "{doacao.medicamento.nome}") excluída por {current_user.nome}'
-        db.session.delete(doacao)
+        # Marcar como cancelado
+        doacao.cancelado = True
+        doacao.cancelado_por_id = current_user.id
+        doacao.cancelado_em = datetime.utcnow()
+        doacao.justificativa_cancelamento = "Cancelado via interface de exclusão (append-only ledger)"
+        
+        # Restaura o estoque (compensação transacional)
+        medicamento = doacao.medicamento
+        medicamento.quantidade += doacao.quantidade
+        
         db.session.commit()
-        registrar_log("Doação Excluída", detalhe)
-        flash("Registro de doação excluído com sucesso.", "success")
+        
+        detalhe = f'Doação #{doacao_id} ({doacao.quantidade} un. de "{medicamento.nome}") cancelada por {current_user.nome} - Estoque restaurado'
+        registrar_log("Doação Cancelada", detalhe)
+        flash("Doação cancelada com sucesso. O histórico foi preservado e o estoque restaurado.", "success")
     except Exception:
         db.session.rollback()
-        flash("Erro ao excluir doação. Tente novamente.", "danger")
+        flash("Erro ao cancelar doação. Tente novamente.", "danger")
     return redirect(url_for("donation.nova_doacao"))
 
 

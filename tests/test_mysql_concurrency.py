@@ -189,7 +189,7 @@ class TestMySQLConcurrency:
             
             paciente = Paciente(
                 nome="Test Patient",
-                cpf="12345678901",
+                cpf="12345678901-IDEMP",  # Unique for idempotent test
                 data_nascimento=date(1990, 1, 1)
             )
             medico = Medico(
@@ -219,9 +219,20 @@ class TestMySQLConcurrency:
             session1.add(receita)
             session1.commit()
             
+            # Create QR nonce for idempotency test
+            qr_nonce = QRNonce(
+                nonce=QRNonce.generate_nonce(),
+                receita_id=receita.id,
+                expira_em=date.today() + timedelta(days=1),
+                usado=False
+            )
+            session1.add(qr_nonce)
+            session1.commit()
+            
             receita_id = receita.id
             med_id = medicamento.id
             original_quantity = medicamento.quantidade
+            nonce_str = qr_nonce.nonce
         finally:
             session1.close()
         
@@ -234,27 +245,49 @@ class TestMySQLConcurrency:
             try:
                 barrier.wait(timeout=5)
                 
-                # Check idempotency and attempt dispensation
+                # Try to consume the QR nonce for idempotency
+                qr_nonce = session.query(QRNonce).filter_by(nonce=nonce_str).first()
+                
+                if not qr_nonce:
+                    results.append((thread_id, "nonce_not_found"))
+                    session.rollback()
+                    return
+                
+                if not qr_nonce.is_valid():
+                    results.append((thread_id, "nonce_invalid"))
+                    session.rollback()
+                    return
+                
+                if qr_nonce.usado:
+                    results.append((thread_id, "already_dispensed"))
+                    session.rollback()
+                    return
+                
                 receita = session.query(Receita).get(receita_id)
                 
                 if receita.status == "dispensada":
-                    # Already dispensed - should not reduce stock
                     results.append((thread_id, "already_dispensed"))
                     session.rollback()
+                    return
+                
+                # Attempt atomic stock reduction
+                success, new_quantity = atomic_reduce_stock_quantity(
+                    session,
+                    med_id,
+                    1
+                )
+                if success:
+                    # Mark nonce as used and update prescription
+                    qr_nonce.usado = True
+                    qr_nonce.usado_em = date.today()
+                    qr_nonce.usado_por_id = 1
+                    receita.status = "dispensada"
+                    receita.dispensada_em = date.today()
+                    session.commit()
+                    results.append((thread_id, "success"))
                 else:
-                    success, new_quantity = atomic_reduce_stock_quantity(
-                        session,
-                        med_id,
-                        1
-                    )
-                    if success:
-                        receita.status = "dispensada"
-                        receita.dispensada_em = date.today()
-                        session.commit()
-                        results.append((thread_id, "success"))
-                    else:
-                        session.rollback()
-                        results.append((thread_id, "insufficient_stock"))
+                    session.rollback()
+                    results.append((thread_id, "insufficient_stock"))
             except Exception as e:
                 results.append((thread_id, f"error: {str(e)}"))
                 session.rollback()
@@ -333,7 +366,7 @@ class TestMySQLConcurrency:
             )
             paciente = Paciente(
                 nome="Test Patient",
-                cpf="12345678901",
+                cpf="12345678901-CONSUME",  # Unique for QR consumption test
                 data_nascimento=date(1990, 1, 1)
             )
             medico = Medico(

@@ -100,13 +100,17 @@ CREATE TABLE IF NOT EXISTS doacoes (
 
 CREATE TABLE IF NOT EXISTS qr_nonces (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  token VARCHAR(64) NOT NULL UNIQUE,
-  receita_id INT NULL,
-  usuario_id INT NULL,
-  usado_em DATETIME NULL,
+  nonce VARCHAR(64) NOT NULL UNIQUE,
+  receita_id INT NOT NULL,
+  gerado_por_id INT NULL,
   expira_em DATETIME NOT NULL,
-  CONSTRAINT fk_qr_nonces_receita FOREIGN KEY (receita_id) REFERENCES receitas(id) ON DELETE SET NULL,
-  CONSTRAINT fk_qr_nonces_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL
+  usado BOOLEAN DEFAULT FALSE NOT NULL,
+  usado_em DATETIME NULL,
+  usado_por_id INT NULL,
+  criado_em DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+  CONSTRAINT fk_qr_nonces_receita FOREIGN KEY (receita_id) REFERENCES receitas(id) ON DELETE CASCADE,
+  CONSTRAINT fk_qr_nonces_gerado_por FOREIGN KEY (gerado_por_id) REFERENCES usuarios(id) ON DELETE SET NULL,
+  CONSTRAINT fk_qr_nonces_usado_por FOREIGN KEY (usado_por_id) REFERENCES usuarios(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS movimentos_estoque (

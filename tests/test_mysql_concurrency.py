@@ -291,6 +291,154 @@ class TestMySQLConcurrency:
             assert 'READ COMMITTED' in str(isolation[0]) or 'REPEATABLE READ' in str(isolation[0]), \
                 f"Expected READ COMMITTED or REPEATABLE READ, got {isolation[0]}"
     
+    def test_concurrent_qr_consumption_mysql(self, mysql_session_factory):
+        """
+        Two independent MySQL connections competing to consume the same QR nonce.
+        
+        This test uses real concurrent transactions on MySQL 8.0 with InnoDB
+        to verify that exactly one dispensation succeeds when two threads
+        attempt to consume the same QR nonce for the last unit of stock.
+        """
+        Session = mysql_session_factory
+        
+        # Setup: Create medication with 1 unit and prescription
+        session1 = Session()
+        try:
+            future_date = date.today() + timedelta(days=90)
+            medicamento = Medicamento(
+                nome='Paracetamol 500mg',
+                lote='LOT12345',
+                data_validade=future_date,
+                quantidade=1,  # Only 1 unit available
+                status_semaforo=0,
+                tarja='Sem Tarja',
+                principio_ativo='Paracetamol',
+                ativo=True,
+                controlado=False
+            )
+            paciente = Paciente(
+                nome="Test Patient",
+                cpf="12345678901",
+                data_nascimento=date(1990, 1, 1)
+            )
+            medico = Medico(
+                nome="Test Doctor",
+                crm="12345-SP",
+                especialidade="General"
+            )
+            session1.add_all([medicamento, paciente, medico])
+            session1.commit()
+            
+            receita = Receita(
+                paciente_id=paciente.id,
+                medico_id=medico.id,
+                medicamento_id=medicamento.id,
+                status="pendente"
+            )
+            session1.add(receita)
+            session1.commit()
+            
+            # Create QR nonce
+            qr_nonce = QRNonce(
+                nonce=QRNonce.generate_nonce(),
+                receita_id=receita.id,
+                expira_em=date.today() + timedelta(days=1),
+                usado=False
+            )
+            session1.add(qr_nonce)
+            session1.commit()
+            
+            nonce_str = qr_nonce.nonce
+            receita_id = receita.id
+            med_id = medicamento.id
+            original_quantity = medicamento.quantidade
+        finally:
+            session1.close()
+        
+        barrier = threading.Barrier(2)
+        results = []
+        
+        def consume_qr_thread(thread_id):
+            """Thread function for concurrent QR consumption."""
+            session = Session()
+            try:
+                barrier.wait(timeout=5)
+                
+                # Try to consume the QR nonce
+                qr_nonce = session.query(QRNonce).filter_by(nonce=nonce_str).first()
+                
+                if not qr_nonce:
+                    results.append((thread_id, "nonce_not_found"))
+                    session.rollback()
+                    return
+                
+                if not qr_nonce.is_valid():
+                    results.append((thread_id, "nonce_invalid"))
+                    session.rollback()
+                    return
+                
+                receita = session.query(Receita).get(receita_id)
+                
+                if receita.status == "dispensada":
+                    results.append((thread_id, "already_dispensed"))
+                    session.rollback()
+                    return
+                
+                # Attempt atomic stock reduction
+                success, new_quantity = atomic_reduce_stock_quantity(
+                    session,
+                    med_id,
+                    1
+                )
+                
+                if success:
+                    # Mark nonce as used and update prescription
+                    qr_nonce.usado = True
+                    qr_nonce.usado_em = date.today()
+                    qr_nonce.usado_por_id = 1
+                    receita.status = "dispensada"
+                    receita.dispensada_em = date.today()
+                    session.commit()
+                    results.append((thread_id, "success"))
+                else:
+                    session.rollback()
+                    results.append((thread_id, "insufficient_stock"))
+            except Exception as e:
+                results.append((thread_id, f"error: {str(e)}"))
+                session.rollback()
+            finally:
+                session.close()
+        
+        # Two threads attempt concurrent QR consumption
+        thread1 = threading.Thread(target=consume_qr_thread, args=(1,))
+        thread2 = threading.Thread(target=consume_qr_thread, args=(2,))
+        
+        thread1.start()
+        thread2.start()
+        thread1.join(timeout=10)
+        thread2.join(timeout=10)
+        
+        # Verify exactly one succeeded
+        success_count = sum(1 for _, result in results if result == "success")
+        assert success_count == 1, f"Expected exactly 1 success, got {success_count}. Results: {results}"
+        
+        # Verify stock was only reduced once
+        session_check = Session()
+        try:
+            medicamento = session_check.query(Medicamento).get(med_id)
+            assert medicamento.quantidade == original_quantity - 1, \
+                f"Stock should be reduced by 1, got {medicamento.quantidade} from {original_quantity}"
+            
+            # Verify prescription was marked as dispensed
+            receita = session_check.query(Receita).get(receita_id)
+            assert receita.status == "dispensada", "Prescription should be marked as dispensed"
+            
+            # Verify nonce was marked as used
+            qr_nonce = session_check.query(QRNonce).filter_by(nonce=nonce_str).first()
+            assert qr_nonce.usado is True, "Nonce should be marked as used"
+        finally:
+            session_check.close()
+    
     def test_concurrent_cancellation_not_implemented(self, mysql_session_factory):
         """
         BLOCKER: Cancellation flow is not implemented in routes.

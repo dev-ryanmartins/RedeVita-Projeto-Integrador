@@ -4,8 +4,6 @@ Permite baixa de estoque via escaneamento de QR Code criptografado
 """
 
 import json
-import hashlib
-import hmac
 from flask import Blueprint, request, jsonify, current_app
 from flask_login import login_required, current_user
 from datetime import datetime, timedelta
@@ -19,26 +17,6 @@ from app.utils.log_helper import registrar_log
 qrcode_bp = Blueprint("qrcode", __name__)
 
 
-def _generate_qr_nonce_signature(nonce: str, secret: str) -> str:
-    """
-    Gera assinatura HMAC-SHA256 para o nonce do QR Code.
-    Garante integridade e autenticidade do token.
-    """
-    return hmac.new(
-        secret.encode(),
-        nonce.encode(),
-        hashlib.sha256
-    ).hexdigest()
-
-
-def _verify_qr_nonce_signature(nonce: str, signature: str, secret: str) -> bool:
-    """
-    Verifica a assinatura do nonce do QR Code.
-    """
-    expected = _generate_qr_nonce_signature(nonce, secret)
-    return hmac.compare_digest(expected, signature)
-
-
 @qrcode_bp.route("/api/qrcode/validate", methods=["POST"])
 @login_required
 @farmaceutico_required
@@ -48,9 +26,12 @@ def validate_qrcode():
     
     Expected JSON payload:
     {
-        "nonce": "token_opaco_aleatorio",
-        "signature": "assinatura HMAC"
+        "nonce": "token_opaco_aleatorio"
     }
+    
+    O nonce é persistido no servidor com expiração e rastreamento de uso.
+    Assinatura HMAC não é usada pois o nonce está armazenado no banco
+    e validado no servidor.
     """
     try:
         payload = request.get_json()
@@ -58,15 +39,9 @@ def validate_qrcode():
             return jsonify({"erro": "Dados do QR Code não fornecidos"}), 400
         
         nonce = payload.get("nonce", "")
-        signature = payload.get("signature", "")
         
         if not nonce:
             return jsonify({"erro": "Nonce do QR Code não fornecido"}), 400
-        
-        # Verifica assinatura
-        secret = current_app.config.get("SECRET_KEY", "default_secret")
-        if not _verify_qr_nonce_signature(nonce, signature, secret):
-            return jsonify({"erro": "Assinatura do QR Code inválida"}), 400
         
         # Processa validação e dispensação usando nonce
         return _process_prescription_qrcode_nonce(nonce)
@@ -152,6 +127,7 @@ def _process_prescription_qrcode_nonce(nonce: str):
         receita.dispensada_em = datetime.utcnow()
         receita.dispensada_por_id = current_user.id
         
+        # Commit the entire transaction (nonce usage, stock reduction, prescription update)
         db.session.commit()
         
         # Registra log (without personal data)
@@ -240,16 +216,12 @@ def generate_prescription_qrcode(receita_id):
             gerado_por_id=current_user.id,
             expiracao_minutos=expiracao_minutos
         )
+        db.session.commit()
         
-        # Generate signature for the nonce
-        secret = current_app.config.get("SECRET_KEY", "default_secret")
-        signature = _generate_qr_nonce_signature(qr_nonce.nonce, secret)
-        
+        # Return only nonce and expiration - no prescription ID to avoid clinical data exposure
         return jsonify({
             "nonce": qr_nonce.nonce,
-            "signature": signature,
-            "expira_em": qr_nonce.expira_em.isoformat(),
-            "receita_id": receita_id
+            "expira_em": qr_nonce.expira_em.isoformat()
         }), 200
         
     except Exception as e:

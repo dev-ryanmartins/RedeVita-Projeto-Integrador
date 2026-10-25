@@ -13,7 +13,7 @@ class Usuario(db.Model, UserMixin):
     senha = db.Column(db.String(255), nullable=False)
     cargo = db.Column(db.String(50), default="Voluntário")
     ativo = db.Column(db.Boolean, default=True, nullable=True)
-    senha_trocada = db.Column(db.Boolean, default=True, nullable=False)
+    # senha_trocada = db.Column(db.Boolean, default=True, nullable=False)  # TODO: Adicionar após migração
     credencial_versao = db.Column(db.Integer, default=1, nullable=False)
 
     def __repr__(self):

@@ -29,6 +29,12 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import event
 
+# Skip all MySQL tests if not in dedicated MySQL job
+pytestmark = pytest.mark.skipif(
+    not os.getenv('MYSQL_HOST') or os.getenv('MYSQL_HOST') == '127.0.0.1',
+    reason="MySQL tests require MYSQL_HOST pointing to CI service, not localhost"
+)
+
 # MySQL test configuration - synthetic credentials only
 MYSQL_HOST = os.environ.get('MYSQL_HOST', '127.0.0.1')
 MYSQL_PORT = int(os.environ.get('MYSQL_PORT', 3306))

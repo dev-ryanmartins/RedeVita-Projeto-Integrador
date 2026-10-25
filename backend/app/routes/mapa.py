@@ -81,11 +81,20 @@ def calcular_distancia_haversine(lat1: float, lon1: float, lat2: float, lon2: fl
 @voluntario_required
 def mapa_saude():
     try:
-        cache_key = "farmacias_map_data"
+        # Paginação para evitar carregar todas as farmácias
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 100, type=int)
+        
+        # Limitar per_page para máximo de 500
+        per_page = min(per_page, 500)
+        page = max(page, 1)
+        
+        cache_key = f"farmacias_map_data_page_{page}_per_{per_page}"
         farmacias_json = current_app.cache.get(cache_key)
 
         if farmacias_json is None:
-            farmacias = Farmacia.query.all()
+            paginated = Farmacia.query.paginate(page=page, per_page=per_page, error_out=False)
+            farmacias = paginated.items
             pontos = []
             for farmacia in farmacias:
                 latitude = getattr(farmacia, "latitude", None)
@@ -108,7 +117,15 @@ def mapa_saude():
                     "tipo": "Farmácia",
                 })
 
-            farmacias_json = json.dumps(pontos, ensure_ascii=False)
+            farmacias_json = json.dumps({
+                "pontos": pontos,
+                "total": paginated.total,
+                "pages": paginated.pages,
+                "current_page": page,
+                "per_page": per_page,
+                "has_next": paginated.has_next,
+                "has_prev": paginated.has_prev,
+            }, ensure_ascii=False)
             current_app.cache.set(cache_key, farmacias_json, timeout=300)
         
         # Não há mais dependência de Google Maps API Key
@@ -119,7 +136,15 @@ def mapa_saude():
                               default_lat=default_lat, default_lng=default_lng)
     except Exception as e:
         current_app.logger.error(f"Erro ao carregar mapa: {str(e)}")
-        farmacias_json = "[]"
+        farmacias_json = json.dumps({
+            "pontos": [],
+            "total": 0,
+            "pages": 0,
+            "current_page": 1,
+            "per_page": per_page,
+            "has_next": False,
+            "has_prev": False,
+        }, ensure_ascii=False)
         return render_template("mapa.html", farmacias_json=farmacias_json,
                               default_lat=-23.5015, default_lng=-47.4526)
 
@@ -152,8 +177,11 @@ def verificar_proximidade():
             return resposta_erro(f"Coordenadas inválidas: {erro}", 400)
 
         LIMITE_PROXIMIDADE_KM = 1.0
+        MAX_RESULTADOS = 50  # Limitar número de farmácias retornadas
         
-        farmacias = Farmacia.query.all()
+        # Carregar farmácias com limite para evitar carregar todas se houver milhares
+        # Nota: para cálculo de proximidade precisamos carregar várias, mas limitamos
+        farmacias = Farmacia.query.limit(1000).all()
         farmacias_proximas = []
         
         for farmacia in farmacias:
@@ -199,10 +227,14 @@ def verificar_proximidade():
 
         farmacias_proximas.sort(key=lambda f: f['distancia_km'])
         
+        # Limitar número de resultados
+        farmacias_proximas = farmacias_proximas[:MAX_RESULTADOS]
+        
         return resposta_ok({
             'farmacias_proximas': farmacias_proximas,
             'total': len(farmacias_proximas),
             'limite_km': LIMITE_PROXIMIDADE_KM,
+            'max_resultados': MAX_RESULTADOS,
             'alerta': len(farmacias_proximas) > 0,
             'mensagem': f'{len(farmacias_proximas)} farmácia(s) próxima(s) encontrada(s)' if farmacias_proximas else 'Nenhuma farmácia próxima encontrada'
         })

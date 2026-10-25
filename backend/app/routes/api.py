@@ -24,11 +24,10 @@ from app.utils.system_health import get_health_summary
 from app.utils.iot_telemetry import processar_leitura_iot, iot_simulator, autenticar_rfid
 from app.utils.pdf_generator import obter_gerador_pdf
 from app.utils.anvisa_api import obter_cliente_anvisa
+from app.services.triagem_service import TriagemMedicamentoService, TriagemError
 from app.extensions import limiter
 
 api_bp = Blueprint("api", __name__, url_prefix="/api")
-
-TARJAS_VALIDAS = ["Sem Tarja", "Tarja Amarela", "Tarja Vermelha", "Portaria 344"]
 
 
 def _get_pagination_params():
@@ -405,6 +404,7 @@ def triagem_entrada():
     data_validade_str = str(dados.get("data_validade", "")).strip()
     quantidade_str = str(dados.get("quantidade", "")).strip()
     tarja = str(dados.get("tarja", "Sem Tarja")).strip()
+    principio_ativo = dados.get("principio_ativo")
     doador = str(dados.get("doador", "")).strip() or "Não informado"
     observacoes = dados.get("observacoes")
 
@@ -412,46 +412,30 @@ def triagem_entrada():
         return resposta_erro("Preencha todos os campos obrigatórios.", 422)
 
     try:
-        quantidade = int(quantidade_str)
-        if quantidade <= 0:
-            raise ValueError
-    except ValueError:
-        return resposta_erro("Quantidade inválida.", 422)
-
-    try:
-        data_validade = datetime.strptime(data_validade_str, "%Y-%m-%d").date()
-    except ValueError:
-        return resposta_erro("Data de validade inválida.", 422)
-
-    if tarja not in TARJAS_VALIDAS:
-        tarja = "Sem Tarja"
-
-    try:
-        status = calcular_status_semaforo(data_validade)
-        med = Medicamento(
+        # Usar serviço de triagem
+        medicamento, aviso = TriagemMedicamentoService.processar_triagem(
             nome=nome,
             lote=lote,
-            data_validade=data_validade,
-            quantidade=quantidade,
-            status_semaforo=status,
+            data_validade_str=data_validade_str,
+            quantidade_str=quantidade_str,
             tarja=tarja,
-            principio_ativo=dados.get("principio_ativo") or None,
+            principio_ativo=principio_ativo,
+            doador=doador,
+            observacoes=observacoes
         )
-        db.session.add(med)
+        
+        db.session.add(medicamento)
         db.session.commit()
+        
         registrar_log(
             "Triagem — Entrada de Medicamento",
             f'"{nome}" recebido de "{doador}" via API'
             + (f" | Obs: {observacoes}" if observacoes else ""),
         )
 
-        aviso = "Medicamento adicionado ao estoque."
-        if status == 2:
-            aviso = f'"{nome}" adicionado, mas o lote está vencido.'
-        elif status == 1:
-            aviso = f'"{nome}" adicionado. Lote próximo ao vencimento.'
-
-        return resposta_ok(_serializar_medicamento(med), aviso, 201)
+        return resposta_ok(_serializar_medicamento(medicamento), aviso, 201)
+    except TriagemError as e:
+        return resposta_erro(e.mensagem, 422)
     except Exception:
         db.session.rollback()
         return resposta_erro("Erro ao registrar medicamento.", 500)

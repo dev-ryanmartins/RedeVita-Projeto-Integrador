@@ -96,7 +96,7 @@ def nova_doacao():
             db.session.add(registro)
             db.session.commit()
             detalhe = (
-                f'{qtd} un. de "{medicamento.nome}" (Tipo: {medicamento.principio_ativo or medicamento_tipo}) '
+                f'{qtd} un. de "{medicamento.nome}" (Tipo: {medicamento.principio_ativo or medicamento.tarja}) '
                 f"por {current_user.nome} [{current_user.cargo_exibicao}] → {destinatario}"
             )
             if receita_medica:

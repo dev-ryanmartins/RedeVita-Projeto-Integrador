@@ -13,6 +13,7 @@ from app.models.receita import Receita
 from app.models.medicamento import Medicamento
 from app.database import db
 from app.core.decorators import farmaceutico_required
+from app.core.api_responses import resposta_ok, resposta_erro, ERRO_VALIDACAO, ERRO_NAO_ENCONTRADO, ERRO_INTERNO
 from app.utils.log_helper import registrar_log
 
 qrcode_bp = Blueprint("qrcode", __name__)
@@ -57,7 +58,7 @@ def validate_qrcode():
         
         payload = request.get_json()
         if not payload:
-            return jsonify({"erro": "Dados do QR Code não fornecidos"}), 400
+            return resposta_erro(ERRO_VALIDACAO, "Dados do QR Code não fornecidos", 400)
         
         qr_data = payload.get("data", {})
         signature = payload.get("signature", "")
@@ -65,7 +66,7 @@ def validate_qrcode():
         # Verifica assinatura
         secret = current_app.config.get("SECRET_KEY", "default_secret")
         if not _verify_qr_signature(qr_data, signature, secret):
-            return jsonify({"erro": "Assinatura do QR Code inválida"}), 400
+            return resposta_erro(ERRO_VALIDACAO, "Assinatura do QR Code inválida", 400)
         
         # Verifica tipo de QR Code
         qr_type = qr_data.get("type")
@@ -75,10 +76,10 @@ def validate_qrcode():
         elif qr_type == "medication":
             return _process_medication_qrcode(qr_data)
         else:
-            return jsonify({"erro": "Tipo de QR Code não suportado"}), 400
+            return resposta_erro(ERRO_VALIDACAO, "Tipo de QR Code não suportado", 400)
             
-    except Exception as e:
-        return jsonify({"erro": f"Erro ao processar QR Code: {str(e)}"}), 500
+    except Exception:
+        return resposta_erro(ERRO_INTERNO, "Erro ao processar QR Code", 500)
 
 
 def _process_prescription_qrcode(qr_data: dict):
@@ -90,34 +91,31 @@ def _process_prescription_qrcode(qr_data: dict):
         prescription_id = qr_data.get("id")
         
         if not prescription_id:
-            return jsonify({"erro": "ID da prescrição não encontrado no QR Code"}), 400
+            return resposta_erro(ERRO_VALIDACAO, "ID da prescrição não encontrado no QR Code", 400)
         
         receita = Receita.query.get(prescription_id)
         if not receita:
-            return jsonify({"erro": "Receita não encontrada"}), 404
+            return resposta_erro(ERRO_NAO_ENCONTRADO, "Receita não encontrada", 404)
         
         # Verifica se já foi dispensada
         if receita.status == "dispensada":
-            return jsonify({
-                "sucesso": True,
+            return resposta_ok({
                 "mensagem": "Esta receita já foi dispensada anteriormente",
                 "ja_dispensada": True
-            }), 200
+            })
         
         # Verifica se há medicamento vinculado
         if not receita.medicamento:
-            return jsonify({"erro": "Receita sem medicamento vinculado"}), 400
+            return resposta_erro(ERRO_VALIDACAO, "Receita sem medicamento vinculado", 400)
         
         # Verifica estoque
         if receita.medicamento.quantidade <= 0:
-            return jsonify({"erro": "Medicamento sem estoque disponível"}), 400
+            return resposta_erro(ERRO_VALIDACAO, "Medicamento sem estoque disponível", 400)
         
         # Verifica se é controlado
         if receita.medicamento.controlado:
             if not receita.tipo_receita:
-                return jsonify({
-                    "erro": "Medicamento controlado requer tipo de receita especial"
-                }), 400
+                return resposta_erro(ERRO_VALIDACAO, "Medicamento controlado requer tipo de receita especial", 400)
         
         # Realiza baixa no estoque
         receita.status = "dispensada"
@@ -139,17 +137,16 @@ def _process_prescription_qrcode(qr_data: dict):
                 f'Receita #{receita.id} dispensada via QR Code por {current_user.nome}'
             )
         
-        return jsonify({
-            "sucesso": True,
+        return resposta_ok({
             "mensagem": f"Receita #{receita.id} dispensada com sucesso via QR Code",
             "medicamento": receita.medicamento.nome,
             "paciente": receita.paciente.nome if receita.paciente else "N/A",
             "estoque_restante": receita.medicamento.quantidade
-        }), 200
+        })
         
-    except Exception as e:
+    except Exception:
         db.session.rollback()
-        return jsonify({"erro": f"Erro ao processar prescrição: {str(e)}"}), 500
+        return resposta_erro(ERRO_INTERNO, "Erro ao processar prescrição", 500)
 
 
 def _process_medication_qrcode(qr_data: dict):
@@ -161,14 +158,13 @@ def _process_medication_qrcode(qr_data: dict):
         medicamento_id = qr_data.get("id")
         
         if not medicamento_id:
-            return jsonify({"erro": "ID do medicamento não encontrado no QR Code"}), 400
+            return resposta_erro(ERRO_VALIDACAO, "ID do medicamento não encontrado no QR Code", 400)
         
         medicamento = Medicamento.query.get(medicamento_id)
         if not medicamento:
-            return jsonify({"erro": "Medicamento não encontrado"}), 404
+            return resposta_erro(ERRO_NAO_ENCONTRADO, "Medicamento não encontrado", 404)
         
-        return jsonify({
-            "sucesso": True,
+        return resposta_ok({
             "medicamento": {
                 "id": medicamento.id,
                 "nome": medicamento.nome,
@@ -179,10 +175,10 @@ def _process_medication_qrcode(qr_data: dict):
                 "principio_ativo": medicamento.principio_ativo,
                 "controlado": medicamento.controlado
             }
-        }), 200
+        })
         
-    except Exception as e:
-        return jsonify({"erro": f"Erro ao processar medicamento: {str(e)}"}), 500
+    except Exception:
+        return resposta_erro(ERRO_INTERNO, "Erro ao processar medicamento", 500)
 
 
 @qrcode_bp.route("/api/qrcode/generate/<int:receita_id>", methods=["GET"])

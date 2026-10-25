@@ -5,17 +5,15 @@ from app.models.medicamento import Medicamento
 from app.database import db
 from app.utils.log_helper import registrar_log
 from app.core.decorators import cargo_required, admin_required, operador_required, voluntario_required, equipe_clinica_required, audit_critical_action
-from app.utils.semaforo import calcular_status_semaforo
 from app.utils.email_service import email_service
 from app.utils.sms_service import sms_service
+from app.services.triagem_service import TriagemMedicamentoService, TriagemError
 from datetime import datetime
 import logging
 
 logger = logging.getLogger(__name__)
 
 donation_bp = Blueprint("donation", __name__)
-
-TARJAS_VALIDAS = ["Sem Tarja", "Tarja Amarela", "Tarja Vermelha", "Portaria 344"]
 
 
 @donation_bp.route("/doacoes", methods=["GET", "POST"])
@@ -131,7 +129,18 @@ def nova_doacao():
         return redirect(url_for("donation.nova_doacao"))
 
     try:
-        medicamentos = Medicamento.query.filter(Medicamento.quantidade > 0).all()
+        # Paginação para listagem de medicamentos com estoque
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 50, type=int)
+        
+        # Limitar per_page para máximo de 200
+        per_page = min(per_page, 200)
+        page = max(page, 1)
+        
+        paginated = Medicamento.query.filter(Medicamento.quantidade > 0).paginate(
+            page=page, per_page=per_page, error_out=False
+        )
+        medicamentos = paginated.items
     except Exception:
         medicamentos = []
 
@@ -159,7 +168,19 @@ def nova_doacao():
             pass
     
     try:
-        doacoes = q.all() if q else []
+        # Paginação para listagem de doações
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 50, type=int)
+        
+        # Limitar per_page para máximo de 200
+        per_page = min(per_page, 200)
+        page = max(page, 1)
+        
+        if q:
+            paginated = q.paginate(page=page, per_page=per_page, error_out=False)
+            doacoes = paginated.items
+        else:
+            doacoes = []
     except Exception:
         doacoes = []
 
@@ -169,6 +190,10 @@ def nova_doacao():
         doacoes=doacoes,
         data_inicio=data_inicio,
         data_fim=data_fim,
+        medicamentos_page=page if 'medicamentos' in locals() else 1,
+        medicamentos_per_page=per_page if 'medicamentos' in locals() else 50,
+        doacoes_page=page if 'doacoes' in locals() else 1,
+        doacoes_per_page=per_page if 'doacoes' in locals() else 50,
     )
 
 
@@ -187,81 +212,39 @@ def triagem():
         doador = request.form.get("doador", "").strip() or "Não informado"
         observacoes = request.form.get("observacoes", "").strip() or None
 
-        if not nome or not lote or not data_validade_str or not quantidade_str:
-            flash("Preencha todos os campos obrigatórios.", "danger")
-            return redirect(url_for("donation.triagem"))
-
         try:
-            quantidade = int(quantidade_str)
-            if quantidade <= 0:
-                raise ValueError
-        except ValueError:
-            flash("Quantidade inválida. Informe um número inteiro positivo.", "danger")
-            return redirect(url_for("donation.triagem"))
-
-        try:
-            data_validade = datetime.strptime(data_validade_str, "%Y-%m-%d").date()
-        except ValueError:
-            flash("Data de validade inválida.", "danger")
-            return redirect(url_for("donation.triagem"))
-
-        if tarja not in TARJAS_VALIDAS:
-            tarja = "Sem Tarja"
-
-        try:
-            status = calcular_status_semaforo(data_validade)
-            
-            if status == 2:
-                flash("ERRO BLOQUEANTE: Não é possível cadastrar medicamentos vencidos (status Vermelho). Medicamento fora da validade regulatória.", "danger")
-                return redirect(url_for("donation.triagem"))
-            
-            med = Medicamento(
+            # Usar serviço de triagem
+            medicamento, aviso = TriagemMedicamentoService.processar_triagem(
                 nome=nome,
                 lote=lote,
-                data_validade=data_validade,
-                quantidade=quantidade,
-                status_semaforo=status,
+                data_validade_str=data_validade_str,
+                quantidade_str=quantidade_str,
                 tarja=tarja,
                 principio_ativo=principio_ativo,
+                doador=doador,
+                observacoes=observacoes
             )
-
-            is_valid, error_msg = med.validar_portaria_344()
-            if not is_valid:
-                flash(f"Erro de validação ANVISA: {error_msg}", "danger")
-                return redirect(url_for("donation.triagem"))
             
-            if tarja == "Portaria 344":
-                flash("ERRO BLOQUEANTE: Substâncias controladas pela Portaria 344 não podem ser cadastradas automaticamente. Requer validação manual do farmacêutico responsável.", "danger")
-                return redirect(url_for("donation.triagem"))
-            
-            principio_lower = (principio_ativo or "").lower()
-            controlled_keywords = ['antibiotico', 'antidepressivo', 'anfetamina', 'opiaceo', 'benzodiazepin', 'controlado', 'psicotropico']
-            if any(keyword in principio_lower for keyword in controlled_keywords):
-                flash("ERRO BLOQUEANTE: Substâncias controladas detectadas pelo princípio ativo. Requer validação manual do farmacêutico responsável.", "danger")
-                return redirect(url_for("donation.triagem"))
-            
-            db.session.add(med)
+            db.session.add(medicamento)
             db.session.commit()
+            
             registrar_log(
                 "Triagem — Entrada de Medicamento",
-                f'"{nome}" (Lote {lote}, {quantidade} un.) recebido de "{doador}" e adicionado ao estoque'
+                f'"{nome}" (Lote {lote}, {quantidade_str} un.) recebido de "{doador}" e adicionado ao estoque'
                 + (f" | Obs: {observacoes}" if observacoes else ""),
             )
             
-            if status == 2:
-                flash(
-                    f'⚠ "{nome}" adicionado, mas atenção: o lote está VENCIDO.',
-                    "warning",
-                )
-            elif status == 1:
-                flash(
-                    f'"{nome}" adicionado ao estoque. Lote próximo ao vencimento.',
-                    "warning",
-                )
+            # Determinar tipo de flash baseado no aviso
+            if "VENCIDO" in aviso:
+                flash(f'⚠ {aviso}', "warning")
+            elif "próximo ao vencimento" in aviso:
+                flash(aviso, "warning")
             else:
-                flash(
-                    f'"{nome}" validado e adicionado ao estoque com sucesso!', "success"
-                )
+                flash(aviso, "success")
+                
+        except TriagemError as e:
+            flash(e.mensagem, "danger")
+            return redirect(url_for("donation.triagem"))
         except Exception:
             db.session.rollback()
             flash("Erro ao registrar o medicamento. Tente novamente.", "danger")
@@ -269,10 +252,11 @@ def triagem():
         return redirect(url_for("donation.triagem"))
 
     recentes = Medicamento.query.order_by(Medicamento.id.desc()).limit(20).all()
+    tarjas_validas = TriagemMedicamentoService.obter_tarjas_validas()
     return render_template(
         "doacoes_triagem.html",
         recentes=recentes,
-        tarjas=TARJAS_VALIDAS,
+        tarjas=tarjas_validas,
     )
 
 

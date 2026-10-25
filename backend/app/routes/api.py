@@ -7,7 +7,11 @@ from io import BytesIO
 from flask import Blueprint, request, current_app
 from sqlalchemy import or_, func
 
-from app.core.api_responses import resposta_ok, resposta_erro
+from app.core.api_responses import (
+    resposta_ok, resposta_erro,
+    ERRO_VALIDACAO, ERRO_NAO_AUTORIZADO, ERRO_PROIBIDO,
+    ERRO_NAO_ENCONTRADO, ERRO_INTERNO
+)
 from app.core.decorators import admin_required, cargo_required, farmaceutico_required, farmacia_vinculada_required, equipe_clinica_required
 from app.core.jwt_auth import jwt_ou_sessao_required
 from app.database import db
@@ -24,7 +28,7 @@ from app.utils.system_health import get_health_summary
 from app.utils.iot_telemetry import processar_leitura_iot, iot_simulator, autenticar_rfid
 from app.utils.pdf_generator import obter_gerador_pdf
 from app.utils.anvisa_api import obter_cliente_anvisa
-from app.services.triagem_service import TriagemMedicamentoService, TriagemError
+from app.services.triagem_service import TriagemMedicamentoService, TriagemError, TARJAS_VALIDAS
 from app.extensions import limiter
 
 api_bp = Blueprint("api", __name__, url_prefix="/api")
@@ -128,7 +132,7 @@ def criar_medicamento_api():
 
     valido, erros = validar_entrada_medicamento(campos)
     if not valido:
-        return resposta_erro("Dados inválidos.", 422, detalhes=erros)
+        return resposta_erro(ERRO_VALIDACAO, "Dados inválidos.", 422, detalhes=erros)
 
     tarja = str(dados.get("tarja", "Sem Tarja")).strip()
     if tarja not in TARJAS_VALIDAS:
@@ -153,7 +157,7 @@ def criar_medicamento_api():
         return resposta_ok(_serializar_medicamento(med), "Medicamento cadastrado.", 201)
     except Exception:
         db.session.rollback()
-        return resposta_erro("Erro ao cadastrar medicamento.", 500)
+        return resposta_erro(ERRO_INTERNO, "Erro ao cadastrar medicamento.", 500)
 
 
 @api_bp.route("/inventario/<int:med_id>", methods=["DELETE"])
@@ -162,7 +166,7 @@ def criar_medicamento_api():
 def excluir_medicamento_api(med_id):
     med = db.session.get(Medicamento, med_id)
     if not med:
-        return resposta_erro("Medicamento não encontrado.", 404)
+        return resposta_erro(ERRO_NAO_ENCONTRADO, "Medicamento não encontrado.", 404)
     try:
         nome = med.nome
         db.session.delete(med)
@@ -171,7 +175,7 @@ def excluir_medicamento_api(med_id):
         return resposta_ok(mensagem=f'Medicamento "{nome}" removido.')
     except Exception:
         db.session.rollback()
-        return resposta_erro("Erro ao remover medicamento.", 500)
+        return resposta_erro(ERRO_INTERNO, "Erro ao remover medicamento.", 500)
 
 
 @api_bp.route("/medicamento/<int:med_id>/timeline")
@@ -184,7 +188,7 @@ def timeline_medicamento(med_id):
     """
     med = db.session.get(Medicamento, med_id)
     if not med:
-        return resposta_erro("Medicamento não encontrado.", 404)
+        return resposta_erro(ERRO_NAO_ENCONTRADO, "Medicamento não encontrado.", 404)
     
     timeline = []
     
@@ -409,7 +413,7 @@ def triagem_entrada():
     observacoes = dados.get("observacoes")
 
     if not nome or not lote or not data_validade_str or not quantidade_str:
-        return resposta_erro("Preencha todos os campos obrigatórios.", 422)
+        return resposta_erro(ERRO_VALIDACAO, "Preencha todos os campos obrigatórios.", 422)
 
     try:
         # Usar serviço de triagem
@@ -435,10 +439,10 @@ def triagem_entrada():
 
         return resposta_ok(_serializar_medicamento(medicamento), aviso, 201)
     except TriagemError as e:
-        return resposta_erro(e.mensagem, 422)
+        return resposta_erro(ERRO_VALIDACAO, e.mensagem, 422)
     except Exception:
         db.session.rollback()
-        return resposta_erro("Erro ao registrar medicamento.", 500)
+        return resposta_erro(ERRO_INTERNO, "Erro ao registrar medicamento.", 500)
 
 
 @api_bp.route("/farmacias")

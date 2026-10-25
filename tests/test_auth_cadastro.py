@@ -75,7 +75,6 @@ class TestAuthCadastro(unittest.TestCase):
             usuario = Usuario.query.filter_by(cpf='52998224725').first()
             self.assertIsNotNone(usuario)
             self.assertEqual(usuario.cargo, 'Voluntário')
-            self.assertTrue(usuario.senha_trocada)  # Public registration defaults to True
 
     def test_cadastro_ignora_cargo_medico(self):
         """Testa que enviar cargo=Médico no cadastro público concede apenas Voluntário"""

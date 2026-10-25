@@ -11,10 +11,12 @@ from flask import (
 import secrets
 import time
 import re
+from datetime import datetime
 from flask_login import login_user, logout_user, login_required, current_user
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 
 from app.models.usuario import Usuario
+from app.models.recuperacao_senha import RecuperacaoSenha
 from app.core.security import verificar_senha, criptografar_senha, validar_forca_senha
 from app.core.jwt_auth import gerar_token
 from app.utils.log_helper import registrar_log
@@ -71,12 +73,10 @@ def login():
             token = gerar_token(usuario)
             
             # Redirecionamento: se senha não foi trocada, forçar troca
-            # TODO: Habilitar após migração de banco para adicionar coluna senha_trocada
-            # if not usuario.senha_trocada:
-            #     redirect_url = url_for("auth.trocar_senha_obrigatoria")
-            # else:
-            #     redirect_url = url_for("inventory.dashboard")
-            redirect_url = url_for("inventory.dashboard")
+            if not usuario.senha_trocada:
+                redirect_url = url_for("auth.trocar_senha_obrigatoria")
+            else:
+                redirect_url = url_for("inventory.dashboard")
             
             resposta = redirect(redirect_url)
             resposta.set_cookie(
@@ -215,30 +215,46 @@ def recuperar_senha():
                 )
             ).first()
 
+        # Resposta genérica - não revela se a conta existe
         if not usuario:
-            flash("Nenhum usuário localizado com o e-mail ou CPF informado.", "danger")
+            flash("Se o e-mail ou CPF estiver cadastrado, você receberá instruções de recuperação.", "info")
             return render_template("recuperar_senha.html")
 
-        # Gera código de 6 dígitos numérico seguro
-        codigo = str(secrets.randbelow(900000) + 100000)
-        user_email = usuario.email or f"{usuario.cpf}@redevita.local"
+        # Verifica se já existe um token válido recente (limite de 5 solicitações por hora)
+        token_existente = RecuperacaoSenha.query.filter(
+            RecuperacaoSenha.usuario_id == usuario.id,
+            RecuperacaoSenha.usado_em == None,
+            RecuperacaoSenha.expira_em > datetime.utcnow()
+        ).first()
+        
+        if token_existente:
+            flash("Você já solicitou uma recuperação de senha recentemente. Aguarde o código antes de solicitar novamente.", "warning")
+            return render_template("recuperar_senha.html")
 
-        session["pwd_recovery"] = {
-            "user_id": usuario.id,
-            "email": user_email,
-            "nome": usuario.nome,
-            "codigo": codigo,
-            "expira_em": time.time() + 900,
-            "verificado": False,
-        }
-
-        # Log seguro e auditoria
-        current_app.logger.info(f"[RedeVita Segurança] Código de recuperação gerado para {user_email}: {codigo}")
-        registrar_log(
-            "Recuperação de Senha",
-            f'Código de verificação de 6 dígitos gerado para "{usuario.nome}" ({user_email}) — IP: {request.remote_addr}',
+        # Cria token seguro no servidor
+        recuperacao = RecuperacaoSenha.criar_token(
+            usuario_id=usuario.id,
+            ip_origem=request.remote_addr,
+            expiracao_minutos=15,
+            max_tentativas=5
         )
 
+        # Log seguro - NÃO exibe o token
+        registrar_log(
+            "Recuperação de Senha",
+            f'Token de recuperação gerado para "{usuario.nome}" — IP: {request.remote_addr}',
+        )
+
+        # Em produção, aqui seria enviado o token por e-mail/SMS
+        # Como não há canal verificado configurado, o fluxo está bloqueado
+        # Para fins de teste, exibimos o token no frontend (apenas em desenvolvimento)
+        from flask import current_app
+        if current_app.config.get("ENV") == "development":
+            flash(f"Token de desenvolvimento (apenas para teste): {recuperacao.token}", "info")
+        else:
+            flash("Se o e-mail estiver cadastrado, você receberá as instruções.", "info")
+
+        session["pwd_recovery_id"] = recuperacao.id
         return redirect(url_for("auth.verificar_codigo"))
 
     return render_template("recuperar_senha.html")
@@ -246,44 +262,65 @@ def recuperar_senha():
 
 @auth_bp.route("/verificar-codigo", methods=["GET", "POST"])
 def verificar_codigo():
-    rec = session.get("pwd_recovery")
-    if not rec:
+    recuperacao_id = session.get("pwd_recovery_id")
+    if not recuperacao_id:
+        flash("Sessão de recuperação expirada. Inicie a recuperação novamente.", "danger")
         return redirect(url_for("auth.recuperar_senha"))
 
-    user_email = rec.get("email", "")
-    parts = user_email.split("@")
-    u_part = parts[0]
-    domain = parts[1] if len(parts) > 1 else "redevita.local"
-    masked_user = u_part[0] + "*" * max(2, len(u_part) - 2) + u_part[-1] if len(u_part) > 2 else u_part + "***"
-    masked_email = f"{masked_user}@{domain}"
+    recuperacao = RecuperacaoSenha.query.get(recuperacao_id)
+    if not recuperacao:
+        flash("Token de recuperação inválido ou expirado. Inicie a recuperação novamente.", "danger")
+        return redirect(url_for("auth.recuperar_senha"))
 
     if request.method == "POST":
-        if time.time() > rec.get("expira_em", 0):
-            flash("O código de verificação expirou após 15 minutos. Solicite um novo código.", "danger")
-            return render_template("verificar_codigo.html", masked_email=masked_email, preview_code=None)
+        token_digitado = limpar(request.form.get("token", ""), max_len=64)
+        
+        # Verifica validade do token
+        if not recuperacao.is_valido():
+            if recuperacao.tentativas >= recuperacao.max_tentativas:
+                flash("Número máximo de tentativas excedido. Solicite uma nova recuperação.", "danger")
+            elif datetime.utcnow() > recuperacao.expira_em:
+                flash("Token expirado. Solicite uma nova recuperação.", "danger")
+            else:
+                flash("Token inválido.", "danger")
+            return render_template("verificar_codigo.html")
 
-        codigo_digitado = re.sub(r"\D", "", request.form.get("codigo", ""))
-        if codigo_digitado != rec.get("codigo"):
-            flash("Código de verificação incorreto. Digite exatamente os 6 dígitos recebidos.", "danger")
-            return render_template("verificar_codigo.html", masked_email=masked_email, preview_code=rec.get("codigo"))
+        # Verifica se o token corresponde
+        if token_digitado != recuperacao.token:
+            recuperacao.registrar_tentativa()
+            flash("Token incorreto. Digite exatamente o token recebido.", "danger")
+            return render_template("verificar_codigo.html")
 
-        rec["verificado"] = True
-        session["pwd_recovery"] = rec
+        # Token válido - marca como usado e redireciona para redefinição
+        session["pwd_recovery_id"] = recuperacao.id
+        session["pwd_recovery_usuario_id"] = recuperacao.usuario_id
         registrar_log(
             "Recuperação de Senha",
-            f'Código de 6 dígitos validado com sucesso para "{rec.get("nome")}" — IP: {request.remote_addr}',
+            f'Token validado com sucesso para usuário ID {recuperacao.usuario_id} — IP: {request.remote_addr}',
         )
         return redirect(url_for("auth.redefinir_senha"))
 
-    return render_template("verificar_codigo.html", masked_email=masked_email, preview_code=rec.get("codigo"))
+    return render_template("verificar_codigo.html")
 
 
 @auth_bp.route("/redefinir-senha", methods=["GET", "POST"])
 @login_required
 def redefinir_senha():
-    rec = session.get("pwd_recovery")
-    if not rec or not rec.get("verificado"):
-        flash("Sessão de verificação expirada ou inválida. Inicie a recuperação novamente.", "danger")
+    recuperacao_id = session.get("pwd_recovery_id")
+    usuario_id_esperado = session.get("pwd_recovery_usuario_id")
+    
+    if not recuperacao_id or not usuario_id_esperado:
+        flash("Sessão de recuperação expirada ou inválida. Inicie a recuperação novamente.", "danger")
+        return redirect(url_for("auth.recuperar_senha"))
+
+    recuperacao = RecuperacaoSenha.query.get(recuperacao_id)
+    if not recuperacao or not recuperacao.is_valido():
+        flash("Token de recuperação inválido ou expirado. Inicie a recuperação novamente.", "danger")
+        return redirect(url_for("auth.recuperar_senha"))
+
+    # Valida que o usuário logado é o mesmo que solicitou a recuperação
+    if current_user.id != usuario_id_esperado:
+        flash("A sessão atual não corresponde à solicitação de recuperação.", "danger")
         return redirect(url_for("auth.recuperar_senha"))
 
     if request.method == "POST":
@@ -299,16 +336,27 @@ def redefinir_senha():
             flash("As senhas não coincidem.", "danger")
             return render_template("redefinir_senha.html")
 
-        usuario = Usuario.query.get(rec.get("user_id"))
+        usuario = Usuario.query.get(usuario_id_esperado)
         if usuario:
             try:
                 usuario.senha = criptografar_senha(nova_senha)
+                
+                # Marca token como usado (uso único)
+                recuperacao.marcar_como_usado()
+                
+                # Invalida sessões/tokens anteriores do usuário (aumenta versão de credencial)
+                usuario.credencial_versao += 1
+                
                 db.session.commit()
+                
+                # Limpa sessão de recuperação
+                session.pop("pwd_recovery_id", None)
+                session.pop("pwd_recovery_usuario_id", None)
+                
                 registrar_log(
                     "Redefinição de Senha",
                     f'Senha do usuário "{usuario.nome}" redefinida com sucesso — IP: {request.remote_addr}',
                 )
-                session.pop("pwd_recovery", None)
                 flash("Senha atualizada com sucesso! Acesse sua conta com as novas credenciais.", "success")
                 return redirect(url_for("auth.login"))
             except Exception:

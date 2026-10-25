@@ -5,7 +5,8 @@ from app.database import db
 from app.core.decorators import admin_required, audit_critical_action
 from app.utils.log_helper import registrar_log
 from app.core.security import criptografar_senha, validar_forca_senha
-from app.utils.sanitize import limpar, validar_cpf_digitos
+from app.utils.sanitize import limpar
+from app.utils.document_validation import validar_cpf
 
 usuarios_bp = Blueprint("usuarios", __name__)
 
@@ -35,7 +36,7 @@ def cadastrar_usuario_admin():
         flash("Preencha todos os campos obrigatórios.", "danger")
         return redirect(url_for("usuarios.listar_usuarios"))
 
-    if not validar_cpf_digitos(cpf):
+    if not validar_cpf(cpf):
         flash("CPF inválido. Verifique os dígitos e tente novamente.", "danger")
         return redirect(url_for("usuarios.listar_usuarios"))
 

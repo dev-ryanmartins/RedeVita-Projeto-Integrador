@@ -53,7 +53,7 @@
                         <select name="medicamento_id" id="medicamento_id" required>
                             <option value="">Selecione o medicamento...</option>
                             {% for med in medicamentos %}
-                            <option value="{{ med.id }}" data-lote="{{ med.lote }}" data-validade="{{ med.data_validade.strftime('%d/%m/%Y') if med.data_validade else 'N/A' }}">
+                            <option value="{{ med.id }}" data-lote="{{ med.lote }}" data-validade="{{ med.data_validade.strftime('%d/%m/%Y') if med.data_validade else 'N/A' }}" data-controlled="{{ 'true' if med.controlado else 'false' }}">
                                 {{ med.nome }} (Lote: {{ med.lote }}, Validade: {{ med.data_validade.strftime('%d/%m/%Y') if med.data_validade else 'N/A' }}, Estoque: {{ med.quantidade }})
                             </option>
                             {% endfor %}
@@ -201,13 +201,13 @@ function confirmarPortaria() {
 
 // Verificar automaticamente se o medicamento é controlado
 document.addEventListener('DOMContentLoaded', function() {
-    const tipoInput = document.getElementById('medicamento_tipo');
-    if (tipoInput) {
-        tipoInput.addEventListener('blur', function() {
-            const tipo = this.value.toLowerCase();
-            const controlledKeywords = ['antibiotico', 'antidepressivo', 'anfetamina', 'opiaceo', 'benzodiazepin', 'controlado', 'psicotropico'];
+    const medicamentoSelect = document.getElementById('medicamento_id');
+    if (medicamentoSelect) {
+        medicamentoSelect.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const isControlled = selectedOption.dataset.controlled === 'true';
             
-            if (controlledKeywords.some(keyword => tipo.includes(keyword))) {
+            if (isControlled) {
                 abrirModalPortaria();
             }
         });
@@ -217,15 +217,14 @@ document.addEventListener('DOMContentLoaded', function() {
 function validarReceita(event) {
     const receitaInput = document.getElementById('receita_medica');
     const aprovacaoSelect = document.getElementById('aprovacao_farmaceutico');
-    const tipoInput = document.getElementById('medicamento_tipo');
+    const medicamentoSelect = document.getElementById('medicamento_id');
     
     const receita = receitaInput.value.trim();
     const aprovacao = aprovacaoSelect.value;
-    const tipo = tipoInput.value.toLowerCase();
     
-    // Check if it's a controlled substance
-    const controlledKeywords = ['antibiotico', 'antidepressivo', 'anfetamina', 'opiaceo', 'benzodiazepin', 'controlado', 'psicotropico'];
-    const isControlled = controlledKeywords.some(keyword => tipo.includes(keyword));
+    // Check if selected medication is controlled
+    const selectedOption = medicamentoSelect.options[medicamentoSelect.selectedIndex];
+    const isControlled = selectedOption.dataset.controlled === 'true';
     
     if (isControlled) {
         if (!receita) {

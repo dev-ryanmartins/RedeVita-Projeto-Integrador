@@ -97,12 +97,13 @@ def farmacia_teste(app):
 class TestRegrasTermicas:
     """Testes para cálculo de regras térmicas conforme ANVISA."""
     
-    def test_status_normal_faixa_segura(self, app):
+    def test_status_normal_faixa_segura(self, app, farmacia_teste):
         """Testa status NORMAL para temperatura na faixa segura."""
         with app.app_context():
             # Faixa segura: 15°C <= Temp <= 25°C e Umidade <= 70%
             leitura = LeituraIoT(
                 dispositivo_id='SENSOR-001',
+                farmacia_id=farmacia_teste.id,
                 temperatura=20.0,
                 umidade=50.0
             )
@@ -111,12 +112,13 @@ class TestRegrasTermicas:
             
             assert leitura.status_alerta == StatusAlertaEnum.NORMAL
     
-    def test_status_alerta_leve_temp_baixa(self, app):
+    def test_status_alerta_leve_temp_baixa(self, app, farmacia_teste):
         """Testa status ALERTA_LEVE para temperatura baixa."""
         with app.app_context():
             # Alerta: 10.0°C <= Temp < 15.0°C
             leitura = LeituraIoT(
                 dispositivo_id='SENSOR-002',
+                farmacia_id=farmacia_teste.id,
                 temperatura=12.0,
                 umidade=60.0
             )
@@ -125,12 +127,13 @@ class TestRegrasTermicas:
             
             assert leitura.status_alerta == StatusAlertaEnum.ALERTA_LEVE
     
-    def test_status_alerta_leve_temp_alta(self, app):
+    def test_status_alerta_leve_temp_alta(self, app, farmacia_teste):
         """Testa status ALERTA_LEVE para temperatura alta."""
         with app.app_context():
             # Alerta: 25.0°C < Temp <= 30.0°C
             leitura = LeituraIoT(
                 dispositivo_id='SENSOR-003',
+                farmacia_id=farmacia_teste.id,
                 temperatura=27.0,
                 umidade=65.0
             )
@@ -139,12 +142,13 @@ class TestRegrasTermicas:
             
             assert leitura.status_alerta == StatusAlertaEnum.ALERTA_LEVE
     
-    def test_status_critico_temp_muito_baixa(self, app):
+    def test_status_critico_temp_muito_baixa(self, app, farmacia_teste):
         """Testa status CRITICO_TERMICO para temperatura muito baixa."""
         with app.app_context():
             # Crítico: Temp < 10.0°C
             leitura = LeituraIoT(
                 dispositivo_id='SENSOR-004',
+                farmacia_id=farmacia_teste.id,
                 temperatura=5.0,
                 umidade=70.0
             )
@@ -153,12 +157,13 @@ class TestRegrasTermicas:
             
             assert leitura.status_alerta == StatusAlertaEnum.CRITICO_TERMICO
     
-    def test_status_critico_temp_muito_alta(self, app):
+    def test_status_critico_temp_muito_alta(self, app, farmacia_teste):
         """Testa status CRITICO_TERMICO para temperatura muito alta."""
         with app.app_context():
             # Crítico: Temp > 30.0°C
             leitura = LeituraIoT(
                 dispositivo_id='SENSOR-005',
+                farmacia_id=farmacia_teste.id,
                 temperatura=35.0,
                 umidade=75.0
             )
@@ -167,12 +172,13 @@ class TestRegrasTermicas:
             
             assert leitura.status_alerta == StatusAlertaEnum.CRITICO_TERMICO
     
-    def test_status_normal_umidade_alta(self, app):
+    def test_status_normal_umidade_alta(self, app, farmacia_teste):
         """Testa que umidade alta não afeta status se temperatura está ok."""
         with app.app_context():
             # Temperatura ok, umidade acima de 70% deve ser ALERTA
             leitura = LeituraIoT(
                 dispositivo_id='SENSOR-006',
+                farmacia_id=farmacia_teste.id,
                 temperatura=20.0,
                 umidade=80.0
             )
@@ -183,11 +189,12 @@ class TestRegrasTermicas:
             # Se umidade > 70%, deve ser ALERTA_LEVE
             assert leitura.status_alerta == StatusAlertaEnum.ALERTA_LEVE
     
-    def test_limite_inferior_normal(self, app):
+    def test_limite_inferior_normal(self, app, farmacia_teste):
         """Testa limite inferior de temperatura NORMAL (15.0°C)."""
         with app.app_context():
             leitura = LeituraIoT(
                 dispositivo_id='SENSOR-007',
+                farmacia_id=farmacia_teste.id,
                 temperatura=15.0,
                 umidade=60.0
             )
@@ -196,11 +203,12 @@ class TestRegrasTermicas:
             
             assert leitura.status_alerta == StatusAlertaEnum.NORMAL
     
-    def test_limite_superior_normal(self, app):
+    def test_limite_superior_normal(self, app, farmacia_teste):
         """Testa limite superior de temperatura NORMAL (25.0°C)."""
         with app.app_context():
             leitura = LeituraIoT(
                 dispositivo_id='SENSOR-008',
+                farmacia_id=farmacia_teste.id,
                 temperatura=25.0,
                 umidade=60.0
             )
@@ -234,12 +242,13 @@ class TestAPITelemetria:
         assert data['data']['temperatura'] == 20.5
         assert data['data']['status_alerta'] == 'NORMAL'
     
-    def test_post_telemetria_sem_farmacia(self, client):
+    def test_post_telemetria_sem_farmacia(self, client, farmacia_teste):
         """Testa POST /api/iot/telemetria sem farmacia_id."""
         payload = {
             'dispositivo_id': 'ESP32-TEST-002',
             'temperatura': 18.0,
-            'umidade': 60.0
+            'umidade': 60.0,
+            'farmacia_id': farmacia_teste.id
         }
         
         response = client.post('/api/iot/telemetria', json=payload)
@@ -248,36 +257,40 @@ class TestAPITelemetria:
         data = response.get_json()
         assert data['success'] is True
     
-    def test_post_telemetria_campos_obrigatorios(self, client):
+    def test_post_telemetria_campos_obrigatorios(self, client, farmacia_teste):
         """Testa validação de campos obrigatórios."""
         # Sem dispositivo_id
         response = client.post('/api/iot/telemetria', json={
             'temperatura': 20.0,
-            'umidade': 50.0
+            'umidade': 50.0,
+            'farmacia_id': farmacia_teste.id
         })
         assert response.status_code == 400
         
         # Sem temperatura
         response = client.post('/api/iot/telemetria', json={
             'dispositivo_id': 'SENSOR-001',
-            'umidade': 50.0
+            'umidade': 50.0,
+            'farmacia_id': farmacia_teste.id
         })
         assert response.status_code == 400
         
         # Sem umidade
         response = client.post('/api/iot/telemetria', json={
             'dispositivo_id': 'SENSOR-001',
-            'temperatura': 20.0
+            'temperatura': 20.0,
+            'farmacia_id': farmacia_teste.id
         })
         assert response.status_code == 400
     
-    def test_post_telemetria_valores_invalidos(self, client):
+    def test_post_telemetria_valores_invalidos(self, client, farmacia_teste):
         """Testa validação de faixas de valores."""
         # Temperatura fora de faixa
         response = client.post('/api/iot/telemetria', json={
             'dispositivo_id': 'SENSOR-001',
             'temperatura': 150.0,  # Acima de 100°C
-            'umidade': 50.0
+            'umidade': 50.0,
+            'farmacia_id': farmacia_teste.id
         })
         assert response.status_code == 400
         
@@ -285,16 +298,18 @@ class TestAPITelemetria:
         response = client.post('/api/iot/telemetria', json={
             'dispositivo_id': 'SENSOR-001',
             'temperatura': 20.0,
-            'umidade': 150.0  # Acima de 100%
+            'umidade': 150.0,  # Acima de 100%
+            'farmacia_id': farmacia_teste.id
         })
         assert response.status_code == 400
     
-    def test_post_telemetria_alerta_critico(self, client):
+    def test_post_telemetria_alerta_critico(self, client, farmacia_teste):
         """Testa geração de alerta crítico."""
         payload = {
             'dispositivo_id': 'ESP32-TEST-003',
             'temperatura': 35.0,  # Acima de 30°C - CRÍTICO
-            'umidade': 80.0
+            'umidade': 80.0,
+            'farmacia_id': farmacia_teste.id
         }
         
         response = client.post('/api/iot/telemetria', json=payload)
@@ -305,12 +320,13 @@ class TestAPITelemetria:
         assert data['data']['status_alerta'] == 'CRITICO_TERMICO'
         assert data['data']['alerta_critico'] is True
     
-    def test_get_telemetria_atual(self, client, app, usuario_admin):
+    def test_get_telemetria_atual(self, client, app, usuario_admin, farmacia_teste):
         """Testa GET /api/iot/telemetria/atual."""
         with app.app_context():
             # Cria leitura de teste
             leitura = LeituraIoT(
                 dispositivo_id='SENSOR-001',
+                farmacia_id=farmacia_teste.id,
                 temperatura=22.0,
                 umidade=55.0,
                 status_alerta=StatusAlertaEnum.NORMAL
@@ -506,11 +522,12 @@ class TestAutenticacaoRFID:
 class TestModelosIoT:
     """Testes para modelos IoT."""
     
-    def test_leitura_iot_to_dict(self, app):
+    def test_leitura_iot_to_dict(self, app, farmacia_teste):
         """Testa método to_dict de LeituraIoT."""
         with app.app_context():
             leitura = LeituraIoT(
                 dispositivo_id='SENSOR-001',
+                farmacia_id=farmacia_teste.id,
                 temperatura=20.0,
                 umidade=55.0,
                 status_alerta=StatusAlertaEnum.NORMAL

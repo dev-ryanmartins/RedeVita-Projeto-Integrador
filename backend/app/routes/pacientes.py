@@ -29,7 +29,8 @@ from app.utils.storage import get_storage_service
 from app.utils.notificacoes import enviar_notificacao_dispensacao
 from app.utils.email_service import email_service
 from app.utils.sms_service import sms_service
-from app.utils.validators import sanitizar_input_string, validar_cpf, detectar_padroes_suspeitos
+from app.utils.validators import sanitizar_input_string, detectar_padroes_suspeitos
+from app.utils.document_validation import validar_cpf
 from app.core.decorators import audit_critical_action
 
 pacientes_bp = Blueprint("pacientes", __name__)

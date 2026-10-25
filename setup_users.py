@@ -1,13 +1,29 @@
+"""
+Script de Configuração de Usuários de Teste (APENAS PARA DESENVOLVIMENTO)
+
+ATENÇÃO: Este script não deve ser usado em produção.
+Para produção, use backend/provision_admin.py para criar o primeiro administrador.
+
+Uso:
+    python setup_users.py <senha>
+"""
+
 from app.core.security import criptografar_senha
 from app.models.usuario import Usuario
 from app.database import db
 from main import create_app
 import sys
 import os
+import secrets
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'backend'))
 
-SENHA_PADRAO = 'admin123'
+if len(sys.argv) < 2:
+    print("ERRO: Senha não fornecida.")
+    print("Uso: python setup_users.py <senha>")
+    sys.exit(1)
+
+SENHA = sys.argv[1]
 
 USUARIOS_TESTE = [
     {
@@ -47,6 +63,7 @@ app = create_app()
 with app.app_context():
     print('=' * 55)
     print('  RedeVita — Configuração de Usuários de Teste')
+    print('  ATENÇÃO: APENAS PARA DESENVOLVIMENTO')
     print('=' * 55)
 
     for dados in USUARIOS_TESTE:
@@ -55,18 +72,20 @@ with app.app_context():
         if usuario:
             usuario.nome = dados['nome']
             usuario.email = dados['email']
-            usuario.senha = criptografar_senha(SENHA_PADRAO)
+            usuario.senha = criptografar_senha(SENHA)
             usuario.cargo = dados['cargo']
             usuario.ativo = True
+            usuario.senha_trocada = True  # Marca como já trocado para desenvolvimento
             acao = 'ATUALIZADO'
         else:
             usuario = Usuario(
                 nome=dados['nome'],
                 cpf=dados['cpf'],
                 email=dados['email'],
-                senha=criptografar_senha(SENHA_PADRAO),
+                senha=criptografar_senha(SENHA),
                 cargo=dados['cargo'],
                 ativo=True,
+                senha_trocada=True  # Marca como já trocado para desenvolvimento
             )
             db.session.add(usuario)
             acao = 'CRIADO   '
@@ -79,7 +98,7 @@ with app.app_context():
                 dados["nome"]}')
 
     print('=' * 55)
-    print(f'  Senha de todos os usuários: {SENHA_PADRAO}')
+    print(f'  Senha de todos os usuários: {SENHA}')
     print('=' * 55)
     print()
     print('  Resumo de permissões por cargo:')

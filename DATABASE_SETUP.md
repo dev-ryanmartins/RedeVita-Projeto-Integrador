@@ -144,10 +144,16 @@ Para bancos de produção, use ferramentas específicas do banco:
 
 ## Acesso Inicial
 
-Após criar o banco, o sistema cria automaticamente um usuário administrador inicial:
+O sistema não cria usuários automaticamente. Para provisionar o primeiro administrador:
 
-- **CPF:** `000.000.000-00`
-- **Senha:** `admin123`
-- **Cargo:** Admin
+1. Certifique-se de que o banco esteja vazio
+2. Execute o script de provisionamento:
+   ```bash
+   cd backend
+   python provision_admin.py
+   ```
+3. O script solicitará os dados do administrador e gerará uma senha forte aleatória
+4. As credenciais serão exibidas uma única vez no terminal
+5. No primeiro acesso, o administrador será obrigado a trocar a senha
 
-**Importante:** Este usuário é criado apenas se o banco estiver vazio. Em produção, provisione usuários de forma segura e exija troca de senha no primeiro login.
+**Importante:** Guarde as credenciais geradas com segurança. Elas não serão exibidas novamente.

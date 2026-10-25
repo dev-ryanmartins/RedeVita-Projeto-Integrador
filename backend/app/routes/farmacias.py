@@ -8,7 +8,8 @@ from app.core.decorators import (
     equipe_clinica_required,
 )
 from app.utils.log_helper import registrar_log
-from app.utils.validators import sanitizar_input_string, validar_cnpj, detectar_padroes_suspeitos
+from app.utils.validators import sanitizar_input_string, detectar_padroes_suspeitos
+from app.utils.document_validation import validar_cnpj
 from app.core.decorators import audit_critical_action
 import re
 import math

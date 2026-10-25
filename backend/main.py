@@ -277,26 +277,12 @@ def create_app(config_overrides=None):
         # Não aplica migrations no startup - use 'flask db upgrade' para isso
         # db.create_all() é seguro (cria apenas tabelas ausentes)
         db.create_all()
-        _criar_admin_inicial()
+        # O provisionamento do primeiro administrador deve ser feito explicitamente
+        # via backend/provision_admin.py, não automaticamente no startup
         from app.database import seed_medicamentos_referencia
         seed_medicamentos_referencia(app)
 
     return app
-
-
-def _criar_admin_inicial():
-    from app.core.security import criptografar_senha
-    if Usuario.query.first() is None:
-        admin = Usuario(
-            nome='Administrador',
-            cpf='00000000000',
-            email='admin@redevita.local',
-            senha=criptografar_senha('admin123'),
-            cargo='Admin',
-            ativo=True
-        )
-        db.session.add(admin)
-        db.session.commit()
 
 
 if __name__ == '__main__':

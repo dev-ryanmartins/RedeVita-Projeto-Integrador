@@ -27,16 +27,16 @@ donation_bp = Blueprint("donation", __name__)
 @audit_critical_action('REGISTRO_DOAÇÃO')
 def nova_doacao():
     if request.method == "POST":
-        medicamento_nome = request.form.get("medicamento_nome", "").strip()
-        medicamento_tipo = request.form.get("medicamento_tipo", "").strip()
+        medicamento_id = request.form.get("medicamento_id", type=int)
         quantidade_str = request.form.get("quantidade", "0")
         receita_medica = request.form.get("receita_medica", "").strip()
         aprovacao_farmaceutico = request.form.get("aprovacao_farmaceutico", "").strip()
         destinatario = request.form.get("destinatario", "").strip() or "Não informado"
         observacao = request.form.get("observacao", "").strip() or None
 
-        if not medicamento_nome or not medicamento_tipo:
-            flash("Preencha o nome e tipo do medicamento.", "danger")
+        # Require explicit medication ID - no creation by name/type
+        if not medicamento_id:
+            flash("ERRO BLOQUEANTE: Selecione um medicamento existente. Não é possível registrar saída sem identificação explícita do lote.", "danger")
             return redirect(url_for("donation.nova_doacao"))
 
         try:
@@ -48,9 +48,19 @@ def nova_doacao():
             flash("Quantidade inválida.", "danger")
             return redirect(url_for("donation.nova_doacao"))
 
-        tipo_lower = medicamento_tipo.lower()
-        controlled_keywords = ['antibiotico', 'antidepressivo', 'anfetamina', 'opiaceo', 'benzodiazepin', 'controlado', 'psicotropico']
-        is_controlled = any(keyword in tipo_lower for keyword in controlled_keywords)
+        # Get medication by explicit ID - no search by name
+        medicamento = Medicamento.query.get(medicamento_id)
+
+        if not medicamento:
+            flash("ERRO BLOQUEANTE: Medicamento não encontrado no estoque. O ID informado não corresponde a nenhum lote existente.", "danger")
+            return redirect(url_for("donation.nova_doacao"))
+
+        if not medicamento.ativo:
+            flash("ERRO BLOQUEANTE: Este medicamento está inativo e não pode ser usado para saída.", "danger")
+            return redirect(url_for("donation.nova_doacao"))
+
+        # Check if controlled substance
+        is_controlled = medicamento.controlado
 
         if is_controlled:
             if not receita_medica:
@@ -60,20 +70,6 @@ def nova_doacao():
             if aprovacao_farmaceutico != 'aprovado':
                 flash("ERRO BLOQUEANTE: Para medicamentos controlados (Portaria 344), é obrigatória a aprovação do farmacêutico responsável.", "danger")
                 return redirect(url_for("donation.nova_doacao"))
-
-        # Search for medication by name - must exist for output operation
-        medicamentos = Medicamento.query.filter(Medicamento.nome.ilike(f"%{medicamento_nome}%")).all()
-
-        if not medicamentos:
-            flash("ERRO BLOQUEANTE: Medicamento não encontrado no estoque. Não é possível registrar saída para um medicamento que não existe. Selecione um medicamento existente.", "danger")
-            return redirect(url_for("donation.nova_doacao"))
-
-        # Check for ambiguity - multiple matches
-        if len(medicamentos) > 1:
-            flash(f"ERRO BLOQUEANTE: Múltiplos medicamentos encontrados com o nome '{medicamento_nome}'. Selecione o lote específico para evitar ambiguidade. Correspondências: {', '.join([f'{m.nome} (Lote: {m.lote})' for m in medicamentos])}", "danger")
-            return redirect(url_for("donation.nova_doacao"))
-
-        medicamento = medicamentos[0]
 
         # Use centralized validation for stock reduction (includes expiration check)
         validacao_saida = validate_batch_for_stock_reduction(

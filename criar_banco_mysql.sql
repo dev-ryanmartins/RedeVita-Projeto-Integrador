@@ -112,19 +112,11 @@ CREATE TABLE IF NOT EXISTS logs_atividade (
 
 SET FOREIGN_KEY_CHECKS = 1;
 
--- Usuários de apresentação. Senha de todos: admin123
-INSERT INTO usuarios (nome, cpf, email, senha, cargo, ativo) VALUES
-  ('Administrador', '00000000000', 'admin@redevita.local', 'scrypt:32768:8:1$oXTOgQ82nDwElxNK$5528623d3b7a394f9d2094c6eabdd424f33031109894bbf60c1ff7775e922368500329876267628e09889c4d8a7e90a1a1de86886a5e4d7eb9952bcaf1bf37c6', 'Admin', 1),
-  ('Operador Teste', '11111111111', 'operador@redevita.local', 'scrypt:32768:8:1$ACxR9pdD0T4GUxkh$accf51819a5741f58c36ec7ca0467fd5dcd8d17b13442598d7966b626276e5110bb4ff3d9b8b7953864b6c842603e3302aa61a268a021442d31b02bf569947a0', 'Operador', 1),
-  ('Dr. Médico Teste', '22222222222', 'medico@redevita.local', 'scrypt:32768:8:1$lUfpH8IeQJM5W3kS$053b266014f6cbbc914528b9433e47747a02eeda272246ba11090403997dff3ff5c14923f5824b2d07ca6207defa139d4a55695f99c6386f91c37e0d8ab05d13', 'Médico', 1),
-  ('Farmacêutico Teste', '33333333333', 'farmaceutico@redevita.local', 'scrypt:32768:8:1$74EOSYGQPRsYUDN7$b5f9815854fe98a86783ca38eea8b6a41959141f208af2ad2f7a7c7f523a52204caa3dec778de320849617bc3bb284ff53084de4499e534f99e650d3207eb130', 'Farmacêutico', 1),
-  ('Voluntário Teste', '44444444444', 'voluntario@redevita.local', 'scrypt:32768:8:1$P3GAAKrs69mgjdZF$eba531351dc35b31eaf68bbc34f806db69ebbe4214e5d2aa472a7e53f71d09b254ec02282326f99fcc3814cae711e4fc213d4a131113a3abec078585f37094e5', 'Voluntário', 1)
-ON DUPLICATE KEY UPDATE
-  nome = VALUES(nome),
-  email = VALUES(email),
-  senha = VALUES(senha),
-  cargo = VALUES(cargo),
-  ativo = VALUES(ativo);
+-- NOTA: Usuários não são criados automaticamente neste script.
+-- Para provisionar o primeiro administrador, execute:
+--   cd backend && python provision_admin.py
+-- Para ambientes de desenvolvimento, você pode usar:
+--   python setup_users.py <senha>
 
 -- Medicamentos de referência ANVISA/Portaria 344 usados pelo sistema (386 registros).
 INSERT INTO medicamentos_referencia (nome_comercial, registro_ms, principio_ativo, tarja, uso_continuo, tipo_receita, lista_portaria) VALUES

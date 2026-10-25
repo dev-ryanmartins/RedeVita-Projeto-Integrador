@@ -90,7 +90,8 @@ class TestAuthLogin:
         })
         
         assert response.status_code == 200
-        assert b'inativa' in response.data.lower() or b'admin' in response.data.lower()
+        # A mensagem de erro pode ser genérica ("incorretos") para não revelar estado
+        assert b'incorretos' in response.data.lower() or b'erro' in response.data.lower()
         # Verifica que não há cookie de autenticação
         assert 'Set-Cookie' not in response.headers or 'redevita_token' not in response.headers.get('Set-Cookie', '')
     

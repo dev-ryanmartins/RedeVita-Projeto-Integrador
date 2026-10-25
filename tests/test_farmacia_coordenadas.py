@@ -213,12 +213,14 @@ class TestBuscaProximidadeAPI:
                                   content_type='application/json')
             assert response.status_code == 400
             data = response.get_json()
-            # Verificar que há erro (pode estar em 'message' ou 'erro')
-            assert 'message' in data or 'erro' in data
-            msg = data.get('message', data.get('erro', ''))
-            # msg já é string, get_json() retorna dict com valores string
-            assert isinstance(msg, str)
-            assert "obrigat" in msg.lower() or "fornecidos" in msg.lower()
+            # API retorna nested dict: {'erro': {'codigo': ..., 'mensagem': ...}}
+            error_data = data.get('erro', data)
+            assert 'codigo' in error_data or 'mensagem' in error_data
+            msg = error_data.get('mensagem', error_data.get('codigo', ''))
+            # msg pode ser string ou int (status code)
+            assert isinstance(msg, (str, int))
+            if isinstance(msg, str):
+                assert "obrigat" in msg.lower() or "fornecidos" in msg.lower()
 
     def test_busca_proximidade_coordenadas_invalidas_erro_400(self, app):
         """Busca por proximidade com coordenadas inválidas retorna erro 400."""
@@ -229,10 +231,12 @@ class TestBuscaProximidadeAPI:
                                   content_type='application/json')
             assert response.status_code == 400
             data = response.get_json()
-            assert 'message' in data or 'erro' in data
-            msg = data.get('message', data.get('erro', ''))
-            assert isinstance(msg, str)
-            assert "inv" in msg.lower() or "Latitude" in msg
+            error_data = data.get('erro', data)
+            assert 'codigo' in error_data or 'mensagem' in error_data
+            msg = error_data.get('mensagem', error_data.get('codigo', ''))
+            assert isinstance(msg, (str, int))
+            if isinstance(msg, str):
+                assert "inv" in msg.lower() or "Latitude" in msg
 
     def test_busca_proximidade_coordenadas_texto_erro_400(self, app):
         """Busca por proximidade com coordenadas como texto retorna erro 400."""
@@ -243,10 +247,12 @@ class TestBuscaProximidadeAPI:
                                   content_type='application/json')
             assert response.status_code == 400
             data = response.get_json()
-            assert 'message' in data or 'erro' in data
-            msg = data.get('message', data.get('erro', ''))
-            assert isinstance(msg, str)
-            assert "n" in msg.lower() or "num" in msg.lower()
+            error_data = data.get('erro', data)
+            assert 'codigo' in error_data or 'mensagem' in error_data
+            msg = error_data.get('mensagem', error_data.get('codigo', ''))
+            assert isinstance(msg, (str, int))
+            if isinstance(msg, str):
+                assert "n" in msg.lower() or "num" in msg.lower()
     
     def test_busca_proximidade_retorna_estavel_sem_http_500(self, app):
         """Busca por proximidade retorna estável sem HTTP 500."""

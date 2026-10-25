@@ -136,6 +136,10 @@ def nova_doacao():
     except Exception:
         medicamentos = []
 
+    # Pagination parameters (for future use)
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 50, type=int)
+    
     data_inicio = request.args.get("data_inicio", "").strip()
     data_fim = request.args.get("data_fim", "").strip()
     

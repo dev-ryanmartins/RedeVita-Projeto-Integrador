@@ -23,7 +23,7 @@ from app.utils.semaforo import calcular_status_semaforo
 from app.utils.system_health import get_health_summary
 from app.utils.iot_telemetry import processar_leitura_iot, iot_simulator, autenticar_rfid
 from app.utils.pdf_generator import obter_gerador_pdf
-from app.utils.anvisa_api import obter_cliente_anvisa, mapear_tarja_por_principio_ativo
+from app.utils.anvisa_api import obter_cliente_anvisa
 from app.extensions import limiter
 
 api_bp = Blueprint("api", __name__, url_prefix="/api")
@@ -282,12 +282,8 @@ def buscar_medicamentos_anvisa():
     
     resultados_internos = []
     for med in medicamentos_internos:
-        # Mapeia tarja automaticamente se estiver incorreta
-        tarja_mapeada = mapear_tarja_por_principio_ativo(med.nome, med.principio_ativo)
-        if med.tarja == "Sem Tarja" and tarja_mapeada != "Sem Tarja":
-            tarja = tarja_mapeada
-        else:
-            tarja = med.tarja or "Sem Tarja"
+        # Usa a tarja armazenada no banco (sem heurística de nome)
+        tarja = med.tarja or "Sem Tarja"
         
         resultados_internos.append({
             "nome": med.nome,

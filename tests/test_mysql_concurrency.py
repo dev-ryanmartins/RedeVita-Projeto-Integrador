@@ -300,7 +300,7 @@ class TestMySQLConcurrency:
 
         # Verify isolation level
         with mysql_engine.connect() as conn:
-            result = conn.execute(text("SELECT @@TX_ISOLATION"))
+            result = conn.execute(text("SELECT @@transaction_isolation"))
             isolation = result.fetchone()
             assert isolation is not None, "Should be able to query isolation level"
             assert 'READ COMMITTED' in str(isolation[0]) or 'REPEATABLE READ' in str(isolation[0]), \

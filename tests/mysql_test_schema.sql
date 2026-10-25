@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS medicamentos (
   referencia_id INT NULL,
   ativo BOOLEAN DEFAULT TRUE,
   controlado BOOLEAN DEFAULT FALSE,
+  observacoes TEXT NULL,
   CONSTRAINT fk_medicamentos_referencia FOREIGN KEY (referencia_id) REFERENCES medicamento_referencia(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

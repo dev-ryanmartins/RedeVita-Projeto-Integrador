@@ -71,10 +71,12 @@ def login():
             token = gerar_token(usuario)
             
             # Redirecionamento: se senha não foi trocada, forçar troca
-            if not usuario.senha_trocada:
-                redirect_url = url_for("auth.trocar_senha_obrigatoria")
-            else:
-                redirect_url = url_for("inventory.dashboard")
+            # TODO: Habilitar após migração de banco para adicionar coluna senha_trocada
+            # if not usuario.senha_trocada:
+            #     redirect_url = url_for("auth.trocar_senha_obrigatoria")
+            # else:
+            #     redirect_url = url_for("inventory.dashboard")
+            redirect_url = url_for("inventory.dashboard")
             
             resposta = redirect(redirect_url)
             resposta.set_cookie(

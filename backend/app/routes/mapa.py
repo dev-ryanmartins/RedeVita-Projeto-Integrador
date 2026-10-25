@@ -10,6 +10,36 @@ from app.core.decorators import voluntario_required
 mapa_bp = Blueprint("mapa", __name__)
 
 
+def validar_coordenada(latitude: float, longitude: float) -> tuple[bool, str]:
+    """
+    Valida se as coordenadas são válidas e dentro dos intervalos geográficos.
+    
+    Args:
+        latitude: Latitude a validar
+        longitude: Longitude a validar
+    
+    Returns:
+        Tuple (valido, mensagem_erro)
+    """
+    # Verificar se são números
+    if not isinstance(latitude, (int, float)) or not isinstance(longitude, (int, float)):
+        return False, "Coordenadas devem ser numéricas"
+    
+    # Verificar NaN ou infinito
+    if math.isnan(latitude) or math.isnan(longitude):
+        return False, "Coordenadas não podem ser NaN"
+    if math.isinf(latitude) or math.isinf(longitude):
+        return False, "Coordenadas não podem ser infinitas"
+    
+    # Verificar intervalos geográficos
+    if not (-90 <= latitude <= 90):
+        return False, f"Latitude deve estar entre -90 e 90 (recebido: {latitude})"
+    if not (-180 <= longitude <= 180):
+        return False, f"Longitude deve estar entre -180 e 180 (recebido: {longitude})"
+    
+    return True, ""
+
+
 def calcular_distancia_haversine(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     """
     Calcula a distância entre dois pontos geográficos usando a fórmula de Haversine.
@@ -21,7 +51,19 @@ def calcular_distancia_haversine(lat1: float, lon1: float, lat2: float, lon2: fl
     
     Returns:
         Distância em quilômetros
+    
+    Raises:
+        ValueError: Se as coordenadas forem inválidas
     """
+    # Validar coordenadas antes de calcular
+    valido, erro = validar_coordenada(lat1, lon1)
+    if not valido:
+        raise ValueError(f"Coordenadas inválidas ponto 1: {erro}")
+    
+    valido, erro = validar_coordenada(lat2, lon2)
+    if not valido:
+        raise ValueError(f"Coordenadas inválidas ponto 2: {erro}")
+    
     R = 6371
     
     lat1, lon1, lat2, lon2 = map(math.radians, [lat1, lon1, lat2, lon2])
@@ -106,6 +148,18 @@ def verificar_proximidade():
         
         if paciente_lat is None or paciente_lon is None:
             return resposta_erro("latitude e longitude são obrigatórios", 400)
+        
+        # Validar tipo das coordenadas
+        try:
+            paciente_lat = float(paciente_lat)
+            paciente_lon = float(paciente_lon)
+        except (TypeError, ValueError):
+            return resposta_erro("latitude e longitude devem ser números válidos", 400)
+        
+        # Validar intervalos das coordenadas do paciente
+        valido, erro = validar_coordenada(paciente_lat, paciente_lon)
+        if not valido:
+            return resposta_erro(f"Coordenadas inválidas: {erro}", 400)
 
         LIMITE_PROXIMIDADE_KM = 1.0
         
@@ -113,23 +167,45 @@ def verificar_proximidade():
         farmacias_proximas = []
         
         for farmacia in farmacias:
-            farmacia_lat = getattr(farmacia, 'latitude', -23.5505)
-            farmacia_lon = getattr(farmacia, 'longitude', -46.6333)
+            # Omitir farmácias sem coordenadas válidas
+            farmacia_lat = getattr(farmacia, 'latitude', None)
+            farmacia_lon = getattr(farmacia, 'longitude', None)
             
-            distancia = calcular_distancia_haversine(
-                paciente_lat, paciente_lon,
-                farmacia_lat, farmacia_lon
-            )
+            if farmacia_lat is None or farmacia_lon is None:
+                continue
             
-            if distancia <= LIMITE_PROXIMIDADE_KM:
-                farmacias_proximas.append({
-                    'id': farmacia.id,
-                    'nome': farmacia.nome_fantasia,
-                    'endereco': farmacia.endereco,
-                    'distancia_km': round(distancia, 3),
-                    'latitude': farmacia_lat,
-                    'longitude': farmacia_lon
-                })
+            # Validar tipo das coordenadas da farmácia
+            try:
+                farmacia_lat = float(farmacia_lat)
+                farmacia_lon = float(farmacia_lon)
+            except (TypeError, ValueError):
+                continue
+            
+            # Validar intervalos das coordenadas da farmácia
+            valido, _ = validar_coordenada(farmacia_lat, farmacia_lon)
+            if not valido:
+                continue
+            
+            # Calcular distância (agora valida internamente)
+            try:
+                distancia = calcular_distancia_haversine(
+                    paciente_lat, paciente_lon,
+                    farmacia_lat, farmacia_lon
+                )
+                
+                if distancia <= LIMITE_PROXIMIDADE_KM:
+                    farmacias_proximas.append({
+                        'id': farmacia.id,
+                        'nome': farmacia.nome_fantasia,
+                        'endereco': farmacia.endereco,
+                        'distancia_km': round(distancia, 3),
+                        'latitude': farmacia_lat,
+                        'longitude': farmacia_lon
+                    })
+            except ValueError as e:
+                # Coordenadas inválidas no cálculo - omitir esta farmácia
+                current_app.logger.warning(f"Farmácia {farmacia.id} com coordenadas inválidas: {str(e)}")
+                continue
 
         farmacias_proximas.sort(key=lambda f: f['distancia_km'])
         
@@ -142,4 +218,5 @@ def verificar_proximidade():
         })
         
     except Exception as e:
-        return resposta_erro(f"Erro ao verificar proximidade: {str(e)}", 500)
+        current_app.logger.error(f"Erro ao verificar proximidade: {str(e)}")
+        return resposta_erro("Erro ao verificar proximidade", 500)

@@ -11,6 +11,7 @@ from app.utils.log_helper import registrar_log
 from app.utils.validators import sanitizar_input_string, validar_cnpj, detectar_padroes_suspeitos
 from app.core.decorators import audit_critical_action
 import re
+import math
 
 farmacias_bp = Blueprint("farmacias", __name__)
 
@@ -24,7 +25,48 @@ def _limpar_cnpj(cnpj: str) -> str:
     return re.sub(r"\D", "", cnpj)
 
 
-def _validar_campos_farmacia(nome_fantasia, cnpj_raw, endereco, responsavel):
+def _validar_coordenada(latitude: str, longitude: str) -> tuple[bool, str]:
+    """
+    Valida coordenadas geográficas fornecidas como strings.
+    
+    Args:
+        latitude: Latitude como string
+        longitude: Longitude como string
+    
+    Returns:
+        Tuple (valido, mensagem_erro)
+    """
+    # Se vazias, são opcionais (válido)
+    if not latitude and not longitude:
+        return True, ""
+    
+    # Se uma fornecida, ambas devem ser fornecidas
+    if (latitude and not longitude) or (not latitude and longitude):
+        return False, "Forneça latitude e longitude, ou deixe ambos vazios"
+    
+    # Tentar converter para float
+    try:
+        lat = float(latitude)
+        lon = float(longitude)
+    except (TypeError, ValueError):
+        return False, "Latitude e longitude devem ser números válidos"
+    
+    # Verificar NaN ou infinito
+    if math.isnan(lat) or math.isnan(lon):
+        return False, "Coordenadas não podem ser NaN"
+    if math.isinf(lat) or math.isinf(lon):
+        return False, "Coordenadas não podem ser infinitas"
+    
+    # Verificar intervalos geográficos
+    if not (-90 <= lat <= 90):
+        return False, f"Latitude deve estar entre -90 e 90 (recebido: {lat})"
+    if not (-180 <= lon <= 180):
+        return False, f"Longitude deve estar entre -180 e 180 (recebido: {lon})"
+    
+    return True, ""
+
+
+def _validar_campos_farmacia(nome_fantasia, cnpj_raw, endereco, responsavel, latitude=None, longitude=None):
     if not nome_fantasia or not cnpj_raw or not endereco or not responsavel:
         return "Preencha todos os campos obrigatórios."
     if len(nome_fantasia) > _MAX_NOME:
@@ -33,6 +75,13 @@ def _validar_campos_farmacia(nome_fantasia, cnpj_raw, endereco, responsavel):
         return f"Endereço muito longo (máx. {_MAX_END} caracteres)."
     if len(responsavel) > _MAX_RESP:
         return f"Nome do responsável muito longo (máx. {_MAX_RESP} caracteres)."
+    
+    # Validar coordenadas se fornecidas
+    if latitude is not None or longitude is not None:
+        valido, erro = _validar_coordenada(latitude or "", longitude or "")
+        if not valido:
+            return erro
+    
     return None
 
 
@@ -56,13 +105,15 @@ def nova_farmacia():
     cnpj_raw = request.form.get("cnpj", "").strip()[:_MAX_CNPJ_RAW]
     endereco = sanitizar_input_string(request.form.get("endereco", ""), max_length=_MAX_END)
     responsavel = sanitizar_input_string(request.form.get("responsavel", ""), max_length=_MAX_RESP)
+    latitude = request.form.get("latitude", "").strip()
+    longitude = request.form.get("longitude", "").strip()
 
     # Detecta padrões suspeitos
     if detectar_padroes_suspeitos(nome_fantasia) or detectar_padroes_suspeitos(endereco) or detectar_padroes_suspeitos(responsavel):
         flash("Entrada contém caracteres não permitidos.", "danger")
         return redirect(url_for("farmacias.listar_farmacias"))
 
-    erro = _validar_campos_farmacia(nome_fantasia, cnpj_raw, endereco, responsavel)
+    erro = _validar_campos_farmacia(nome_fantasia, cnpj_raw, endereco, responsavel, latitude, longitude)
     if erro:
         flash(erro, "danger")
         return redirect(url_for("farmacias.listar_farmacias"))
@@ -79,12 +130,18 @@ def nova_farmacia():
         return redirect(url_for("farmacias.listar_farmacias"))
 
     try:
+        # Converter coordenadas se fornecidas
+        lat_float = float(latitude) if latitude else None
+        lon_float = float(longitude) if longitude else None
+        
         farmacia = Farmacia(
             nome_fantasia=nome_fantasia,
             razao_social=razao_social or None,
             cnpj=cnpj_fmt,
             endereco=endereco,
             responsavel=responsavel,
+            latitude=lat_float,
+            longitude=lon_float
         )
         db.session.add(farmacia)
         db.session.commit()
@@ -113,13 +170,15 @@ def editar_farmacia(farmacia_id):
     cnpj_raw = request.form.get("cnpj", "").strip()[:_MAX_CNPJ_RAW]
     endereco = sanitizar_input_string(request.form.get("endereco", ""), max_length=_MAX_END)
     responsavel = sanitizar_input_string(request.form.get("responsavel", ""), max_length=_MAX_RESP)
+    latitude = request.form.get("latitude", "").strip()
+    longitude = request.form.get("longitude", "").strip()
 
     # Detecta padrões suspeitos
     if detectar_padroes_suspeitos(nome_fantasia) or detectar_padroes_suspeitos(endereco) or detectar_padroes_suspeitos(responsavel):
         flash("Entrada contém caracteres não permitidos.", "danger")
         return redirect(url_for("farmacias.listar_farmacias"))
 
-    erro = _validar_campos_farmacia(nome_fantasia, cnpj_raw, endereco, responsavel)
+    erro = _validar_campos_farmacia(nome_fantasia, cnpj_raw, endereco, responsavel, latitude, longitude)
     if erro:
         flash(erro, "danger")
         return redirect(url_for("farmacias.listar_farmacias"))
@@ -137,11 +196,17 @@ def editar_farmacia(farmacia_id):
         return redirect(url_for("farmacias.listar_farmacias"))
 
     try:
+        # Converter coordenadas se fornecidas
+        lat_float = float(latitude) if latitude else None
+        lon_float = float(longitude) if longitude else None
+        
         farmacia.nome_fantasia = nome_fantasia
         farmacia.razao_social = razao_social or None
         farmacia.cnpj = cnpj_fmt
         farmacia.endereco = endereco
         farmacia.responsavel = responsavel
+        farmacia.latitude = lat_float
+        farmacia.longitude = lon_float
         db.session.commit()
         registrar_log("Edição de Farmácia", f'Farmácia "{nome_fantasia}" atualizada')
         flash(f'Farmácia "{nome_fantasia}" atualizada com sucesso!', "success")

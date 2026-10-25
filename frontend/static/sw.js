@@ -1,6 +1,5 @@
 const CACHE_NAME = 'redevita-pwa-v1';
 const STATIC_ASSETS = [
-  '/',
   '/manifest.json',
   '/static/css/global.css',
   '/static/css/dashboard.css',
@@ -40,11 +39,23 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Interceptação de requisições: Cache First para estáticos, Network First para dados dinâmicos
+// Interceptação de requisições: Cache First apenas para estáticos públicos
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
   const url = new URL(event.request.url);
+
+  // Não cachear requisições de API - sempre passa pela rede
+  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/login') || url.pathname.startsWith('/register')) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
+  // Não cachear navegação HTML para evitar vazamento de conteúdo autenticado
+  if (event.request.mode === 'navigate') {
+    event.respondWith(fetch(event.request));
+    return;
+  }
 
   // Requisições para estáticos: Cache First com fallback para rede
   if (url.pathname.startsWith('/static/')) {
@@ -63,23 +74,8 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Navegação HTML: Network First com fallback para o cache
-  if (event.request.mode === 'navigate') {
-    event.respondWith(
-      fetch(event.request).catch(() => {
-        return caches.match(event.request).then((cached) => {
-          if (cached) return cached;
-          return caches.match('/');
-        });
-      })
-    );
-    return;
-  }
-
-  // Demais requisições: Rede normal com fallback para cache
-  event.respondWith(
-    fetch(event.request).catch(() => caches.match(event.request))
-  );
+  // Demais requisições: Rede normal sem cache
+  event.respondWith(fetch(event.request));
 });
 
 // Sistema de Notificações Push - Módulo Aditivo

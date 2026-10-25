@@ -189,7 +189,7 @@ class TestMySQLConcurrency:
             
             paciente = Paciente(
                 nome="Test Patient",
-                cpf="12345678901-IDEMP",  # Unique for idempotent test
+                cpf="98765432100",  # Unique for idempotent test (11 chars)
                 data_nascimento=date(1990, 1, 1)
             )
             medico = Medico(
@@ -366,7 +366,7 @@ class TestMySQLConcurrency:
             )
             paciente = Paciente(
                 nome="Test Patient",
-                cpf="12345678901-CONSUME",  # Unique for QR consumption test
+                cpf="98765432101",  # Unique for QR consumption test (11 chars)
                 data_nascimento=date(1990, 1, 1)
             )
             medico = Medico(

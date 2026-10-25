@@ -55,10 +55,10 @@ class TestMigrationsSetup:
         """Diretório de versões de migrations existe."""
         versions_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'backend', 'migrations', 'versions')
         assert os.path.exists(versions_dir)
-    
-    def test_migration_inicial_placeholder_existe(self):
-        """Migration inicial placeholder (001_schema_inicial) existe."""
-        migration_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'backend', 'migrations', 'versions', '001_schema_inicial.py')
+
+    def test_migration_qr_nonce_existe(self):
+        """Migration QR nonce existe."""
+        migration_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'backend', 'migrations', 'versions', 'qr_001_add_nonce_and_approval.py')
         assert os.path.exists(migration_file)
     
     def test_migration_env_importa_modelos(self):

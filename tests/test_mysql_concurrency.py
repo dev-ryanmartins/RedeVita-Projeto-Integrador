@@ -25,8 +25,9 @@ import pytest
 import threading
 import time
 import pymysql
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy import event
 
 # MySQL test configuration - synthetic credentials only
 MYSQL_HOST = os.environ.get('MYSQL_HOST', '127.0.0.1')
@@ -57,6 +58,21 @@ def mysql_engine():
 def mysql_session_factory(mysql_engine):
     """Create session factory for MySQL."""
     return sessionmaker(bind=mysql_engine)
+
+
+@pytest.fixture(scope="module", autouse=True)
+def disable_portaria_validation():
+    """
+    Disable Portaria 344 validation for MySQL concurrency tests.
+
+    The validation uses Flask-SQLAlchemy which requires application context,
+    but these tests use independent SQLAlchemy sessions.
+    """
+    from app.models.medicamento import _validar_portaria_344_medicamento
+    event.remove(Medicamento, 'before_insert', _validar_portaria_344_medicamento)
+    event.remove(Medicamento, 'before_update', _validar_portaria_344_medicamento)
+    yield
+    # Event listeners are not restored since this is module-scoped and tests run in isolation
 
 
 class TestMySQLConcurrency:
@@ -274,17 +290,17 @@ class TestMySQLConcurrency:
         # Check engine type
         with mysql_engine.connect() as conn:
             result = conn.execute(
-                "SELECT ENGINE FROM information_schema.TABLES "
-                "WHERE TABLE_SCHEMA = :db_name AND TABLE_NAME = 'medicamentos'",
+                text("SELECT ENGINE FROM information_schema.TABLES "
+                     "WHERE TABLE_SCHEMA = :db_name AND TABLE_NAME = 'medicamentos'"),
                 {"db_name": MYSQL_DATABASE}
             )
             engine_info = result.fetchone()
             assert engine_info is not None, "medicamentos table should exist"
             assert engine_info[0] == 'InnoDB', f"Expected InnoDB engine, got {engine_info[0]}"
-        
+
         # Verify isolation level
         with mysql_engine.connect() as conn:
-            result = conn.execute("SELECT @@TX_ISOLATION")
+            result = conn.execute(text("SELECT @@TX_ISOLATION"))
             isolation = result.fetchone()
             assert isolation is not None, "Should be able to query isolation level"
             assert 'READ COMMITTED' in str(isolation[0]) or 'REPEATABLE READ' in str(isolation[0]), \

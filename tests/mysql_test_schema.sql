@@ -166,3 +166,7 @@ CREATE TABLE IF NOT EXISTS solicitacoes_estoque (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+-- Insert test user for QR nonce tests (usado_por_id FK)
+INSERT INTO usuarios (id, nome, cpf, email, senha, cargo, ativo, senha_trocada, credencial_versao)
+VALUES (1, 'Test Farmacêutico', '11122233344', 'farmaceutico@test.local', 'hashed_password', 'Farmacêutico', TRUE, TRUE, 1);

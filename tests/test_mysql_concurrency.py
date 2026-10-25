@@ -280,7 +280,7 @@ class TestMySQLConcurrency:
                     # Mark nonce as used and update prescription
                     qr_nonce.usado = True
                     qr_nonce.usado_em = date.today()
-                    qr_nonce.usado_por_id = 1
+                    qr_nonce.usado_por_id = None  # No FK constraint issue
                     receita.status = "dispensada"
                     receita.dispensada_em = date.today()
                     session.commit()
@@ -443,7 +443,7 @@ class TestMySQLConcurrency:
                     # Mark nonce as used and update prescription
                     qr_nonce.usado = True
                     qr_nonce.usado_em = date.today()
-                    qr_nonce.usado_por_id = 1
+                    qr_nonce.usado_por_id = None  # No FK constraint issue
                     receita.status = "dispensada"
                     receita.dispensada_em = date.today()
                     session.commit()

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trocar Senha - RedeVita</title>
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/duotone/style.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+</head>
+{% from "_brand_logo.html" import brand_logo %}
+<body style="background-color: #0b0f17;">
+<div class="auth-wrapper">
+    <div class="login-box">
+
+        <!-- Lado da Imagem (Desktop) -->
+        <div class="login-side-image">
+            <div class="image-overlay-card">
+                {{ brand_logo(url_for('auth.login')) }}
+                <p style="color:#cbd5e1; font-size:0.95rem; margin-bottom:16px;">Gestão inteligente de medicamentos e doações.</p>
+                <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; padding: 16px;">
+                    <div style="display:flex; align-items:center; gap:8px; color:#38bdf8; font-weight:600; margin-bottom:8px;">
+                        <i class="fas fa-shield-alt"></i> Troca de Senha Obrigatória
+                    </div>
+                    <p style="color:#cbd5e1; font-size:0.85rem; margin:0;">
+                        Por segurança, você deve alterar sua senha inicial antes de acessar o sistema.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lado do Formulário -->
+        <div class="login-side-form" style="background-color: #151c2a;">
+            
+            <div class="form-content">
+                <h2>Trocar Senha</h2>
+                <p class="subtitle">Defina sua nova senha para continuar.</p>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ 'danger' if category == 'danger' or category == 'error' else category }}" style="margin-bottom:16px; display:flex; align-items:center; gap:8px;">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <span>{{ message }}</span>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <form action="{{ url_for('auth.trocar_senha_obrigatoria') }}" method="POST" class="modern-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <div class="form-group" style="margin-bottom:18px;">
+                        <label for="nova_senha" style="display:block; margin-bottom:8px; font-weight:600; color:#cbd5e1;">Nova Senha</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" name="nova_senha" id="nova_senha"
+                                   placeholder="••••••••" required autocomplete="new-password" minlength="8">
+                        </div>
+                        <small style="color:#94a3b8; font-size:0.8rem; margin-top:4px; display:block;">
+                            Mínimo de 8 caracteres
+                        </small>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom:18px;">
+                        <label for="confirmar_senha" style="display:block; margin-bottom:8px; font-weight:600; color:#cbd5e1;">Confirmar Senha</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" name="confirmar_senha" id="confirmar_senha"
+                                   placeholder="••••••••" required autocomplete="new-password" minlength="8">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-primary-gradient" style="width:100%; display:inline-flex; align-items:center; justify-content:center; gap:8px;">
+                        Atualizar Senha <i class="fas fa-arrow-right"></i>
+                    </button>
+                </form>
+
+                <div class="auth-footer" style="margin-top: 24px; text-align: center;">
+                    <p style="color:#94a3b8; font-size:0.9rem;">
+                        <i class="fas fa-info-circle" style="color:#38bdf8;"></i>
+                        Esta ação é obrigatória no primeiro acesso.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

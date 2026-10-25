@@ -79,25 +79,96 @@ document.addEventListener('DOMContentLoaded', () => {
             e.target.value = v;
         });
         
-        input.addEventListener('blur', async (e) => {
-            const cep = e.target.value.replace(/\D/g, '');
-            if (cep.length === 8) {
+        // Armazenar valor original do endereço para proteção contra sobrescrita
+        const enderecoInput = document.querySelector('input[name="endereco"]');
+        let enderecoOriginal = enderecoInput ? enderecoInput.value : '';
+        
+        // Atualizar valor original quando o usuário editar manualmente
+        if (enderecoInput) {
+            enderecoInput.addEventListener('input', () => {
+                enderecoOriginal = enderecoInput.value;
+            });
+        }
+        
+        // Configurar botão de busca de CEP (se existir)
+        const cepBotao = document.querySelector('.btn-buscar-cep');
+        if (cepBotao) {
+            cepBotao.addEventListener('click', async () => {
+                const cep = input.value.replace(/\D/g, '');
+                
+                // Validar CEP
+                if (cep.length !== 8) {
+                    mostrarMensagemCEP('Por favor, digite um CEP válido com 8 dígitos.', 'erro');
+                    return;
+                }
+                
+                // Mostrar estado de carregamento
+                mostrarMensagemCEP('Buscando endereço...', 'carregando');
+                cepBotao.disabled = true;
+                
                 try {
-                    const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+                    const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`, {
+                        signal: AbortSignal.timeout(10000) // Timeout de 10 segundos
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`Erro HTTP: ${response.status}`);
+                    }
+                    
                     const data = await response.json();
                     
-                    if (!data.erro) {
-                        const enderecoInput = document.querySelector('input[name="endereco"]');
-                        if (enderecoInput) {
-                            enderecoInput.value = `${data.logradouro}, ${data.bairro}, ${data.localidade} - ${data.uf}`;
-                            enderecoInput.style.borderColor = '#10b981';
+                    if (data.erro) {
+                        mostrarMensagemCEP('CEP não encontrado. Verifique o número e tente novamente.', 'erro');
+                    } else {
+                        // Verificar se o usuário editou o endereço enquanto buscava
+                        const enderecoAtual = enderecoInput ? enderecoInput.value : '';
+                        if (enderecoAtual !== enderecoOriginal) {
+                            // Usuário editou manualmente, preservar edição
+                            mostrarMensagemCEP('Endereço digitado manualmente preservado. CEP encontrado mas não aplicado.', 'aviso');
+                        } else {
+                            // Aplicar dados do ViaCEP
+                            if (enderecoInput) {
+                                enderecoInput.value = `${data.logradouro}, ${data.bairro}, ${data.localidade} - ${data.uf}`;
+                                enderecoOriginal = enderecoInput.value;
+                                enderecoInput.style.borderColor = '#10b981';
+                            }
+                            mostrarMensagemCEP('Endereço preenchido com sucesso.', 'sucesso');
                         }
                     }
                 } catch (error) {
+                    if (error.name === 'AbortError') {
+                        mostrarMensagemCEP('Tempo limite excedido. Tente novamente.', 'erro');
+                    } else {
+                        mostrarMensagemCEP('Erro ao buscar CEP. Verifique sua conexão e tente novamente.', 'erro');
+                    }
                     console.error('Erro ao buscar CEP:', error);
+                } finally {
+                    cepBotao.disabled = false;
                 }
-            }
-        });
+            });
+        }
+    }
+    
+    function mostrarMensagemCEP(mensagem, tipo) {
+        // Tenta encontrar container de mensagem específico para CEP
+        const mensagemContainer = document.getElementById('cep-mensagem');
+        if (mensagemContainer) {
+            mensagemContainer.textContent = mensagem;
+            mensagemContainer.className = `mensagem-cep mensagem-${tipo}`;
+            mensagemContainer.setAttribute('role', 'alert');
+            mensagemContainer.setAttribute('aria-live', 'polite');
+            
+            // Remover mensagem após 5 segundos
+            setTimeout(() => {
+                mensagemContainer.textContent = '';
+                mensagemContainer.className = 'mensagem-cep';
+                mensagemContainer.removeAttribute('role');
+                mensagemContainer.removeAttribute('aria-live');
+            }, 5000);
+        } else {
+            // Fallback para console se container não existir
+            console.log(`[CEP ${tipo}]: ${mensagem}`);
+        }
     }
 
     document.querySelectorAll('.mask-cpf').forEach(aplicarMascaraCPF);

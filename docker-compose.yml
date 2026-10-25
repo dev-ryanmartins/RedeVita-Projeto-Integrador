@@ -6,11 +6,11 @@ services:
     ports:
       - "5000:5000"
     environment:
-      - DATABASE_URL=mysql+pymysql://redevita:redevita123@db:3306/redevita
-      - SECRET_KEY=redevita_projeto_ads_2026
-      - JWT_SECRET_KEY=redevita_jwt_secret_2026
-      - JWT_EXPIRATION=3600
-      - FLASK_ENV=production
+      - DATABASE_URL=${DATABASE_URL}
+      - SECRET_KEY=${SECRET_KEY}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - JWT_EXPIRATION=${JWT_EXPIRATION:-3600}
+      - FLASK_ENV=${FLASK_ENV:-production}
     depends_on:
       db:
         condition: service_healthy
@@ -27,18 +27,18 @@ services:
   db:
     image: mysql:8.0
     environment:
-      - MYSQL_ROOT_PASSWORD=root123
-      - MYSQL_DATABASE=redevita
-      - MYSQL_USER=redevita
-      - MYSQL_PASSWORD=redevita123
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-redevita}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
     ports:
-      - "3306:3306"
+      - "127.0.0.1:3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./criar_banco_mysql.sql:/docker-entrypoint-initdb.d/init.sql
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot123"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$${MYSQL_ROOT_PASSWORD}"]
       interval: 10s
       timeout: 5s
       retries: 5

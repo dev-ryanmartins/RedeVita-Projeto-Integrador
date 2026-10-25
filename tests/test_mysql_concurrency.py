@@ -194,7 +194,7 @@ class TestMySQLConcurrency:
             )
             medico = Medico(
                 nome="Test Doctor",
-                crm="12345-SP",
+                crm="12345-SP-IDEMP",  # Unique for idempotent test
                 especialidade="General"
             )
             medicamento = Medicamento(
@@ -338,7 +338,7 @@ class TestMySQLConcurrency:
             )
             medico = Medico(
                 nome="Test Doctor",
-                crm="12345-SP",
+                crm="12345-SP-CONSUME",  # Unique for QR consumption test
                 especialidade="General"
             )
             session1.add_all([medicamento, paciente, medico])

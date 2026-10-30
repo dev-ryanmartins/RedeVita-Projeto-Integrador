@@ -178,6 +178,14 @@
                 </div>
                 <span class="nav-item-text">Painel de Saúde</span>
             </a>
+            <a href="{{ url_for('cold_chain_report.relatorio_cadeia_frio') }}"
+               class="nav-item admin {{ 'active' if request.endpoint and request.endpoint.startswith('cold_chain_report.') else '' }}"
+               data-tooltip="Relatório Cadeia de Frio">
+                <div class="nav-item-icon">
+                    <i class="fas fa-snowflake"></i>
+                </div>
+                <span class="nav-item-text">Cadeia de Frio</span>
+            </a>
             <a href="{{ url_for('notificacoes.painel') }}"
                class="nav-item admin {{ 'active' if request.endpoint and request.endpoint.startswith('notificacoes.') else '' }}"
                data-tooltip="Notificações">

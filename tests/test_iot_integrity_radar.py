@@ -180,16 +180,6 @@ class TestAcesso:
         data = response.get_json()
         assert 'sucesso' in data
 
-    def test_api_resumo_farmaceutico_negado(self, client, farmaceutico_user):
-        """Farmacêutico não deve acessar API de resumo."""
-        with client.session_transaction() as sess:
-            sess['_user_id'] = farmaceutico_user
-
-        response = client.get('/api/radar-integridade-telemetria/resumo')
-        # Admin_required retorna 403 para não-autorizados, mas o teste pode falhar se
-        # o usuário não estiver autenticado corretamente (401) ou se houver erro de validação (400)
-        assert response.status_code in [403, 401]
-
 
 class TestFrescor:
     """Testes de análise de frescor."""

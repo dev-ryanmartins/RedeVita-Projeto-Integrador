@@ -26,7 +26,7 @@ class TestAdminPainelSaudeAccess:
         
         response = client.get('/admin/painel-saude')
         assert response.status_code == 200
-        assert b'Painel de Saúde Operacional' in response.data
+        assert 'Painel de Saúde Operacional' in response.data.decode('utf-8')
     
     def test_usuario_nao_admin_bloqueado(self, client, usuario_voluntario):
         """Usuário não-admin não pode acessar o painel de saúde."""
@@ -199,17 +199,18 @@ class TestAdminPainelSaudeTemplate:
         assert response.status_code == 200
         
         # Verificar elementos principais
-        assert b'Painel de Saúde Operacional' in response.data
-        assert b'M\xe9tricas do Sistema' in response.data or b'Metricas do Sistema' in response.data
-        assert b'Telemetria IoT' in response.data
-        assert b'Status Geral' in response.data
-        assert b'Uptime' in response.data
-        assert b'Mem\xf3ria' in response.data or b'Memoria' in response.data
-        assert b'CPU' in response.data
-        assert b'Banco de Dados' in response.data
-        assert b'\xdaltima Leitura' in response.data or b'Ultima Leitura' in response.data or b'Nenhuma leitura' in response.data
-        assert b'Leituras (24h)' in response.data
-        assert b'Dispositivos Ativos' in response.data
+        response_text = response.data.decode('utf-8')
+        assert 'Painel de Saúde Operacional' in response_text
+        assert 'Métricas do Sistema' in response_text or 'Metricas do Sistema' in response_text
+        assert 'Telemetria IoT' in response_text
+        assert 'Status Geral' in response_text
+        assert 'Uptime' in response_text
+        assert 'Memória' in response_text or 'Memoria' in response_text
+        assert 'CPU' in response_text
+        assert 'Banco de Dados' in response_text
+        assert 'Última Leitura' in response_text or 'Ultima Leitura' in response_text or 'Nenhuma leitura' in response_text
+        assert 'Leituras (24h)' in response_text
+        assert 'Dispositivos Ativos' in response_text
     
     def test_template_responsivo(self, client, usuario_admin):
         """Template inclui CSS específico do painel de saúde."""
@@ -223,7 +224,7 @@ class TestAdminPainelSaudeTemplate:
         assert response.status_code == 200
         
         # Verificar que o CSS específico foi carregado
-        assert b'admin_painel_saude.css' in response.data
+        assert 'admin_painel_saude.css' in response.data.decode('utf-8')
 
 
 @pytest.fixture

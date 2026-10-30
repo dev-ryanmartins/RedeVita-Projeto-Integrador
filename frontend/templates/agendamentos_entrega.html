@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}Agendamento de Entrega - RedeVita{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/agendamento_entrega.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="alert alert-warning d-flex align-items-center" role="alert">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-exclamation-triangle-fill flex-shrink-0 me-2" viewBox="0 0 16 16">
+            <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+        </svg>
+        <div>
+            <strong>Aviso Importante:</strong> Agendamento operacional. Não reserva estoque, não autoriza a transferência e não comprova a entrega de medicamentos.
+        </div>
+    </div>
+
+    <h2 class="mb-4">Agendamento de Entrega entre Participantes</h2>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="POST">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="farmacia_origem_id" class="form-label">Farmácia de Origem *</label>
+                        <select class="form-select" id="farmacia_origem_id" name="farmacia_origem_id" required>
+                            <option value="">Selecione...</option>
+                            {% for f in farmacias %}
+                            <option value="{{ f.id }}">{{ f.nome_fantasia }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="farmacia_destino_id" class="form-label">Farmácia de Destino *</label>
+                        <select class="form-select" id="farmacia_destino_id" name="farmacia_destino_id" required>
+                            <option value="">Selecione...</option>
+                            {% for f in farmacias %}
+                            <option value="{{ f.id }}">{{ f.nome_fantasia }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="data_hora_inicio" class="form-label">Data/Hora Início *</label>
+                        <input type="datetime-local" class="form-control" id="data_hora_inicio" name="data_hora_inicio" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="data_hora_fim" class="form-label">Data/Hora Fim *</label>
+                        <input type="datetime-local" class="form-control" id="data_hora_fim" name="data_hora_fim" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="observacoes" class="form-label">Observações</label>
+                        <textarea class="form-control" id="observacoes" name="observacoes" rows="1"></textarea>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Criar Agendamento</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title mb-3">Filtros</h5>
+            <form method="GET" class="row g-2">
+                <div class="col-md-4">
+                    <select class="form-select" name="estado">
+                        <option value="">Todos os Estados</option>
+                        <option value="proposta" {% if estado_filtro == 'proposta' %}selected{% endif %}>Proposta</option>
+                        <option value="aguardando_confirmacao_origem" {% if estado_filtro == 'aguardando_confirmacao_origem' %}selected{% endif %}>Aguardando Origem</option>
+                        <option value="aguardando_confirmacao_destino" {% if estado_filtro == 'aguardando_confirmacao_destino' %}selected{% endif %}>Aguardando Destino</option>
+                        <option value="confirmado" {% if estado_filtro == 'confirmado' %}selected{% endif %}>Confirmado</option>
+                        <option value="cancelado" {% if estado_filtro == 'cancelado' %}selected{% endif %}>Cancelado</option>
+                        <option value="encerrado_sem_confirmacao" {% if estado_filtro == 'encerrado_sem_confirmacao' %}selected{% endif %}>Encerrado</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-secondary w-100">Filtrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card mt-4">
+        <div class="card-body">
+            <h5 class="card-title">Agendamentos</h5>
+            {% if agendamentos %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Origem</th>
+                            <th>Destino</th>
+                            <th>Início</th>
+                            <th>Fim</th>
+                            <th>Estado</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ag in agendamentos %}
+                        <tr>
+                            <td>{{ ag.farmacia_origem.nome_fantasia }}</td>
+                            <td>{{ ag.farmacia_destino.nome_fantasia }}</td>
+                            <td>{{ ag.data_hora_inicio.strftime('%d/%m/%Y %H:%M') }}</td>
+                            <td>{{ ag.data_hora_fim.strftime('%d/%m/%Y %H:%M') }}</td>
+                            <td>
+                                <span class="badge {% if ag.estado == 'confirmado' %}bg-success{% elif ag.estado == 'cancelado' %}bg-danger{% elif ag.estado == 'proposta' %}bg-info{% else %}bg-warning{% endif %}">
+                                    {{ ag.estado|replace('_', ' ')|capitalize }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{{ url_for('agendamento_entrega.detalhes_agendamento', id=ag.id) }}" class="btn btn-sm btn-info">Detalhes</a>
+                                {% if ag.estado in ['proposta', 'aguardando_confirmacao_origem'] %}
+                                <form method="POST" action="{{ url_for('agendamento_entrega.confirmar_origem', id=ag.id) }}" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-warning">Confirmar Origem</button>
+                                </form>
+                                {% endif %}
+                                {% if ag.estado in ['proposta', 'aguardando_confirmacao_destino'] %}
+                                <form method="POST" action="{{ url_for('agendamento_entrega.confirmar_destino', id=ag.id) }}" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-warning">Confirmar Destino</button>
+                                </form>
+                                {% endif %}
+                                {% if ag.estado != 'cancelado' %}
+                                <form method="POST" action="{{ url_for('agendamento_entrega.cancelar_agendamento', id=ag.id) }}" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-danger">Cancelar</button>
+                                </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted">Nenhum agendamento registrado.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

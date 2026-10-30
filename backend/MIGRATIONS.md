@@ -87,12 +87,17 @@ flask --app main:create_app db upgrade
 As migrations manuais antigas foram movidas para:
 - `backend/migrations_custom/add_ativo_medicamentos.py`
 - `backend/migrations_custom/necessidade_001_add_necessidades_institucionais.py`
+- `backend/migrations_custom/agendamento_001_add_agendamentos_entrega.py`
 
 Estas migrations não são mais aplicadas automaticamente. Se necessário, devem ser convertidas para Flask-Migrate.
 
 ### Necessidade Institucional
 
 A migration `necessidade_001_add_necessidades_institucionais.py` cria a tabela `necessidades_institucionais` para o Quadro Privado de Necessidades de Instituições. Deve ser aplicada manualmente se o Flask-Migrate não estiver configurado corretamente no ambiente.
+
+### Agendamento de Entrega
+
+A migration `agendamento_001_add_agendamentos_entrega.py` cria a tabela `agendamentos_entrega` para o Agendamento de Entrega entre Participantes Autorizados. Deve ser aplicada manualmente se o Flask-Migrate não estiver configurado corretamente no ambiente.
 
 ## Backup e Recuperação
 

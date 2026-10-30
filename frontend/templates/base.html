@@ -279,6 +279,14 @@
                 </div>
                 <span class="nav-item-text">Necessidades</span>
             </a>
+            <a href="{{ url_for('agendamento_entrega.listar_agendamentos') }}"
+               class="nav-item admin {{ 'active' if request.endpoint and request.endpoint.startswith('agendamento_entrega.') else '' }}"
+               data-tooltip="Agendamento de Entrega">
+                <div class="nav-item-icon">
+                    <i class="fas fa-truck"></i>
+                </div>
+                <span class="nav-item-text">Agendamentos</span>
+            </a>
             <a href="#" onclick="abrirPainelAdmin()"
                class="nav-item admin"
                data-tooltip="Painel Admin">

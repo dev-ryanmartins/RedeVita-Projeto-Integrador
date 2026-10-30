@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}Janela de Resgate de Lotes - RedeVita{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/lot_rescue.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="lot-rescue-container">
+    <div class="page-header">
+        <h1 class="page-title">Janela de Resgate de Lotes</h1>
+        <p class="page-subtitle">Dá tempo de salvar?</p>
+    </div>
+
+    <div class="warning-banner">
+        <span class="warning-icon">⚠️</span>
+        <span class="warning-text">Simulação de planejamento. Não realiza transferências nem substitui a avaliação de um farmacêutico.</span>
+    </div>
+
+    <div class="controls-section">
+        <div class="control-group">
+            <label for="horizon-dias">Horizonte (dias):</label>
+            <input type="number" id="horizon-dias" min="1" max="365" value="30" aria-label="Horizonte em dias">
+        </div>
+
+        <div class="control-group">
+            <label for="filtro-nome">Filtrar por nome:</label>
+            <input type="text" id="filtro-nome" placeholder="Nome do medicamento" aria-label="Filtro por nome do medicamento">
+        </div>
+
+        <button id="btn-buscar" class="btn-primary" aria-label="Buscar lotes">Buscar Lotes</button>
+    </div>
+
+    <div id="loading-state" class="state-container hidden">
+        <div class="spinner"></div>
+        <p>Carregando lotes...</p>
+    </div>
+
+    <div id="error-state" class="state-container hidden">
+        <div class="error-icon">❌</div>
+        <p id="error-message">Erro ao carregar dados.</p>
+        <button id="btn-retry" class="btn-secondary">Tentar novamente</button>
+    </div>
+
+    <div id="empty-state" class="state-container hidden">
+        <div class="empty-icon">📦</div>
+        <p>Nenhum lote encontrado dentro do horizonte especificado.</p>
+    </div>
+
+    <div id="main-content" class="main-content hidden">
+        <div class="summary-cards">
+            <div class="summary-card">
+                <h3>Total de Lotes</h3>
+                <p id="summary-total" class="summary-value">-</p>
+            </div>
+            <div class="summary-card critical">
+                <h3>Críticos (≤7 dias)</h3>
+                <p id="summary-critical" class="summary-value">-</p>
+            </div>
+            <div class="summary-card attention">
+                <h3>Atenção (8-30 dias)</h3>
+                <p id="summary-attention" class="summary-value">-</p>
+            </div>
+            <div class="summary-card normal">
+                <h3>Normais (>30 dias)</h3>
+                <p id="summary-normal" class="summary-value">-</p>
+            </div>
+        </div>
+
+        <div class="lotes-table-container">
+            <table class="lotes-table">
+                <thead>
+                    <tr>
+                        <th>Medicamento</th>
+                        <th>Lote</th>
+                        <th>Validade</th>
+                        <th>Dias Restantes</th>
+                        <th>Qtd. Cadastrada</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="lotes-tbody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="limitation-section" class="limitation-section">
+        <h3>Limitações Conhecidas</h3>
+        <ul>
+            <li>Saldo baseado em quantidade cadastrada (não derivado de ledger - módulo não disponível)</li>
+            <li>Não há vínculo direto entre lote e farmácia no modelo de dados</li>
+            <li>Coordenadas da farmácia podem ser nulas (sem cálculo de distância)</li>
+            <li>Leituras IoT não vinculadas a lotes (sem dados térmicos)</li>
+            <li>Não há alteração de dados reais durante simulação</li>
+        </ul>
+    </div>
+</div>
+
+<div id="simulation-modal" class="modal hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Simular Cenário</h2>
+            <button id="close-modal" class="close-btn" aria-label="Fechar modal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="lote-info">
+                <h3>Lote Selecionado</h3>
+                <p><strong>Medicamento:</strong> <span id="sim-medicamento">-</span></p>
+                <p><strong>Lote:</strong> <span id="sim-lote">-</span></p>
+                <p><strong>Validade:</strong> <span id="sim-validade">-</span></p>
+                <p><strong>Dias restantes:</strong> <span id="sim-dias">-</span></p>
+            </div>
+
+            <div class="etapas-section">
+                <h3>Etapas Hipotéticas</h3>
+                <div id="etapas-container">
+                    <div class="etapa-row">
+                        <input type="text" class="etapa-nome" placeholder="Nome da etapa (ex: Triagem)" aria-label="Nome da etapa">
+                        <input type="number" class="etapa-duracao" min="1" max="90" placeholder="Dias" aria-label="Duração em dias">
+                        <button class="btn-remove-etapa" aria-label="Remover etapa">-</button>
+                    </div>
+                </div>
+                <button id="btn-add-etapa" class="btn-secondary">Adicionar Etapa</button>
+            </div>
+
+            <div class="simulation-controls">
+                <button id="btn-simular" class="btn-primary">Simular</button>
+            </div>
+
+            <div id="simulation-result" class="simulation-result hidden">
+                <h3>Resultado da Simulação</h3>
+                <div id="result-content"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/lot_rescue.js') }}"></script>
+{% endblock %}

@@ -116,6 +116,14 @@
                 </div>
                 <span class="nav-item-text">Lab. Crises</span>
             </a>
+            <a href="{{ url_for('lot_rescue.janela_resgate') }}"
+               class="nav-item {{ 'active' if request.endpoint and request.endpoint.startswith('lot_rescue.') else '' }}"
+               data-tooltip="Janela de Resgate de Lotes">
+                <div class="nav-item-icon">
+                    <i class="fas fa-hourglass-half"></i>
+                </div>
+                <span class="nav-item-text">Janela Resgate</span>
+            </a>
             {% endif %}
             <a href="{{ url_for('mapa.mapa_saude') }}" 
                class="nav-item {{ 'active' if request.endpoint and request.endpoint.startswith('mapa.') else '' }}"

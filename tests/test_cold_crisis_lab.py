@@ -102,7 +102,7 @@ class TestAcessoLaboratorio:
 
         response = client.get('/laboratorio-crise-cadeia-frio')
         assert response.status_code == 200
-        assert b'Laboratório de Crises' in response.data
+        assert 'Laboratório de Crises' in response.data.decode('utf-8')
 
     def test_farmaceutico_acesso_página(self, client, farmaceutico_user):
         """Farmacêutico deve conseguir acessar a página do Laboratório."""
@@ -112,7 +112,7 @@ class TestAcessoLaboratorio:
 
         response = client.get('/laboratorio-crise-cadeia-frio')
         assert response.status_code == 200
-        assert b'Laboratório de Crises' in response.data
+        assert 'Laboratório de Crises' in response.data.decode('utf-8')
 
     def test_medico_sem_acesso_403(self, client, medico_user):
         """Médico não deve ter acesso e receber 403."""

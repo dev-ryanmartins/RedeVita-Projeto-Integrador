@@ -15,7 +15,6 @@ from app.database import db
 from app.models.usuario import Usuario
 from app.models.medicamento import Medicamento
 from app.models.doacao import Doacao
-from flask_login import login_user
 
 
 @pytest.fixture
@@ -41,8 +40,8 @@ def client(app):
 
 
 @pytest.fixture
-def operador(app):
-    """Cria usuário operador."""
+def operador_id(app):
+    """Cria usuário operador e retorna o ID."""
     with app.app_context():
         operador = Usuario(
             nome='Operador Teste',
@@ -54,12 +53,12 @@ def operador(app):
         )
         db.session.add(operador)
         db.session.commit()
-        return operador
+        return operador.id
 
 
 @pytest.fixture
-def admin(app):
-    """Cria usuário admin."""
+def admin_id(app):
+    """Cria usuário admin e retorna o ID."""
     with app.app_context():
         admin = Usuario(
             nome='Admin Teste',
@@ -71,12 +70,12 @@ def admin(app):
         )
         db.session.add(admin)
         db.session.commit()
-        return admin
+        return admin.id
 
 
 @pytest.fixture
-def voluntario(app):
-    """Cria usuário voluntário."""
+def voluntario_id(app):
+    """Cria usuário voluntário e retorna o ID."""
     with app.app_context():
         voluntario = Usuario(
             nome='Voluntário Teste',
@@ -88,7 +87,7 @@ def voluntario(app):
         )
         db.session.add(voluntario)
         db.session.commit()
-        return voluntario
+        return voluntario.id
 
 
 class TestAcesso:
@@ -100,21 +99,27 @@ class TestAcesso:
         assert response.status_code == 302
         assert '/login' in response.location
 
-    def test_operador_acesso_permitido(self, client, operador):
+    def test_operador_acesso_permitido(self, client, operador_id):
         """Operador deve ter acesso à pré-checagem."""
-        login_user(client, operador)
+        with client.session_transaction() as sess:
+            sess['_user_id'] = operador_id
+            sess['_fresh'] = True
         response = client.get('/doacoes/pre-checagem')
         assert response.status_code == 200
 
-    def test_admin_acesso_permitido(self, client, admin):
+    def test_admin_acesso_permitido(self, client, admin_id):
         """Admin deve ter acesso à pré-checagem."""
-        login_user(client, admin)
+        with client.session_transaction() as sess:
+            sess['_user_id'] = admin_id
+            sess['_fresh'] = True
         response = client.get('/doacoes/pre-checagem')
         assert response.status_code == 200
 
-    def test_voluntario_bloqueado(self, client, voluntario):
+    def test_voluntario_bloqueado(self, client, voluntario_id):
         """Voluntário deve receber 403."""
-        login_user(client, voluntario)
+        with client.session_transaction() as sess:
+            sess['_user_id'] = voluntario_id
+            sess['_fresh'] = True
         response = client.get('/doacoes/pre-checagem')
         assert response.status_code == 403
 
@@ -122,9 +127,11 @@ class TestAcesso:
 class TestValidacaoCampos:
     """Testes de validação de campos."""
 
-    def test_nome_obrigatorio(self, client, operador):
+    def test_nome_obrigatorio(self, client, operador_id):
         """Nome do medicamento é obrigatório."""
-        login_user(client, operador)
+        with client.session_transaction() as sess:
+            sess['_user_id'] = operador_id
+            sess['_fresh'] = True
         response = client.post('/doacoes/pre-checagem', data={
             'lote': 'ABC123',
             'data_validade': '2025-12-31',
@@ -134,9 +141,11 @@ class TestValidacaoCampos:
         assert response.status_code == 200
         assert b'Nome do medicamento' in response.data or b'nome' in response.data
 
-    def test_lote_obrigatorio(self, client, operador):
+    def test_lote_obrigatorio(self, client, operador_id):
         """Número do lote é obrigatório."""
-        login_user(client, operador)
+        with client.session_transaction() as sess:
+            sess['_user_id'] = operador_id
+            sess['_fresh'] = True
         response = client.post('/doacoes/pre-checagem', data={
             'nome': 'Dipirona',
             'data_validade': '2025-12-31',
@@ -146,9 +155,11 @@ class TestValidacaoCampos:
         assert response.status_code == 200
         assert b'Lote' in response.data or b'lote' in response.data
 
-    def test_data_invalida(self, client, operador):
+    def test_data_invalida(self, client, operador_id):
         """Data de validade inválida deve ser rejeitada."""
-        login_user(client, operador)
+        with client.session_transaction() as sess:
+            sess['_user_id'] = operador_id
+            sess['_fresh'] = True
         response = client.post('/doacoes/pre-checagem', data={
             'nome': 'Dipirona',
             'lote': 'ABC123',
@@ -159,9 +170,11 @@ class TestValidacaoCampos:
         assert response.status_code == 200
         assert b'inv' in response.data.lower()
 
-    def test_data_vencida(self, client, operador):
+    def test_data_vencida(self, client, operador_id):
         """Data de validade vencida deve ser bloqueada."""
-        login_user(client, operador)
+        with client.session_transaction() as sess:
+            sess['_user_id'] = operador_id
+            sess['_fresh'] = True
         response = client.post('/doacoes/pre-checagem', data={
             'nome': 'Dipirona',
             'lote': 'ABC123',
@@ -172,9 +185,11 @@ class TestValidacaoCampos:
         assert response.status_code == 200
         assert b'vencid' in response.data.lower()
 
-    def test_quantidade_invalida(self, client, operador):
+    def test_quantidade_invalida(self, client, operador_id):
         """Quantidade inválida deve ser rejeitada."""
-        login_user(client, operador)
+        with client.session_transaction() as sess:
+            sess['_user_id'] = operador_id
+            sess['_fresh'] = True
         response = client.post('/doacoes/pre-checagem', data={
             'nome': 'Dipirona',
             'lote': 'ABC123',
@@ -185,9 +200,11 @@ class TestValidacaoCampos:
         assert response.status_code == 200
         assert b'quantidade' in response.data.lower()
 
-    def test_quantidade_zero(self, client, operador):
+    def test_quantidade_zero(self, client, operador_id):
         """Quantidade zero deve ser rejeitada."""
-        login_user(client, operador)
+        with client.session_transaction() as sess:
+            sess['_user_id'] = operador_id
+            sess['_fresh'] = True
         response = client.post('/doacoes/pre-checagem', data={
             'nome': 'Dipirona',
             'lote': 'ABC123',
@@ -198,9 +215,11 @@ class TestValidacaoCampos:
         assert response.status_code == 200
         assert b'quantidade' in response.data.lower()
 
-    def test_tarja_invalida(self, client, operador):
+    def test_tarja_invalida(self, client, operador_id):
         """Classificação inválida deve ser rejeitada."""
-        login_user(client, operador)
+        with client.session_transaction() as sess:
+            sess['_user_id'] = operador_id
+            sess['_fresh'] = True
         response = client.post('/doacoes/pre-checagem', data={
             'nome': 'Dipirona',
             'lote': 'ABC123',
@@ -211,9 +230,11 @@ class TestValidacaoCampos:
         assert response.status_code == 200
         assert b'tarja' in response.data.lower() or b'classifica' in response.data.lower()
 
-    def test_tarja_controlada_bloqueio(self, client, operador):
+    def test_tarja_controlada_bloqueio(self, client, operador_id):
         """Portaria 344 deve exigir avaliação farmacêutica."""
-        login_user(client, operador)
+        with client.session_transaction() as sess:
+            sess['_user_id'] = operador_id
+            sess['_fresh'] = True
         response = client.post('/doacoes/pre-checagem', data={
             'nome': 'Diazepam',
             'lote': 'ABC123',
@@ -224,9 +245,11 @@ class TestValidacaoCampos:
         assert response.status_code == 200
         assert b'farmac' in response.data.lower() or b'controlad' in response.data.lower()
 
-    def test_principio_ativo_controlado(self, client, operador):
+    def test_principio_ativo_controlado(self, client, operador_id):
         """Princípio ativo controlado deve gerar alerta."""
-        login_user(client, operador)
+        with client.session_transaction() as sess:
+            sess['_user_id'] = operador_id
+            sess['_fresh'] = True
         response = client.post('/doacoes/pre-checagem', data={
             'nome': 'Medicamento',
             'lote': 'ABC123',
@@ -242,9 +265,11 @@ class TestValidacaoCampos:
 class TestResultados:
     """Testes dos resultados da pré-checagem."""
 
-    def test_sem_bloqueios_permite_prosseguir(self, client, operador):
+    def test_sem_bloqueios_permite_prosseguir(self, client, operador_id):
         """Sem bloqueios deve permitir prosseguir."""
-        login_user(client, operador)
+        with client.session_transaction() as sess:
+            sess['_user_id'] = operador_id
+            sess['_fresh'] = True
         response = client.post('/doacoes/pre-checagem', data={
             'nome': 'Dipirona',
             'lote': 'ABC123',
@@ -255,9 +280,11 @@ class TestResultados:
         assert response.status_code == 200
         assert b'prosseguir' in response.data.lower() or b'continuar' in response.data.lower()
 
-    def test_bloqueios_impedem_prosseguimento(self, client, operador):
+    def test_bloqueios_impedem_prosseguimento(self, client, operador_id):
         """Bloqueios devem impedir prosseguimento."""
-        login_user(client, operador)
+        with client.session_transaction() as sess:
+            sess['_user_id'] = operador_id
+            sess['_fresh'] = True
         response = client.post('/doacoes/pre-checagem', data={
             'nome': '',  # Nome vazio
             'lote': 'ABC123',
@@ -268,9 +295,11 @@ class TestResultados:
         assert response.status_code == 200
         assert b'bloqueio' in response.data.lower() or b'obrigat' in response.data.lower()
 
-    def test_verificacoes_nao_feitas_listadas(self, client, operador):
+    def test_verificacoes_nao_feitas_listadas(self, client, operador_id):
         """Verificações não feitas pelo sistema devem ser listadas."""
-        login_user(client, operador)
+        with client.session_transaction() as sess:
+            sess['_user_id'] = operador_id
+            sess['_fresh'] = True
         response = client.post('/doacoes/pre-checagem', data={
             'nome': 'Dipirona',
             'lote': 'ABC123',
@@ -285,9 +314,11 @@ class TestResultados:
 class TestSemAlteracaoDados:
     """Testes de que a pré-checagem não altera dados."""
 
-    def test_nao_cria_medicamento(self, client, operador, app):
+    def test_nao_cria_medicamento(self, client, operador_id, app):
         """Pré-checagem não deve criar medicamento."""
-        login_user(client, operador)
+        with client.session_transaction() as sess:
+            sess['_user_id'] = operador_id
+            sess['_fresh'] = True
         
         with app.app_context():
             count_before = Medicamento.query.count()
@@ -305,9 +336,11 @@ class TestSemAlteracaoDados:
         
         assert count_before == count_after
 
-    def test_nao_cria_doacao(self, client, operador, app):
+    def test_nao_cria_doacao(self, client, operador_id, app):
         """Pré-checagem não deve criar doação."""
-        login_user(client, operador)
+        with client.session_transaction() as sess:
+            sess['_user_id'] = operador_id
+            sess['_fresh'] = True
         
         with app.app_context():
             count_before = Doacao.query.count()
@@ -325,9 +358,11 @@ class TestSemAlteracaoDados:
         
         assert count_before == count_after
 
-    def test_continuar_para_triagem_nao_submete_dados(self, client, operador, app):
+    def test_continuar_para_triagem_nao_submete_dados(self, client, operador_id, app):
         """Botão continuar para triagem não deve submeter dados automaticamente."""
-        login_user(client, operador)
+        with client.session_transaction() as sess:
+            sess['_user_id'] = operador_id
+            sess['_fresh'] = True
         
         with app.app_context():
             count_before = Medicamento.query.count()
@@ -354,9 +389,11 @@ class TestSemAlteracaoDados:
 class TestAvisoPersistente:
     """Teste do aviso persistente."""
 
-    def test_aviso_persistente_exibido(self, client, operador):
+    def test_aviso_persistente_exibido(self, client, operador_id):
         """Aviso persistente deve ser exibido."""
-        login_user(client, operador)
+        with client.session_transaction() as sess:
+            sess['_user_id'] = operador_id
+            sess['_fresh'] = True
         response = client.get('/doacoes/pre-checagem')
         assert response.status_code == 200
         assert b'aviso' in response.data.lower() or b'aprov' in response.data.lower()

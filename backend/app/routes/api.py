@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 import time
 import psutil
 import os
+import uuid
 from io import BytesIO
 
 from flask import Blueprint, request, current_app
@@ -19,7 +20,7 @@ from app.models.doacao import Doacao
 from app.models.farmacia import Farmacia
 from app.models.medicamento import Medicamento
 from app.models.medico import Medico
-from app.models.iot import LeituraIoT, TagRFID, StatusAlertaEnum
+from app.models.iot import LeituraIoT, TagRFID, StatusAlertaEnum, LoteTelemetria, ResultadoLoteEnum
 from app.models.usuario import Usuario
 from app.schemas.med_schema import validar_entrada_medicamento
 from app.utils.log_helper import registrar_log
@@ -1426,6 +1427,9 @@ def receber_telemetria_lote():
             ...
         ]
     }
+    
+    NOTA: Este endpoint não tem autenticação confiável. Os identificadores de
+    dispositivo são declarados no payload e não comprovam identidade.
     """
     try:
         dados = request.get_json()
@@ -1441,8 +1445,14 @@ def receber_telemetria_lote():
         if len(leituras) > 100:
             return resposta_erro("Máximo de 100 leituras por lote", 400)
         
+        # Gerar identificador interno do lote
+        lote_id = str(uuid.uuid4())
+        data_recebimento = datetime.utcnow()
+        
         leituras_processadas = []
         erros = []
+        dispositivos = set()
+        erros_por_categoria = {}
         
         for idx, leitura_data in enumerate(leituras):
             try:
@@ -1456,6 +1466,7 @@ def receber_telemetria_lote():
                 # Validação básica
                 if not dispositivo_id or temperatura is None or umidade is None:
                     erros.append(f"Índice {idx}: campos obrigatórios faltando")
+                    erros_por_categoria['campos_obrigatorios'] = erros_por_categoria.get('campos_obrigatorios', 0) + 1
                     continue
                 
                 # Validação de tipos
@@ -1466,6 +1477,7 @@ def receber_telemetria_lote():
                         luminosidade_lux = float(luminosidade_lux)
                 except (ValueError, TypeError):
                     erros.append(f"Índice {idx}: tipos inválidos")
+                    erros_por_categoria['tipos_invalidos'] = erros_por_categoria.get('tipos_invalidos', 0) + 1
                     continue
                 
                 # Aplica regras sanitárias ANVISA
@@ -1503,10 +1515,50 @@ def receber_telemetria_lote():
                     'status': status_alerta.value
                 })
                 
+                dispositivos.add(dispositivo_id)
+                
             except Exception as e:
-                erros.append(f"Índice {idx}: {str(e)}")
+                erros.append(f"Índice {idx}: erro_processamento")
+                erros_por_categoria['erro_processamento'] = erros_por_categoria.get('erro_processamento', 0) + 1
         
         db.session.commit()
+        
+        # Determinar resultado do lote
+        total_recebidas = len(leituras)
+        total_processadas = len(leituras_processadas)
+        total_rejeitadas = total_recebidas - total_processadas
+        
+        if total_rejeitadas == 0:
+            resultado = ResultadoLoteEnum.COMPLETO
+        elif total_processadas == 0:
+            resultado = ResultadoLoteEnum.REJEITADO
+        else:
+            resultado = ResultadoLoteEnum.PARCIAL
+        
+        # Determinar dispositivo principal (apenas se único)
+        dispositivo_principal = None
+        if len(dispositivos) == 1:
+            dispositivo_principal = dispositivos.pop()
+        
+        # Persistir registro do lote
+        try:
+            registro_lote = LoteTelemetria(
+                lote_id=lote_id,
+                data_recebimento=data_recebimento,
+                total_recebidas=total_recebidas,
+                total_processadas=total_processadas,
+                total_rejeitadas=total_rejeitadas,
+                resultado=resultado,
+                qtd_dispositivos=len(dispositivos),
+                dispositivo_principal=dispositivo_principal,
+                erros_por_categoria=erros_por_categoria if erros_por_categoria else None
+            )
+            db.session.add(registro_lote)
+            db.session.commit()
+        except Exception as e:
+            # Falha de persistência não deve alterar a resposta ao cliente
+            # mas deve ser registrada no log
+            registrar_log("Erro Persistência Lote", f"Falha ao registrar lote {lote_id}: {str(e)}")
         
         return resposta_ok({
             'processadas': len(leituras_processadas),

@@ -44,6 +44,7 @@ from app.routes.impacto import impacto_bp
 from app.routes.health import health_bp
 from app.routes.admin_health import admin_health_bp
 from app.routes.cold_chain_report import cold_chain_report_bp
+from app.routes.iot_sync_diagnostic import iot_sync_diagnostic_bp
 from app.core.error_handlers import registrar_handlers_api
 from app.core.middleware import request_id_middleware
 
@@ -186,6 +187,7 @@ def create_app(config_overrides=None):
     app.register_blueprint(health_bp)
     app.register_blueprint(admin_health_bp)
     app.register_blueprint(cold_chain_report_bp)
+    app.register_blueprint(iot_sync_diagnostic_bp)
 
     registrar_handlers_limite(app)
     registrar_handlers_api(app)

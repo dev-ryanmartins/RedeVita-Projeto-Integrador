@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}Diagnóstico de Sincronização IoT - RedeVita{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/iot_sync_diagnostic.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="iot-diagnostic-container">
+    <div class="header-section">
+        <h1>Diagnóstico de Sincronização IoT</h1>
+        <p class="subtitle">Histórico de lotes de telemetria recebidos pela API</p>
+    </div>
+
+    <!-- Aviso sobre autenticação -->
+    <div class="warning-banner">
+        <span class="warning-icon">⚠️</span>
+        <span class="warning-text">
+            <strong>Nota:</strong> O endpoint /iot/telemetria/lote não tem autenticação confiável.
+            Os identificadores de dispositivo são declarados no payload e não comprovam identidade ou execução única.
+        </span>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filters-section">
+        <div class="filter-group">
+            <label for="data-inicio">Data Início:</label>
+            <input type="date" id="data-inicio" class="filter-input">
+        </div>
+        <div class="filter-group">
+            <label for="data-fim">Data Fim:</label>
+            <input type="date" id="data-fim" class="filter-input">
+        </div>
+        <div class="filter-group">
+            <label for="resultado-filtro">Resultado:</label>
+            <select id="resultado-filtro" class="filter-select">
+                <option value="">Todos</option>
+                <option value="COMPLETO">Completo</option>
+                <option value="PARCIAL">Parcial</option>
+                <option value="REJEITADO">Rejeitado</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="dispositivo-filtro">Dispositivo:</label>
+            <select id="dispositivo-filtro" class="filter-select">
+                <option value="">Todos</option>
+            </select>
+        </div>
+        <button id="aplicar-filtros" class="btn btn-primary">Aplicar Filtros</button>
+        <button id="limpar-filtros" class="btn btn-secondary">Limpar</button>
+    </div>
+
+    <!-- Indicadores Agregados -->
+    <div class="indicators-section">
+        <div class="indicator-card">
+            <div class="indicator-label">Total de Lotes</div>
+            <div class="indicator-value" id="total-lotes">-</div>
+        </div>
+        <div class="indicator-card">
+            <div class="indicator-label">Leituras Recebidas</div>
+            <div class="indicator-value" id="total-recebidas">-</div>
+        </div>
+        <div class="indicator-card">
+            <div class="indicator-label">Leituras Processadas</div>
+            <div class="indicator-value" id="total-processadas">-</div>
+        </div>
+        <div class="indicator-card">
+            <div class="indicator-label">Leituras Rejeitadas</div>
+            <div class="indicator-value" id="total-rejeitadas">-</div>
+        </div>
+    </div>
+
+    <!-- Distribuição por Resultado -->
+    <div class="result-distribution">
+        <h3>Distribuição por Resultado</h3>
+        <div class="distribution-bars" id="distribution-bars">
+            <div class="distribution-item">
+                <span class="dist-label">Completo</span>
+                <div class="dist-bar-container">
+                    <div class="dist-bar bar-success" id="bar-completo" style="width: 0%"></div>
+                </div>
+                <span class="dist-value" id="val-completo">0</span>
+            </div>
+            <div class="distribution-item">
+                <span class="dist-label">Parcial</span>
+                <div class="dist-bar-container">
+                    <div class="dist-bar bar-warning" id="bar-parcial" style="width: 0%"></div>
+                </div>
+                <span class="dist-value" id="val-parcial">0</span>
+            </div>
+            <div class="distribution-item">
+                <span class="dist-label">Rejeitado</span>
+                <div class="dist-bar-container">
+                    <div class="dist-bar bar-error" id="bar-rejeitado" style="width: 0%"></div>
+                </div>
+                <span class="dist-value" id="val-rejeitado">0</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabela de Lotes -->
+    <div class="table-section">
+        <h3>Lotes Recebidos</h3>
+        <div class="table-info">
+            <span>Timezone: UTC</span>
+            <span>Intervalo máximo: 90 dias</span>
+        </div>
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Data/Hora (UTC)</th>
+                        <th>ID do Lote</th>
+                        <th>Resultado</th>
+                        <th>Recebidas</th>
+                        <th>Processadas</th>
+                        <th>Rejeitadas</th>
+                        <th>Dispositivos</th>
+                        <th>Dispositivo Principal</th>
+                    </tr>
+                </thead>
+                <tbody id="lotes-tbody">
+                    <!-- Preenchido via JavaScript -->
+                </tbody>
+            </table>
+        </div>
+        <div class="pagination-section" id="pagination-section">
+            <button id="prev-page" class="btn btn-sm" disabled>Anterior</button>
+            <span id="page-info">Página 1</span>
+            <button id="next-page" class="btn btn-sm" disabled>Próxima</button>
+        </div>
+    </div>
+
+    <!-- Estado Vazio -->
+    <div class="empty-state" id="empty-state" style="display: none;">
+        <div class="empty-icon">📭</div>
+        <h3>Nenhum lote encontrado</h3>
+        <p>Não há lotes de telemetria registrados no período selecionado.</p>
+    </div>
+
+    <!-- Estado de Erro -->
+    <div class="error-state" id="error-state" style="display: none;">
+        <div class="error-icon">❌</div>
+        <h3>Erro ao carregar dados</h3>
+        <p id="error-message">Não foi possível carregar os dados de diagnóstico.</p>
+        <button id="retry-button" class="btn btn-primary">Tentar Novamente</button>
+    </div>
+
+    <!-- Estado de Carregamento -->
+    <div class="loading-state" id="loading-state" style="display: none;">
+        <div class="loading-spinner"></div>
+        <p>Carregando dados...</p>
+    </div>
+</div>
+
+<script src="/static/js/iot_sync_diagnostic.js"></script>
+{% endblock %}

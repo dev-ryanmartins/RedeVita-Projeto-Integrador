@@ -186,6 +186,14 @@
                 </div>
                 <span class="nav-item-text">Cadeia de Frio</span>
             </a>
+            <a href="{{ url_for('iot_sync_diagnostic.diagnostico_iot_page') }}"
+               class="nav-item admin {{ 'active' if request.endpoint and request.endpoint.startswith('iot_sync_diagnostic.') else '' }}"
+               data-tooltip="Diagnóstico IoT">
+                <div class="nav-item-icon">
+                    <i class="fas fa-sync-alt"></i>
+                </div>
+                <span class="nav-item-text">Diagnóstico IoT</span>
+            </a>
             <a href="{{ url_for('notificacoes.painel') }}"
                class="nav-item admin {{ 'active' if request.endpoint and request.endpoint.startswith('notificacoes.') else '' }}"
                data-tooltip="Notificações">

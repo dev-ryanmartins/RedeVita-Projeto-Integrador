@@ -5,9 +5,10 @@ Disciplina: ADS - Módulo 4 - Internet das Coisas e Hardware Virtual
 """
 
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, Enum, ForeignKey, Index
+from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, Enum, ForeignKey, Index, JSON
 from sqlalchemy.orm import relationship
 import enum
+import uuid
 
 from app.database import db
 
@@ -17,6 +18,58 @@ class StatusAlertaEnum(enum.Enum):
     NORMAL = "NORMAL"
     ALERTA_LEVE = "ALERTA_LEVE"
     CRITICO_TERMICO = "CRITICO_TERMICO"
+
+
+class ResultadoLoteEnum(enum.Enum):
+    """Enum para resultado do processamento de lote"""
+    COMPLETO = "COMPLETO"
+    PARCIAL = "PARCIAL"
+    REJEITADO = "REJEITADO"
+
+
+class LoteTelemetria(db.Model):
+    """
+    Tabela de histórico de lotes de telemetria recebidos pela API.
+    Armazena metadados operacionais para diagnóstico de sincronização IoT.
+    
+    NOTA: Esta tabela não armazena payloads completos, dados de pacientes,
+    credenciais ou mensagens de exceção. Apenas metadados operacionais.
+    
+    NOTA: O endpoint /iot/telemetria/lote não tem autenticação confiável.
+    Os identificadores de dispositivo são declarados no payload e não
+    comprovam identidade ou execução única.
+    """
+    __tablename__ = 'lotes_telemetria'
+    __table_args__ = {'extend_existing': True}
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    lote_id = Column(String(36), unique=True, nullable=False, index=True, comment="UUID interno gerado no servidor")
+    data_recebimento = Column(DateTime, default=datetime.utcnow, nullable=False, index=True, comment="Timestamp de recebimento no servidor (UTC)")
+    total_recebidas = Column(Integer, nullable=False, comment="Total de leituras recebidas no lote")
+    total_processadas = Column(Integer, nullable=False, comment="Total de leituras processadas com sucesso")
+    total_rejeitadas = Column(Integer, nullable=False, comment="Total de leituras rejeitadas")
+    resultado = Column(Enum(ResultadoLoteEnum), nullable=False, comment="Resultado agregado do processamento")
+    qtd_dispositivos = Column(Integer, nullable=False, comment="Quantidade de dispositivos distintos no lote")
+    dispositivo_principal = Column(String(50), nullable=True, comment="ID do dispositivo quando há apenas um no lote (não autenticado)")
+    erros_por_categoria = Column(JSON, nullable=True, comment="Categorias e quantidades de erros, sem mensagens brutas")
+
+    def __repr__(self):
+        return f"<LoteTelemetria {self.lote_id} - {self.resultado.value}>"
+
+    def to_dict(self):
+        """Converte para dicionário para API responses"""
+        return {
+            'id': self.id,
+            'lote_id': self.lote_id,
+            'data_recebimento': self.data_recebimento.isoformat() if self.data_recebimento else None,
+            'total_recebidas': self.total_recebidas,
+            'total_processadas': self.total_processadas,
+            'total_rejeitadas': self.total_rejeitadas,
+            'resultado': self.resultado.value,
+            'qtd_dispositivos': self.qtd_dispositivos,
+            'dispositivo_principal': self.dispositivo_principal,
+            'erros_por_categoria': self.erros_por_categoria
+        }
 
 
 class LeituraIoT(db.Model):

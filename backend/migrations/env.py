@@ -42,7 +42,7 @@ from app.models.farmacia import Farmacia
 from app.models.doacao import Doacao
 from app.models.receita import Receita
 from app.models.log_atividade import LogAtividade
-from app.models.iot import LeituraIoT, TagRFID
+from app.models.iot import LeituraIoT, TagRFID, LoteTelemetria
 
 # add your model's MetaData object here
 # for 'autogenerate' support

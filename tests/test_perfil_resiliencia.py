@@ -12,7 +12,6 @@ from app.database import db
 from app.services.perfil_resiliencia import PerfilResilienciaService
 from app.models.usuario import Usuario
 from app.models.farmacia import Farmacia
-from flask_login import login_user
 
 
 @pytest.fixture
@@ -67,9 +66,12 @@ class TestAcesso:
             )
             db.session.add(admin)
             db.session.commit()
+            admin_id = admin.id
         
-        # Login com Flask-Login
-        login_user(client, admin)
+        # Login com sessão
+        with client.session_transaction() as sess:
+            sess['_user_id'] = admin_id
+            sess['_fresh'] = True
         
         response = client.get('/perfil-resiliencia-farmacia')
         assert response.status_code == 200
@@ -88,9 +90,12 @@ class TestAcesso:
             )
             db.session.add(farmaceutico)
             db.session.commit()
+            farmaceutico_id = farmaceutico.id
         
-        # Login com Flask-Login
-        login_user(client, farmaceutico)
+        # Login com sessão
+        with client.session_transaction() as sess:
+            sess['_user_id'] = farmaceutico_id
+            sess['_fresh'] = True
         
         response = client.get('/perfil-resiliencia-farmacia')
         assert response.status_code == 403

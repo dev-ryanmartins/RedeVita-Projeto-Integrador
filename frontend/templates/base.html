@@ -170,6 +170,14 @@
         {% if is_admin() %}
         <div class="nav-section">
             <div class="nav-section-title">Administração</div>
+            <a href="{{ url_for('admin_health.painel_saude') }}"
+               class="nav-item admin {{ 'active' if request.endpoint and request.endpoint.startswith('admin_health.') else '' }}"
+               data-tooltip="Painel de Saúde">
+                <div class="nav-item-icon">
+                    <i class="fas fa-heartbeat"></i>
+                </div>
+                <span class="nav-item-text">Painel de Saúde</span>
+            </a>
             <a href="{{ url_for('notificacoes.painel') }}"
                class="nav-item admin {{ 'active' if request.endpoint and request.endpoint.startswith('notificacoes.') else '' }}"
                data-tooltip="Notificações">

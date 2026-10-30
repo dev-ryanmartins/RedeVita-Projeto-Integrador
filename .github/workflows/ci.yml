@@ -200,3 +200,33 @@ jobs:
         export PYTHONPATH="../backend:$PYTHONPATH"
         pytest ../tests/test_iot_sync_diagnostic.py --collect-only | grep "test session starts"
         pytest ../tests/test_iot_sync_diagnostic.py --collect-only | grep "collected"
+
+  test-cold-crisis-lab:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Configurar Python 3.12
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+    
+    - name: Instalar dependências
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f backend/requirements.txt ]; then pip install -r backend/requirements.txt; fi
+        pip install pytest pytest-cov
+    
+    - name: Testes do Laboratório de Crises da Cadeia Frio
+      run: |
+        cd backend
+        export PYTHONPATH="../backend:$PYTHONPATH"
+        pytest ../tests/test_cold_crisis_lab.py ../tests/test_cold_crisis_simulator.py -v --tb=short --cov=backend/app/routes/cold_crisis_lab --cov=backend/app/services/cold_crisis_simulator --cov-report=xml --cov-report=html
+    
+    - name: Verificar se testes foram executados
+      run: |
+        cd backend
+        export PYTHONPATH="../backend:$PYTHONPATH"
+        pytest ../tests/test_cold_crisis_lab.py ../tests/test_cold_crisis_simulator.py --collect-only | grep "test session starts"
+        pytest ../tests/test_cold_crisis_lab.py ../tests/test_cold_crisis_simulator.py --collect-only | grep "collected"

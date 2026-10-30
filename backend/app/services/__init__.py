@@ -1,3 +1,1 @@
-"""
-Serviços de domínio do RedeVita.
-"""
+# Serviços do aplicativo

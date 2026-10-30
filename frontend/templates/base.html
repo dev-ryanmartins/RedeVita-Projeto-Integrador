@@ -108,6 +108,14 @@
                 <span class="nav-item-badge">{{ alertas }}</span>
                 {% endif %}
             </a>
+            <a href="{{ url_for('cold_crisis_lab.laboratorio_page') }}"
+               class="nav-item {{ 'active' if request.endpoint and request.endpoint.startswith('cold_crisis_lab.') else '' }}"
+               data-tooltip="Laboratório de Crises">
+                <div class="nav-item-icon">
+                    <i class="fas fa-flask"></i>
+                </div>
+                <span class="nav-item-text">Lab. Crises</span>
+            </a>
             {% endif %}
             <a href="{{ url_for('mapa.mapa_saude') }}" 
                class="nav-item {{ 'active' if request.endpoint and request.endpoint.startswith('mapa.') else '' }}"

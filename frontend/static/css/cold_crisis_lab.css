@@ -1,0 +1,542 @@
+/* Laboratório de Crises da Cadeia Frio */
+/* Estilo específico seguindo identidade visual RedeVita */
+
+[data-cold-crisis-lab] {
+    --crisis-primary: #00d4ff;
+    --crisis-secondary: #0099cc;
+    --crisis-accent: #ff6b6b;
+    --crisis-warning: #ffa500;
+    --crisis-success: #51cf66;
+    --crisis-bg: rgba(0, 212, 255, 0.05);
+    --crisis-border: rgba(0, 212, 255, 0.2);
+    --crisis-text: #e0e0e0;
+    --crisis-text-muted: #a0a0a0;
+}
+
+/* Banner de Aviso de Simulação */
+.simulation-banner {
+    background: linear-gradient(135deg, rgba(255, 165, 0, 0.2), rgba(255, 107, 107, 0.2));
+    border: 1px solid rgba(255, 165, 0, 0.3);
+    border-radius: 8px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.simulation-banner-content {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1;
+}
+
+.simulation-banner i {
+    font-size: 1.5rem;
+    color: var(--crisis-warning);
+}
+
+.simulation-banner span {
+    color: var(--crisis-text);
+    font-size: 0.95rem;
+}
+
+/* Introdução */
+.lab-intro {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 2rem;
+    gap: 1rem;
+}
+
+.lab-intro h2 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--crisis-primary);
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.lab-intro p {
+    color: var(--crisis-text-muted);
+    font-size: 0.95rem;
+    max-width: 600px;
+}
+
+.lab-actions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+/* Seção de Controles */
+.lab-controls-section {
+    background: var(--crisis-bg);
+    border: 1px solid var(--crisis-border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.lab-controls-header h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--crisis-text);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.lab-controls-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.lab-control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.lab-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--crisis-text);
+}
+
+.lab-select,
+.lab-input {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--crisis-border);
+    border-radius: 6px;
+    padding: 0.625rem 0.875rem;
+    color: var(--crisis-text);
+    font-size: 0.95rem;
+    font-family: 'Inter', sans-serif;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.lab-select:focus,
+.lab-input:focus {
+    outline: none;
+    border-color: var(--crisis-primary);
+    box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+}
+
+.lab-select:disabled,
+.lab-input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.lab-help {
+    font-size: 0.8rem;
+    color: var(--crisis-text-muted);
+}
+
+.lab-controls-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--crisis-primary), var(--crisis-secondary));
+    border: none;
+    border-radius: 6px;
+    padding: 0.625rem 1.25rem;
+    color: white;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-primary:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 212, 255, 0.3);
+}
+
+.btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--crisis-border);
+    border-radius: 6px;
+    padding: 0.625rem 1.25rem;
+    color: var(--crisis-text);
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.btn-secondary:hover {
+    background: rgba(0, 0, 0, 0.4);
+    border-color: var(--crisis-primary);
+}
+
+.btn-link {
+    background: none;
+    border: none;
+    color: var(--crisis-primary);
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+/* Estado de Carregamento */
+.lab-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    gap: 1rem;
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--crisis-border);
+    border-top-color: var(--crisis-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.lab-loading p {
+    color: var(--crisis-text-muted);
+    font-size: 0.95rem;
+}
+
+/* Estado de Erro */
+.lab-error {
+    background: rgba(255, 107, 107, 0.1);
+    border: 1px solid rgba(255, 107, 107, 0.3);
+    border-radius: 8px;
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.lab-error i {
+    font-size: 1.25rem;
+    color: var(--crisis-accent);
+}
+
+.lab-error span {
+    flex: 1;
+    color: var(--crisis-text);
+    font-size: 0.95rem;
+}
+
+/* Resultados */
+.lab-results {
+    margin-bottom: 2rem;
+}
+
+.lab-results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.lab-results-header h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--crisis-text);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.lab-results-meta {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.lab-result-badge {
+    background: var(--crisis-bg);
+    border: 1px solid var(--crisis-border);
+    border-radius: 4px;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.85rem;
+    color: var(--crisis-text-muted);
+}
+
+/* Estatísticas */
+.lab-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.lab-stat-card {
+    background: var(--crisis-bg);
+    border: 1px solid var(--crisis-border);
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+}
+
+.lab-stat-card strong {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--crisis-primary);
+    margin-bottom: 0.25rem;
+}
+
+.lab-stat-card span {
+    font-size: 0.85rem;
+    color: var(--crisis-text-muted);
+}
+
+.lab-stat-card-normal strong {
+    color: var(--crisis-success);
+}
+
+.lab-stat-card-alerta strong {
+    color: var(--crisis-warning);
+}
+
+.lab-stat-card-critico strong {
+    color: var(--crisis-accent);
+}
+
+.lab-stat-card-frio strong {
+    color: #5bc0de;
+}
+
+/* Eventos */
+.lab-events-section {
+    background: var(--crisis-bg);
+    border: 1px solid var(--crisis-border);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.lab-events-section h4 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--crisis-text);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.lab-events-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.lab-event-item {
+    background: rgba(0, 0, 0, 0.2);
+    border-left: 3px solid var(--crisis-primary);
+    border-radius: 4px;
+    padding: 0.75rem 1rem;
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+}
+
+.lab-event-item .event-time {
+    font-size: 0.85rem;
+    color: var(--crisis-text-muted);
+    white-space: nowrap;
+}
+
+.lab-event-item .event-content {
+    flex: 1;
+}
+
+.lab-event-item .event-type {
+    font-weight: 600;
+    color: var(--crisis-primary);
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+}
+
+.lab-event-item .event-description {
+    font-size: 0.9rem;
+    color: var(--crisis-text);
+}
+
+/* Tabela de Leituras */
+.lab-readings-section {
+    background: var(--crisis-bg);
+    border: 1px solid var(--crisis-border);
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.lab-readings-section h4 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--crisis-text);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.lab-readings-table-wrapper {
+    overflow-x: auto;
+    border-radius: 6px;
+}
+
+.lab-readings-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.lab-readings-table thead {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.lab-readings-table th {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: var(--crisis-text);
+    border-bottom: 1px solid var(--crisis-border);
+}
+
+.lab-readings-table td {
+    padding: 0.75rem 1rem;
+    color: var(--crisis-text);
+    border-bottom: 1px solid rgba(0, 212, 255, 0.1);
+}
+
+.lab-readings-table tbody tr:hover {
+    background: rgba(0, 212, 255, 0.05);
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.status-badge.NORMAL {
+    background: rgba(81, 207, 102, 0.2);
+    color: var(--crisis-success);
+}
+
+.status-badge.ALERTA {
+    background: rgba(255, 165, 0, 0.2);
+    color: var(--crisis-warning);
+}
+
+.status-badge.CRÍTICO {
+    background: rgba(255, 107, 107, 0.2);
+    color: var(--crisis-accent);
+}
+
+.status-badge.FRIO {
+    background: rgba(91, 192, 222, 0.2);
+    color: #5bc0de;
+}
+
+/* Estado Vazio */
+.lab-empty {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--crisis-text-muted);
+}
+
+.lab-empty i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.lab-empty p {
+    font-size: 0.95rem;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .lab-intro {
+        flex-direction: column;
+    }
+
+    .lab-controls-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .lab-controls-actions {
+        flex-direction: column;
+    }
+
+    .lab-controls-actions button {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .lab-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .lab-readings-table {
+        font-size: 0.8rem;
+    }
+
+    .lab-readings-table th,
+    .lab-readings-table td {
+        padding: 0.5rem 0.75rem;
+    }
+}
+
+/* Acessibilidade - Preferência de Movimento Reduzido */
+@media (prefers-reduced-motion: reduce) {
+    .loading-spinner {
+        animation: none;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+        transform: none;
+    }
+
+    .lab-readings-table tbody tr:hover {
+        background: none;
+    }
+}
+
+/* Foco Visível */
+.lab-select:focus-visible,
+.lab-input:focus-visible,
+.btn-primary:focus-visible,
+.btn-secondary:focus-visible {
+    outline: 2px solid var(--crisis-primary);
+    outline-offset: 2px;
+}

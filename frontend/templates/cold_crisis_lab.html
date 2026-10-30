@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% block title %}Laboratório de Crises da Cadeia Frio - RedeVita{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/cold_crisis_lab.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-wrapper" data-cold-crisis-lab>
+    <!-- Aviso de Simulação -->
+    <div class="simulation-banner" role="alert">
+        <div class="simulation-banner-content">
+            <i class="fas fa-flask"></i>
+            <span><strong>Ambiente de simulação.</strong> Os dados não representam leituras reais nem substituem protocolos clínicos, farmacêuticos ou regulatórios.</span>
+        </div>
+    </div>
+
+    <div class="lab-intro">
+        <div>
+            <h2><i class="fas fa-snowflake"></i> Laboratório de Crises da Cadeia Frio</h2>
+            <p>Simule cenários de falha na cadeia frio para treinamento e análise técnica. Selecione um cenário, configure os parâmetros e visualize os resultados.</p>
+        </div>
+        <div class="lab-actions">
+            <a href="{{ url_for('inventory.dashboard') }}" class="btn-secondary"><i class="fas fa-arrow-left"></i> Dashboard</a>
+        </div>
+    </div>
+
+    <!-- Controles de Simulação -->
+    <div class="lab-controls-section">
+        <div class="lab-controls-header">
+            <h3><i class="fas fa-cog"></i> Configuração da Simulação</h3>
+        </div>
+        <div class="lab-controls-grid">
+            <div class="lab-control-group">
+                <label for="cenarioSelect" class="lab-label">Cenário</label>
+                <select id="cenarioSelect" class="lab-select" aria-describedby="cenarioHelp">
+                    <option value="">Selecione um cenário...</option>
+                </select>
+                <span id="cenarioHelp" class="lab-help">Escolha o tipo de crise a simular</span>
+            </div>
+            <div class="lab-control-group">
+                <label for="duracaoHoras" class="lab-label">Duração (horas)</label>
+                <input type="number" id="duracaoHoras" class="lab-input" min="1" max="24" value="6" aria-describedby="duracaoHelp">
+                <span id="duracaoHelp" class="lab-help">Entre 1 e 24 horas</span>
+            </div>
+            <div class="lab-control-group">
+                <label for="intervaloMinutos" class="lab-label">Intervalo (minutos)</label>
+                <input type="number" id="intervaloMinutos" class="lab-input" min="1" max="60" value="15" aria-describedby="intervaloHelp">
+                <span id="intervaloHelp" class="lab-help">Entre 1 e 60 minutos</span>
+            </div>
+            <div class="lab-control-group">
+                <label for="seedInput" class="lab-label">Seed (opcional)</label>
+                <input type="number" id="seedInput" class="lab-input" placeholder="Aleatório" aria-describedby="seedHelp">
+                <span id="seedHelp" class="lab-help">Use a mesma seed para reprodutibilidade</span>
+            </div>
+        </div>
+        <div class="lab-controls-actions">
+            <button type="button" id="btnSimular" class="btn-primary" disabled>
+                <i class="fas fa-play"></i> Iniciar Simulação
+            </button>
+            <button type="button" id="btnLimpar" class="btn-secondary">
+                <i class="fas fa-eraser"></i> Limpar
+            </button>
+        </div>
+    </div>
+
+    <!-- Estado de Carregamento -->
+    <div class="lab-loading" id="labLoading" hidden>
+        <div class="loading-spinner"></div>
+        <p>Executando simulação...</p>
+    </div>
+
+    <!-- Estado de Erro -->
+    <div class="lab-error" id="labError" hidden role="alert">
+        <i class="fas fa-exclamation-triangle"></i>
+        <span id="labErrorMessage">Erro ao executar simulação</span>
+        <button type="button" class="btn-link" onclick="document.getElementById('labError').hidden = true">Fechar</button>
+    </div>
+
+    <!-- Resultados da Simulação -->
+    <div class="lab-results" id="labResults" hidden>
+        <div class="lab-results-header">
+            <h3><i class="fas fa-chart-bar"></i> Resultados da Simulação</h3>
+            <div class="lab-results-meta">
+                <span id="resultadoCenario" class="lab-result-badge"></span>
+                <span id="resultadoSeed" class="lab-result-badge"></span>
+            </div>
+        </div>
+
+        <!-- Estatísticas -->
+        <div class="lab-stats-grid">
+            <div class="lab-stat-card">
+                <strong id="statTotalLeituras">0</strong>
+                <span>Total de Leituras</span>
+            </div>
+            <div class="lab-stat-card">
+                <strong id="statTempMin">0°C</strong>
+                <span>Temperatura Mínima</span>
+            </div>
+            <div class="lab-stat-card">
+                <strong id="statTempMax">0°C</strong>
+                <span>Temperatura Máxima</span>
+            </div>
+            <div class="lab-stat-card">
+                <strong id="statTempMedia">0°C</strong>
+                <span>Temperatura Média</span>
+            </div>
+            <div class="lab-stat-card lab-stat-card-normal">
+                <strong id="statNormal">0</strong>
+                <span>Normal</span>
+            </div>
+            <div class="lab-stat-card lab-stat-card-alerta">
+                <strong id="statAlerta">0</strong>
+                <span>Alerta</span>
+            </div>
+            <div class="lab-stat-card lab-stat-card-critico">
+                <strong id="statCritico">0</strong>
+                <span>Crítico</span>
+            </div>
+            <div class="lab-stat-card lab-stat-card-frio">
+                <strong id="statFrio">0</strong>
+                <span>Frio</span>
+            </div>
+        </div>
+
+        <!-- Eventos -->
+        <div class="lab-events-section">
+            <h4><i class="fas fa-history"></i> Eventos Simulados</h4>
+            <div class="lab-events-list" id="labEventsList">
+                <!-- Eventos serão inseridos aqui -->
+            </div>
+        </div>
+
+        <!-- Tabela de Leituras -->
+        <div class="lab-readings-section">
+            <h4><i class="fas fa-table"></i> Leituras Simuladas</h4>
+            <div class="lab-readings-table-wrapper">
+                <table class="lab-readings-table">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Dispositivo</th>
+                            <th>Temperatura</th>
+                            <th>Umidade</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="labReadingsTableBody">
+                        <!-- Leituras serão inseridas aqui -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estado Vazio -->
+    <div class="lab-empty" id="labEmpty">
+        <i class="fas fa-flask"></i>
+        <p>Selecione um cenário e clique em "Iniciar Simulação" para visualizar os resultados.</p>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/cold_crisis_lab.js') }}"></script>
+{% endblock %}

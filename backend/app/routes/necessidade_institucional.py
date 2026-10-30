@@ -14,10 +14,10 @@ from app.models.usuario import Usuario
 from app.models.medicamento_referencia import MedicamentoReferencia
 from datetime import datetime
 
-necessidade_bp = Blueprint("necessidade_institucional", __name__)
+necessidade_institucional_bp = Blueprint("necessidade_institucional", __name__)
 
 
-@necessidade_bp.route("/necessidades-institucionais", methods=["GET", "POST"])
+@necessidade_institucional_bp.route("/necessidades-institucionais", methods=["GET", "POST"])
 @login_required
 @admin_required
 def listar_necessidades():
@@ -101,7 +101,7 @@ def listar_necessidades():
     )
 
 
-@necessidade_bp.route("/necessidades-institucionais/<int:id>/revisar", methods=["POST"])
+@necessidade_institucional_bp.route("/necessidades-institucionais/<int:id>/revisar", methods=["POST"])
 @login_required
 @admin_required
 def revisar_necessidade(id):
@@ -127,7 +127,7 @@ def revisar_necessidade(id):
     return redirect(url_for("necessidade_institucional.listar_necessidades"))
 
 
-@necessidade_bp.route("/necessidades-institucionais/<int:id>/encerrar", methods=["POST"])
+@necessidade_institucional_bp.route("/necessidades-institucionais/<int:id>/encerrar", methods=["POST"])
 @login_required
 @admin_required
 def encerrar_necessidade(id):
@@ -147,7 +147,7 @@ def encerrar_necessidade(id):
     return redirect(url_for("necessidade_institucional.listar_necessidades"))
 
 
-@necessidade_bp.route("/necessidades-institucionais/<int:id>/detalhes")
+@necessidade_institucional_bp.route("/necessidades-institucionais/<int:id>/detalhes")
 @login_required
 @admin_required
 def detalhes_necessidade(id):

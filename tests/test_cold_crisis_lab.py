@@ -105,8 +105,7 @@ class TestValidacaoParametros:
         resultado = simulador.obter_cenario(
             tipo='falha_energia',
             duracao_horas=6,
-            intervalo_minutos=15,
-            seed=12345
+            intervalo_minutos=15
         )
         assert resultado['simulado'] is True
 

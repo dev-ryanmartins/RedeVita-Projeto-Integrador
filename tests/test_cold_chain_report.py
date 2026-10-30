@@ -141,7 +141,7 @@ def leituras_iot(app, farmacia_teste):
         )
         leituras.append(leitura3)
         
-        # Leitura antiga (fora do intervalo padrão)
+        # Leitura antiga (fora do intervalo padrão de 7 dias)
         leitura4 = LeituraIoT(
             dispositivo_id='sensor_001',
             farmacia_id=farmacia_teste.id,
@@ -256,7 +256,7 @@ class TestColdChainReportFilters:
         
         data = response.get_json()
         assert data['status'] == 'ok'
-        # Deve retornar apenas leituras dentro do período (3 leituras recentes)
+        # Deve retornar apenas leituras dentro do período (3 leituras recentes, não a antiga)
         assert data['indicators']['total_leituras'] == 3
     
     def test_filtro_periodo_invalido_formato(self, client, usuario_admin):
@@ -314,8 +314,8 @@ class TestColdChainReportFilters:
         
         data = response.get_json()
         assert data['status'] == 'ok'
-        # Todas as leituras são da farmacia_teste
-        assert data['indicators']['total_leituras'] == 4
+        # Todas as leituras são da farmacia_teste, mas intervalo padrão é 7 dias
+        assert data['indicators']['total_leituras'] == 3
     
     def test_filtro_dispositivo(self, client, usuario_admin, leituras_iot):
         """Filtro de dispositivo retorna apenas leituras desse dispositivo."""
@@ -352,10 +352,11 @@ class TestColdChainReportIndicators:
         data = response.get_json()
         indicators = data['indicators']
         
-        assert indicators['total_leituras'] == 4
+        # Intervalo padrão é 7 dias, então não inclui a leitura antiga de 10 dias
+        assert indicators['total_leituras'] == 3
         assert indicators['alertas_criticos'] == 1
         assert indicators['temperatura_min'] == 8.0
-        assert indicators['temperatura_max'] == 22.0
+        assert indicators['temperatura_max'] == 20.5
         assert indicators['temperatura_media'] is not None
         assert indicators['ultima_leitura'] is not None
     

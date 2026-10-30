@@ -6,7 +6,7 @@ Testes de cálculos, validações e determinismo.
 
 import pytest
 from datetime import datetime, timedelta
-from app import create_app
+from main import create_app
 from app.database import db
 from app.models.iot import LeituraIoT, StatusAlertaEnum
 from app.models.farmacia import Farmacia

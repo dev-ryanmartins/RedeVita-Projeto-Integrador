@@ -353,16 +353,16 @@ class TestService:
         """Testa cenário compatível."""
         with app.app_context():
             service = LotRescueService()
-            lote = Medicamento.query.filter_by(lote='LOT001').first()
+            lote = Medicamento.query.filter_by(lote='LOT003').first()  # 60 days
             lote_id = lote.id
 
             resultado = service.simular_cenario_resgate(
                 lote_id=lote_id,
-                etapas=[{'nome': 'Triagem', 'duracao_dias': 2}]
+                etapas=[{'nome': 'Triagem', 'duracao_dias': 10}]
             )
 
-            assert resultado['margem_dias'] == 3  # 5 - 2
-            assert resultado['resultado'] == 'compativel'
+            assert resultado['margem_dias'] == 50  # 60 - 10
+            assert resultado['resultado'] == 'compativel'  # 50 >= 7
 
     def test_simular_cenario_margem_reduzida(self, app, sample_medicamentos):
         """Testa cenário com margem reduzida."""

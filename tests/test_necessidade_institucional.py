@@ -71,8 +71,7 @@ def referencia_id(app):
     with app.app_context():
         ref = MedicamentoReferencia(
             nome_comercial='Dipirona 500mg',
-            principio_ativo='dipirona',
-            laboratorio='Genérico'
+            principio_ativo='dipirona'
         )
         db.session.add(ref)
         db.session.commit()

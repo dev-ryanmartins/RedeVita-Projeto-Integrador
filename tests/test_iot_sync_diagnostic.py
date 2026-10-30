@@ -22,7 +22,7 @@ class TestIoTSyncDiagnosticAccess:
         
         response = client.get('/admin/diagnostico-iot')
         assert response.status_code == 200
-        assert b'Diagnóstico de Sincronização IoT' in response.data
+        assert 'Diagnóstico de Sincronização IoT' in response.data.decode('utf-8')
     
     def test_usuario_nao_admin_bloqueado(self, client, regular_user):
         """Non-admin user is blocked from diagnostic page"""

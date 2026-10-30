@@ -87,9 +87,6 @@ def farmacia_teste(app):
             cnpj='12345678000100',
             endereco='Rua Teste, 123',
             responsavel='Responsável Teste',
-            cidade='São Paulo',
-            estado='SP',
-            cep='01234567',
             latitude=-23.5505,
             longitude=-46.6333
         )

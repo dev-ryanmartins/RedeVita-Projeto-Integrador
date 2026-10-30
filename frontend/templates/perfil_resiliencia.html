@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Perfil de Resiliência da Farmácia - RedeVita{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/perfil_resiliencia.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-wrapper" data-perfil-resiliencia>
+    <!-- Aviso -->
+    <div class="pr-banner" role="alert">
+        <div class="pr-banner-content">
+            <i class="fas fa-shield-alt"></i>
+            <span><strong>Informações operacionais declaradas ou verificadas administrativamente.</strong> Não comprovam condições de armazenamento nem autorizam recebimento ou transferência de medicamentos.</span>
+        </div>
+    </div>
+
+    <div class="pr-intro">
+        <div>
+            <h2><i class="fas fa-hospital"></i> Perfil de Resiliência da Farmácia</h2>
+            <p>Registre e consulte informações operacionais declaradas pelas farmácias parceiras para planejamento de contingência.</p>
+        </div>
+    </div>
+
+    <!-- Lista de Farmácias -->
+    <div class="pr-list-section">
+        <div class="pr-list-header">
+            <h3><i class="fas fa-list"></i> Farmácias Parceiras</h3>
+        </div>
+        <div class="pr-list-content" id="prListContent">
+            <div class="pr-loading" id="prLoading">
+                <div class="loading-spinner"></div>
+                <p>Carregando perfis...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/perfil_resiliencia.js') }}"></script>
+{% endblock %}

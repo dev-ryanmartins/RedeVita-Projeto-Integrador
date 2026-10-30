@@ -218,6 +218,14 @@
                 </div>
                 <span class="nav-item-text">Radar Integridade</span>
             </a>
+            <a href="{{ url_for('perfil_resiliencia.perfil_page') }}"
+               class="nav-item admin {{ 'active' if request.endpoint and request.endpoint.startswith('perfil_resiliencia.') else '' }}"
+               data-tooltip="Perfil Resiliência">
+                <div class="nav-item-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <span class="nav-item-text">Perfil Resiliência</span>
+            </a>
             <a href="{{ url_for('notificacoes.painel') }}"
                class="nav-item admin {{ 'active' if request.endpoint and request.endpoint.startswith('notificacoes.') else '' }}"
                data-tooltip="Notificações">

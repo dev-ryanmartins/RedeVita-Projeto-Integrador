@@ -1,0 +1,440 @@
+/* CSS específico para Radar de Integridade da Telemetria */
+/* Segue identidade visual RedeVita: tema escuro, cards arredondados, azul/ciano, fonte Inter */
+
+.radar-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.page-header {
+    margin-bottom: 2rem;
+}
+
+.page-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #e2e8f0;
+    margin: 0 0 0.5rem 0;
+}
+
+.page-subtitle {
+    font-size: 1.25rem;
+    color: #94a3b8;
+    margin: 0;
+}
+
+.warning-banner {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: #fff;
+    padding: 1rem 1.5rem;
+    border-radius: 0.75rem;
+    margin-bottom: 2rem;
+    font-weight: 500;
+}
+
+.warning-icon {
+    font-size: 1.5rem;
+}
+
+.warning-text {
+    flex: 1;
+}
+
+.controls-section {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    margin-bottom: 2rem;
+    background: #1e293b;
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex: 1;
+    min-width: 200px;
+}
+
+.control-group label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #94a3b8;
+}
+
+.control-group input,
+.control-group select {
+    padding: 0.75rem 1rem;
+    border: 1px solid #334155;
+    border-radius: 0.5rem;
+    background: #0f172a;
+    color: #e2e8f0;
+    font-size: 0.875rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.control-group input:focus,
+.control-group select:focus {
+    outline: none;
+    border-color: #38bdf8;
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.1);
+}
+
+.btn-primary {
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);
+    color: #fff;
+    border: none;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
+}
+
+.btn-primary:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+}
+
+.btn-secondary {
+    padding: 0.75rem 1.5rem;
+    background: #334155;
+    color: #e2e8f0;
+    border: 1px solid #475569;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.btn-secondary:hover {
+    background: #475569;
+    border-color: #64748b;
+}
+
+.btn-secondary:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.1);
+}
+
+.state-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    text-align: center;
+    color: #94a3b8;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.spinner {
+    width: 3rem;
+    height: 3rem;
+    border: 3px solid #334155;
+    border-top-color: #38bdf8;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.error-icon,
+.empty-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.main-content {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.summary-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.summary-card {
+    background: #1e293b;
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    border: 1px solid #334155;
+}
+
+.summary-card h3 {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #94a3b8;
+    margin: 0 0 0.5rem 0;
+}
+
+.summary-card.warning {
+    border-color: #f59e0b;
+    background: linear-gradient(135deg, #1e293b 0%, #451a03 100%);
+}
+
+.summary-card.critical {
+    border-color: #ef4444;
+    background: linear-gradient(135deg, #1e293b 0%, #450a0a 100%);
+}
+
+.summary-card.alert {
+    border-color: #f97316;
+    background: linear-gradient(135deg, #1e293b 0%, #7c2d12 100%);
+}
+
+.summary-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #e2e8f0;
+    margin: 0;
+}
+
+.tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid #334155;
+}
+
+.tab-btn {
+    padding: 0.75rem 1.5rem;
+    background: transparent;
+    color: #94a3b8;
+    border: none;
+    border-bottom: 2px solid transparent;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+}
+
+.tab-btn:hover {
+    color: #e2e8f0;
+}
+
+.tab-btn.active {
+    color: #38bdf8;
+    border-bottom-color: #38bdf8;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.controls-secondary {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    margin-bottom: 1.5rem;
+}
+
+.table-container {
+    background: #1e293b;
+    border-radius: 0.75rem;
+    border: 1px solid #334155;
+    overflow: hidden;
+}
+
+.radar-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.radar-table thead {
+    background: #0f172a;
+}
+
+.radar-table th {
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: #94a3b8;
+    font-size: 0.875rem;
+    border-bottom: 1px solid #334155;
+}
+
+.radar-table td {
+    padding: 1rem;
+    color: #e2e8f0;
+    border-bottom: 1px solid #334155;
+}
+
+.radar-table tbody tr:hover {
+    background: #334155;
+}
+
+.radar-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.status-badge.recente {
+    background: #052e16;
+    color: #4ade80;
+}
+
+.status-badge.moderado {
+    background: #451a03;
+    color: #fbbf24;
+}
+
+.status-badge.antigo {
+    background: #450a0a;
+    color: #f87171;
+}
+
+.status-badge.sem_dados {
+    background: #1e293b;
+    color: #94a3b8;
+    border: 1px solid #475569;
+}
+
+.gravidade-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.gravidade-badge.alta {
+    background: #450a0a;
+    color: #f87171;
+}
+
+.gravidade-badge.moderada {
+    background: #451a03;
+    color: #fbbf24;
+}
+
+.limitation-section {
+    margin-top: 2rem;
+    background: #1e293b;
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    border: 1px solid #334155;
+}
+
+.limitation-section h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #f97316;
+    margin: 0 0 1rem 0;
+}
+
+.limitation-section ul {
+    margin: 0;
+    padding-left: 1.5rem;
+    color: #94a3b8;
+}
+
+.limitation-section li {
+    margin-bottom: 0.5rem;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .radar-container {
+        padding: 1rem;
+    }
+
+    .page-title {
+        font-size: 1.5rem;
+    }
+
+    .page-subtitle {
+        font-size: 1rem;
+    }
+
+    .controls-section,
+    .controls-secondary {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .control-group {
+        min-width: 100%;
+    }
+
+    .summary-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .radar-table {
+        font-size: 0.75rem;
+    }
+
+    .radar-table th,
+    .radar-table td {
+        padding: 0.75rem 0.5rem;
+    }
+
+    .tabs {
+        flex-wrap: wrap;
+    }
+
+    .tab-btn {
+        flex: 1;
+        min-width: 120px;
+    }
+}
+
+/* Acessibilidade: prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+    .spinner {
+        animation: none;
+    }
+
+    .main-content {
+        animation: none;
+    }
+
+    .btn-primary:hover,
+    .btn-secondary:hover {
+        transform: none;
+    }
+}
+
+/* Foco visível */
+*:focus-visible {
+    outline: 2px solid #38bdf8;
+    outline-offset: 2px;
+}

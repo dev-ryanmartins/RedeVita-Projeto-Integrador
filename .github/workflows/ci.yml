@@ -260,3 +260,33 @@ jobs:
         export PYTHONPATH="../backend:$PYTHONPATH"
         pytest ../tests/test_lot_rescue.py ../tests/test_lot_rescue_service.py --collect-only | grep "test session starts"
         pytest ../tests/test_lot_rescue.py ../tests/test_lot_rescue_service.py --collect-only | grep "collected"
+
+  test-iot-integrity-radar:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Configurar Python 3.12
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Instalar dependências
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f backend/requirements.txt ]; then pip install -r backend/requirements.txt; fi
+        pip install pytest pytest-cov
+
+    - name: Testes do Radar de Integridade da Telemetria
+      run: |
+        cd backend
+        export PYTHONPATH="../backend:$PYTHONPATH"
+        pytest ../tests/test_iot_integrity_radar.py ../tests/test_iot_integrity_radar_service.py -v --tb=short --cov=backend/app/routes/iot_integrity_radar --cov=backend/app/services/iot_integrity_radar --cov-report=xml --cov-report=html
+
+    - name: Verificar se testes foram executados
+      run: |
+        cd backend
+        export PYTHONPATH="../backend:$PYTHONPATH"
+        pytest ../tests/test_iot_integrity_radar.py ../tests/test_iot_integrity_radar_service.py --collect-only | grep "test session starts"
+        pytest ../tests/test_iot_integrity_radar.py ../tests/test_iot_integrity_radar_service.py --collect-only | grep "collected"

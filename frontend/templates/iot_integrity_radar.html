@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+
+{% block title %}Radar de Integridade da Telemetria - RedeVita{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/iot_integrity_radar.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="radar-container">
+    <div class="page-header">
+        <h1 class="page-title">Radar de Integridade da Telemetria</h1>
+        <p class="page-subtitle">Análise de sinais operacionais na telemetria IoT</p>
+    </div>
+
+    <div class="warning-banner">
+        <span class="warning-icon">⚠️</span>
+        <span class="warning-text">Sinais operacionais baseados nas leituras disponíveis. Não confirmam falha, perda de dados ou condição de um medicamento.</span>
+    </div>
+
+    <div class="controls-section">
+        <div class="control-group">
+            <label for="periodo-dias">Período (dias):</label>
+            <input type="number" id="periodo-dias" min="1" max="90" value="7" aria-label="Período em dias">
+        </div>
+
+        <button id="btn-analisar" class="btn-primary" aria-label="Analisar telemetria">Analisar</button>
+    </div>
+
+    <div id="loading-state" class="state-container hidden">
+        <div class="spinner"></div>
+        <p>Analisando telemetria...</p>
+    </div>
+
+    <div id="error-state" class="state-container hidden">
+        <div class="error-icon">❌</div>
+        <p id="error-message">Erro ao carregar dados.</p>
+        <button id="btn-retry" class="btn-secondary">Tentar novamente</button>
+    </div>
+
+    <div id="empty-state" class="state-container hidden">
+        <div class="empty-icon">📡</div>
+        <p>Nenhuma leitura IoT encontrada no período especificado.</p>
+    </div>
+
+    <div id="main-content" class="main-content hidden">
+        <div class="summary-cards">
+            <div class="summary-card">
+                <h3>Dispositivos</h3>
+                <p id="summary-dispositivos" class="summary-value">-</p>
+            </div>
+            <div class="summary-card warning">
+                <h3>Sem Dados</h3>
+                <p id="summary-sem-dados" class="summary-value">-</p>
+            </div>
+            <div class="summary-card critical">
+                <h3>Dados Antigos</h3>
+                <p id="summary-antigos" class="summary-value">-</p>
+            </div>
+            <div class="summary-card alert">
+                <h3>Lacunas</h3>
+                <p id="summary-lacunas" class="summary-value">-</p>
+            </div>
+            <div class="summary-card alert">
+                <h3>Duplicidades</h3>
+                <p id="summary-duplicidades" class="summary-value">-</p>
+            </div>
+            <div class="summary-card alert">
+                <h3>Timestamps Futuros</h3>
+                <p id="summary-futuros" class="summary-value">-</p>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="frescor">Frescor</button>
+            <button class="tab-btn" data-tab="lacunas">Lacunas</button>
+            <button class="tab-btn" data-tab="duplicidades">Duplicidades</button>
+            <button class="tab-btn" data-tab="futuros">Timestamps Futuros</button>
+        </div>
+
+        <div id="tab-frescor" class="tab-content active">
+            <div class="table-container">
+                <table class="radar-table">
+                    <thead>
+                        <tr>
+                            <th>Dispositivo (ID declarado)</th>
+                            <th>Última Leitura</th>
+                            <th>Dias Desde Última</th>
+                            <th>Status</th>
+                            <th>Total Leituras</th>
+                        </tr>
+                    </thead>
+                    <tbody id="frescor-tbody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="tab-lacunas" class="tab-content">
+            <div class="controls-secondary">
+                <div class="control-group">
+                    <label for="intervalo-lacunas">Intervalo esperado:</label>
+                    <select id="intervalo-lacunas" aria-label="Intervalo esperado">
+                        <option value="5min">5 minutos</option>
+                        <option value="15min">15 minutos</option>
+                        <option value="30min">30 minutos</option>
+                        <option value="1h" selected>1 hora</option>
+                        <option value="6h">6 horas</option>
+                        <option value="12h">12 horas</option>
+                        <option value="24h">24 horas</option>
+                    </select>
+                </div>
+                <button id="btn-analisar-lacunas" class="btn-secondary">Analisar Lacunas</button>
+            </div>
+            <div class="table-container">
+                <table class="radar-table">
+                    <thead>
+                        <tr>
+                            <th>Dispositivo</th>
+                            <th>Farmácia</th>
+                            <th>De</th>
+                            <th>Até</th>
+                            <th>Delta (min)</th>
+                            <th>Esperado (min)</th>
+                            <th>Gravidade</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lacunas-tbody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="tab-duplicidades" class="tab-content">
+            <div class="table-container">
+                <table class="radar-table">
+                    <thead>
+                        <tr>
+                            <th>Dispositivo</th>
+                            <th>Farmácia</th>
+                            <th>Timestamp</th>
+                            <th>Temperatura</th>
+                            <th>Umidade</th>
+                            <th>Quantidade</th>
+                            <th>Candidatos a Duplicidade</th>
+                        </tr>
+                    </thead>
+                    <tbody id="duplicidades-tbody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="tab-futuros" class="tab-content">
+            <div class="controls-secondary">
+                <div class="control-group">
+                    <label for="tolerancia-futuros">Tolerância (min):</label>
+                    <input type="number" id="tolerancia-futuros" min="1" max="1440" value="60" aria-label="Tolerância em minutos">
+                </div>
+                <button id="btn-analisar-futuros" class="btn-secondary">Analisar Timestamps</button>
+            </div>
+            <div class="table-container">
+                <table class="radar-table">
+                    <thead>
+                        <tr>
+                            <th>Dispositivo</th>
+                            <th>Farmácia</th>
+                            <th>Timestamp</th>
+                            <th>Delta (min)</th>
+                            <th>Tolerância (min)</th>
+                            <th>Temperatura</th>
+                            <th>Umidade</th>
+                        </tr>
+                    </thead>
+                    <tbody id="futuros-tbody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="limitation-section" class="limitation-section">
+        <h3>Capacidades Não Verificáveis</h3>
+        <ul>
+            <li>Atraso entre envio e recebimento (sem horário de recebimento por leitura)</li>
+            <li>Perda de leituras (sem sequência confiável)</li>
+            <li>Duplicação real (sem ID único por leitura)</li>
+            <li>Ordem original do dispositivo (sem sequência)</li>
+            <li>Autenticação do dispositivo (ID do payload não é prova)</li>
+        </ul>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/iot_integrity_radar.js') }}"></script>
+{% endblock %}

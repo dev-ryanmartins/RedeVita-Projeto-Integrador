@@ -210,6 +210,14 @@
                 </div>
                 <span class="nav-item-text">Diagnóstico IoT</span>
             </a>
+            <a href="{{ url_for('iot_integrity_radar.radar_page') }}"
+               class="nav-item admin {{ 'active' if request.endpoint and request.endpoint.startswith('iot_integrity_radar.') else '' }}"
+               data-tooltip="Radar de Integridade">
+                <div class="nav-item-icon">
+                    <i class="fas fa-radar"></i>
+                </div>
+                <span class="nav-item-text">Radar Integridade</span>
+            </a>
             <a href="{{ url_for('notificacoes.painel') }}"
                class="nav-item admin {{ 'active' if request.endpoint and request.endpoint.startswith('notificacoes.') else '' }}"
                data-tooltip="Notificações">

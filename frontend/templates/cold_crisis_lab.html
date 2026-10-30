@@ -25,6 +25,14 @@
         </div>
     </div>
 
+    <!-- Tabs -->
+    <div class="lab-tabs">
+        <button class="lab-tab active" data-tab="simulacao">Simulação</button>
+        <button class="lab-tab" data-tab="replay">Replay e Avaliação</button>
+    </div>
+
+    <!-- Conteúdo da aba Simulação -->
+    <div class="lab-tab-content active" id="tab-simulacao">
     <!-- Controles de Simulação -->
     <div class="lab-controls-section">
         <div class="lab-controls-header">
@@ -157,6 +165,126 @@
     <div class="lab-empty" id="labEmpty">
         <i class="fas fa-flask"></i>
         <p>Selecione um cenário e clique em "Iniciar Simulação" para visualizar os resultados.</p>
+    </div>
+    </div>
+
+    <!-- Conteúdo da aba Replay -->
+    <div class="lab-tab-content" id="tab-replay">
+        <!-- Aviso de Exercício -->
+        <div class="replay-banner" role="alert">
+            <div class="replay-banner-content">
+                <i class="fas fa-graduation-cap"></i>
+                <span><strong>Exercício simulado.</strong> Não representa uma ocorrência real, avaliação profissional ou protocolo oficial.</span>
+            </div>
+        </div>
+
+        <!-- Controles de Replay -->
+        <div class="lab-controls-section">
+            <div class="lab-controls-header">
+                <h3><i class="fas fa-redo"></i> Configuração do Replay</h3>
+            </div>
+            <div class="lab-controls-grid">
+                <div class="lab-control-group">
+                    <label for="replayScenarioSelect" class="lab-label">Cenário</label>
+                    <select id="replayScenarioSelect" class="lab-select" aria-describedby="replayScenarioHelp">
+                        <option value="">Selecione um cenário...</option>
+                    </select>
+                    <span id="replayScenarioHelp" class="lab-help">Escolha o cenário para replay</span>
+                </div>
+                <div class="lab-control-group">
+                    <label for="replayDuracaoHoras" class="lab-label">Duração (horas)</label>
+                    <input type="number" id="replayDuracaoHoras" class="lab-input" min="1" max="24" value="6" aria-describedby="replayDuracaoHelp">
+                    <span id="replayDuracaoHelp" class="lab-help">Entre 1 e 24 horas</span>
+                </div>
+                <div class="lab-control-group">
+                    <label for="replayIntervaloMinutos" class="lab-label">Intervalo (minutos)</label>
+                    <input type="number" id="replayIntervaloMinutos" class="lab-input" min="1" max="60" value="15" aria-describedby="replayIntervaloHelp">
+                    <span id="replayIntervaloHelp" class="lab-help">Entre 1 e 60 minutos</span>
+                </div>
+                <div class="lab-control-group">
+                    <label for="replaySeedInput" class="lab-label">Seed</label>
+                    <input type="number" id="replaySeedInput" class="lab-input" placeholder="Aleatório" aria-describedby="replaySeedHelp">
+                    <span id="replaySeedHelp" class="lab-help">Use a mesma seed para reprodutibilidade</span>
+                </div>
+            </div>
+            <div class="lab-controls-actions">
+                <button type="button" id="btnIniciarReplay" class="btn-primary" disabled>
+                    <i class="fas fa-play"></i> Iniciar Replay
+                </button>
+                <button type="button" id="btnPausarReplay" class="btn-secondary" disabled>
+                    <i class="fas fa-pause"></i> Pausar
+                </button>
+                <button type="button" id="btnAvancarEtapa" class="btn-secondary" disabled>
+                    <i class="fas fa-step-forward"></i> Avançar Etapa
+                </button>
+                <button type="button" id="btnReiniciarReplay" class="btn-secondary" disabled>
+                    <i class="fas fa-redo"></i> Reiniciar
+                </button>
+            </div>
+        </div>
+
+        <!-- Informação do Roteiro -->
+        <div class="lab-info-section" id="replayRoteiroInfo" hidden>
+            <h4><i class="fas fa-info-circle"></i> Roteiro de Treinamento</h4>
+            <div class="lab-info-content">
+                <p><strong>Versão:</strong> <span id="roteiroVersao"></span></p>
+                <p><strong>Data:</strong> <span id="roteiroData"></span></p>
+                <p class="lab-aviso"><em><span id="roteiroAviso"></span></em></p>
+            </div>
+        </div>
+
+        <!-- Etapas do Roteiro -->
+        <div class="lab-etapas-section" id="replayEtapasSection" hidden>
+            <h4><i class="fas fa-tasks"></i> Etapas do Roteiro</h4>
+            <div class="lab-etapas-list" id="replayEtapasList">
+                <!-- Etapas serão inseridas aqui -->
+            </div>
+        </div>
+
+        <!-- Controles de Comparação -->
+        <div class="lab-controls-section" id="replayComparacaoSection" hidden>
+            <div class="lab-controls-header">
+                <h3><i class="fas fa-balance-scale"></i> Comparação de Execuções</h3>
+            </div>
+            <div class="lab-controls-actions">
+                <button type="button" id="btnComparar" class="btn-primary">
+                    <i class="fas fa-balance-scale"></i> Comparar Execuções
+                </button>
+            </div>
+        </div>
+
+        <!-- Resultados da Comparação -->
+        <div class="lab-results" id="replayComparacaoResultados" hidden>
+            <div class="lab-results-header">
+                <h3><i class="fas fa-chart-bar"></i> Resultados da Comparação</h3>
+            </div>
+            <div class="lab-comparacao-grid">
+                <div class="lab-comparacao-card">
+                    <h4>Execução 1</h4>
+                    <p><strong>Cobertura:</strong> <span id="comparacaoCobertura1">0%</span></p>
+                    <p><strong>Tempo Virtual:</strong> <span id="comparacaoTempo1">0h</span></p>
+                </div>
+                <div class="lab-comparacao-card">
+                    <h4>Execução 2</h4>
+                    <p><strong>Cobertura:</strong> <span id="comparacaoCobertura2">0%</span></p>
+                    <p><strong>Tempo Virtual:</strong> <span id="comparacaoTempo2">0h</span></p>
+                </div>
+            </div>
+            <div class="lab-comparacao-detalhes">
+                <h4>Etapas Comuns</h4>
+                <ul id="comparacaoEtapasComuns"></ul>
+                <h4>Etapas Exclusivas - Execução 1</h4>
+                <ul id="comparacaoEtapasExclusivas1"></ul>
+                <h4>Etapas Exclusivas - Execução 2</h4>
+                <ul id="comparacaoEtapasExclusivas2"></ul>
+            </div>
+        </div>
+
+        <!-- Estado Vazio do Replay -->
+        <div class="lab-empty" id="replayEmpty">
+            <i class="fas fa-redo"></i>
+            <p>Selecione um cenário e clique em "Iniciar Replay" para iniciar o exercício.</p>
+        </div>
     </div>
 </div>
 

@@ -484,6 +484,226 @@
     font-size: 0.95rem;
 }
 
+/* Tabs */
+.lab-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--crisis-border);
+}
+
+.lab-tab {
+    padding: 0.75rem 1.5rem;
+    background: transparent;
+    color: var(--crisis-text-muted);
+    border: none;
+    border-bottom: 2px solid transparent;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+}
+
+.lab-tab:hover {
+    color: var(--crisis-text);
+}
+
+.lab-tab.active {
+    color: var(--crisis-primary);
+    border-bottom-color: var(--crisis-primary);
+}
+
+.lab-tab-content {
+    display: none;
+}
+
+.lab-tab-content.active {
+    display: block;
+}
+
+/* Banner de Replay */
+.replay-banner {
+    background: linear-gradient(135deg, rgba(81, 207, 102, 0.2), rgba(0, 212, 255, 0.2));
+    border: 1px solid rgba(81, 207, 102, 0.3);
+    border-radius: 8px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.replay-banner-content {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1;
+}
+
+.replay-banner i {
+    font-size: 1.5rem;
+    color: var(--crisis-success);
+}
+
+.replay-banner span {
+    color: var(--crisis-text);
+    font-size: 0.95rem;
+}
+
+/* Informação do Roteiro */
+.lab-info-section {
+    background: var(--crisis-bg);
+    border: 1px solid var(--crisis-border);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.lab-info-section h4 {
+    color: var(--crisis-text);
+    margin: 0 0 1rem 0;
+    font-size: 1rem;
+}
+
+.lab-info-content p {
+    color: var(--crisis-text-muted);
+    margin: 0.5rem 0;
+    font-size: 0.9rem;
+}
+
+.lab-aviso {
+    color: var(--crisis-warning);
+    font-style: italic;
+}
+
+/* Etapas do Roteiro */
+.lab-etapas-section {
+    background: var(--crisis-bg);
+    border: 1px solid var(--crisis-border);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.lab-etapas-section h4 {
+    color: var(--crisis-text);
+    margin: 0 0 1rem 0;
+    font-size: 1rem;
+}
+
+.lab-etapas-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.lab-etapa-item {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--crisis-border);
+    border-radius: 6px;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.2s;
+}
+
+.lab-etapa-item:hover {
+    border-color: var(--crisis-primary);
+}
+
+.lab-etapa-item.coberta {
+    border-color: var(--crisis-success);
+    background: rgba(81, 207, 102, 0.1);
+}
+
+.lab-etapa-item.pendente {
+    opacity: 0.6;
+}
+
+.lab-etapa-item input[type="checkbox"] {
+    width: 1.25rem;
+    height: 1.25rem;
+    cursor: pointer;
+}
+
+.lab-etapa-content {
+    flex: 1;
+}
+
+.lab-etapa-content strong {
+    display: block;
+    color: var(--crisis-text);
+    margin-bottom: 0.25rem;
+}
+
+.lab-etapa-content p {
+    color: var(--crisis-text-muted);
+    margin: 0;
+    font-size: 0.85rem;
+}
+
+/* Comparação */
+.lab-comparacao-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.lab-comparacao-card {
+    background: var(--crisis-bg);
+    border: 1px solid var(--crisis-border);
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.lab-comparacao-card h4 {
+    color: var(--crisis-text);
+    margin: 0 0 1rem 0;
+    font-size: 1rem;
+}
+
+.lab-comparacao-card p {
+    color: var(--crisis-text-muted);
+    margin: 0.5rem 0;
+    font-size: 0.9rem;
+}
+
+.lab-comparacao-card strong {
+    color: var(--crisis-text);
+}
+
+.lab-comparacao-detalhes {
+    background: var(--crisis-bg);
+    border: 1px solid var(--crisis-border);
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.lab-comparacao-detalhes h4 {
+    color: var(--crisis-text);
+    margin: 0 0 1rem 0;
+    font-size: 1rem;
+}
+
+.lab-comparacao-detalhes ul {
+    list-style: none;
+    padding: 0;
+    margin: 0.5rem 0;
+}
+
+.lab-comparacao-detalhes li {
+    color: var(--crisis-text-muted);
+    padding: 0.5rem 0;
+    font-size: 0.9rem;
+}
+
+.lab-comparacao-detalhes li::before {
+    content: "•";
+    color: var(--crisis-primary);
+    margin-right: 0.5rem;
+}
+
 /* Responsividade */
 @media (max-width: 768px) {
     .lab-intro {

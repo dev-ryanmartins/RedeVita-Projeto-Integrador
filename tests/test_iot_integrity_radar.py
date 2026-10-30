@@ -41,6 +41,7 @@ def admin_user(app):
     with app.app_context():
         usuario = Usuario(
             nome='Admin Test',
+            cpf='12345678901',
             email='admin@test.com',
             senha='admin123',
             cargo='Admin',
@@ -57,6 +58,7 @@ def farmaceutico_user(app):
     with app.app_context():
         usuario = Usuario(
             nome='Farmacêutico Test',
+            cpf='98765432109',
             email='farmaceutico@test.com',
             senha='farm123',
             cargo='Farmacêutico',

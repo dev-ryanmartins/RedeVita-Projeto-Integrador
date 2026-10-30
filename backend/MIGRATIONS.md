@@ -84,10 +84,15 @@ flask --app main:create_app db upgrade
 
 ## Migrations Manuais Legadas
 
-A migration manual antiga foi movida para:
+As migrations manuais antigas foram movidas para:
 - `backend/migrations_custom/add_ativo_medicamentos.py`
+- `backend/migrations_custom/necessidade_001_add_necessidades_institucionais.py`
 
-Esta migration não é mais aplicada automaticamente. Se necessário, deve ser convertida para Flask-Migrate.
+Estas migrations não são mais aplicadas automaticamente. Se necessário, devem ser convertidas para Flask-Migrate.
+
+### Necessidade Institucional
+
+A migration `necessidade_001_add_necessidades_institucionais.py` cria a tabela `necessidades_institucionais` para o Quadro Privado de Necessidades de Instituições. Deve ser aplicada manualmente se o Flask-Migrate não estiver configurado corretamente no ambiente.
 
 ## Backup e Recuperação
 

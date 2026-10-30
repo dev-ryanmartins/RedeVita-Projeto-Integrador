@@ -11,6 +11,30 @@ from app.models.usuario import Usuario
 from app.core.security import criptografar_senha
 from app.models.iot import LeituraIoT, StatusAlertaEnum
 from datetime import datetime, timedelta
+from backend.main import create_app
+from app.database import db
+
+
+@pytest.fixture
+def app():
+    """Fixture para criar aplicação Flask de teste."""
+    app = create_app({
+        'TESTING': True,
+        'SQLALCHEMY_DATABASE_URI': 'sqlite:///:memory:',
+        'WTF_CSRF_ENABLED': False,
+        'SECRET_KEY': 'test-secret-key'
+    })
+    
+    with app.app_context():
+        db.create_all()
+        yield app
+        db.drop_all()
+
+
+@pytest.fixture
+def client(app):
+    """Fixture para cliente de teste."""
+    return app.test_client()
 
 
 class TestAdminPainelSaudeAccess:
@@ -231,7 +255,6 @@ class TestAdminPainelSaudeTemplate:
 def usuario_admin(app):
     """Cria um usuário administrador para testes."""
     with app.app_context():
-        from app.database import db
         admin = Usuario(
             nome='Admin Teste',
             cpf='12345678901',
@@ -243,14 +266,15 @@ def usuario_admin(app):
         )
         db.session.add(admin)
         db.session.commit()
-        return admin
+        yield admin
+        db.session.delete(admin)
+        db.session.commit()
 
 
 @pytest.fixture
 def usuario_voluntario(app):
     """Cria um usuário voluntário para testes."""
     with app.app_context():
-        from app.database import db
         voluntario = Usuario(
             nome='Voluntário Teste',
             cpf='98765432100',
@@ -262,4 +286,6 @@ def usuario_voluntario(app):
         )
         db.session.add(voluntario)
         db.session.commit()
-        return voluntario
+        yield voluntario
+        db.session.delete(voluntario)
+        db.session.commit()

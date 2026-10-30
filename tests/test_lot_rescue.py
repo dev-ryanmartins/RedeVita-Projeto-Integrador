@@ -42,8 +42,8 @@ def client(app):
 
 
 @pytest.fixture
-def admin_user(app):
-    """Cria usuário admin para testes."""
+def admin_user_id(app):
+    """Cria usuário admin para testes e retorna ID."""
     with app.app_context():
         admin = Usuario(
             nome='Admin Teste',
@@ -55,12 +55,12 @@ def admin_user(app):
         )
         db.session.add(admin)
         db.session.commit()
-        return admin
+        return admin.id
 
 
 @pytest.fixture
-def farmaceutico_user(app):
-    """Cria usuário farmacêutico para testes."""
+def farmaceutico_user_id(app):
+    """Cria usuário farmacêutico para testes e retorna ID."""
     with app.app_context():
         farmaceutico = Usuario(
             nome='Farmacêutico Teste',
@@ -72,12 +72,12 @@ def farmaceutico_user(app):
         )
         db.session.add(farmaceutico)
         db.session.commit()
-        return farmaceutico
+        return farmaceutico.id
 
 
 @pytest.fixture
-def medico_user(app):
-    """Cria usuário médico para testes."""
+def medico_user_id(app):
+    """Cria usuário médico para testes e retorna ID."""
     with app.app_context():
         medico = Usuario(
             nome='Médico Teste',
@@ -89,7 +89,7 @@ def medico_user(app):
         )
         db.session.add(medico)
         db.session.commit()
-        return medico
+        return medico.id
 
 
 @pytest.fixture
@@ -165,24 +165,24 @@ class TestAcesso:
         assert response.status_code == 302
         assert '/login' in response.location
 
-    def test_admin_acesso_permitido(self, client, admin_user):
+    def test_admin_acesso_permitido(self, client, admin_user_id):
         """Admin deve ter acesso permitido."""
         with client.session_transaction() as sess:
-            sess['_user_id'] = str(admin_user.id)
+            sess['_user_id'] = str(admin_user_id)
         response = client.get('/janela-resgate-lotes')
         assert response.status_code == 200
 
-    def test_farmaceutico_acesso_permitido(self, client, farmaceutico_user):
+    def test_farmaceutico_acesso_permitido(self, client, farmaceutico_user_id):
         """Farmacêutico deve ter acesso permitido."""
         with client.session_transaction() as sess:
-            sess['_user_id'] = str(farmaceutico_user.id)
+            sess['_user_id'] = str(farmaceutico_user_id)
         response = client.get('/janela-resgate-lotes')
         assert response.status_code == 200
 
-    def test_medico_acesso_negado(self, client, medico_user):
+    def test_medico_acesso_negado(self, client, medico_user_id):
         """Médico deve receber 403."""
         with client.session_transaction() as sess:
-            sess['_user_id'] = str(medico_user.id)
+            sess['_user_id'] = str(medico_user_id)
         response = client.get('/janela-resgate-lotes')
         assert response.status_code == 403
 
@@ -190,10 +190,10 @@ class TestAcesso:
 class TestAPIListarLotes:
     """Testa API de listagem de lotes."""
 
-    def test_listar_lotes_sucesso(self, client, admin_user, sample_medicamentos):
+    def test_listar_lotes_sucesso(self, client, admin_user_id, sample_medicamentos):
         """Testa listagem de lotes com sucesso."""
         with client.session_transaction() as sess:
-            sess['_user_id'] = str(admin_user.id)
+            sess['_user_id'] = str(admin_user_id)
 
         response = client.get('/api/janela-resgate-lotes/lotes?horizon_dias=30')
         assert response.status_code == 200
@@ -201,10 +201,10 @@ class TestAPIListarLotes:
         assert data['sucesso'] is True
         assert len(data['dados']['lotes']) == 2  # LOT001 e LOT002
 
-    def test_listar_lotes_filtro_nome(self, client, admin_user, sample_medicamentos):
+    def test_listar_lotes_filtro_nome(self, client, admin_user_id, sample_medicamentos):
         """Testa filtro por nome do medicamento."""
         with client.session_transaction() as sess:
-            sess['_user_id'] = str(admin_user.id)
+            sess['_user_id'] = str(admin_user_id)
 
         response = client.get('/api/janela-resgate-lotes/lotes?horizon_dias=30&nome_medicamento=Paracetamol')
         assert response.status_code == 200
@@ -213,10 +213,10 @@ class TestAPIListarLotes:
         assert len(data['dados']['lotes']) == 1
         assert data['dados']['lotes'][0]['nome'] == 'Paracetamol'
 
-    def test_listar_lotes_horizonte_invalido(self, client, admin_user):
+    def test_listar_lotes_horizonte_invalido(self, client, admin_user_id):
         """Testa validação de horizonte inválido."""
         with client.session_transaction() as sess:
-            sess['_user_id'] = str(admin_user.id)
+            sess['_user_id'] = str(admin_user_id)
 
         response = client.get('/api/janela-resgate-lotes/lotes?horizon_dias=500')
         assert response.status_code == 400
@@ -227,10 +227,10 @@ class TestAPIListarLotes:
 class TestAPIResumo:
     """Testa API de resumo."""
 
-    def test_resumo_sucesso(self, client, admin_user, sample_medicamentos):
+    def test_resumo_sucesso(self, client, admin_user_id, sample_medicamentos):
         """Testa cálculo de resumo com sucesso."""
         with client.session_transaction() as sess:
-            sess['_user_id'] = str(admin_user.id)
+            sess['_user_id'] = str(admin_user_id)
 
         response = client.get('/api/janela-resgate-lotes/resumo?horizon_dias=30')
         assert response.status_code == 200
@@ -244,10 +244,10 @@ class TestAPIResumo:
 class TestAPISimular:
     """Testa API de simulação."""
 
-    def test_simular_sucesso(self, client, admin_user, sample_medicamentos):
+    def test_simular_sucesso(self, client, admin_user_id, sample_medicamentos):
         """Testa simulação com sucesso."""
         with client.session_transaction() as sess:
-            sess['_user_id'] = str(admin_user.id)
+            sess['_user_id'] = str(admin_user_id)
 
         # Buscar o ID do lote LOT001
         with client.application.app_context():
@@ -274,10 +274,10 @@ class TestAPISimular:
         assert data['dados']['total_duracao_dias'] == 3
         assert data['dados']['margem_dias'] == 2  # 5 dias - 3 dias
 
-    def test_simular_lote_nao_encontrado(self, client, admin_user):
+    def test_simular_lote_nao_encontrado(self, client, admin_user_id):
         """Testa simulação com lote inexistente."""
         with client.session_transaction() as sess:
-            sess['_user_id'] = str(admin_user.id)
+            sess['_user_id'] = str(admin_user_id)
 
         payload = {
             'lote_id': 99999,
@@ -293,10 +293,10 @@ class TestAPISimular:
         data = response.get_json()
         assert data['sucesso'] is False
 
-    def test_simular_sem_etapas(self, client, admin_user):
+    def test_simular_sem_etapas(self, client, admin_user_id):
         """Testa simulação sem etapas."""
         with client.session_transaction() as sess:
-            sess['_user_id'] = str(admin_user.id)
+            sess['_user_id'] = str(admin_user_id)
 
         payload = {
             'lote_id': 1,
@@ -312,10 +312,10 @@ class TestAPISimular:
         data = response.get_json()
         assert data['sucesso'] is False
 
-    def test_simular_duracao_invalida(self, client, admin_user):
+    def test_simular_duracao_invalida(self, client, admin_user_id):
         """Testa simulação com duração inválida."""
         with client.session_transaction() as sess:
-            sess['_user_id'] = str(admin_user.id)
+            sess['_user_id'] = str(admin_user_id)
 
         payload = {
             'lote_id': 1,
@@ -354,9 +354,10 @@ class TestService:
         with app.app_context():
             service = LotRescueService()
             lote = Medicamento.query.filter_by(lote='LOT001').first()
+            lote_id = lote.id
 
             resultado = service.simular_cenario_resgate(
-                lote_id=lote.id,
+                lote_id=lote_id,
                 etapas=[{'nome': 'Triagem', 'duracao_dias': 2}]
             )
 
@@ -368,9 +369,10 @@ class TestService:
         with app.app_context():
             service = LotRescueService()
             lote = Medicamento.query.filter_by(lote='LOT001').first()
+            lote_id = lote.id
 
             resultado = service.simular_cenario_resgate(
-                lote_id=lote.id,
+                lote_id=lote_id,
                 etapas=[{'nome': 'Triagem', 'duracao_dias': 4}]
             )
 
@@ -382,9 +384,10 @@ class TestService:
         with app.app_context():
             service = LotRescueService()
             lote = Medicamento.query.filter_by(lote='LOT001').first()
+            lote_id = lote.id
 
             resultado = service.simular_cenario_resgate(
-                lote_id=lote.id,
+                lote_id=lote_id,
                 etapas=[{'nome': 'Triagem', 'duracao_dias': 10}]
             )
 
@@ -396,9 +399,10 @@ class TestService:
         with app.app_context():
             service = LotRescueService()
             lote = Medicamento.query.filter_by(lote='LOT001').first()
+            lote_id = lote.id
 
             resultado = service.simular_cenario_resgate(
-                lote_id=lote.id,
+                lote_id=lote_id,
                 etapas=[{'nome': 'Triagem', 'duracao_dias': 2}]
             )
 
@@ -410,15 +414,16 @@ class TestService:
         with app.app_context():
             service = LotRescueService()
             lote = Medicamento.query.filter_by(lote='LOT001').first()
+            lote_id = lote.id
             quantidade_original = lote.quantidade
 
             service.simular_cenario_resgate(
-                lote_id=lote.id,
+                lote_id=lote_id,
                 etapas=[{'nome': 'Triagem', 'duracao_dias': 2}]
             )
 
             # Recarregar do banco
-            db.session.refresh(lote)
+            lote = Medicamento.query.get(lote_id)
             assert lote.quantidade == quantidade_original
 
     def test_quantidade_cadastrada_nao_disponivel(self, app, sample_medicamentos):

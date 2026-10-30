@@ -40,8 +40,8 @@ def service(app):
 
 
 @pytest.fixture
-def sample_lote(app):
-    """Cria lote de exemplo."""
+def sample_lote_id(app):
+    """Cria lote de exemplo e retorna ID."""
     with app.app_context():
         lote = Medicamento(
             nome='Medicamento Teste',
@@ -55,7 +55,7 @@ def sample_lote(app):
         )
         db.session.add(lote)
         db.session.commit()
-        return lote
+        return lote.id
 
 
 class TestLimitesParametros:
@@ -71,36 +71,36 @@ class TestLimitesParametros:
         with pytest.raises(ValueError, match="Horizonte deve ser entre"):
             service.listar_lotes_para_resgate(horizon_dias=366)
 
-    def test_etapa_duracao_minima(self, service, sample_lote):
+    def test_etapa_duracao_minima(self, service, sample_lote_id):
         """Testa duração mínima de etapa."""
         with pytest.raises(ValueError, match="Duração da etapa deve ser entre"):
             service.simular_cenario_resgate(
-                lote_id=sample_lote.id,
+                lote_id=sample_lote_id,
                 etapas=[{'nome': 'Teste', 'duracao_dias': 0}]
             )
 
-    def test_etapa_duracao_maxima(self, service, sample_lote):
+    def test_etapa_duracao_maxima(self, service, sample_lote_id):
         """Testa duração máxima de etapa."""
         with pytest.raises(ValueError, match="Duração da etapa deve ser entre"):
             service.simular_cenario_resgate(
-                lote_id=sample_lote.id,
+                lote_id=sample_lote_id,
                 etapas=[{'nome': 'Teste', 'duracao_dias': 91}]
             )
 
-    def test_maximo_etapas(self, service, sample_lote):
+    def test_maximo_etapas(self, service, sample_lote_id):
         """Testa máximo de etapas."""
         etapas = [{'nome': f'Etapa{i}', 'duracao_dias': 1} for i in range(6)]
         with pytest.raises(ValueError, match="Máximo de 5 etapas"):
             service.simular_cenario_resgate(
-                lote_id=sample_lote.id,
+                lote_id=sample_lote_id,
                 etapas=etapas
             )
 
-    def test_lista_vazia_etapas(self, service, sample_lote):
+    def test_lista_vazia_etapas(self, service, sample_lote_id):
         """Testa lista vazia de etapas."""
         with pytest.raises(ValueError, match="Pelo menos uma etapa"):
             service.simular_cenario_resgate(
-                lote_id=sample_lote.id,
+                lote_id=sample_lote_id,
                 etapas=[]
             )
 
@@ -108,10 +108,10 @@ class TestLimitesParametros:
 class TestCalculosMargem:
     """Testa cálculos de margem."""
 
-    def test_margem_positiva(self, service, sample_lote):
+    def test_margem_positiva(self, service, sample_lote_id):
         """Testa margem positiva."""
         resultado = service.simular_cenario_resgate(
-            lote_id=sample_lote.id,
+            lote_id=sample_lote_id,
             etapas=[{'nome': 'Teste', 'duracao_dias': 10}]
         )
         assert resultado['margem_dias'] == 20  # 30 - 10
@@ -133,18 +133,19 @@ class TestCalculosMargem:
             )
             db.session.add(lote)
             db.session.commit()
+            lote_id = lote.id
 
             resultado = service.simular_cenario_resgate(
-                lote_id=lote.id,
+                lote_id=lote_id,
                 etapas=[{'nome': 'Teste', 'duracao_dias': 10}]
             )
             assert resultado['margem_dias'] == 0
             assert resultado['resultado'] == 'margem_reduzida'
 
-    def test_margem_negativa(self, service, sample_lote):
+    def test_margem_negativa(self, service, sample_lote_id):
         """Testa margem negativa."""
         resultado = service.simular_cenario_resgate(
-            lote_id=sample_lote.id,
+            lote_id=sample_lote_id,
             etapas=[{'nome': 'Teste', 'duracao_dias': 40}]
         )
         assert resultado['margem_dias'] == -10  # 30 - 40
@@ -166,9 +167,10 @@ class TestCalculosMargem:
             )
             db.session.add(lote)
             db.session.commit()
+            lote_id = lote.id
 
             resultado = service.simular_cenario_resgate(
-                lote_id=lote.id,
+                lote_id=lote_id,
                 etapas=[{'nome': 'Teste', 'duracao_dias': 4}]
             )
             assert resultado['margem_dias'] == 6
@@ -190,9 +192,10 @@ class TestCalculosMargem:
             )
             db.session.add(lote)
             db.session.commit()
+            lote_id = lote.id
 
             resultado = service.simular_cenario_resgate(
-                lote_id=lote.id,
+                lote_id=lote_id,
                 etapas=[{'nome': 'Teste', 'duracao_dias': 3}]
             )
             assert resultado['margem_dias'] == 7
@@ -202,17 +205,17 @@ class TestCalculosMargem:
 class TestDeterminismo:
     """Testa determinismo dos resultados."""
 
-    def test_mesma_entrada_mesma_saida(self, service, sample_lote):
+    def test_mesma_entrada_mesma_saida(self, service, sample_lote_id):
         """Testa que mesma entrada produz mesma saída."""
         etapas = [{'nome': 'Triagem', 'duracao_dias': 5}]
 
         resultado1 = service.simular_cenario_resgate(
-            lote_id=sample_lote.id,
+            lote_id=sample_lote_id,
             etapas=etapas
         )
 
         resultado2 = service.simular_cenario_resgate(
-            lote_id=sample_lote.id,
+            lote_id=sample_lote_id,
             etapas=etapas
         )
 
@@ -220,18 +223,18 @@ class TestDeterminismo:
         assert resultado1['resultado'] == resultado2['resultado']
         assert resultado1['total_duracao_dias'] == resultado2['total_duracao_dias']
 
-    def test_seed_ignorada_se_somente_para_validacao(self, service, sample_lote):
+    def test_seed_ignorada_se_somente_para_validacao(self, service, sample_lote_id):
         """Testa que seed não afeta resultado (só validação)."""
         etapas = [{'nome': 'Triagem', 'duracao_dias': 5}]
 
         resultado1 = service.simular_cenario_resgate(
-            lote_id=sample_lote.id,
+            lote_id=sample_lote_id,
             etapas=etapas,
             seed=123
         )
 
         resultado2 = service.simular_cenario_resgate(
-            lote_id=sample_lote.id,
+            lote_id=sample_lote_id,
             etapas=etapas,
             seed=456
         )

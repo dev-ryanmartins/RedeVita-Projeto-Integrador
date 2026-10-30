@@ -133,15 +133,15 @@ class ColdCrisisReplayService:
         Obtém o roteiro de treinamento para um cenário.
 
         Args:
-            scenario: Tipo do cenário
+            cenario: Tipo do cenário
 
         Returns:
             Lista de etapas do roteiro
         """
-        if scenario not in self.ROTEIRO_ETAPAS:
+        if cenario not in self.ROTEIRO_ETAPAS:
             return []
 
-        return self.ROTEIRO_ETAPAS[scenario]
+        return self.ROTEIRO_ETAPAS[cenario]
 
     def obter_informacao_roteiro(self) -> Dict[str, str]:
         """
@@ -293,7 +293,7 @@ class ColdCrisisReplayService:
             Dicionário com comparação
         """
         # Verificar se são do mesmo cenário
-        if execucao["cenario"] != execucao2["cenario"]:
+        if execucao1["cenario"] != execucao2["cenario"]:
             raise ValueError("As execuções devem ser do mesmo cenário")
 
         # Calcular cobertura de cada execução

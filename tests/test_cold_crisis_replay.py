@@ -72,7 +72,7 @@ class TestRoteiro:
         
         for cenario in cenarios:
             roteiro = service.obter_roteiro(cenario)
-            assert len(roteiro) > 0, f"Cenário {scenario} não tem roteiro"
+            assert len(roteiro) > 0, f"Cenário {cenario} não tem roteiro"
 
 
 class TestReplay:
@@ -450,5 +450,5 @@ class TestAvaliacao:
         
         # Deve explicitar que é material demonstrativo
         assert 'demonstrativo' in info['aviso'].lower()
-        assert 'protocolo oficial' in info['aviso'].lower()
+        assert 'procedimento oficial' in info['aviso'].lower()
         assert 'orientação da anvisa' in info['aviso'].lower()

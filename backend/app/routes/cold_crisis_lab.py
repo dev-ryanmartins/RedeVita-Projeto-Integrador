@@ -148,12 +148,12 @@ def obter_roteiro():
     Acesso: Admin e Farmacêutico
     """
     try:
-        cenario = request.args.get('scenario')
+        cenario = request.args.get('cenario')
 
-        if not scenario:
+        if not cenario:
             return resposta_erro(
                 ERRO_VALIDACAO,
-                "Parâmetro 'scenario' é obrigatório",
+                "Parâmetro 'cenario' é obrigatório",
                 status=400
             )
 

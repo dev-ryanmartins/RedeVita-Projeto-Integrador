@@ -58,6 +58,16 @@
                 </div>
                 <span class="nav-item-text">Doações</span>
             </a>
+            {% if is_operador() or is_admin() %}
+            <a href="{{ url_for('donation.pre_checagem') }}" 
+               class="nav-item {{ 'active' if request.endpoint == 'donation.pre_checagem' else '' }}"
+               data-tooltip="Pré-checagem">
+                <div class="nav-item-icon">
+                    <i class="fas fa-clipboard-check"></i>
+                </div>
+                <span class="nav-item-text">Pré-checagem</span>
+            </a>
+            {% endif %}
             <a href="{{ url_for('pacientes.listar_pacientes') }}" 
                class="nav-item {{ 'active' if request.endpoint and request.endpoint.startswith('pacientes.') else '' }}"
                data-tooltip="Pacientes">

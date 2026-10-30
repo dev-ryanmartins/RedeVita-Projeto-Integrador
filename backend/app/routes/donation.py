@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
 from app.models.doacao import Doacao
 from app.models.medicamento import Medicamento
@@ -9,6 +9,9 @@ from app.utils.email_service import email_service
 from app.utils.sms_service import sms_service
 from app.utils.medication_validation import (
     validate_batch_for_creation,
+    validate_expiration,
+    validate_quantity,
+    validate_tarja,
     calculate_semaforo_status,
     validate_batch_for_stock_reduction,
     TARJAS_VALIDAS,
@@ -282,6 +285,216 @@ def triagem():
         "doacoes_triagem.html",
         recentes=recentes,
         tarjas=TARJAS_VALIDAS,
+    )
+
+
+@donation_bp.route("/doacoes/pre-checagem", methods=["GET", "POST"])
+@login_required
+@operador_required
+def pre_checagem():
+    """
+    Pré-checagem guiada de doações - não grava dados, apenas valida e explica pendências.
+    Esta rota NÃO cria medicamentos nem altera estoque.
+    """
+    if request.method == "POST":
+        # Aceita tanto form quanto JSON
+        if request.is_json:
+            dados = request.get_json() or {}
+            nome = dados.get("nome", "").strip()
+            lote = dados.get("lote", "").strip()
+            data_validade_str = dados.get("data_validade", "").strip()
+            quantidade_str = dados.get("quantidade", "0").strip()
+            tarja = dados.get("tarja", "Sem Tarja").strip()
+            principio_ativo = dados.get("principio_ativo", "").strip() or None
+        else:
+            nome = request.form.get("nome", "").strip()
+            lote = request.form.get("lote", "").strip()
+            data_validade_str = request.form.get("data_validade", "").strip()
+            quantidade_str = request.form.get("quantidade", "0").strip()
+            tarja = request.form.get("tarja", "Sem Tarja").strip()
+            principio_ativo = request.form.get("principio_ativo", "").strip() or None
+
+        # Lista de resultados da pré-checagem
+        bloqueios = []
+        pendencias_humanas = []
+        informativos = []
+        verificacoes_nao_feitas = []
+
+        # 1. Validar nome
+        if not nome:
+            bloqueios.append({
+                "campo": "nome",
+                "mensagem": "Nome do medicamento é obrigatório.",
+                "proximo_passo": "Informe o nome completo do medicamento conforme a embalagem."
+            })
+        else:
+            informativos.append({
+                "campo": "nome",
+                "mensagem": f"Nome informado: {nome}",
+                "nota": "O sistema não valida se o nome está correto ou se corresponde a um medicamento real."
+            })
+
+        # 2. Validar lote
+        if not lote:
+            bloqueios.append({
+                "campo": "lote",
+                "mensagem": "Número do lote é obrigatório.",
+                "proximo_passo": "Informe o número do lote conforme a embalagem."
+            })
+        else:
+            informativos.append({
+                "campo": "lote",
+                "mensagem": f"Lote informado: {lote}",
+                "nota": "O sistema não verifica se o lote existe ou é válido."
+            })
+
+        # 3. Validar data de validade
+        try:
+            data_validade = datetime.strptime(data_validade_str, "%Y-%m-%d").date()
+            exp_result = validate_expiration(data_validade)
+            if not exp_result.is_valid:
+                bloqueios.append({
+                    "campo": "data_validade",
+                    "mensagem": exp_result.error_message,
+                    "proximo_passo": "Verifique a data de validade na embalagem. Lotes vencidos não podem ser aceitos."
+                })
+            else:
+                dias_restantes = (data_validade - datetime.now().date()).days
+                if dias_restantes <= 30:
+                    pendencias_humanas.append({
+                        "campo": "data_validade",
+                        "mensagem": f"Lote próximo ao vencimento ({dias_restantes} dias restantes).",
+                        "proximo_passo": "Avalie se o prazo é suficiente para uso ou redistribuição."
+                    })
+                else:
+                    informativos.append({
+                        "campo": "data_validade",
+                        "mensagem": f"Data de validade: {data_validade.strftime('%d/%m/%Y')} ({dias_restantes} dias restantes).",
+                        "nota": "A validade foi verificada automaticamente."
+                    })
+        except ValueError:
+            bloqueios.append({
+                "campo": "data_validade",
+                "mensagem": "Data de validade inválida. Use formato AAAA-MM-DD.",
+                "proximo_passo": "Informe a data no formato correto (ex: 2025-12-31)."
+            })
+
+        # 4. Validar quantidade
+        try:
+            quantidade = int(quantidade_str)
+            qty_result = validate_quantity(quantidade)
+            if not qty_result.is_valid:
+                bloqueios.append({
+                    "campo": "quantidade",
+                    "mensagem": qty_result.error_message,
+                    "proximo_passo": "Informe um número inteiro positivo para a quantidade."
+                })
+            else:
+                informativos.append({
+                    "campo": "quantidade",
+                    "mensagem": f"Quantidade informada: {quantidade} unidades.",
+                    "nota": "O sistema não verifica se a quantidade corresponde ao conteúdo real da embalagem."
+                })
+        except ValueError:
+            bloqueios.append({
+                "campo": "quantidade",
+                "mensagem": "Quantidade inválida. Informe um número inteiro.",
+                "proximo_passo": "Informe um número inteiro positivo (ex: 10, 20, 50)."
+            })
+
+        # 5. Validar tarja
+        tarja_result = validate_tarja(tarja, allow_unknown=False)
+        if not tarja_result.is_valid:
+            bloqueios.append({
+                "campo": "tarja",
+                "mensagem": tarja_result.error_message,
+                "proximo_passo": "Selecione uma classificação válida (Sem Tarja, Tarja Amarela, Tarja Vermelha, Portaria 344)."
+            })
+        else:
+            if tarja == "Portaria 344":
+                bloqueios.append({
+                    "campo": "tarja",
+                    "mensagem": "Medicamento controlado pela Portaria 344.",
+                    "proximo_passo": "Este medicamento requer avaliação obrigatória do farmacêutico responsável antes do cadastro."
+                })
+            else:
+                informativos.append({
+                    "campo": "tarja",
+                    "mensagem": f"Classificação: {tarja}.",
+                    "nota": "A classificação foi verificada automaticamente."
+                })
+
+        # 6. Verificar princípio ativo controlado
+        if principio_ativo:
+            principio_lower = principio_ativo.lower()
+            controlled_keywords = ['antibiotico', 'antidepressivo', 'anfetamina', 'opiaceo', 'benzodiazepin', 'controlado', 'psicotropico']
+            if any(keyword in principio_lower for keyword in controlled_keywords):
+                pendencias_humanas.append({
+                    "campo": "principio_ativo",
+                    "mensagem": "Princípio ativo pode indicar substância controlada.",
+                    "proximo_passo": "Solicite avaliação do farmacêutico responsável para confirmar a classificação correta."
+                })
+            else:
+                informativos.append({
+                    "campo": "principio_ativo",
+                    "mensagem": f"Princípio ativo informado: {principio_ativo}.",
+                    "nota": "O sistema não valida se o princípio ativo está correto ou corresponde ao medicamento."
+                })
+
+        # 7. Verificações não feitas pelo sistema
+        verificacoes_nao_feitas = [
+            {
+                "item": "Procedência da doação",
+                "explicacao": "O sistema não verifica se o doador é legítimo ou se a origem é segura."
+            },
+            {
+                "item": "Integridade da embalagem",
+                "explicacao": "O sistema não verifica se a embalagem está íntegra, lacrada ou violada."
+            },
+            {
+                "item": "Condições de conservação",
+                "explicacao": "O sistema não verifica se o medicamento foi armazenado corretamente (temperatura, umidade, luz)."
+            },
+            {
+                "item": "Condições de transporte",
+                "explicacao": "O sistema não verifica se o transporte respeitou as condições de cadeia de frio quando necessário."
+            },
+            {
+                "item": "Documentação exigida",
+                "explicacao": "O sistema não verifica se há documentação legal ou sanitária exigida para o medicamento."
+            }
+        ]
+
+        # Determinar status geral
+        pode_prosseguir = len(bloqueios) == 0
+
+        resultado = {
+            "pode_prosseguir": pode_prosseguir,
+            "bloqueios": bloqueios,
+            "pendencias_humanas": pendencias_humanas,
+            "informativos": informativos,
+            "verificacoes_nao_feitas": verificacoes_nao_feitas
+        }
+
+        if request.is_json:
+            return jsonify(resultado)
+        else:
+            return render_template(
+                "doacoes_pre_checagem.html",
+                resultado=resultado,
+                nome=nome,
+                lote=lote,
+                data_validade=data_validade_str,
+                quantidade=quantidade_str,
+                tarja=tarja,
+                principio_ativo=principio_ativo,
+                tarjas=TARJAS_VALIDAS
+            )
+
+    return render_template(
+        "doacoes_pre_checagem.html",
+        resultado=None,
+        tarjas=TARJAS_VALIDAS
     )
 
 

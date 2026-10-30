@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block title %}Pré-checagem de Doações - RedeVita{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/doacoes_pre_checagem.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="alert alert-warning d-flex align-items-center" role="alert">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-exclamation-triangle-fill flex-shrink-0 me-2" viewBox="0 0 16 16">
+            <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+        </svg>
+        <div>
+            <strong>Aviso Importante:</strong> Esta pré-checagem não aprova a doação nem confirma que o medicamento pode ser aceito, transferido ou dispensado.
+        </div>
+    </div>
+
+    <h2 class="mb-4">Pré-checagem Guiada de Doações</h2>
+    <p class="text-muted mb-4">
+        Preencha os campos abaixo para identificar pendências antes de iniciar a triagem.
+        Esta etapa não grava dados no sistema.
+    </p>
+
+    <div class="card">
+        <div class="card-body">
+            <form id="pre-checagem-form" method="POST">
+                <div class="mb-3">
+                    <label for="nome" class="form-label">Nome do Medicamento *</label>
+                    <input type="text" class="form-control" id="nome" name="nome" required
+                           value="{{ nome or '' }}" placeholder="Ex: Dipirona Sódica 500mg">
+                </div>
+
+                <div class="mb-3">
+                    <label for="lote" class="form-label">Número do Lote *</label>
+                    <input type="text" class="form-control" id="lote" name="lote" required
+                           value="{{ lote or '' }}" placeholder="Ex: ABC12345">
+                </div>
+
+                <div class="mb-3">
+                    <label for="data_validade" class="form-label">Data de Validade *</label>
+                    <input type="date" class="form-control" id="data_validade" name="data_validade" required
+                           value="{{ data_validade or '' }}">
+                </div>
+
+                <div class="mb-3">
+                    <label for="quantidade" class="form-label">Quantidade *</label>
+                    <input type="number" class="form-control" id="quantidade" name="quantidade" required min="1"
+                           value="{{ quantidade or '' }}" placeholder="Ex: 10">
+                </div>
+
+                <div class="mb-3">
+                    <label for="tarja" class="form-label">Classificação (Tarja) *</label>
+                    <select class="form-select" id="tarja" name="tarja" required>
+                        <option value="">Selecione...</option>
+                        {% for tarja in tarjas %}
+                        <option value="{{ tarja }}" {% if tarja == (tarja or 'Sem Tarja') %}selected{% endif %}>{{ tarja }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="principio_ativo" class="form-label">Princípio Ativo (opcional)</label>
+                    <input type="text" class="form-control" id="principio_ativo" name="principio_ativo"
+                           value="{{ principio_ativo or '' }}" placeholder="Ex: Dipirona sódica">
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">Verificar Pendências</button>
+                    <button type="button" class="btn btn-secondary" onclick="window.location.href='/doacoes/triagem'">Ir para Triagem</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if resultado %}
+    <div id="resultado" class="mt-4">
+        {% if resultado.bloqueios %}
+        <div class="card mb-3 border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">🚫 Bloqueios Detectados</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-danger">Estes problemas impedem o prosseguimento pelo fluxo atual:</p>
+                <ul class="list-group">
+                    {% for bloqueio in resultado.bloqueios %}
+                    <li class="list-group-item list-group-item-danger">
+                        <strong>{{ bloqueio.campo|capitalize }}:</strong> {{ bloqueio.mensagem }}
+                        <br>
+                        <small class="text-muted">Próximo passo: {{ bloqueio.proximo_passo }}</small>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if resultado.pendencias_humanas %}
+        <div class="card mb-3 border-warning">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">⚠️ Pendências de Conferência Humana</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-warning">Estes itens requerem avaliação manual:</p>
+                <ul class="list-group">
+                    {% for pendencia in resultado.pendencias_humanas %}
+                    <li class="list-group-item list-group-item-warning">
+                        <strong>{{ pendencia.campo|capitalize }}:</strong> {{ pendencia.mensagem }}
+                        <br>
+                        <small class="text-muted">Próximo passo: {{ pendencia.proximo_passo }}</small>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if resultado.informativos %}
+        <div class="card mb-3 border-success">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">✓ Dados Verificados Automaticamente</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-success">Estes dados passaram nas verificações automáticas existentes:</p>
+                <ul class="list-group">
+                    {% for info in resultado.informativos %}
+                    <li class="list-group-item list-group-item-success">
+                        <strong>{{ info.campo|capitalize }}:</strong> {{ info.mensagem }}
+                        {% if info.nota %}
+                        <br>
+                        <small class="text-muted">{{ info.nota }}</small>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="card mb-3 border-info">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">ℹ️ Verificações Não Feitas pelo Sistema</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-info">O sistema NÃO realiza estas verificações - requer inspeção humana:</p>
+                <ul class="list-group">
+                    {% for verificacao in resultado.verificacoes_nao_feitas %}
+                    <li class="list-group-item list-group-item-info">
+                        <strong>{{ verificacao.item }}:</strong> {{ verificacao.explicacao }}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-body">
+                {% if resultado.pode_prosseguir %}
+                <p class="text-success">
+                    <strong>Sem bloqueios detectados.</strong> Você pode prosseguir para a triagem,
+                    mas ainda deve verificar os itens listados acima manualmente.
+                </p>
+                <a href="/doacoes/triagem" class="btn btn-primary">Continuar para Triagem</a>
+                {% else %}
+                <p class="text-danger">
+                    <strong>Bloqueios detectados.</strong> Corrija os problemas acima antes de prosseguir.
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/doacoes_pre_checagem.js') }}"></script>
+{% endblock %}

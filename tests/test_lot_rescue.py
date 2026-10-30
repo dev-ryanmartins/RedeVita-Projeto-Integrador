@@ -16,6 +16,7 @@ from app.database import db
 from app.models.usuario import Usuario
 from app.models.medicamento import Medicamento
 from app.services.lot_rescue_service import LotRescueService
+from werkzeug.security import generate_password_hash
 
 
 @pytest.fixture
@@ -47,10 +48,11 @@ def admin_user(app):
         admin = Usuario(
             nome='Admin Teste',
             email='admin@teste.com',
+            cpf='12345678901',
+            senha=generate_password_hash('senha123'),
             cargo='Admin',
             ativo=True
         )
-        admin.set_senha('senha123')
         db.session.add(admin)
         db.session.commit()
         return admin
@@ -63,10 +65,11 @@ def farmaceutico_user(app):
         farmaceutico = Usuario(
             nome='Farmacêutico Teste',
             email='farmaceutico@teste.com',
+            cpf='12345678902',
+            senha=generate_password_hash('senha123'),
             cargo='Farmacêutico',
             ativo=True
         )
-        farmaceutico.set_senha('senha123')
         db.session.add(farmaceutico)
         db.session.commit()
         return farmaceutico
@@ -79,10 +82,11 @@ def medico_user(app):
         medico = Usuario(
             nome='Médico Teste',
             email='medico@teste.com',
+            cpf='12345678903',
+            senha=generate_password_hash('senha123'),
             cargo='Médico',
             ativo=True
         )
-        medico.set_senha('senha123')
         db.session.add(medico)
         db.session.commit()
         return medico
@@ -101,7 +105,6 @@ def sample_medicamentos(app):
             ativo=True,
             status_semaforo=1,
             tarja='Amarela',
-            controlado=False,
             principio_ativo='Paracetamol'
         )
         # Lote atenção (vence em 15 dias)
@@ -113,7 +116,6 @@ def sample_medicamentos(app):
             ativo=True,
             status_semaforo=0,
             tarja='Branca',
-            controlado=False,
             principio_ativo='Ibuprofeno'
         )
         # Lote normal (vence em 60 dias)
@@ -125,7 +127,6 @@ def sample_medicamentos(app):
             ativo=True,
             status_semaforo=0,
             tarja='Branca',
-            controlado=False,
             principio_ativo='Dipirona'
         )
         # Lote vencido
@@ -137,7 +138,6 @@ def sample_medicamentos(app):
             ativo=True,
             status_semaforo=2,
             tarja='Branca',
-            controlado=False,
             principio_ativo='Amoxicilina'
         )
         # Lote fora do horizonte (vence em 400 dias)
@@ -149,7 +149,6 @@ def sample_medicamentos(app):
             ativo=True,
             status_semaforo=0,
             tarja='Branca',
-            controlado=False,
             principio_ativo='Omeprazol'
         )
 

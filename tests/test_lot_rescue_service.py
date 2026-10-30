@@ -51,7 +51,6 @@ def sample_lote(app):
             ativo=True,
             status_semaforo=0,
             tarja='Branca',
-            controlado=False,
             principio_ativo='Principio Ativo'
         )
         db.session.add(lote)
@@ -130,7 +129,6 @@ class TestCalculosMargem:
                 ativo=True,
                 status_semaforo=0,
                 tarja='Branca',
-                controlado=False,
                 principio_ativo='Teste'
             )
             db.session.add(lote)
@@ -164,7 +162,6 @@ class TestCalculosMargem:
                 ativo=True,
                 status_semaforo=0,
                 tarja='Branca',
-                controlado=False,
                 principio_ativo='Teste'
             )
             db.session.add(lote)
@@ -189,7 +186,6 @@ class TestCalculosMargem:
                 ativo=True,
                 status_semaforo=0,
                 tarja='Branca',
-                controlado=False,
                 principio_ativo='Teste'
             )
             db.session.add(lote)
@@ -267,7 +263,6 @@ class TestValidations:
                 ativo=False,  # Inativo
                 status_semaforo=0,
                 tarja='Branca',
-                controlado=False,
                 principio_ativo='Teste'
             )
             db.session.add(lote)
@@ -288,7 +283,6 @@ class TestValidations:
                 ativo=True,
                 status_semaforo=2,
                 tarja='Branca',
-                controlado=False,
                 principio_ativo='Teste'
             )
             db.session.add(lote)
@@ -309,7 +303,6 @@ class TestValidations:
                 ativo=True,
                 status_semaforo=0,
                 tarja='Branca',
-                controlado=False,
                 principio_ativo='Teste'
             )
             db.session.add(lote)
@@ -345,7 +338,6 @@ class TestResumo:
                 ativo=True,
                 status_semaforo=0,
                 tarja='Branca',
-                controlado=False,
                 principio_ativo='Teste'
             )
             # Lote atenção
@@ -357,7 +349,6 @@ class TestResumo:
                 ativo=True,
                 status_semaforo=0,
                 tarja='Branca',
-                controlado=False,
                 principio_ativo='Teste'
             )
             # Lote normal
@@ -369,7 +360,6 @@ class TestResumo:
                 ativo=True,
                 status_semaforo=0,
                 tarja='Branca',
-                controlado=False,
                 principio_ativo='Teste'
             )
 

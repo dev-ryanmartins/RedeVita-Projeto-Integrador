@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}Quadro de Necessidades de Instituições - RedeVita{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/necessidades_institucionais.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="alert alert-warning d-flex align-items-center" role="alert">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-exclamation-triangle-fill flex-shrink-0 me-2" viewBox="0 0 16 16">
+            <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+        </svg>
+        <div>
+            <strong>Aviso Importante:</strong> Necessidades registradas para planejamento. Este quadro não confirma estoque, reserva, elegibilidade clínica ou atendimento.
+        </div>
+    </div>
+
+    <h2 class="mb-4">Quadro Privado de Necessidades de Instituições</h2>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="POST">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="nome_instituicao" class="form-label">Nome da Instituição *</label>
+                        <input type="text" class="form-control" id="nome_instituicao" name="nome_instituicao" required placeholder="Ex: Hospital Municipal">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="medicamento_referencia_id" class="form-label">Referência do Medicamento</label>
+                        <select class="form-select" id="medicamento_referencia_id" name="medicamento_referencia_id">
+                            <option value="">Selecione...</option>
+                            {% for ref in referencias %}
+                            <option value="{{ ref.id }}">{{ ref.nome_comercial }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="produto_descritivo" class="form-label">Produto (se não houver referência) *</label>
+                        <input type="text" class="form-control" id="produto_descritivo" name="produto_descritivo" placeholder="Ex: Dipirona 500mg">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="quantidade_solicitada" class="form-label">Quantidade *</label>
+                        <input type="number" class="form-control" id="quantidade_solicitada" name="quantidade_solicitada" required min="1">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="unidade" class="form-label">Unidade</label>
+                        <input type="text" class="form-control" id="unidade" name="unidade" value="unidade">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="data_desejada" class="form-label">Data Desejada</label>
+                        <input type="date" class="form-control" id="data_desejada" name="data_desejada">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="prioridade" class="form-label">Prioridade</label>
+                        <select class="form-select" id="prioridade" name="prioridade">
+                            <option value="baixa">Baixa</option>
+                            <option value="media" selected>Média</option>
+                            <option value="alta">Alta</option>
+                            <option value="urgente">Urgente</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="observacoes" class="form-label">Observações</label>
+                        <textarea class="form-control" id="observacoes" name="observacoes" rows="1"></textarea>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Registrar Necessidade</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title mb-3">Filtros</h5>
+            <form method="GET" class="row g-2">
+                <div class="col-md-4">
+                    <select class="form-select" name="status">
+                        <option value="">Todos os Status</option>
+                        <option value="rascunho" {% if status_filtro == 'rascunho' %}selected{% endif %}>Rascunho</option>
+                        <option value="em_revisao" {% if status_filtro == 'em_revisao' %}selected{% endif %}>Em Revisão</option>
+                        <option value="registrada" {% if status_filtro == 'registrada' %}selected{% endif %}>Registrada</option>
+                        <option value="encerrada" {% if status_filtro == 'encerrada' %}selected{% endif %}>Encerrada</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <select class="form-select" name="prioridade">
+                        <option value="">Todas as Prioridades</option>
+                        <option value="baixa" {% if prioridade_filtro == 'baixa' %}selected{% endif %}>Baixa</option>
+                        <option value="media" {% if prioridade_filtro == 'media' %}selected{% endif %}>Média</option>
+                        <option value="alta" {% if prioridade_filtro == 'alta' %}selected{% endif %}>Alta</option>
+                        <option value="urgente" {% if prioridade_filtro == 'urgente' %}selected{% endif %}>Urgente</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-secondary w-100">Filtrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card mt-4">
+        <div class="card-body">
+            <h5 class="card-title">Necessidades Registradas</h5>
+            {% if necessidades %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Instituição</th>
+                            <th>Produto</th>
+                            <th>Quantidade</th>
+                            <th>Prioridade</th>
+                            <th>Status</th>
+                            <th>Data Desejada</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for necessidade in necessidades %}
+                        <tr>
+                            <td>{{ necessidade.nome_instituicao }}</td>
+                            <td>{{ necessidade.produto_descritivo or 'Referência: ' + (necessidade.referencia.nome_comercial if necessidade.referencia else 'N/A') }}</td>
+                            <td>{{ necessidade.quantidade_solicitada }} {{ necessidade.unidade }}</td>
+                            <td>
+                                <span class="badge {% if necessidade.prioridade == 'urgente' %}bg-danger{% elif necessidade.prioridade == 'alta' %}bg-warning{% elif necessidade.prioridade == 'baixa' %}bg-success{% else %}bg-info{% endif %}">
+                                    {{ necessidade.prioridade|capitalize }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge {% if necessidade.status == 'encerrada' %}bg-secondary{% elif necessidade.status == 'registrada' %}bg-success{% elif necessidade.status == 'em_revisao' %}bg-warning{% else %}bg-light text-dark{% endif %}">
+                                    {{ necessidade.status|replace('_', ' ')|capitalize }}
+                                </span>
+                            </td>
+                            <td>{{ necessidade.data_desejada.strftime('%d/%m/%Y') if necessidade.data_desejada else 'N/A' }}</td>
+                            <td>
+                                <a href="{{ url_for('necessidade_institucional.detalhes_necessidade', id=necessidade.id) }}" class="btn btn-sm btn-info">Detalhes</a>
+                                {% if necessidade.status != 'encerrada' %}
+                                <form method="POST" action="{{ url_for('necessidade_institucional.revisar_necessidade', id=necessidade.id) }}" class="d-inline">
+                                    <select name="status" class="form-select form-select-sm">
+                                        <option value="em_revisao">Em Revisão</option>
+                                        <option value="registrada">Registrada</option>
+                                        <option value="encerrada">Encerrar</option>
+                                    </select>
+                                    <button type="submit" class="btn btn-sm btn-warning">Revisar</button>
+                                </form>
+                                <form method="POST" action="{{ url_for('necessidade_institucional.encerrar_necessidade', id=necessidade.id) }}" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-danger">Encerrar</button>
+                                </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted">Nenhuma necessidade registrada.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

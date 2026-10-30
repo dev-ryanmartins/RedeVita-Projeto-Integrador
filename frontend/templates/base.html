@@ -263,7 +263,7 @@
                 </div>
                 <span class="nav-item-text">Logs</span>
             </a>
-            <a href="{{ url_for('academico.auditoria') }}" 
+            <a href="{{ url_for('academico.auditoria') }}"
                class="nav-item admin {{ 'active' if request.endpoint == 'academico.auditoria' else '' }}"
                data-tooltip="Auditoria">
                 <div class="nav-item-icon">
@@ -271,7 +271,15 @@
                 </div>
                 <span class="nav-item-text">Auditoria</span>
             </a>
-            <a href="#" onclick="abrirPainelAdmin()" 
+            <a href="{{ url_for('necessidade_institucional.listar_necessidades') }}"
+               class="nav-item admin {{ 'active' if request.endpoint and request.endpoint.startswith('necessidade_institucional.') else '' }}"
+               data-tooltip="Necessidades Institucionais">
+                <div class="nav-item-icon">
+                    <i class="fas fa-hand-holding-heart"></i>
+                </div>
+                <span class="nav-item-text">Necessidades</span>
+            </a>
+            <a href="#" onclick="abrirPainelAdmin()"
                class="nav-item admin"
                data-tooltip="Painel Admin">
                 <div class="nav-item-icon">

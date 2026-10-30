@@ -49,6 +49,7 @@ from app.routes.cold_crisis_lab import cold_crisis_lab_bp
 from app.routes.lot_rescue import lot_rescue_bp
 from app.routes.iot_integrity_radar import iot_integrity_radar_bp
 from app.routes.perfil_resiliencia import perfil_resiliencia_bp
+from app.routes.necessidade_institucional import necessidade_institucional_bp
 from app.core.error_handlers import registrar_handlers_api
 from app.core.middleware import request_id_middleware
 
@@ -196,6 +197,7 @@ def create_app(config_overrides=None):
     app.register_blueprint(lot_rescue_bp)
     app.register_blueprint(iot_integrity_radar_bp)
     app.register_blueprint(perfil_resiliencia_bp)
+    app.register_blueprint(necessidade_institucional_bp)
 
     registrar_handlers_limite(app)
     registrar_handlers_api(app)

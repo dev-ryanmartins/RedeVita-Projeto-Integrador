@@ -1,0 +1,133 @@
+/* CSS específico para Quadro de Necessidades de Instituições */
+
+.alert-warning {
+    background-color: rgba(255, 193, 7, 0.1);
+    border-color: rgba(255, 193, 7, 0.3);
+    color: #ffc107;
+}
+
+.alert-warning svg {
+    flex-shrink: 0;
+}
+
+.card {
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+}
+
+.card-body {
+    color: #e0e0e0;
+}
+
+.card-title {
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.form-label {
+    color: #b0b0b0;
+}
+
+.form-control,
+.form-select {
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+}
+
+.form-control:focus,
+.form-select:focus {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-color: #00bcd4;
+    color: #ffffff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 188, 212, 0.25);
+}
+
+.form-control::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.table {
+    color: #e0e0e0;
+}
+
+.table thead th {
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.table tbody tr {
+    border-color: rgba(255, 255, 255, 0.05);
+}
+
+.table tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.btn-primary {
+    background-color: #00bcd4;
+    border-color: #00bcd4;
+}
+
+.btn-primary:hover {
+    background-color: #0097a7;
+    border-color: #0097a7;
+}
+
+.btn-secondary {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+}
+
+.btn-secondary:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+}
+
+.btn-info {
+    background-color: #17a2b8;
+    border-color: #17a2b8;
+}
+
+.btn-info:hover {
+    background-color: #138496;
+    border-color: #138496;
+}
+
+.btn-warning {
+    background-color: #ffc107;
+    border-color: #ffc107;
+    color: #000;
+}
+
+.btn-warning:hover {
+    background-color: #e0a800;
+    border-color: #e0a800;
+    color: #000;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+    border-color: #c82333;
+}
+
+.badge {
+    font-weight: 500;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .btn,
+    .form-control,
+    .form-select {
+        transition: none;
+    }
+}

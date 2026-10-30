@@ -11,7 +11,7 @@ Testa:
 """
 
 import pytest
-from app import create_app
+from main import create_app
 from app.database import db
 from app.models.usuario import Usuario
 from app.core.security import criptografar_senha

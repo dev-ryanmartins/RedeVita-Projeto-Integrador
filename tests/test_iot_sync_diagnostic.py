@@ -11,6 +11,31 @@ from app.models.usuario import Usuario
 from app.models.farmacia import Farmacia
 
 
+@pytest.fixture
+def app():
+    """Create application for testing"""
+    from backend.main import create_app
+    app = create_app({'TESTING': True, 'SQLALCHEMY_DATABASE_URI': 'sqlite:///:memory:'})
+    return app
+
+
+@pytest.fixture
+def client(app):
+    """Create test client"""
+    return app.test_client()
+
+
+@pytest.fixture
+def db_session(app):
+    """Create database session for testing"""
+    with app.app_context():
+        from app.database import db
+        db.create_all()
+        yield db
+        db.session.remove()
+        db.drop_all()
+
+
 class TestIoTSyncDiagnosticAccess:
     """Test access control for IoT sync diagnostic"""
     

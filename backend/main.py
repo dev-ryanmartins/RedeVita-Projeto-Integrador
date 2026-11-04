@@ -108,10 +108,14 @@ def create_app(config_overrides=None):
     ``config_overrides`` is applied before extensions are initialized so test
     suites and other callers can provide an isolated database configuration.
     """
+    # Use caminhos absolutos para evitar problemas de diretório de trabalho
+    backend_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(backend_dir)
+    
     app = Flask(
         __name__,
-        template_folder='../frontend/templates',
-        static_folder='../frontend/static'
+        template_folder=os.path.join(project_root, 'frontend', 'templates'),
+        static_folder=os.path.join(project_root, 'frontend', 'static')
     )
     app.config.from_object(Config)
     if config_overrides:

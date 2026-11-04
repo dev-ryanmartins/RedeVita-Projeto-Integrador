@@ -108,6 +108,7 @@
                         <th>Medicamento</th>
                         <th>Quantidade</th>
                         <th>Responsável</th>
+                        <th>Ações</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -124,10 +125,15 @@
                                 {{ doacao.usuario.nome }}
                             </span>
                         </td>
+                        <td>
+                            <a href="{{ url_for('recibo_doacao.recibo', doacao_id=doacao.id) }}" class="btn-sm" title="Ver Recibo">
+                                <i class="fas fa-receipt"></i> Recibo
+                            </a>
+                        </td>
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="4" class="empty-state">
+                        <td colspan="5" class="empty-state">
                             <i class="fas fa-history"></i>
                             <p>Nenhuma doação registrada no sistema ainda.</p>
                         </td>

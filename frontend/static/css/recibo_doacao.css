@@ -1,0 +1,300 @@
+/* Recibo de Etapas da Doação - CSS Específico */
+
+.recibo-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.page-header h1 {
+    font-size: 2rem;
+    color: #2c3e50;
+    margin: 0;
+}
+
+.btn-back {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    background-color: #6c757d;
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    transition: background-color 0.2s;
+}
+
+.btn-back:hover {
+    background-color: #5a6268;
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    border: 1px solid #ffc107;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 2rem;
+    color: #856404;
+}
+
+.alert-warning strong {
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.card {
+    background-color: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.card h2 {
+    font-size: 1.5rem;
+    color: #2c3e50;
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 0.5rem;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.info-item .label {
+    font-weight: 600;
+    color: #6c757d;
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+}
+
+.info-item .value {
+    color: #2c3e50;
+    font-size: 1rem;
+}
+
+.status-aprovado {
+    color: #28a745;
+    font-weight: 600;
+}
+
+.status-pendente_conferencia_manual {
+    color: #ffc107;
+    font-weight: 600;
+}
+
+/* Timeline */
+.timeline {
+    position: relative;
+    padding-left: 2rem;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 0.5rem;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: #3498db;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 2rem;
+    padding-left: 1.5rem;
+}
+
+.timeline-item:last-child {
+    margin-bottom: 0;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -2.25rem;
+    top: 0;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+    background-color: #3498db;
+    border: 3px solid white;
+    box-shadow: 0 0 0 2px #3498db;
+}
+
+.timeline-item.evento-automatico .timeline-marker {
+    background-color: #17a2b8;
+    box-shadow: 0 0 0 2px #17a2b8;
+}
+
+.timeline-item.evento-manual .timeline-marker {
+    background-color: #28a745;
+    box-shadow: 0 0 0 2px #28a745;
+}
+
+.timeline-content {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 1rem;
+    border-left: 4px solid #3498db;
+}
+
+.timeline-item.evento-automatico .timeline-content {
+    border-left-color: #17a2b8;
+}
+
+.timeline-item.evento-manual .timeline-content {
+    border-left-color: #28a745;
+}
+
+.timeline-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.timeline-tipo {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 1.1rem;
+}
+
+.timeline-origem {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.origem-sistema {
+    background-color: #d1ecf1;
+    color: #0c5460;
+}
+
+.origem-usuario {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.timeline-data {
+    color: #6c757d;
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+}
+
+.timeline-observacao {
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+    font-style: italic;
+}
+
+.timeline-usuario {
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 2rem;
+    color: #6c757d;
+}
+
+.actions {
+    text-align: center;
+    margin-top: 2rem;
+}
+
+.btn-print {
+    padding: 0.75rem 1.5rem;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-print:hover {
+    background-color: #2980b9;
+}
+
+/* Print styles */
+@media print {
+    .btn-back,
+    .btn-print,
+    .actions {
+        display: none;
+    }
+
+    .recibo-container {
+        max-width: 100%;
+        padding: 0;
+    }
+
+    .card {
+        box-shadow: none;
+        border: 1px solid #dee2e6;
+    }
+
+    .timeline::before {
+        background-color: #000;
+    }
+
+    .timeline-marker {
+        box-shadow: 0 0 0 2px #000;
+    }
+
+    .timeline-item.evento-automatico .timeline-marker,
+    .timeline-item.evento-manual .timeline-marker {
+        box-shadow: 0 0 0 2px #000;
+    }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .timeline-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+    .btn-back,
+    .btn-print {
+        transition: none;
+    }
+}
+
+.btn-print:focus,
+.btn-back:focus {
+    outline: 3px solid #3498db;
+    outline-offset: 2px;
+}

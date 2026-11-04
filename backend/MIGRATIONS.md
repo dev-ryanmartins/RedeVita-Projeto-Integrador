@@ -88,6 +88,7 @@ As migrations manuais antigas foram movidas para:
 - `backend/migrations_custom/add_ativo_medicamentos.py`
 - `backend/migrations_custom/necessidade_001_add_necessidades_institucionais.py`
 - `backend/migrations_custom/agendamento_001_add_agendamentos_entrega.py`
+- `backend/migrations_custom/doacao_001_add_doacoes_etapas.py`
 
 Estas migrations não são mais aplicadas automaticamente. Se necessário, devem ser convertidas para Flask-Migrate.
 
@@ -98,6 +99,10 @@ A migration `necessidade_001_add_necessidades_institucionais.py` cria a tabela `
 ### Agendamento de Entrega
 
 A migration `agendamento_001_add_agendamentos_entrega.py` cria a tabela `agendamentos_entrega` para o Agendamento de Entrega entre Participantes Autorizados. Deve ser aplicada manualmente se o Flask-Migrate não estiver configurado corretamente no ambiente.
+
+### Recibo de Etapas da Doação
+
+A migration `doacao_001_add_doacoes_etapas.py` cria a tabela `doacoes_etapas` para o Recibo de Etapas da Doação. Deve ser aplicada manualmente se o Flask-Migrate não estiver configurado corretamente no ambiente.
 
 ## Backup e Recuperação
 

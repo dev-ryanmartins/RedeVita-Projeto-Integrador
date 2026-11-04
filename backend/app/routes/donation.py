@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from flask_login import login_required, current_user
 from app.models.doacao import Doacao
 from app.models.medicamento import Medicamento
+from app.models.doacao_etapa import DoacaoEtapa, TipoEtapa, OrigemEvento
 from app.database import db
 from app.utils.log_helper import registrar_log
 from app.core.decorators import cargo_required, admin_required, operador_required, voluntario_required, equipe_clinica_required, audit_critical_action
@@ -98,6 +99,19 @@ def nova_doacao():
             )
             db.session.add(registro)
             db.session.commit()
+
+            # Registra evento inicial de criação do registro
+            etapa_inicial = DoacaoEtapa(
+                doacao_id=registro.id,
+                tipo_etapa=TipoEtapa.REGISTRO_CRIADO.value,
+                data_hora=datetime.utcnow(),
+                usuario_id=current_user.id,
+                origem=OrigemEvento.USUARIO.value,
+                observacao=f"Registro de saída de {qtd} unidades de {medicamento.nome}"
+            )
+            db.session.add(etapa_inicial)
+            db.session.commit()
+
             detalhe = (
                 f'{qtd} un. de "{medicamento.nome}" (Tipo: {medicamento.principio_ativo or medicamento.tarja}) '
                 f"por {current_user.nome} [{current_user.cargo_exibicao}] → {destinatario}"

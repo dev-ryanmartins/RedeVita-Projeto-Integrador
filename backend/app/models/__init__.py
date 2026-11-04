@@ -8,3 +8,4 @@ from app.models.solicitacao_estoque import SolicitacaoEstoque
 from app.models.recuperacao_senha import RecuperacaoSenha
 from app.models.necessidade_institucional import NecessidadeInstitucional
 from app.models.agendamento_entrega import AgendamentoEntrega
+from app.models.doacao_etapa import DoacaoEtapa

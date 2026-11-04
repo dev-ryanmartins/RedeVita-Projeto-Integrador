@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Recibo de Etapas da Doação #{{ doacao.id }} - RedeVita{% endblock %}
+
+{% block content %}
+<div class="recibo-container">
+    <div class="page-header">
+        <h1>Recibo de Etapas da Doação #{{ doacao.id }}</h1>
+        <a href="{{ url_for('donation.nova_doacao') }}" class="btn-back">← Voltar para Doações</a>
+    </div>
+
+    <!-- Aviso persistente -->
+    <div class="alert-warning">
+        <strong>⚠️ Aviso Importante:</strong> Este recibo mostra apenas etapas registradas no sistema. Não comprova por si só a entrega física nem substitui a conferência farmacêutica ou documental.
+    </div>
+
+    <!-- Informações da doação -->
+    <div class="card">
+        <h2>Informações da Doação</h2>
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="label">ID:</span>
+                <span class="value">{{ doacao.id }}</span>
+            </div>
+            <div class="info-item">
+                <span class="label">Medicamento:</span>
+                <span class="value">{{ doacao.medicamento.nome }}</span>
+            </div>
+            <div class="info-item">
+                <span class="label">Lote:</span>
+                <span class="value">{{ doacao.medicamento.lote }}</span>
+            </div>
+            <div class="info-item">
+                <span class="label">Quantidade:</span>
+                <span class="value">{{ doacao.quantidade }} un.</span>
+            </div>
+            <div class="info-item">
+                <span class="label">Data de Registro:</span>
+                <span class="value">{{ doacao.data_doacao.strftime('%d/%m/%Y %H:%M') if doacao.data_doacao else 'N/A' }}</span>
+            </div>
+            <div class="info-item">
+                <span class="label">Registrado por:</span>
+                <span class="value">{{ doacao.usuario.nome }} ({{ doacao.usuario.cargo_exibicao }})</span>
+            </div>
+            {% if doacao.peso_gramas %}
+            <div class="info-item">
+                <span class="label">Peso:</span>
+                <span class="value">{{ doacao.peso_gramas }}g</span>
+            </div>
+            {% endif %}
+            <div class="info-item">
+                <span class="label">Status de Conferência:</span>
+                <span class="value status-{{ doacao.status_conferencia.lower() }}">{{ doacao.status_conferencia }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Linha do tempo de etapas -->
+    <div class="card">
+        <h2>Linha do Tempo de Etapas</h2>
+        {% if etapas %}
+        <div class="timeline">
+            {% for etapa in etapas %}
+            <div class="timeline-item {{ 'evento-automatico' if etapa.origem == 'sistema' else 'evento-manual' }}">
+                <div class="timeline-marker"></div>
+                <div class="timeline-content">
+                    <div class="timeline-header">
+                        <span class="timeline-tipo">{{ etapa.tipo_etapa.replace('_', ' ').title() }}</span>
+                        <span class="timeline-origem {{ 'origem-sistema' if etapa.origem == 'sistema' else 'origem-usuario' }}">
+                            {{ 'Sistema' if etapa.origem == 'sistema' else 'Usuário' }}
+                        </span>
+                    </div>
+                    <div class="timeline-data">
+                        {{ etapa.data_hora.strftime('%d/%m/%Y %H:%M:%S') if etapa.data_hora else 'N/A' }}
+                    </div>
+                    {% if etapa.observacao %}
+                    <div class="timeline-observacao">{{ etapa.observacao }}</div>
+                    {% endif %}
+                    {% if etapa.usuario %}
+                    <div class="timeline-usuario">
+                        Responsável: {{ etapa.usuario.nome }} ({{ etapa.usuario.cargo_exibicao }})
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <p>Nenhuma etapa registrada para esta doação.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Botão de impressão -->
+    <div class="actions">
+        <button onclick="window.print()" class="btn-print">🖨️ Imprimir Recibo</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/recibo_doacao.css') }}">
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/recibo_doacao.js') }}"></script>
+{% endblock %}

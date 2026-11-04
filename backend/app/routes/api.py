@@ -17,6 +17,7 @@ from app.core.decorators import admin_required, cargo_required, farmaceutico_req
 from app.core.jwt_auth import jwt_ou_sessao_required
 from app.database import db
 from app.models.doacao import Doacao
+from app.models.doacao_etapa import DoacaoEtapa, TipoEtapa, OrigemEvento
 from app.models.farmacia import Farmacia
 from app.models.medicamento import Medicamento
 from app.models.medico import Medico
@@ -1352,18 +1353,40 @@ def balanca_pesar_doacao():
         
         # Atualiza peso da doação
         doacao.peso_gramas = peso_gramas
-        
+
+        # Registra evento de pesagem
+        etapa_pesagem = DoacaoEtapa(
+            doacao_id=doacao.id,
+            tipo_etapa=TipoEtapa.PESAGEM_REGISTRADA.value,
+            data_hora=datetime.utcnow(),
+            usuario_id=None,  # Evento automático via IoT
+            origem=OrigemEvento.SISTEMA.value,
+            observacao=f"Peso registrado: {peso_gramas}g"
+        )
+        db.session.add(etapa_pesagem)
+
         # Verifica discrepância com tara de referência (se existir)
         # Assume tara de referência baseada na quantidade (ex: 1 unidade = 5g)
         tara_referencia = doacao.quantidade * 5.0  # 5g por unidade como exemplo
-        
+
         if tara_referencia > 0:
             discrepancia_percentual = abs(peso_gramas - tara_referencia) / tara_referencia * 100
-            
+
             if discrepancia_percentual > 15.0:
                 # Discrepância maior que 15% - sinaliza para conferência manual
                 doacao.status_conferencia = "PENDENTE_CONFERENCIA_MANUAL"
-                
+
+                # Registra evento de conferência manual requerida
+                etapa_conferencia = DoacaoEtapa(
+                    doacao_id=doacao.id,
+                    tipo_etapa=TipoEtapa.CONFERENCIA_MANUAL_REQUERIDA.value,
+                    data_hora=datetime.utcnow(),
+                    usuario_id=None,
+                    origem=OrigemEvento.SISTEMA.value,
+                    observacao=f"Discrepância de {discrepancia_percentual:.1f}% detectada (peso: {peso_gramas}g vs tara: {tara_referencia}g)"
+                )
+                db.session.add(etapa_conferencia)
+
                 registrar_log(
                     "ALERTA_PESAGEM_IOT",
                     f"DISCREPÂNCIA DE PESO DETECTADA - Doação ID {doacao_id}: "
@@ -1371,7 +1394,9 @@ def balanca_pesar_doacao():
                     f"(Discrepância: {discrepancia_percentual:.1f}%). "
                     f"Marcada para conferência manual."
                 )
-                
+
+                db.session.commit()
+
                 return resposta_ok({
                     'doacao_id': doacao.id,
                     'peso_gramas': peso_gramas,
@@ -1383,7 +1408,8 @@ def balanca_pesar_doacao():
             else:
                 # Peso dentro da tolerância
                 doacao.status_conferencia = "APROVADO"
-                
+                db.session.commit()
+
                 return resposta_ok({
                     'doacao_id': doacao.id,
                     'peso_gramas': peso_gramas,
@@ -1394,6 +1420,7 @@ def balanca_pesar_doacao():
                 }, "Pesagem registrada com sucesso", 200)
         else:
             # Sem tara de referência - apenas registra
+            db.session.commit()
             return resposta_ok({
                 'doacao_id': doacao.id,
                 'peso_gramas': peso_gramas,

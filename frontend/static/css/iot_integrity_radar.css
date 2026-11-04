@@ -13,34 +13,34 @@
 
 /* Input com ícone seguindo padrão global.css */
 .control-group .input-with-icon {
-    position: relative;
-    width: 100%;
-    display: flex;
-    align-items: center;
-    box-sizing: border-box;
+    position: relative !important;
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    box-sizing: border-box !important;
 }
 
 .control-group .input-with-icon i {
-    position: absolute;
-    left: 14px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #94a3b8;
-    font-size: 1rem;
-    pointer-events: none;
-    z-index: 2;
+    position: absolute !important;
+    left: 14px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    color: #94a3b8 !important;
+    font-size: 1rem !important;
+    pointer-events: none !important;
+    z-index: 2 !important;
 }
 
 .control-group .input-with-icon input[type="date"] {
-    padding-left: 44px;
-    padding-right: 14px;
-    width: 100%;
-    min-height: 42px;
-    box-sizing: border-box;
+    padding-left: 44px !important;
+    padding-right: 14px !important;
+    width: 100% !important;
+    min-height: 42px !important;
+    box-sizing: border-box !important;
 }
 
 .control-group .input-with-icon:focus-within i {
-    color: #38bdf8;
+    color: #38bdf8 !important;
 }
 
 /* Header seguindo padrão glassmorphism-dashboard */

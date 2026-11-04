@@ -7,7 +7,6 @@ Create Date: 2026-11-04 00:00:00.000000
 """
 from alembic import op
 import sqlalchemy as sa
-from datetime import datetime
 
 
 # revision identifiers, used by Alembic.
@@ -40,6 +39,8 @@ def upgrade():
 def downgrade():
     """Drop doacoes_etapas table"""
     op.drop_table('doacoes_etapas')
+
+
 
 
 def upgrade():

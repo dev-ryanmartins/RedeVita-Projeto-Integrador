@@ -1,139 +1,38 @@
 {% extends "base.html" %}
 
-{% block title %}Radar de Integridade da Telemetria - RedeVita{% endblock %}
+{% block title %}Radar de Integridade e Telemetria de Dispositivos - RedeVita{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/iot_integrity_radar.css') }}">
 {% endblock %}
 
 {% block content %}
-<div class="radar-container">
-    <!-- Header -->
-    <div class="radar-header">
+<div class="radar-page">
+    <!-- Cabeçalho da Página -->
+    <div class="radar-page-header">
         <div class="radar-header-content">
-            <h1>Radar de Integridade da Telemetria</h1>
-            <p class="subtitle">Análise de sinais operacionais na telemetria IoT</p>
+            <h1>Radar de Integridade e Telemetria de Dispositivos</h1>
+            <p class="radar-header-subtitle">Monitoramento em tempo real de lacunas, duplicidades e falhas de sincronização de sensores IoT</p>
         </div>
     </div>
 
-    <!-- Warning Banner -->
-    <div class="radar-warning">
-        <i class="fas fa-exclamation-triangle"></i>
-        <span>Sinais operacionais baseados nas leituras disponíveis. Não confirmam falha, perda de dados ou condição de um medicamento.</span>
+    <!-- Aviso Operacional -->
+    <div class="radar-notice">
+        <div class="radar-notice-icon">
+            <i class="fas fa-info-circle"></i>
+        </div>
+        <div class="radar-notice-content">
+            <strong>Nota:</strong> Sinais operacionais baseados nas leituras disponíveis. Não confirmam falha, perda de dados ou condição de um medicamento.
+        </div>
     </div>
 
-    <!-- Controls -->
-    <div class="radar-controls">
-        <div class="radar-control">
-            <label>Data Início</label>
-            <div class="radar-input-group">
-                <i class="fas fa-calendar"></i>
-                <input type="date" id="data-inicio" name="data_inicio">
-            </div>
-        </div>
-
-        <div class="radar-control">
-            <label>Data Fim</label>
-            <div class="radar-input-group">
-                <i class="fas fa-calendar"></i>
-                <input type="date" id="data-fim" name="data_fim">
-            </div>
-        </div>
-
-        <button id="btn-analisar" class="radar-btn radar-btn-primary">
-            <i class="fas fa-search"></i> Analisar
-        </button>
-    </div>
-
-    <!-- Loading State -->
-    <div id="loading-state" class="radar-state hidden">
-        <div class="radar-spinner"></div>
-        <p>Analisando telemetria...</p>
-    </div>
-
-    <!-- Error State -->
-    <div id="error-state" class="radar-state hidden">
-        <i class="fas fa-times-circle radar-state-icon"></i>
-        <p id="error-message">Erro ao carregar dados.</p>
-        <button id="btn-retry" class="radar-btn radar-btn-secondary">
-            <i class="fas fa-redo"></i> Tentar novamente
-        </button>
-    </div>
-
-    <!-- Empty State -->
-    <div id="empty-state" class="radar-state hidden">
-        <i class="fas fa-satellite-dish radar-state-icon"></i>
-        <p>Nenhuma leitura IoT encontrada no período especificado.</p>
-    </div>
-
-    <!-- Main Content -->
-    <div id="main-content" class="radar-content hidden">
-        <!-- Summary Cards -->
-        <div class="radar-summary">
-            <div class="radar-card">
-                <i class="fas fa-microchip radar-card-icon"></i>
-                <span class="radar-card-label">Dispositivos</span>
-                <span id="summary-dispositivos" class="radar-card-value">-</span>
-            </div>
-            <div class="radar-card radar-card-warning">
-                <i class="fas fa-question-circle radar-card-icon"></i>
-                <span class="radar-card-label">Sem Dados</span>
-                <span id="summary-sem-dados" class="radar-card-value">-</span>
-            </div>
-            <div class="radar-card radar-card-danger">
-                <i class="fas fa-clock radar-card-icon"></i>
-                <span class="radar-card-label">Dados Antigos</span>
-                <span id="summary-antigos" class="radar-card-value">-</span>
-            </div>
-            <div class="radar-card radar-card-warning">
-                <i class="fas fa-grip-lines radar-card-icon"></i>
-                <span class="radar-card-label">Lacunas</span>
-                <span id="summary-lacunas" class="radar-card-value">-</span>
-            </div>
-            <div class="radar-card radar-card-warning">
-                <i class="fas fa-copy radar-card-icon"></i>
-                <span class="radar-card-label">Duplicidades</span>
-                <span id="summary-duplicidades" class="radar-card-value">-</span>
-            </div>
-            <div class="radar-card radar-card-warning">
-                <i class="fas fa-forward radar-card-icon"></i>
-                <span class="radar-card-label">Timestamps Futuros</span>
-                <span id="summary-futuros" class="radar-card-value">-</span>
-            </div>
-        </div>
-
-        <!-- Tabs -->
-        <div class="radar-tabs">
-            <button class="radar-tab active" data-tab="frescor">Frescor</button>
-            <button class="radar-tab" data-tab="lacunas">Lacunas</button>
-            <button class="radar-tab" data-tab="duplicidades">Duplicidades</button>
-            <button class="radar-tab" data-tab="futuros">Timestamps Futuros</button>
-        </div>
-
-        <!-- Tab Content: Frescor -->
-        <div id="tab-frescor" class="radar-tab-content active">
-            <div class="radar-table-wrapper">
-                <table class="radar-table">
-                    <thead>
-                        <tr>
-                            <th>Dispositivo</th>
-                            <th>Última Leitura</th>
-                            <th>Dias Desde Última</th>
-                            <th>Status</th>
-                            <th>Total Leituras</th>
-                        </tr>
-                    </thead>
-                    <tbody id="frescor-tbody"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Tab Content: Lacunas -->
-        <div id="tab-lacunas" class="radar-tab-content">
-            <div class="radar-controls-secondary">
-                <div class="radar-control">
-                    <label>Intervalo esperado</label>
-                    <select id="intervalo-lacunas">
+    <!-- Painel de Controles -->
+    <div class="radar-controls-panel">
+        <div class="radar-controls-grid">
+            <div class="radar-control-item">
+                <label class="radar-label">Intervalo Esperado</label>
+                <div class="radar-select-wrapper">
+                    <select id="intervalo-analise" class="radar-select">
                         <option value="5min">5 minutos</option>
                         <option value="15min">15 minutos</option>
                         <option value="30min">30 minutos</option>
@@ -143,95 +42,145 @@
                         <option value="24h">24 horas</option>
                     </select>
                 </div>
-                <button id="btn-analisar-lacunas" class="radar-btn radar-btn-secondary">
-                    <i class="fas fa-search"></i> Analisar Lacunas
-                </button>
             </div>
-            <div class="radar-table-wrapper">
-                <table class="radar-table">
-                    <thead>
-                        <tr>
-                            <th>Dispositivo</th>
-                            <th>Farmácia</th>
-                            <th>De</th>
-                            <th>Até</th>
-                            <th>Delta (min)</th>
-                            <th>Esperado (min)</th>
-                            <th>Gravidade</th>
-                        </tr>
-                    </thead>
-                    <tbody id="lacunas-tbody"></tbody>
-                </table>
-            </div>
-        </div>
 
-        <!-- Tab Content: Duplicidades -->
-        <div id="tab-duplicidades" class="radar-tab-content">
-            <div class="radar-table-wrapper">
-                <table class="radar-table">
-                    <thead>
-                        <tr>
-                            <th>Dispositivo</th>
-                            <th>Farmácia</th>
-                            <th>Timestamp</th>
-                            <th>Temperatura</th>
-                            <th>Umidade</th>
-                            <th>Quantidade</th>
-                            <th>Candidatos</th>
-                        </tr>
-                    </thead>
-                    <tbody id="duplicidades-tbody"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Tab Content: Futuros -->
-        <div id="tab-futuros" class="radar-tab-content">
-            <div class="radar-controls-secondary">
-                <div class="radar-control">
-                    <label>Tolerância (min)</label>
-                    <input type="number" id="tolerancia-futuros" min="1" max="1440" value="60">
+            <div class="radar-control-item">
+                <label class="radar-label">Tolerância (min)</label>
+                <div class="radar-input-wrapper">
+                    <input type="number" id="tolerancia-analise" class="radar-input" min="1" max="1440" value="60">
                 </div>
-                <button id="btn-analisar-futuros" class="radar-btn radar-btn-secondary">
-                    <i class="fas fa-search"></i> Analisar Timestamps
+            </div>
+
+            <div class="radar-control-item">
+                <label class="radar-label">Data Início</label>
+                <div class="radar-input-wrapper">
+                    <i class="fas fa-calendar radar-input-icon"></i>
+                    <input type="date" id="data-inicio" class="radar-input">
+                </div>
+            </div>
+
+            <div class="radar-control-item">
+                <label class="radar-label">Data Fim</label>
+                <div class="radar-input-wrapper">
+                    <i class="fas fa-calendar radar-input-icon"></i>
+                    <input type="date" id="data-fim" class="radar-input">
+                </div>
+            </div>
+
+            <div class="radar-control-item radar-control-action">
+                <button id="btn-analisar" class="radar-btn radar-btn-primary">
+                    <i class="fas fa-play"></i> Analisar
                 </button>
             </div>
-            <div class="radar-table-wrapper">
-                <table class="radar-table">
+        </div>
+    </div>
+
+    <!-- Estado de Carregamento -->
+    <div id="loading-state" class="radar-loading hidden">
+        <div class="radar-spinner"></div>
+        <p>Analisando telemetria...</p>
+    </div>
+
+    <!-- Estado de Erro -->
+    <div id="error-state" class="radar-error hidden">
+        <i class="fas fa-exclamation-circle radar-error-icon"></i>
+        <p id="error-message">Erro ao carregar dados.</p>
+        <button id="btn-retry" class="radar-btn radar-btn-secondary">
+            <i class="fas fa-redo"></i> Tentar novamente
+        </button>
+    </div>
+
+    <!-- Estado Vazio -->
+    <div id="empty-state" class="radar-empty hidden">
+        <i class="fas fa-search radar-empty-icon"></i>
+        <p>Nenhuma leitura IoT encontrada no período especificado.</p>
+    </div>
+
+    <!-- Conteúdo Principal -->
+    <div id="main-content" class="radar-main hidden">
+        <!-- Cards de Métricas -->
+        <div class="radar-metrics">
+            <div class="radar-metric-card radar-metric-success">
+                <div class="radar-metric-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="radar-metric-content">
+                    <span class="radar-metric-label">Lacunas</span>
+                    <span id="metric-lacunas" class="radar-metric-value">-</span>
+                </div>
+            </div>
+
+            <div class="radar-metric-card radar-metric-warning">
+                <div class="radar-metric-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="radar-metric-content">
+                    <span class="radar-metric-label">Duplicidades</span>
+                    <span id="metric-duplicidades" class="radar-metric-value">-</span>
+                </div>
+            </div>
+
+            <div class="radar-metric-card radar-metric-danger">
+                <div class="radar-metric-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="radar-metric-content">
+                    <span class="radar-metric-label">Timestamps Futuros</span>
+                    <span id="metric-futuros" class="radar-metric-value">-</span>
+                </div>
+            </div>
+
+            <div class="radar-metric-card radar-metric-info">
+                <div class="radar-metric-icon">
+                    <i class="fas fa-microchip"></i>
+                </div>
+                <div class="radar-metric-content">
+                    <span class="radar-metric-label">Dispositivos</span>
+                    <span id="metric-dispositivos" class="radar-metric-value">-</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabela de Dados -->
+        <div class="radar-data-section">
+            <div class="radar-data-header">
+                <h2>Resultados da Análise</h2>
+            </div>
+            <div class="radar-table-container">
+                <table class="radar-data-table">
                     <thead>
                         <tr>
                             <th>Dispositivo</th>
                             <th>Farmácia</th>
                             <th>Timestamp</th>
-                            <th>Delta (min)</th>
-                            <th>Tolerância (min)</th>
                             <th>Temperatura</th>
                             <th>Umidade</th>
+                            <th>Status</th>
                         </tr>
                     </thead>
-                    <tbody id="futuros-tbody"></tbody>
+                    <tbody id="data-tbody">
+                    </tbody>
                 </table>
             </div>
         </div>
     </div>
 
-    <!-- Limitations -->
-    <div class="radar-limitations">
-        <h3><i class="fas fa-info-circle"></i> Capacidades Não Verificáveis</h3>
-        <ul>
-            <li>Atraso entre envio e recebimento (sem horário de recebimento por leitura)</li>
-            <li>Perda de leituras (sem sequência confiável)</li>
-            <li>Duplicação real (sem ID único por leitura)</li>
-            <li>Ordem original do dispositivo (sem sequência)</li>
-            <li>Autenticação do dispositivo (ID do payload não é prova)</li>
-        </ul>
-    </div>
+    <!-- Rodapé Informativo -->
+    <details class="radar-footer">
+        <summary class="radar-footer-summary">
+            <i class="fas fa-info-circle"></i> Capacidades Não Verificáveis
+        </summary>
+        <div class="radar-footer-content">
+            <ul>
+                <li><strong>Atraso entre envio e recebimento:</strong> Sem horário de recebimento por leitura individual</li>
+                <li><strong>Perda de leituras:</strong> Sem sequência confiável para detectar perdas</li>
+                <li><strong>Duplicação real:</strong> Sem ID único por leitura para confirmar duplicatas</li>
+                <li><strong>Ordem original do dispositivo:</strong> Sem sequência para determinar ordem correta</li>
+                <li><strong>Autenticação do dispositivo:</strong> ID do payload não é prova de autenticidade</li>
+            </ul>
+        </div>
+    </details>
 </div>
-
-<!-- Scroll to Top -->
-<button id="scroll-to-top" class="radar-scroll-top" aria-label="Voltar ao topo">
-    <i class="fas fa-arrow-up"></i>
-</button>
 
 <script src="{{ url_for('static', filename='js/iot_integrity_radar.js') }}"></script>
 {% endblock %}

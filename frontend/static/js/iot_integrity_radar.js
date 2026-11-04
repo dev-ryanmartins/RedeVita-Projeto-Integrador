@@ -1,11 +1,13 @@
 /**
- * JavaScript para Radar de Integridade da Telemetria
- * Layout refeito com classes radar-*
+ * JavaScript para Radar de Integridade e Telemetria
+ * Design Profissional e Limpo
  */
 
 document.addEventListener('DOMContentLoaded', function() {
     const btnAnalisar = document.getElementById('btn-analisar');
     const btnRetry = document.getElementById('btn-retry');
+    const intervaloAnalise = document.getElementById('intervalo-analise');
+    const toleranciaAnalise = document.getElementById('tolerancia-analise');
     const dataInicio = document.getElementById('data-inicio');
     const dataFim = document.getElementById('data-fim');
     const loadingState = document.getElementById('loading-state');
@@ -13,15 +15,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const emptyState = document.getElementById('empty-state');
     const mainContent = document.getElementById('main-content');
     const errorMessage = document.getElementById('error-message');
-    const tabBtns = document.querySelectorAll('.radar-tab');
-    const tabContents = document.querySelectorAll('.radar-tab-content');
+    const dataTbody = document.getElementById('data-tbody');
 
-    const btnAnalisarLacunas = document.getElementById('btn-analisar-lacunas');
-    const intervaloLacunas = document.getElementById('intervalo-lacunas');
-    const btnAnalisarFuturos = document.getElementById('btn-analisar-futuros');
-    const toleranciaFuturos = document.getElementById('tolerancia-futuros');
-
-    // Buscar dados iniciais
+    // Buscar dados
     btnAnalisar.addEventListener('click', buscarDados);
     btnRetry.addEventListener('click', buscarDados);
 
@@ -43,34 +39,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     inicializarDatas();
-
-    // Tabs
-    tabBtns.forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            const tab = this.dataset.tab;
-            
-            // Guardar posição do scroll antes de mudar
-            const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
-            
-            // Atualizar botões
-            tabBtns.forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            
-            // Atualizar conteúdo
-            tabContents.forEach(content => content.classList.remove('active'));
-            document.getElementById(`tab-${tab}`).classList.add('active');
-            
-            // Restaurar posição do scroll para evitar pulo
-            window.scrollTo(0, scrollPosition);
-        });
-    });
-
-    // Analisar lacunas
-    btnAnalisarLacunas.addEventListener('click', analisarLacunas);
-
-    // Analisar timestamps futuros
-    btnAnalisarFuturos.addEventListener('click', analisarFuturos);
 
     async function buscarDados() {
         // Calcular período a partir das datas
@@ -95,10 +63,13 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
+        const intervalo = intervaloAnalise.value || '1h';
+        const tolerancia = parseInt(toleranciaAnalise.value) || 60;
+
         showLoading();
 
         try {
-            // Buscar resumo
+            // Buscar resumo geral
             const resumoResponse = await fetch(`/api/radar-integridade-telemetria/resumo?periodo_dias=${diffDias}`);
             const resumoData = await resumoResponse.json();
 
@@ -106,77 +77,71 @@ document.addEventListener('DOMContentLoaded', function() {
                 throw new Error(resumoData.mensagem || 'Erro ao buscar resumo');
             }
 
-            updateSummary(resumoData.dados);
+            updateMetrics(resumoData.dados);
 
-            // Buscar frescor
-            const frescorResponse = await fetch(`/api/radar-integridade-telemetria/frescor?periodo_dias=${diffDias}`);
-            const frescorData = await frescorResponse.json();
+            // Buscar dados detalhados
+            const [lacunasData, duplicidadesData, futurosData] = await Promise.all([
+                fetch(`/api/radar-integridade-telemetria/lacunas?intervalo_minutos=${intervalo}&periodo_dias=${diffDias}`).then(r => r.json()),
+                fetch(`/api/radar-integridade-telemetria/duplicidades?periodo_dias=${diffDias}`).then(r => r.json()),
+                fetch(`/api/radar-integridade-telemetria/futuros?tolerancia_minutos=${tolerancia}&periodo_dias=${diffDias}`).then(r => r.json())
+            ]);
 
-            if (!frescorData.sucesso) {
-                throw new Error(frescorData.mensagem || 'Erro ao analisar frescor');
+            // Combinar todos os dados em uma tabela
+            const todosDados = [];
+            
+            if (lacunasData.sucesso && lacunasData.dados.lacunas) {
+                lacunasData.dados.lacunas.forEach(item => {
+                    todosDados.push({
+                        dispositivo: item.dispositivo_id,
+                        farmacia: item.farmacia_id || '-',
+                        timestamp: item.data_inicio,
+                        temperatura: '-',
+                        umidade: '-',
+                        status: 'Lacuna',
+                        gravidade: item.gravidade
+                    });
+                });
             }
 
-            if (frescorData.dados.total === 0) {
+            if (duplicidadesData.sucesso && duplicidadesData.dados.duplicidades) {
+                duplicidadesData.dados.duplicidades.forEach(item => {
+                    todosDados.push({
+                        dispositivo: item.dispositivo_id,
+                        farmacia: item.farmacia_id || '-',
+                        timestamp: item.timestamp,
+                        temperatura: item.temperatura,
+                        umidade: item.umidade,
+                        status: 'Duplicidade',
+                        gravidade: '-'
+                    });
+                });
+            }
+
+            if (futurosData.sucesso && futurosData.dados.futuros) {
+                futurosData.dados.futuros.forEach(item => {
+                    todosDados.push({
+                        dispositivo: item.dispositivo_id,
+                        farmacia: item.farmacia_id || '-',
+                        timestamp: item.timestamp,
+                        temperatura: item.temperatura,
+                        umidade: item.umidade,
+                        status: 'Timestamp Futuro',
+                        gravidade: item.delta_minutos > item.tolerancia_minutos ? 'Alta' : 'Moderada'
+                    });
+                });
+            }
+
+            if (todosDados.length === 0) {
                 showEmpty();
                 return;
             }
 
             showContent();
-            renderFrescorTable(frescorData.dados.dispositivos);
+            renderDataTable(todosDados);
 
         } catch (error) {
             console.error('Erro ao buscar dados:', error);
             showError('Erro ao carregar dados: ' + (error.message || 'Erro desconhecido'));
-        }
-    }
-
-    async function analisarLacunas() {
-        const inicio = new Date(dataInicio.value);
-        const fim = new Date(dataFim.value);
-        const diffDias = Math.ceil((fim - inicio) / (1000 * 60 * 60 * 24));
-        const intervalo = intervaloLacunas.value || '1h';
-
-        showLoading();
-
-        try {
-            const response = await fetch(`/api/radar-integridade-telemetria/lacunas?intervalo_minutos=${intervalo}&periodo_dias=${diffDias}`);
-            const data = await response.json();
-
-            if (!data.sucesso) {
-                throw new Error(data.mensagem || 'Erro ao analisar lacunas');
-            }
-
-            showContent();
-            renderLacunasTable(data.dados.lacunas);
-
-        } catch (error) {
-            console.error('Erro ao analisar lacunas:', error);
-            showError(error.message || 'Erro ao analisar lacunas');
-        }
-    }
-
-    async function analisarFuturos() {
-        const inicio = new Date(dataInicio.value);
-        const fim = new Date(dataFim.value);
-        const diffDias = Math.ceil((fim - inicio) / (1000 * 60 * 60 * 24));
-        const tolerancia = parseInt(toleranciaFuturos.value) || 60;
-
-        showLoading();
-
-        try {
-            const response = await fetch(`/api/radar-integridade-telemetria/futuros?tolerancia_minutos=${tolerancia}&periodo_dias=${diffDias}`);
-            const data = await response.json();
-
-            if (!data.sucesso) {
-                throw new Error(data.mensagem || 'Erro ao analisar timestamps futuros');
-            }
-
-            showContent();
-            renderFuturosTable(data.dados.futuros);
-
-        } catch (error) {
-            console.error('Erro ao analisar timestamps futuros:', error);
-            showError(error.message || 'Erro ao analisar timestamps futuros');
         }
     }
 
@@ -209,86 +174,37 @@ document.addEventListener('DOMContentLoaded', function() {
         mainContent.classList.remove('hidden');
     }
 
-    function updateSummary(data) {
-        document.getElementById('summary-dispositivos').textContent = data.dispositivos || '-';
-        document.getElementById('summary-sem-dados').textContent = data.sem_dados || '-';
-        document.getElementById('summary-antigos').textContent = data.dados_antigos || '-';
-        document.getElementById('summary-lacunas').textContent = data.lacunas || '-';
-        document.getElementById('summary-duplicidades').textContent = data.duplicidades || '-';
-        document.getElementById('summary-futuros').textContent = data.timestamps_futuros || '-';
+    function updateMetrics(data) {
+        document.getElementById('metric-lacunas').textContent = data.lacunas || 0;
+        document.getElementById('metric-duplicidades').textContent = data.duplicidades || 0;
+        document.getElementById('metric-futuros').textContent = data.timestamps_futuros || 0;
+        document.getElementById('metric-dispositivos').textContent = data.dispositivos || 0;
     }
 
-    function renderFrescorTable(dispositivos) {
-        const tbody = document.getElementById('frescor-tbody');
-        tbody.innerHTML = '';
+    function renderDataTable(dados) {
+        dataTbody.innerHTML = '';
 
-        dispositivos.forEach(disp => {
+        dados.forEach(item => {
             const tr = document.createElement('tr');
+            
+            let statusClass = 'radar-status-neutral';
+            if (item.status === 'Lacuna') {
+                statusClass = item.gravidade === 'Alta' ? 'radar-status-danger' : 'radar-status-warning';
+            } else if (item.status === 'Duplicidade') {
+                statusClass = 'radar-status-warning';
+            } else if (item.status === 'Timestamp Futuro') {
+                statusClass = item.gravidade === 'Alta' ? 'radar-status-danger' : 'radar-status-warning';
+            }
+
             tr.innerHTML = `
-                <td>${escapeHtml(disp.dispositivo_id)}</td>
-                <td>${formatDate(disp.ultima_leitura)}</td>
-                <td>${disp.dias_desde_ultima ? disp.dias_desde_ultima.toFixed(1) : '-'}</td>
-                <td><span class="status-badge ${disp.status_frescor}">${formatStatus(disp.status_frescor)}</span></td>
-                <td>${disp.total_leituras}</td>
+                <td>${escapeHtml(item.dispositivo)}</td>
+                <td>${escapeHtml(item.farmacia)}</td>
+                <td>${formatDate(item.timestamp)}</td>
+                <td>${item.temperatura !== '-' ? item.temperatura + '°C' : '-'}</td>
+                <td>${item.umidade !== '-' ? item.umidade + '%' : '-'}</td>
+                <td><span class="${statusClass}">${item.status}</span></td>
             `;
-            tbody.appendChild(tr);
-        });
-    }
-
-    function renderLacunasTable(lacunas) {
-        const tbody = document.getElementById('lacunas-tbody');
-        tbody.innerHTML = '';
-
-        lacunas.forEach(lacuna => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${escapeHtml(lacuna.dispositivo_id)}</td>
-                <td>${escapeHtml(lacuna.farmacia_id || '-')}</td>
-                <td>${formatDate(lacuna.data_inicio)}</td>
-                <td>${formatDate(lacuna.data_fim)}</td>
-                <td>${lacuna.delta_minutos}</td>
-                <td>${lacuna.intervalo_esperado_min}</td>
-                <td><span class="gravidade-badge ${lacuna.gravidade}">${lacuna.gravidade}</span></td>
-            `;
-            tbody.appendChild(tr);
-        });
-    }
-
-    function renderDuplicidadesTable(duplicidades) {
-        const tbody = document.getElementById('duplicidades-tbody');
-        tbody.innerHTML = '';
-
-        duplicidades.forEach(dup => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${escapeHtml(dup.dispositivo_id)}</td>
-                <td>${escapeHtml(dup.farmacia_id || '-')}</td>
-                <td>${formatDate(dup.timestamp)}</td>
-                <td>${dup.temperatura}°C</td>
-                <td>${dup.umidade}%</td>
-                <td>${dup.quantidade}</td>
-                <td>${dup.candidatos}</td>
-            `;
-            tbody.appendChild(tr);
-        });
-    }
-
-    function renderFuturosTable(futuros) {
-        const tbody = document.getElementById('futuros-tbody');
-        tbody.innerHTML = '';
-
-        futuros.forEach(futuro => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${escapeHtml(futuro.dispositivo_id)}</td>
-                <td>${escapeHtml(futuro.farmacia_id || '-')}</td>
-                <td>${formatDate(futuro.timestamp)}</td>
-                <td>${futuro.delta_minutos}</td>
-                <td>${futuro.tolerancia_minutos}</td>
-                <td>${futuro.temperatura}°C</td>
-                <td>${futuro.umidade}%</td>
-            `;
-            tbody.appendChild(tr);
+            dataTbody.appendChild(tr);
         });
     }
 
@@ -308,37 +224,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return `${dia}/${mes}/${ano} ${horas}:${minutos}`;
     }
 
-    function formatStatus(status) {
-        const mapa = {
-            'recente': 'Recente',
-            'moderado': 'Moderado',
-            'antigo': 'Antigo',
-            'sem_dados': 'Sem dados'
-        };
-        return mapa[status] || status;
-    }
-
-    // Scroll-to-Top Button
-    const scrollToTopBtn = document.getElementById('scroll-to-top');
-    
-    if (scrollToTopBtn) {
-        window.addEventListener('scroll', function() {
-            if (window.pageYOffset > 300) {
-                scrollToTopBtn.classList.add('visible');
-            } else {
-                scrollToTopBtn.classList.remove('visible');
-            }
-        });
-
-        scrollToTopBtn.addEventListener('click', function() {
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
-        });
-    }
-
-    // Escape para fechar modal
+    // Escape para fechar modais
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             const modal = document.querySelector('.modal.active');

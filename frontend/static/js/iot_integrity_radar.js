@@ -1,6 +1,6 @@
 /**
  * JavaScript para Radar de Integridade da Telemetria
- * Funcionalidades: análise de sinais, tabs, filtros e visualização
+ * Layout refeito com classes radar-*
  */
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -13,8 +13,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const emptyState = document.getElementById('empty-state');
     const mainContent = document.getElementById('main-content');
     const errorMessage = document.getElementById('error-message');
-    const tabBtns = document.querySelectorAll('.tab-btn');
-    const tabContents = document.querySelectorAll('.tab-content');
+    const tabBtns = document.querySelectorAll('.radar-tab');
+    const tabContents = document.querySelectorAll('.radar-tab-content');
 
     const btnAnalisarLacunas = document.getElementById('btn-analisar-lacunas');
     const intervaloLacunas = document.getElementById('intervalo-lacunas');
@@ -209,37 +209,28 @@ document.addEventListener('DOMContentLoaded', function() {
         mainContent.classList.remove('hidden');
     }
 
-    function updateSummary(resumo) {
-        document.getElementById('summary-dispositivos').textContent = resumo.total_dispositivos;
-        document.getElementById('summary-sem-dados').textContent = resumo.dispositivos_sem_dados;
-        document.getElementById('summary-antigos').textContent = resumo.dispositivos_antigos;
-        document.getElementById('summary-lacunas').textContent = resumo.total_lacunas;
-        document.getElementById('summary-duplicidades').textContent = resumo.total_duplicidades;
-        document.getElementById('summary-futuros').textContent = resumo.total_futuros;
+    function updateSummary(data) {
+        document.getElementById('summary-dispositivos').textContent = data.dispositivos || '-';
+        document.getElementById('summary-sem-dados').textContent = data.sem_dados || '-';
+        document.getElementById('summary-antigos').textContent = data.dados_antigos || '-';
+        document.getElementById('summary-lacunas').textContent = data.lacunas || '-';
+        document.getElementById('summary-duplicidades').textContent = data.duplicidades || '-';
+        document.getElementById('summary-futuros').textContent = data.timestamps_futuros || '-';
     }
 
     function renderFrescorTable(dispositivos) {
         const tbody = document.getElementById('frescor-tbody');
         tbody.innerHTML = '';
 
-        dispositivos.forEach(dispositivo => {
+        dispositivos.forEach(disp => {
             const tr = document.createElement('tr');
-
-            const statusClass = dispositivo.status_frescor === 'recente' ? 'recente' : 
-                               dispositivo.status_frescor === 'moderado' ? 'moderado' : 
-                               dispositivo.status_frescor === 'antigo' ? 'antigo' : 'sem_dados';
-
-            const dias = dispositivo.dias_desde_ultima ? dispositivo.dias_desde_ultima.toFixed(1) : '-';
-            const horas = dispositivo.horas_desde_ultima ? dispositivo.horas_desde_ultima.toFixed(1) : '-';
-
             tr.innerHTML = `
-                <td>${escapeHtml(dispositivo.dispositivo_id)}</td>
-                <td>${dispositivo.ultima_leitura ? formatDate(dispositivo.ultima_leitura) : '-'}</td>
-                <td>${dias} dias (${horas}h)</td>
-                <td><span class="status-badge ${statusClass}">${formatStatus(dispositivo.status_frescor)}</span></td>
-                <td>${dispositivo.total_leituras}</td>
+                <td>${escapeHtml(disp.dispositivo_id)}</td>
+                <td>${formatDate(disp.ultima_leitura)}</td>
+                <td>${disp.dias_desde_ultima ? disp.dias_desde_ultima.toFixed(1) : '-'}</td>
+                <td><span class="status-badge ${disp.status_frescor}">${formatStatus(disp.status_frescor)}</span></td>
+                <td>${disp.total_leituras}</td>
             `;
-
             tbody.appendChild(tr);
         });
     }
@@ -248,26 +239,17 @@ document.addEventListener('DOMContentLoaded', function() {
         const tbody = document.getElementById('lacunas-tbody');
         tbody.innerHTML = '';
 
-        if (lacunas.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#94a3b8;">Nenhuma lacuna detectada neste intervalo.</td></tr>';
-            return;
-        }
-
         lacunas.forEach(lacuna => {
             const tr = document.createElement('tr');
-
-            const gravidadeClass = lacuna.gravidade === 'alta' ? 'alta' : 'moderada';
-
             tr.innerHTML = `
                 <td>${escapeHtml(lacuna.dispositivo_id)}</td>
-                <td>${lacuna.farmacia_id}</td>
-                <td>${formatDate(lacuna.timestamp_anterior)}</td>
-                <td>${formatDate(lacuna.timestamp_atual)}</td>
-                <td>${lacuna.delta_minutos.toFixed(1)}</td>
-                <td>${lacuna.intervalo_esperado_minutos}</td>
-                <td><span class="gravidade-badge ${gravidadeClass}">${lacuna.gravidade}</span></td>
+                <td>${escapeHtml(lacuna.farmacia_id || '-')}</td>
+                <td>${formatDate(lacuna.data_inicio)}</td>
+                <td>${formatDate(lacuna.data_fim)}</td>
+                <td>${lacuna.delta_minutos}</td>
+                <td>${lacuna.intervalo_esperado_min}</td>
+                <td><span class="gravidade-badge ${lacuna.gravidade}">${lacuna.gravidade}</span></td>
             `;
-
             tbody.appendChild(tr);
         });
     }
@@ -276,24 +258,17 @@ document.addEventListener('DOMContentLoaded', function() {
         const tbody = document.getElementById('duplicidades-tbody');
         tbody.innerHTML = '';
 
-        if (duplicidades.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:#94a3b8;">Nenhum candidato a duplicidade detectado.</td></tr>';
-            return;
-        }
-
         duplicidades.forEach(dup => {
             const tr = document.createElement('tr');
-
             tr.innerHTML = `
                 <td>${escapeHtml(dup.dispositivo_id)}</td>
-                <td>${dup.farmacia_id}</td>
+                <td>${escapeHtml(dup.farmacia_id || '-')}</td>
                 <td>${formatDate(dup.timestamp)}</td>
                 <td>${dup.temperatura}°C</td>
                 <td>${dup.umidade}%</td>
                 <td>${dup.quantidade}</td>
-                <td><span class="status-badge antigo">Candidato a duplicidade</span></td>
+                <td>${dup.candidatos}</td>
             `;
-
             tbody.appendChild(tr);
         });
     }
@@ -302,24 +277,17 @@ document.addEventListener('DOMContentLoaded', function() {
         const tbody = document.getElementById('futuros-tbody');
         tbody.innerHTML = '';
 
-        if (futuros.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:#94a3b8;">Nenhum timestamp no futuro detectado.</td></tr>';
-            return;
-        }
-
         futuros.forEach(futuro => {
             const tr = document.createElement('tr');
-
             tr.innerHTML = `
                 <td>${escapeHtml(futuro.dispositivo_id)}</td>
-                <td>${futuro.farmacia_id}</td>
-                <td>${formatDate(futuro.data_hora)}</td>
-                <td>${futuro.delta_minutos.toFixed(1)}</td>
+                <td>${escapeHtml(futuro.farmacia_id || '-')}</td>
+                <td>${formatDate(futuro.timestamp)}</td>
+                <td>${futuro.delta_minutos}</td>
                 <td>${futuro.tolerancia_minutos}</td>
                 <td>${futuro.temperatura}°C</td>
                 <td>${futuro.umidade}%</td>
             `;
-
             tbody.appendChild(tr);
         });
     }
@@ -332,7 +300,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function formatDate(dateString) {
         const date = new Date(dateString);
-        // Formato consistente dd/mm/aaaa HH:MM para evitar problemas de fuso horário
         const dia = String(date.getDate()).padStart(2, '0');
         const mes = String(date.getMonth() + 1).padStart(2, '0');
         const ano = date.getFullYear();
@@ -355,7 +322,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const scrollToTopBtn = document.getElementById('scroll-to-top');
     
     if (scrollToTopBtn) {
-        // Mostrar/esconder botão ao rolar
         window.addEventListener('scroll', function() {
             if (window.pageYOffset > 300) {
                 scrollToTopBtn.classList.add('visible');
@@ -364,7 +330,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // Scroll para topo ao clicar
         scrollToTopBtn.addEventListener('click', function() {
             window.scrollTo({
                 top: 0,
@@ -376,7 +341,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Escape para fechar modal
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
-            // Fechar qualquer modal se existir
             const modal = document.querySelector('.modal.active');
             if (modal) {
                 modal.classList.remove('active');

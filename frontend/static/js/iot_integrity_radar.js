@@ -6,9 +6,10 @@
 document.addEventListener('DOMContentLoaded', function() {
     const btnAnalisar = document.getElementById('btn-analisar');
     const btnRetry = document.getElementById('btn-retry');
-    const periodoDias = document.getElementById('periodo-dias');
+    const dataInicio = document.getElementById('data-inicio');
+    const dataFim = document.getElementById('data-fim');
     const loadingState = document.getElementById('loading-state');
-    const errorState = document('error-state');
+    const errorState = document.getElementById('error-state');
     const emptyState = document.getElementById('empty-state');
     const mainContent = document.getElementById('main-content');
     const errorMessage = document.getElementById('error-message');
@@ -24,10 +25,33 @@ document.addEventListener('DOMContentLoaded', function() {
     btnAnalisar.addEventListener('click', buscarDados);
     btnRetry.addEventListener('click', buscarDados);
 
+    // Inicializar datas com período padrão de 7 dias
+    function inicializarDatas() {
+        const hoje = new Date();
+        const seteDiasAtras = new Date(hoje);
+        seteDiasAtras.setDate(hoje.getDate() - 7);
+
+        const formatarDataISO = (data) => {
+            const ano = data.getFullYear();
+            const mes = String(data.getMonth() + 1).padStart(2, '0');
+            const dia = String(data.getDate()).padStart(2, '0');
+            return `${ano}-${mes}-${dia}`;
+        };
+
+        dataFim.value = formatarDataISO(hoje);
+        dataInicio.value = formatarDataISO(seteDiasAtras);
+    }
+
+    inicializarDatas();
+
     // Tabs
     tabBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
             const tab = this.dataset.tab;
+            
+            // Guardar posição do scroll antes de mudar
+            const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
             
             // Atualizar botões
             tabBtns.forEach(b => b.classList.remove('active'));
@@ -36,6 +60,9 @@ document.addEventListener('DOMContentLoaded', function() {
             // Atualizar conteúdo
             tabContents.forEach(content => content.classList.remove('active'));
             document.getElementById(`tab-${tab}`).classList.add('active');
+            
+            // Restaurar posição do scroll para evitar pulo
+            window.scrollTo(0, scrollPosition);
         });
     });
 
@@ -46,10 +73,24 @@ document.addEventListener('DOMContentLoaded', function() {
     btnAnalisarFuturos.addEventListener('click', analisarFuturos);
 
     async function buscarDados() {
-        const periodo = parseInt(periodoDias.value) || 7;
+        // Calcular período a partir das datas
+        const inicio = new Date(dataInicio.value);
+        const fim = new Date(dataFim.value);
 
-        // Validar período
-        if (periodo < 1 || periodo > 90) {
+        // Validar datas
+        if (!dataInicio.value || !dataFim.value) {
+            showError('Selecione as datas de início e fim');
+            return;
+        }
+
+        if (inicio > fim) {
+            showError('Data de início deve ser anterior à data de fim');
+            return;
+        }
+
+        const diffDias = Math.ceil((fim - inicio) / (1000 * 60 * 60 * 24));
+
+        if (diffDias < 1 || diffDias > 90) {
             showError('Período deve ser entre 1 e 90 dias');
             return;
         }
@@ -58,7 +99,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         try {
             // Buscar resumo
-            const resumoResponse = await fetch(`/api/radar-integridade-telemetria/resumo?periodo_dias=${periodo}`);
+            const resumoResponse = await fetch(`/api/radar-integridade-telemetria/resumo?periodo_dias=${diffDias}`);
             const resumoData = await resumoResponse.json();
 
             if (!resumoData.sucesso) {
@@ -68,7 +109,7 @@ document.addEventListener('DOMContentLoaded', function() {
             updateSummary(resumoData.dados);
 
             // Buscar frescor
-            const frescorResponse = await fetch(`/api/radar-integridade-telemetria/frescor?periodo_dias=${periodo}`);
+            const frescorResponse = await fetch(`/api/radar-integridade-telemetria/frescor?periodo_dias=${diffDias}`);
             const frescorData = await frescorResponse.json();
 
             if (!frescorData.sucesso) {
@@ -85,18 +126,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
         } catch (error) {
             console.error('Erro ao buscar dados:', error);
-            showError(error.message || 'Erro ao carregar dados');
+            showError('Erro ao carregar dados: ' + (error.message || 'Erro desconhecido'));
         }
     }
 
     async function analisarLacunas() {
-        const periodo = parseInt(periodoDias.value) || 7;
+        const inicio = new Date(dataInicio.value);
+        const fim = new Date(dataFim.value);
+        const diffDias = Math.ceil((fim - inicio) / (1000 * 60 * 60 * 24));
         const intervalo = intervaloLacunas.value || '1h';
 
         showLoading();
 
         try {
-            const response = await fetch(`/api/radar-integridade-telemetria/lacunas?intervalo_minutos=${intervalo}&periodo_dias=${periodo}`);
+            const response = await fetch(`/api/radar-integridade-telemetria/lacunas?intervalo_minutos=${intervalo}&periodo_dias=${diffDias}`);
             const data = await response.json();
 
             if (!data.sucesso) {
@@ -113,13 +156,15 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function analisarFuturos() {
-        const periodo = parseInt(periodoDias.value) || 7;
+        const inicio = new Date(dataInicio.value);
+        const fim = new Date(dataFim.value);
+        const diffDias = Math.ceil((fim - inicio) / (1000 * 60 * 60 * 24));
         const tolerancia = parseInt(toleranciaFuturos.value) || 60;
 
         showLoading();
 
         try {
-            const response = await fetch(`/api/radar-integridade-telemetria/futuros?tolerancia_minutos=${tolerancia}&periodo_dias=${periodo}`);
+            const response = await fetch(`/api/radar-integridade-telemetria/futuros?tolerancia_minutos=${tolerancia}&periodo_dias=${diffDias}`);
             const data = await response.json();
 
             if (!data.sucesso) {
@@ -287,7 +332,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function formatDate(dateString) {
         const date = new Date(dateString);
-        return date.toLocaleString('pt-BR');
+        // Formato consistente dd/mm/aaaa HH:MM para evitar problemas de fuso horário
+        const dia = String(date.getDate()).padStart(2, '0');
+        const mes = String(date.getMonth() + 1).padStart(2, '0');
+        const ano = date.getFullYear();
+        const horas = String(date.getHours()).padStart(2, '0');
+        const minutos = String(date.getMinutes()).padStart(2, '0');
+        return `${dia}/${mes}/${ano} ${horas}:${minutos}`;
     }
 
     function formatStatus(status) {
@@ -298,6 +349,28 @@ document.addEventListener('DOMContentLoaded', function() {
             'sem_dados': 'Sem dados'
         };
         return mapa[status] || status;
+    }
+
+    // Scroll-to-Top Button
+    const scrollToTopBtn = document.getElementById('scroll-to-top');
+    
+    if (scrollToTopBtn) {
+        // Mostrar/esconder botão ao rolar
+        window.addEventListener('scroll', function() {
+            if (window.pageYOffset > 300) {
+                scrollToTopBtn.classList.add('visible');
+            } else {
+                scrollToTopBtn.classList.remove('visible');
+            }
+        });
+
+        // Scroll para topo ao clicar
+        scrollToTopBtn.addEventListener('click', function() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
     }
 
     // Escape para fechar modal

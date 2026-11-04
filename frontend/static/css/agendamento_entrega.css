@@ -1,102 +1,98 @@
 /* CSS específico para Agendamento de Entrega */
 
 .alert-warning {
-    background-color: rgba(255, 193, 7, 0.1);
-    border-color: rgba(255, 193, 7, 0.3);
-    color: #ffc107;
+    background-color: rgba(243, 156, 18, 0.1);
+    border: 1px solid var(--warning);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 2rem;
+    color: var(--warning);
 }
 
-.alert-warning svg {
-    flex-shrink: 0;
+.alert-warning strong {
+    display: block;
+    margin-bottom: 0.5rem;
 }
 
 .card {
+    background-color: var(--bg-card);
     border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background-color: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(10px);
-}
-
-.card-body {
-    color: #e0e0e0;
-}
-
-.card-title {
-    color: #ffffff;
-    font-weight: 600;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-sm);
 }
 
 .form-label {
-    color: #b0b0b0;
+    color: var(--text-muted);
 }
 
 .form-control,
 .form-select {
-    background-color: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #ffffff;
+    background-color: var(--bg-input);
+    border: 1px solid var(--border-input);
+    color: var(--text-primary);
 }
 
 .form-control:focus,
 .form-select:focus {
-    background-color: rgba(255, 255, 255, 0.15);
-    border-color: #00bcd4;
-    color: #ffffff;
-    box-shadow: 0 0 0 0.2rem rgba(0, 188, 212, 0.25);
+    background-color: var(--bg-input);
+    border-color: var(--primary-blue);
+    color: var(--text-primary);
+    box-shadow: 0 0 0 0.2rem rgba(2, 132, 199, 0.25);
 }
 
 .table {
-    color: #e0e0e0;
+    color: var(--text-primary);
 }
 
 .table thead th {
-    border-color: rgba(255, 255, 255, 0.1);
-    color: #ffffff;
+    border-color: var(--border-subtle);
+    color: var(--text-primary);
     font-weight: 600;
 }
 
 .table tbody tr {
-    border-color: rgba(255, 255, 255, 0.05);
+    border-color: var(--border-subtle);
 }
 
 .table tbody tr:hover {
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: var(--bg-hover);
 }
 
 .btn-primary {
-    background-color: #00bcd4;
-    border-color: #00bcd4;
+    background-color: var(--primary-blue);
+    border-color: var(--primary-blue);
 }
 
 .btn-primary:hover {
-    background-color: #0097a7;
-    border-color: #0097a7;
+    background-color: var(--primary-blue-hover);
+    border-color: var(--primary-blue-hover);
 }
 
 .btn-secondary {
-    background-color: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.2);
-    color: #ffffff;
+    background-color: var(--border-subtle);
+    border-color: var(--border-input);
+    color: var(--text-primary);
 }
 
 .btn-secondary:hover {
-    background-color: rgba(255, 255, 255, 0.2);
-    color: #ffffff;
+    background-color: var(--border-input);
+    color: var(--text-primary);
 }
 
 .btn-info {
-    background-color: #17a2b8;
-    border-color: #17a2b8;
+    background-color: var(--primary-blue);
+    border-color: var(--primary-blue);
 }
 
 .btn-info:hover {
-    background-color: #138496;
-    border-color: #138496;
+    background-color: var(--primary-blue-hover);
+    border-color: var(--primary-blue-hover);
 }
 
 .btn-warning {
-    background-color: #ffc107;
-    border-color: #ffc107;
+    background-color: var(--warning);
+    border-color: var(--warning);
     color: #000;
 }
 
@@ -107,8 +103,8 @@
 }
 
 .btn-danger {
-    background-color: #dc3545;
-    border-color: #dc3545;
+    background-color: var(--danger);
+    border-color: var(--danger);
 }
 
 .btn-danger:hover {

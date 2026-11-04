@@ -15,31 +15,31 @@
 
 .page-header h1 {
     font-size: 2rem;
-    color: #2c3e50;
+    color: var(--text-primary);
     margin: 0;
 }
 
 .btn-back {
     display: inline-block;
     padding: 0.75rem 1.5rem;
-    background-color: #6c757d;
-    color: white;
+    background-color: var(--border-subtle);
+    color: var(--text-primary);
     text-decoration: none;
     border-radius: 8px;
     transition: background-color 0.2s;
 }
 
 .btn-back:hover {
-    background-color: #5a6268;
+    background-color: var(--border-input);
 }
 
 .alert-warning {
-    background-color: #fff3cd;
-    border: 1px solid #ffc107;
+    background-color: rgba(243, 156, 18, 0.1);
+    border: 1px solid var(--warning);
     border-radius: 8px;
     padding: 1rem;
     margin-bottom: 2rem;
-    color: #856404;
+    color: var(--warning);
 }
 
 .alert-warning strong {
@@ -48,19 +48,19 @@
 }
 
 .card {
-    background-color: white;
+    background-color: var(--bg-card);
     border-radius: 12px;
     padding: 1.5rem;
     margin-bottom: 2rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-sm);
 }
 
 .card h2 {
     font-size: 1.5rem;
-    color: #2c3e50;
+    color: var(--text-primary);
     margin-top: 0;
     margin-bottom: 1.5rem;
-    border-bottom: 2px solid #3498db;
+    border-bottom: 2px solid var(--primary-blue);
     padding-bottom: 0.5rem;
 }
 
@@ -77,23 +77,23 @@
 
 .info-item .label {
     font-weight: 600;
-    color: #6c757d;
+    color: var(--text-muted);
     font-size: 0.875rem;
     margin-bottom: 0.25rem;
 }
 
 .info-item .value {
-    color: #2c3e50;
+    color: var(--text-primary);
     font-size: 1rem;
 }
 
 .status-aprovado {
-    color: #28a745;
+    color: var(--success);
     font-weight: 600;
 }
 
 .status-pendente_conferencia_manual {
-    color: #ffc107;
+    color: var(--warning);
     font-weight: 600;
 }
 
@@ -110,7 +110,7 @@
     top: 0;
     bottom: 0;
     width: 2px;
-    background-color: #3498db;
+    background-color: var(--primary-blue);
 }
 
 .timeline-item {
@@ -130,34 +130,34 @@
     width: 1rem;
     height: 1rem;
     border-radius: 50%;
-    background-color: #3498db;
-    border: 3px solid white;
-    box-shadow: 0 0 0 2px #3498db;
+    background-color: var(--primary-blue);
+    border: 3px solid var(--bg-card);
+    box-shadow: 0 0 0 2px var(--primary-blue);
 }
 
 .timeline-item.evento-automatico .timeline-marker {
-    background-color: #17a2b8;
-    box-shadow: 0 0 0 2px #17a2b8;
+    background-color: var(--primary-blue-hover);
+    box-shadow: 0 0 0 2px var(--primary-blue-hover);
 }
 
 .timeline-item.evento-manual .timeline-marker {
-    background-color: #28a745;
-    box-shadow: 0 0 0 2px #28a745;
+    background-color: var(--success);
+    box-shadow: 0 0 0 2px var(--success);
 }
 
 .timeline-content {
-    background-color: #f8f9fa;
+    background-color: var(--bg-input);
     border-radius: 8px;
     padding: 1rem;
-    border-left: 4px solid #3498db;
+    border-left: 4px solid var(--primary-blue);
 }
 
 .timeline-item.evento-automatico .timeline-content {
-    border-left-color: #17a2b8;
+    border-left-color: var(--primary-blue-hover);
 }
 
 .timeline-item.evento-manual .timeline-content {
-    border-left-color: #28a745;
+    border-left-color: var(--success);
 }
 
 .timeline-header {
@@ -169,7 +169,7 @@
 
 .timeline-tipo {
     font-weight: 600;
-    color: #2c3e50;
+    color: var(--text-primary);
     font-size: 1.1rem;
 }
 
@@ -182,36 +182,36 @@
 }
 
 .origem-sistema {
-    background-color: #d1ecf1;
-    color: #0c5460;
+    background-color: rgba(2, 132, 199, 0.12);
+    color: var(--primary-blue);
 }
 
 .origem-usuario {
-    background-color: #d4edda;
-    color: #155724;
+    background-color: rgba(46, 204, 113, 0.12);
+    color: var(--success);
 }
 
 .timeline-data {
-    color: #6c757d;
+    color: var(--text-muted);
     font-size: 0.875rem;
     margin-bottom: 0.5rem;
 }
 
 .timeline-observacao {
-    color: #2c3e50;
+    color: var(--text-primary);
     margin-bottom: 0.5rem;
     font-style: italic;
 }
 
 .timeline-usuario {
-    color: #6c757d;
+    color: var(--text-muted);
     font-size: 0.875rem;
 }
 
 .empty-state {
     text-align: center;
     padding: 2rem;
-    color: #6c757d;
+    color: var(--text-muted);
 }
 
 .actions {
@@ -221,8 +221,8 @@
 
 .btn-print {
     padding: 0.75rem 1.5rem;
-    background-color: #3498db;
-    color: white;
+    background-color: var(--primary-blue);
+    color: #fff;
     border: none;
     border-radius: 8px;
     font-size: 1rem;
@@ -231,7 +231,7 @@
 }
 
 .btn-print:hover {
-    background-color: #2980b9;
+    background-color: var(--primary-blue-hover);
 }
 
 /* Print styles */

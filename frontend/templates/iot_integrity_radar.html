@@ -8,39 +8,62 @@
 
 {% block content %}
 <div class="radar-container">
-    <div class="page-header">
-        <h1 class="page-title">Radar de Integridade da Telemetria</h1>
-        <p class="page-subtitle">Análise de sinais operacionais na telemetria IoT</p>
+    <div class="radar-header">
+        <div class="radar-header-content">
+            <h1>Radar de Integridade da Telemetria</h1>
+            <p class="subtitle">Análise de sinais operacionais na telemetria IoT</p>
+        </div>
     </div>
 
     <div class="warning-banner">
-        <span class="warning-icon">⚠️</span>
+        <div class="warning-icon">
+            <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
+        </div>
         <span class="warning-text">Sinais operacionais baseados nas leituras disponíveis. Não confirmam falha, perda de dados ou condição de um medicamento.</span>
     </div>
 
     <div class="controls-section">
         <div class="control-group">
-            <label for="periodo-dias">Período (dias):</label>
-            <input type="number" id="periodo-dias" min="1" max="90" value="7" aria-label="Período em dias">
+            <label for="data-inicio">Data Início</label>
+            <div class="input-with-icon">
+                <i class="fas fa-calendar" aria-hidden="true"></i>
+                <input type="date" id="data-inicio" name="data_inicio" aria-label="Data início">
+            </div>
         </div>
 
-        <button id="btn-analisar" class="btn-primary" aria-label="Analisar telemetria">Analisar</button>
+        <div class="control-group">
+            <label for="data-fim">Data Fim</label>
+            <div class="input-with-icon">
+                <i class="fas fa-calendar" aria-hidden="true"></i>
+                <input type="date" id="data-fim" name="data_fim" aria-label="Data fim">
+            </div>
+        </div>
+
+        <button id="btn-analisar" class="btn-primary" aria-label="Analisar telemetria">
+            <i class="fas fa-search" aria-hidden="true"></i> Analisar
+        </button>
     </div>
 
     <div id="loading-state" class="state-container hidden">
         <div class="spinner"></div>
-        <p>Analisando telemetria...</p>
+        <p style="font-size: 0.9rem; color: #94a3b8; margin-top: 1rem;">Analisando telemetria...</p>
     </div>
 
     <div id="error-state" class="state-container hidden">
-        <div class="error-icon">❌</div>
-        <p id="error-message">Erro ao carregar dados.</p>
-        <button id="btn-retry" class="btn-secondary">Tentar novamente</button>
+        <div class="error-icon">
+            <i class="fas fa-times-circle" aria-hidden="true"></i>
+        </div>
+        <p id="error-message" style="font-size: 0.9rem; color: #94a3b8; margin-top: 1rem;">Erro ao carregar dados.</p>
+        <button id="btn-retry" class="btn-secondary" style="margin-top: 1rem;">
+            <i class="fas fa-redo" aria-hidden="true"></i> Tentar novamente
+        </button>
     </div>
 
     <div id="empty-state" class="state-container hidden">
-        <div class="empty-icon">📡</div>
-        <p>Nenhuma leitura IoT encontrada no período especificado.</p>
+        <div class="empty-icon">
+            <i class="fas fa-satellite-dish" aria-hidden="true"></i>
+        </div>
+        <p style="font-size: 0.9rem; color: #94a3b8; margin-top: 1rem;">Nenhuma leitura IoT encontrada no período especificado.</p>
     </div>
 
     <div id="main-content" class="main-content hidden">
@@ -99,7 +122,7 @@
         <div id="tab-lacunas" class="tab-content">
             <div class="controls-secondary">
                 <div class="control-group">
-                    <label for="intervalo-lacunas">Intervalo esperado:</label>
+                    <label for="intervalo-lacunas">Intervalo esperado</label>
                     <select id="intervalo-lacunas" aria-label="Intervalo esperado">
                         <option value="5min">5 minutos</option>
                         <option value="15min">15 minutos</option>
@@ -110,7 +133,9 @@
                         <option value="24h">24 horas</option>
                     </select>
                 </div>
-                <button id="btn-analisar-lacunas" class="btn-secondary">Analisar Lacunas</button>
+                <button id="btn-analisar-lacunas" class="btn-secondary">
+                    <i class="fas fa-search" aria-hidden="true"></i> Analisar Lacunas
+                </button>
             </div>
             <div class="table-container">
                 <table class="radar-table">
@@ -154,10 +179,12 @@
         <div id="tab-futuros" class="tab-content">
             <div class="controls-secondary">
                 <div class="control-group">
-                    <label for="tolerancia-futuros">Tolerância (min):</label>
+                    <label for="tolerancia-futuros">Tolerância (min)</label>
                     <input type="number" id="tolerancia-futuros" min="1" max="1440" value="60" aria-label="Tolerância em minutos">
                 </div>
-                <button id="btn-analisar-futuros" class="btn-secondary">Analisar Timestamps</button>
+                <button id="btn-analisar-futuros" class="btn-secondary">
+                    <i class="fas fa-search" aria-hidden="true"></i> Analisar Timestamps
+                </button>
             </div>
             <div class="table-container">
                 <table class="radar-table">
@@ -190,6 +217,11 @@
         </ul>
     </div>
 </div>
+
+<!-- Botão Scroll-to-Top -->
+<button id="scroll-to-top" class="scroll-to-top" aria-label="Voltar ao topo" title="Voltar ao topo">
+    <i class="fas fa-arrow-up" aria-hidden="true"></i>
+</button>
 
 <script src="{{ url_for('static', filename='js/iot_integrity_radar.js') }}"></script>
 {% endblock %}

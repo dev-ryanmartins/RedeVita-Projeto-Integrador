@@ -1,37 +1,210 @@
-/* Estilos específicos para pré-checagem de doações */
+/* Estilos específicos para pré-checagem de doações - Padrão RedeVita */
 
-.card {
+/* Container principal */
+.page-wrapper {
+    max-width: 100%;
+    padding: 0;
+}
+
+/* Alerta de aviso */
+.alert-warning {
+    background-color: rgba(243, 156, 18, 0.1);
+    border: 1px solid var(--warning);
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 1rem;
+    margin-bottom: 2rem;
+    color: var(--warning);
+}
+
+.alert-warning strong {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Cards */
+.card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.card-danger {
+    border-color: var(--danger);
+}
+
+.card-warning {
+    border-color: var(--warning);
+}
+
+.card-success {
+    border-color: var(--success);
+}
+
+.card-info {
+    border-color: var(--primary-blue);
 }
 
 .card-header {
-    border-radius: 8px 8px 0 0;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.card-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
     font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
-.list-group-item {
-    border-radius: 0;
+.card-body {
+    margin-top: 1rem;
 }
 
-.list-group-item:first-child {
-    border-top-left-radius: 0;
-    border-top-right-radius: 0;
+/* Formulário */
+.form-group {
+    margin-bottom: 1.25rem;
 }
 
-.list-group-item:last-child {
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-weight: 500;
 }
 
-.alert {
-    border-radius: 8px;
+.required {
+    color: var(--danger);
+    margin-left: 2px;
 }
 
-.form-control:focus,
-.form-select:focus {
-    border-color: #0d6efd;
-    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+.form-control {
+    width: 100%;
+    padding: 0.65rem 0.95rem;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text-main);
+    font-size: 0.9rem;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.form-control:focus {
+    border-color: #38bdf8;
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.15);
+    outline: none;
+}
+
+.form-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+}
+
+/* Botões */
+.btn-primary {
+    background-color: var(--primary-blue);
+    border-color: var(--primary-blue);
+    color: white;
+    padding: 0.65rem 1.25rem;
+    border-radius: var(--radius);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-blue-hover);
+}
+
+.btn-secondary {
+    background-color: var(--border-subtle);
+    border-color: var(--border-input);
+    color: var(--text-primary);
+    padding: 0.65rem 1.25rem;
+    border-radius: var(--radius);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.btn-secondary:hover {
+    background-color: var(--border-input);
+}
+
+/* Lista de resultados */
+.result-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.result-item {
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.5rem;
+    border-radius: 6px;
+    border-left: 3px solid;
+    background: var(--bg-input);
+}
+
+.result-item.danger {
+    border-left-color: var(--danger);
+}
+
+.result-item.warning {
+    border-left-color: var(--warning);
+}
+
+.result-item.success {
+    border-left-color: var(--success);
+}
+
+.result-item.info {
+    border-left-color: var(--primary-blue);
+}
+
+.result-item strong {
+    display: block;
+    margin-bottom: 0.25rem;
+    color: var(--text-primary);
+}
+
+.result-item small {
+    display: block;
+    margin-top: 0.25rem;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+/* Cores de texto */
+.text-danger {
+    color: var(--danger);
+}
+
+.text-warning {
+    color: var(--warning);
+}
+
+.text-success {
+    color: var(--success);
+}
+
+.text-info {
+    color: var(--primary-blue);
+}
+
+.text-muted {
+    color: var(--text-muted);
 }
 
 /* Acessibilidade */
@@ -45,7 +218,11 @@
 
 /* Responsividade */
 @media (max-width: 768px) {
-    .container {
-        padding: 0 1rem;
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .form-actions button {
+        width: 100%;
     }
 }

@@ -1,12 +1,19 @@
-from flask import Blueprint, render_template
-from flask_login import login_required
+from flask import Blueprint, render_template, request, jsonify, send_file
+from flask_login import login_required, current_user
 from app.models.medicamento import Medicamento
 from app.models.doacao import Doacao
 from app.models.paciente import Paciente
 from app.models.farmacia import Farmacia
 from app.database import db
 from app.core.decorators import equipe_clinica_required
-from datetime import date
+from app.core.api_responses import resposta_ok, resposta_erro
+from app.utils.pdf_generator import obter_gerador_pdf
+from datetime import date, datetime
+from io import BytesIO
+import logging
+import os
+
+logger = logging.getLogger(__name__)
 
 impacto_bp = Blueprint("impacto", __name__)
 
@@ -56,3 +63,68 @@ def impacto_social():
         medicamentos_vencidos=medicamentos_vencidos,
         doacoes_mes=doacoes_mes
     )
+
+
+@impacto_bp.route("/api/impacto/exportar-pdf", methods=["POST"])
+@login_required
+@equipe_clinica_required
+def exportar_pdf():
+    """Exporta o relatório de impacto social em PDF"""
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return resposta_erro(
+                mensagem="Corpo da requisição vazio",
+                codigo=400
+            )
+        
+        data_inicio = data.get("data_inicio")
+        data_fim = data.get("data_fim")
+        titulo = data.get("titulo", "Relatório de Impacto Social")
+        observacoes = data.get("observacoes", "")
+        dados_atuais = data.get("dados_atuais", {})
+        graficos = data.get("graficos", {})
+        
+        # Escape de texto fornecido pelo usuário
+        titulo = titulo.replace("<", "&lt;").replace(">", "&gt;")
+        observacoes = observacoes.replace("<", "&lt;").replace(">", "&gt;")
+        
+        # Gerar PDF
+        gerador = obter_gerador_pdf()
+        pdf_bytes = gerador.gerar_pdf_impacto_social(
+            data_inicio=data_inicio,
+            data_fim=data_fim,
+            titulo=titulo,
+            observacoes=observacoes,
+            dados=dados_atuais,
+            graficos=graficos
+        )
+        
+        # Criar nome do arquivo
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"relatorio_impacto_social_{timestamp}.pdf"
+        
+        # Enviar arquivo
+        buffer = BytesIO(pdf_bytes)
+        buffer.seek(0)
+        
+        return send_file(
+            buffer,
+            as_attachment=True,
+            download_name=filename,
+            mimetype="application/pdf"
+        )
+        
+    except ImportError as e:
+        logger.error(f"reportlab não instalado: {e}")
+        return resposta_erro(
+            mensagem="Biblioteca de PDF não instalada. Contate o administrador.",
+            codigo=500
+        )
+    except Exception as e:
+        logger.error(f"Erro ao exportar PDF: {e}")
+        return resposta_erro(
+            mensagem="Erro ao gerar PDF",
+            codigo=500
+        )

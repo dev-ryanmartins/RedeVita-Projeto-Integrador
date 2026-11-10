@@ -224,7 +224,7 @@
                class="nav-item admin {{ 'active' if request.endpoint and request.endpoint.startswith('iot_integrity_radar.') else '' }}"
                data-tooltip="Radar de Integridade">
                 <div class="nav-item-icon">
-                    <i class="fas fa-radar"></i>
+                    <i class="fas fa-satellite-dish"></i>
                 </div>
                 <span class="nav-item-text">Radar Integridade</span>
             </a>
@@ -659,9 +659,9 @@
                         <button onclick="executarComandoAdmin('ver_sessoes')" class="btn-admin">
                             <i class="fas fa-users"></i> Sessões Ativas
                         </button>
-                        <button onclick="executarComandoAdmin('ver_metricas_sistema')" class="btn-admin">
+                        <a href="{{ url_for('admin_health.painel_saude') }}" class="btn-admin" title="Abrir Painel de Saúde Operacional">
                             <i class="fas fa-tachometer-alt"></i> Métricas do Sistema
-                        </button>
+                        </a>
                     </div>
                 </div>
                 
@@ -891,45 +891,72 @@
     function executarComandoAdmin(comando) {
         const resultadoDiv = document.getElementById('admin-comando-resultado');
         const saidaPre = document.getElementById('admin-comando-saida');
-        
+
         if (!resultadoDiv || !saidaPre) return;
-        
+
         resultadoDiv.style.display = 'block';
-        saidaPre.textContent = 'Executando comando...';
+        saidaPre.textContent = 'Verificando comando...';
 
         setTimeout(() => {
             let resultado = '';
             switch(comando) {
                 case 'backup_db':
-                    resultado = '✓ Backup do banco de dados concluído com sucesso.\nArquivo: redevita_backup_' + new Date().toISOString().slice(0,10) + '.sql\nTamanho: 2.4 MB';
+                    resultado = '⚠ Funcionalidade não implementada.\nPara fazer backup do banco de dados, use o sistema de backup configurado no servidor ou Docker.';
                     break;
                 case 'limpar_logs':
-                    resultado = '✓ Logs antigos (mais de 30 dias) foram removidos.\nTotal de registros limpos: 1,247\nEspaço liberado: 156 KB';
+                    resultado = '⚠ Funcionalidade não implementada.\nA limpeza de logs deve ser configurada via job de manutenção no servidor.';
                     break;
                 case 'validar_estoque':
-                    resultado = '✓ Validação de estoque concluída.\nTotal de itens: 156\nItens com alerta: 3\nItens críticos: 1\nRecomendação: Verificar itens próximos ao vencimento';
+                    resultado = '⚠ Funcionalidade não implementada.\nUse a tela de Inventário para validar o estoque de medicamentos.';
                     break;
                 case 'validar_portaria':
-                    resultado = '✓ Verificação de Portaria 344 concluída.\nMedicamentos controlados: 12\nItens conformes: 11\nItens não conformes: 1\nAção necessária: Revisar item #456';
+                    resultado = '⚠ Funcionalidade não implementada.\nA validação de Portaria 344 deve ser implementada como uma regra de negócio específica.';
                     break;
                 case 'limpar_cache':
-                    resultado = '✓ Cache do sistema limpo com sucesso.\nTempo de limpeza: 0.3s\nMemória liberada: 45 MB';
+                    resultado = '⚠ Funcionalidade não implementada.\nA limpeza de cache deve ser feita reiniciando o servidor ou configurando um job de manutenção.';
                     break;
                 case 'reiniciar_sistema':
-                    resultado = '⚠ Comando de reinicialização enviado.\nO sistema será reiniciado em 30 segundos.\nOs usuários serão desconectados temporariamente.';
+                    resultado = '⚠ Funcionalidade não implementada.\nO reinício do sistema deve ser feito pelo administrador do servidor ou via Docker/Container.';
                     break;
                 case 'criar_usuario_teste':
-                    resultado = '✓ Usuário de teste criado com sucesso.\nNome: Usuário Teste\nCPF: 123.456.789-00\nCargo: Operador\nSenha: temp123\n(Lembre-se de remover este usuário após os testes)';
+                    resultado = '⚠ Funcionalidade não implementada.\nUse a tela de Cadastro de Usuários para criar novos usuários.';
                     break;
                 case 'resetar_senhas':
-                    resultado = '⚠ Reset de senhas iniciado.\nTodos os usuários receberão senha temporária.\nEmails de notificação enviados: 5\nTempo estimado para conclusão: 2 minutos';
+                    resultado = '⚠ Funcionalidade não implementada.\nO reset de senhas deve ser feito por um processo seguro com verificação de identidade.';
+                    break;
+                case 'exportar_relatorio_global':
+                    resultado = '⚠ Funcionalidade não implementada.\nUse a tela de Relatórios para exportar dados.';
+                    break;
+                case 'exportar_usuarios':
+                    resultado = '⚠ Funcionalidade não implementada.\nUse a tela de Relatórios para exportar dados de usuários.';
+                    break;
+                case 'exportar_auditoria':
+                    resultado = '⚠ Funcionalidade não implementada.\nUse a tela de Relatórios para exportar dados de auditoria.';
+                    break;
+                case 'ver_conexoes_ativas':
+                    resultado = '⚠ Funcionalidade não implementada.\nO monitoramento de conexões deve ser implementado no nível do servidor.';
+                    break;
+                case 'ver_sessoes':
+                    resultado = '⚠ Funcionalidade não implementada.\nO monitoramento de sessões deve ser implementado no nível do servidor.';
+                    break;
+                case 'ver_metricas_sistema':
+                    resultado = '⚠ Use o botão "Métricas do Sistema" para abrir o Painel de Saúde Operacional.';
+                    break;
+                case 'painel_auditoria_rapido':
+                    resultado = '⚠ Funcionalidade não implementada.\nO painel de auditoria deve ser implementado como uma tela dedicada.';
+                    break;
+                case 'ver_log_acessos':
+                    resultado = '⚠ Funcionalidade não implementada.\nO log de acessos deve ser implementado como uma tela dedicada.';
+                    break;
+                case 'ver_alertas_seguranca':
+                    resultado = '⚠ Funcionalidade não implementada.\nOs alertas de segurança devem ser implementados como um sistema de monitoramento dedicado.';
                     break;
                 default:
-                    resultado = 'Comando não reconhecido.';
+                    resultado = '⚠ Comando não reconhecido ou não implementado.';
             }
-            
+
             saidaPre.textContent = resultado;
-        }, 1000);
+        }, 500);
     }
 
     function abrirFormularioUsuario() {

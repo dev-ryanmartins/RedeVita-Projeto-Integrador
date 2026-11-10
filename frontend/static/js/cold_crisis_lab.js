@@ -49,10 +49,10 @@
             cenarioSelect.innerHTML = '<option value="">Selecione um cenário...</option>';
 
             // Adicionar cenários
-            cenarios.forEach(cenario => {
+            cenarios.forEach(c => {
                 const option = document.createElement('option');
-                option.value = scenario.id;
-                option.textContent = `${scenario.nome} - ${scenario.descricao}`;
+                option.value = c.id;
+                option.textContent = `${c.nome} - ${c.descricao}`;
                 cenarioSelect.appendChild(option);
             });
         } catch (error) {
@@ -314,7 +314,7 @@
                     'Accept': 'application/json'
                 },
                 body: JSON.stringify({
-                    cenario: cenario,
+                    scenario: cenario,
                     duracao_horas: duracao,
                     intervalo_minutos: intervalo,
                     seed: seed
@@ -344,7 +344,7 @@
     // Mostrar roteiro
     async function mostrarRoteiro(cenario) {
         try {
-            const response = await fetch(`/api/laboratorio-crise-cadeia-frio/replay/roteiro?scenario=${scenario}`, {
+            const response = await fetch(`/api/laboratorio-crise-cadeia-frio/replay/roteiro?cenario=${scenario}`, {
                 headers: { Accept: 'application/json' }
             });
 
@@ -355,6 +355,9 @@
             const data = await response.json();
             const roteiro = data.dados?.roteiro || [];
             const informacao = data.dados?.informacao || {};
+
+            // Armazenar roteiro globalmente para uso posterior
+            window.roteiroAtual = roteiro;
 
             document.getElementById('roteiroVersao').textContent = informacao.versao || '-';
             document.getElementById('roteiroData').textContent = informacao.data || '-';
@@ -368,8 +371,8 @@
 
     // Mostrar etapas
     function mostrarEtapas(cenario) {
-        const service = new ColdCrisisReplayService();
-        const etapas = service.obter_roteiro(cenario);
+        // Usar as etapas já carregadas do roteiro
+        const etapas = window.roteiroAtual || [];
 
         replayEtapasList.innerHTML = '';
         etapas.forEach(etapa => {

@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeFullscreenToggle();
     initializeTimeFilter();
     initializeCommandPalette();
+    restoreSidebarScrollPosition();
 });
 
 function initializeSidebar() {
@@ -37,6 +38,9 @@ function initializeSidebar() {
     const navItems = document.querySelectorAll('.nav-item');
     navItems.forEach(item => {
         item.addEventListener('click', function() {
+            // Salvar posição de rolagem antes da navegação
+            saveSidebarScrollPosition();
+            
             navItems.forEach(nav => nav.classList.remove('active'));
             this.classList.add('active');
         });
@@ -396,4 +400,25 @@ function updateSelectedPaletteItem(items, selectedIndex) {
             item.scrollIntoView({ block: 'nearest' });
         }
     });
+}
+
+// Salvar posição de rolagem da sidebar
+function saveSidebarScrollPosition() {
+    const sidebarNav = document.querySelector('.sidebar-nav');
+    if (sidebarNav) {
+        sessionStorage.setItem('redevitaSidebarScrollTop', sidebarNav.scrollTop);
+    }
+}
+
+// Restaurar posição de rolagem da sidebar
+function restoreSidebarScrollPosition() {
+    const sidebarNav = document.querySelector('.sidebar-nav');
+    const savedScrollTop = sessionStorage.getItem('redevitaSidebarScrollTop');
+    
+    if (sidebarNav && savedScrollTop !== null) {
+        // Restaurar a posição após um pequeno delay para garantir que o DOM esteja renderizado
+        setTimeout(function() {
+            sidebarNav.scrollTop = parseInt(savedScrollTop, 10);
+        }, 50);
+    }
 }

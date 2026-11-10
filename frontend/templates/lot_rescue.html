@@ -2,93 +2,118 @@
 
 {% block title %}Janela de Resgate de Lotes - RedeVita{% endblock %}
 
-{% block head %}
+{% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/lot_rescue.css') }}">
 {% endblock %}
 
 {% block content %}
-<div class="lot-rescue-container">
-    <div class="page-header">
-        <h1 class="page-title">Janela de Resgate de Lotes</h1>
-        <p class="page-subtitle">Dá tempo de salvar?</p>
-    </div>
-
-    <div class="warning-banner">
-        <span class="warning-icon">⚠️</span>
-        <span class="warning-text">Simulação de planejamento. Não realiza transferências nem substitui a avaliação de um farmacêutico.</span>
-    </div>
-
-    <div class="controls-section">
-        <div class="control-group">
-            <label for="horizon-dias">Horizonte (dias):</label>
-            <input type="number" id="horizon-dias" min="1" max="365" value="30" aria-label="Horizonte em dias">
+<div class="page-wrapper" data-lot-rescue>
+    <!-- Aviso de Simulação -->
+    <div class="simulation-banner" role="alert">
+        <div class="simulation-banner-content">
+            <i class="fas fa-info-circle"></i>
+            <span><strong>Simulação de planejamento.</strong> Não realiza transferências nem substitui a avaliação de um farmacêutico.</span>
         </div>
-
-        <div class="control-group">
-            <label for="filtro-nome">Filtrar por nome:</label>
-            <input type="text" id="filtro-nome" placeholder="Nome do medicamento" aria-label="Filtro por nome do medicamento">
-        </div>
-
-        <button id="btn-buscar" class="btn-primary" aria-label="Buscar lotes">Buscar Lotes</button>
     </div>
 
-    <div id="loading-state" class="state-container hidden">
-        <div class="spinner"></div>
+    <div class="lab-intro">
+        <div>
+            <h2><i class="fas fa-box-open"></i> Janela de Resgate de Lotes</h2>
+            <p>Identifique lotes próximos ao vencimento e simule cenários de resgate. Configure o horizonte e visualize as opções disponíveis.</p>
+        </div>
+    </div>
+
+    <!-- Controles de Busca -->
+    <div class="lab-controls-section">
+        <div class="lab-controls-header">
+            <h3><i class="fas fa-search"></i> Configuração da Busca</h3>
+        </div>
+        <div class="lab-controls-grid">
+            <div class="lab-control-group">
+                <label for="horizon-dias" class="lab-label">Horizonte (dias)</label>
+                <input type="number" id="horizon-dias" class="lab-input" min="1" max="365" value="30" aria-describedby="horizonHelp">
+                <span id="horizonHelp" class="lab-help">Entre 1 e 365 dias</span>
+            </div>
+            <div class="lab-control-group">
+                <label for="filtro-nome" class="lab-label">Filtrar por nome</label>
+                <input type="text" id="filtro-nome" class="lab-input" placeholder="Nome do medicamento" aria-describedby="filtroHelp">
+                <span id="filtroHelp" class="lab-help">Digite o nome do medicamento</span>
+            </div>
+        </div>
+        <div class="lab-controls-actions">
+            <button type="button" id="btn-buscar" class="btn-primary">
+                <i class="fas fa-search"></i> Buscar Lotes
+            </button>
+        </div>
+    </div>
+
+    <!-- Estado de Carregamento -->
+    <div class="lab-loading" id="loading-state" hidden>
+        <div class="loading-spinner"></div>
         <p>Carregando lotes...</p>
     </div>
 
-    <div id="error-state" class="state-container hidden">
-        <div class="error-icon">❌</div>
-        <p id="error-message">Erro ao carregar dados.</p>
-        <button id="btn-retry" class="btn-secondary">Tentar novamente</button>
+    <!-- Estado de Erro -->
+    <div class="lab-error" id="error-state" hidden role="alert">
+        <i class="fas fa-exclamation-triangle"></i>
+        <span id="error-message">Erro ao carregar dados.</span>
+        <button type="button" class="btn-link" id="btn-retry">Tentar novamente</button>
     </div>
 
-    <div id="empty-state" class="state-container hidden">
-        <div class="empty-icon">📦</div>
+    <!-- Estado Vazio -->
+    <div class="lab-empty" id="empty-state" hidden>
+        <i class="fas fa-box-open"></i>
         <p>Nenhum lote encontrado dentro do horizonte especificado.</p>
     </div>
 
+    <!-- Conteúdo Principal -->
     <div id="main-content" class="main-content hidden">
-        <div class="summary-cards">
-            <div class="summary-card">
-                <h3>Total de Lotes</h3>
-                <p id="summary-total" class="summary-value">-</p>
+        <!-- Cards de Resumo -->
+        <div class="lab-stats-grid">
+            <div class="lab-stat-card">
+                <strong id="summary-total">-</strong>
+                <span>Total de Lotes</span>
             </div>
-            <div class="summary-card critical">
-                <h3>Críticos (≤7 dias)</h3>
-                <p id="summary-critical" class="summary-value">-</p>
+            <div class="lab-stat-card lab-stat-card-critico">
+                <strong id="summary-critical">-</strong>
+                <span>Críticos (≤7 dias)</span>
             </div>
-            <div class="summary-card attention">
-                <h3>Atenção (8-30 dias)</h3>
-                <p id="summary-attention" class="summary-value">-</p>
+            <div class="lab-stat-card lab-stat-card-alerta">
+                <strong id="summary-attention">-</strong>
+                <span>Atenção (8-30 dias)</span>
             </div>
-            <div class="summary-card normal">
-                <h3>Normais (>30 dias)</h3>
-                <p id="summary-normal" class="summary-value">-</p>
+            <div class="lab-stat-card lab-stat-card-normal">
+                <strong id="summary-normal">-</strong>
+                <span>Normais (>30 dias)</span>
             </div>
         </div>
 
-        <div class="lotes-table-container">
-            <table class="lotes-table">
-                <thead>
-                    <tr>
-                        <th>Medicamento</th>
-                        <th>Lote</th>
-                        <th>Validade</th>
-                        <th>Dias Restantes</th>
-                        <th>Qtd. Cadastrada</th>
-                        <th>Status</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody id="lotes-tbody">
-                </tbody>
-            </table>
+        <!-- Tabela de Lotes -->
+        <div class="lab-readings-section">
+            <h4><i class="fas fa-list"></i> Lotes Encontrados</h4>
+            <div class="lab-readings-table-wrapper">
+                <table class="lab-readings-table">
+                    <thead>
+                        <tr>
+                            <th>Medicamento</th>
+                            <th>Lote</th>
+                            <th>Validade</th>
+                            <th>Dias Restantes</th>
+                            <th>Qtd. Cadastrada</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lotes-tbody">
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
-    <div id="limitation-section" class="limitation-section">
-        <h3>Limitações Conhecidas</h3>
+    <!-- Limitações -->
+    <div class="lab-info-section">
+        <h4><i class="fas fa-exclamation-circle"></i> Limitações Conhecidas</h4>
         <ul>
             <li>Saldo baseado em quantidade cadastrada (não derivado de ledger - módulo não disponível)</li>
             <li>Não há vínculo direto entre lote e farmácia no modelo de dados</li>
@@ -99,39 +124,50 @@
     </div>
 </div>
 
+<!-- Modal de Simulação -->
 <div id="simulation-modal" class="modal hidden">
     <div class="modal-content">
         <div class="modal-header">
-            <h2>Simular Cenário</h2>
+            <h3><i class="fas fa-play-circle"></i> Simular Cenário</h3>
             <button id="close-modal" class="close-btn" aria-label="Fechar modal">&times;</button>
         </div>
         <div class="modal-body">
-            <div class="lote-info">
-                <h3>Lote Selecionado</h3>
-                <p><strong>Medicamento:</strong> <span id="sim-medicamento">-</span></p>
-                <p><strong>Lote:</strong> <span id="sim-lote">-</span></p>
-                <p><strong>Validade:</strong> <span id="sim-validade">-</span></p>
-                <p><strong>Dias restantes:</strong> <span id="sim-dias">-</span></p>
+            <div class="lab-info-section">
+                <h4><i class="fas fa-box"></i> Lote Selecionado</h4>
+                <div class="lab-info-content">
+                    <p><strong>Medicamento:</strong> <span id="sim-medicamento">-</span></p>
+                    <p><strong>Lote:</strong> <span id="sim-lote">-</span></p>
+                    <p><strong>Validade:</strong> <span id="sim-validade">-</span></p>
+                    <p><strong>Dias restantes:</strong> <span id="sim-dias">-</span></p>
+                </div>
             </div>
 
-            <div class="etapas-section">
-                <h3>Etapas Hipotéticas</h3>
+            <div class="lab-controls-section">
+                <div class="lab-controls-header">
+                    <h4><i class="fas fa-tasks"></i> Etapas Hipotéticas</h4>
+                </div>
                 <div id="etapas-container">
                     <div class="etapa-row">
-                        <input type="text" class="etapa-nome" placeholder="Nome da etapa (ex: Triagem)" aria-label="Nome da etapa">
-                        <input type="number" class="etapa-duracao" min="1" max="90" placeholder="Dias" aria-label="Duração em dias">
-                        <button class="btn-remove-etapa" aria-label="Remover etapa">-</button>
+                        <input type="text" class="etapa-nome lab-input" placeholder="Nome da etapa (ex: Triagem)" aria-label="Nome da etapa">
+                        <input type="number" class="etapa-duracao lab-input" min="1" max="90" placeholder="Dias" aria-label="Duração em dias">
+                        <button class="btn-remove-etapa btn-secondary" aria-label="Remover etapa"><i class="fas fa-minus"></i></button>
                     </div>
                 </div>
-                <button id="btn-add-etapa" class="btn-secondary">Adicionar Etapa</button>
+                <div class="lab-controls-actions">
+                    <button type="button" id="btn-add-etapa" class="btn-secondary">
+                        <i class="fas fa-plus"></i> Adicionar Etapa
+                    </button>
+                </div>
             </div>
 
-            <div class="simulation-controls">
-                <button id="btn-simular" class="btn-primary">Simular</button>
+            <div class="lab-controls-actions">
+                <button type="button" id="btn-simular" class="btn-primary">
+                    <i class="fas fa-play"></i> Simular
+                </button>
             </div>
 
-            <div id="simulation-result" class="simulation-result hidden">
-                <h3>Resultado da Simulação</h3>
+            <div id="simulation-result" class="lab-info-section hidden">
+                <h4><i class="fas fa-chart-bar"></i> Resultado da Simulação</h4>
                 <div id="result-content"></div>
             </div>
         </div>

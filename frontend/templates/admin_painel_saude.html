@@ -185,6 +185,7 @@
     const UPDATE_INTERVAL = 30000;
     let updateTimer = null;
     let isPageVisible = true;
+    let isLoading = false; // Prevenir requisições duplicadas
 
     // Detectar visibilidade da página
     document.addEventListener('visibilitychange', () => {
@@ -199,8 +200,25 @@
 
     // Carregar dados do painel
     async function loadDashboardData() {
+        // Prevenir requisições duplicadas
+        if (isLoading) {
+            console.log('Já está carregando dados, ignorando requisição duplicada');
+            return;
+        }
+
+        isLoading = true;
+        setRefreshButtonLoading(true);
+        
         try {
-            const response = await fetch('/api/admin/painel-saude/dados');
+            // Adicionar timeout para evitar carregamento infinito
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 segundos timeout
+            
+            const response = await fetch('/api/admin/painel-saude/dados', {
+                signal: controller.signal
+            });
+            
+            clearTimeout(timeoutId);
             
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}`);
@@ -218,6 +236,23 @@
         } catch (error) {
             console.error('Erro ao carregar dados:', error);
             showError();
+        } finally {
+            isLoading = false;
+            setRefreshButtonLoading(false);
+        }
+    }
+
+    // Função para definir estado de carregamento do botão
+    function setRefreshButtonLoading(loading) {
+        const refreshBtn = document.getElementById('refreshBtn');
+        if (refreshBtn) {
+            if (loading) {
+                refreshBtn.disabled = true;
+                refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Atualizando...';
+            } else {
+                refreshBtn.disabled = false;
+                refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Atualizar';
+            }
         }
     }
 
@@ -406,8 +441,17 @@
     });
 
     // Carregar dados iniciais
-    loadDashboardData();
-    startAutoUpdate();
+    // Usar DOMContentLoaded para garantir que o DOM esteja pronto
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDashboardData();
+            startAutoUpdate();
+        });
+    } else {
+        // DOM já está pronto
+        loadDashboardData();
+        startAutoUpdate();
+    }
 
     // Limpar timer ao sair da página
     window.addEventListener('beforeunload', () => {

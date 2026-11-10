@@ -12,6 +12,45 @@
             <h1>Impacto Social e Sustentabilidade</h1>
             <p class="subtitle">Métricas consolidadas do impacto da RedeVita na comunidade.</p>
         </div>
+        <div class="dashboard-header-actions">
+            <button type="button" id="btn-exportar-pdf" class="btn-primary">
+                <i class="fas fa-file-pdf"></i> Exportar Relatório PDF
+            </button>
+        </div>
+    </div>
+
+    <!-- Filtros e Contexto -->
+    <div class="lab-controls-section">
+        <div class="lab-controls-header">
+            <h3><i class="fas fa-filter"></i> Configuração do Relatório</h3>
+        </div>
+        <div class="lab-controls-grid">
+            <div class="lab-control-group">
+                <label for="data-inicio" class="lab-label">Data Início</label>
+                <input type="date" id="data-inicio" class="lab-input" aria-describedby="dataInicioHelp">
+                <span id="dataInicioHelp" class="lab-help">Período inicial dos dados</span>
+            </div>
+            <div class="lab-control-group">
+                <label for="data-fim" class="lab-label">Data Fim</label>
+                <input type="date" id="data-fim" class="lab-input" aria-describedby="dataFimHelp">
+                <span id="dataFimHelp" class="lab-help">Período final dos dados</span>
+            </div>
+            <div class="lab-control-group">
+                <label for="titulo-relatorio" class="lab-label">Título do Relatório (opcional)</label>
+                <input type="text" id="titulo-relatorio" class="lab-input" placeholder="Ex: Relatório Trimestral Q1 2024" aria-describedby="tituloHelp">
+                <span id="tituloHelp" class="lab-help">Título personalizado para o PDF</span>
+            </div>
+            <div class="lab-control-group">
+                <label for="observacoes" class="lab-label">Observações (opcional)</label>
+                <input type="text" id="observacoes" class="lab-input" placeholder="Contexto adicional do relatório" aria-describedby="obsHelp">
+                <span id="obsHelp" class="lab-help">Informações contextuais para o PDF</span>
+            </div>
+        </div>
+        <div class="lab-controls-actions">
+            <button type="button" id="btn-aplicar-filtros" class="btn-primary">
+                <i class="fas fa-sync"></i> Atualizar Dados
+            </button>
+        </div>
     </div>
 
     <div class="stats-grid-corporate">
@@ -139,17 +178,35 @@
 (function () {
     if (typeof Chart === 'undefined') return;
     
+    // Dados iniciais do servidor
+    const dadosIniciais = {
+        pacientes_beneficiados: {{ pacientes_beneficiados }},
+        residuos_evitados_kg: {{ residuos_evitados_kg }},
+        medicamentos_salvos: {{ medicamentos_salvos }},
+        medicamentos_vencidos: {{ medicamentos_vencidos }},
+        total_pacientes: {{ total_pacientes }},
+        total_farmacias: {{ total_farmacias }},
+        total_doacoes: {{ total_doacoes }},
+        total_medicamentos: {{ total_medicamentos }},
+        doacoes_mes: {{ doacoes_mes }}
+    };
+
+    // Armazenar instâncias dos gráficos para captura no PDF
+    let chartImpactoInstance = null;
+    let chartDistribuicaoInstance = null;
+    let chartSustentabilidadeInstance = null;
+
     // Gráfico de Evolução de Impacto
     const ctxImpacto = document.getElementById('chartImpacto');
     if (ctxImpacto) {
-        new Chart(ctxImpacto, {
+        chartImpactoInstance = new Chart(ctxImpacto, {
             type: 'line',
             data: {
                 labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
                 datasets: [
                     {
                         label: 'Pacientes Beneficiados',
-                        data: [120, 150, 180, 210, 240, {{ pacientes_beneficiados }}],
+                        data: [120, 150, 180, 210, 240, dadosIniciais.pacientes_beneficiados],
                         borderColor: '#38bdf8',
                         backgroundColor: 'rgba(56, 189, 248, 0.1)',
                         fill: true,
@@ -157,7 +214,7 @@
                     },
                     {
                         label: 'Resíduos Evitados (kg)',
-                        data: [5.2, 6.8, 7.5, 8.2, 9.1, {{ residuos_evitados_kg }}],
+                        data: [5.2, 6.8, 7.5, 8.2, 9.1, dadosIniciais.residuos_evitados_kg],
                         borderColor: '#10b981',
                         backgroundColor: 'rgba(16, 185, 129, 0.1)',
                         fill: true,
@@ -183,12 +240,12 @@
     // Gráfico de Distribuição
     const ctxDistribuicao = document.getElementById('chartDistribuicao');
     if (ctxDistribuicao) {
-        new Chart(ctxDistribuicao, {
+        chartDistribuicaoInstance = new Chart(ctxDistribuicao, {
             type: 'doughnut',
             data: {
                 labels: ['Pacientes', 'Farmácias', 'Doações', 'Medicamentos'],
                 datasets: [{
-                    data: [{{ total_pacientes }}, {{ total_farmacias }}, {{ total_doacoes }}, {{ total_medicamentos }}],
+                    data: [dadosIniciais.total_pacientes, dadosIniciais.total_farmacias, dadosIniciais.total_doacoes, dadosIniciais.total_medicamentos],
                     backgroundColor: ['#38bdf8', '#10b981', '#f59e0b', '#ef4444'],
                     borderWidth: 0
                 }]
@@ -220,13 +277,13 @@
     // Gráfico de Sustentabilidade
     const ctxSustentabilidade = document.getElementById('chartSustentabilidade');
     if (ctxSustentabilidade) {
-        new Chart(ctxSustentabilidade, {
+        chartSustentabilidadeInstance = new Chart(ctxSustentabilidade, {
             type: 'bar',
             data: {
                 labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
                 datasets: [{
                     label: 'Doações Realizadas',
-                    data: [8, 12, 15, 18, 22, {{ doacoes_mes }}],
+                    data: [8, 12, 15, 18, 22, dadosIniciais.doacoes_mes],
                     backgroundColor: '#f59e0b',
                     borderRadius: 8
                 }]
@@ -245,6 +302,83 @@
             }
         });
     }
+
+    // Botão Atualizar Dados
+    document.getElementById('btn-aplicar-filtros').addEventListener('click', function() {
+        const dataInicio = document.getElementById('data-inicio').value;
+        const dataFim = document.getElementById('data-fim').value;
+        
+        // Recarregar a página com os filtros
+        const url = new URL(window.location.href);
+        if (dataInicio) url.searchParams.set('data_inicio', dataInicio);
+        if (dataFim) url.searchParams.set('data_fim', dataFim);
+        window.location.href = url.toString();
+    });
+
+    // Botão Exportar PDF
+    document.getElementById('btn-exportar-pdf').addEventListener('click', async function() {
+        const dataInicio = document.getElementById('data-inicio').value;
+        const dataFim = document.getElementById('data-fim').value;
+        const titulo = document.getElementById('titulo-relatorio').value;
+        const observacoes = document.getElementById('observacoes').value;
+
+        // Capturar imagens dos gráficos
+        const chartImages = {};
+        if (chartImpactoInstance) {
+            chartImages.impacto = chartImpactoInstance.toBase64Image();
+        }
+        if (chartDistribuicaoInstance) {
+            chartImages.distribuicao = chartDistribuicaoInstance.toBase64Image();
+        }
+        if (chartSustentabilidadeInstance) {
+            chartImages.sustentabilidade = chartSustentabilidadeInstance.toBase64Image();
+        }
+
+        try {
+            const response = await fetch('/api/impacto/exportar-pdf', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    data_inicio: dataInicio,
+                    data_fim: dataFim,
+                    titulo: titulo,
+                    observacoes: observacoes,
+                    dados_atuais: dadosIniciais,
+                    graficos: chartImages
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.mensagem || 'Erro ao gerar PDF');
+            }
+
+            // Baixar o PDF
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `relatorio-impacto-social-${new Date().toISOString().split('T')[0]}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+
+        } catch (error) {
+            console.error('Erro ao exportar PDF:', error);
+            alert(error.message || 'Erro ao gerar PDF. Tente novamente.');
+        }
+    });
+
+    // Inicializar datas com período atual (últimos 6 meses)
+    const hoje = new Date();
+    const seisMesesAtras = new Date();
+    seisMesesAtras.setMonth(hoje.getMonth() - 6);
+    
+    document.getElementById('data-inicio').value = seisMesesAtras.toISOString().split('T')[0];
+    document.getElementById('data-fim').value = hoje.toISOString().split('T')[0];
 })();
 </script>
 {% endblock %}

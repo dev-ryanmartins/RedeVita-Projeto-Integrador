@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     let currentPage = 1;
     let currentFilters = {};
+    let isLoading = false; // Prevenir requisições duplicadas
     
     // DOM elements
     const dataInicioInput = document.getElementById('data-inicio');
@@ -22,6 +23,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const emptyState = document.getElementById('empty-state');
     const errorState = document.getElementById('error-state');
     const loadingState = document.getElementById('loading-state');
+    const contentSection = document.getElementById('content-section');
     const retryButton = document.getElementById('retry-button');
     
     // Initialize default date range (last 7 days)
@@ -45,19 +47,17 @@ document.addEventListener('DOMContentLoaded', function() {
     nextPageBtn.addEventListener('click', () => loadLotes(currentPage + 1));
     retryButton.addEventListener('click', loadLotes);
     
-    // Handle visibility API to pause auto-refresh if needed
-    document.addEventListener('visibilitychange', () => {
-        if (!document.hidden) {
-            loadLotes(currentPage);
-        }
-    });
-    
     function loadDispositivos() {
         fetch('/api/admin/diagnostico-iot/dispositivos')
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
-                if (data.status === 'ok' && data.dispositivos) {
-                    data.dispositivos.forEach(dispositivo => {
+                if (data.sucesso && data.dados && data.dados.dispositivos) {
+                    data.dados.dispositivos.forEach(dispositivo => {
                         const option = document.createElement('option');
                         option.value = dispositivo;
                         option.textContent = dispositivo;
@@ -92,6 +92,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function loadLotes(page = 1) {
+        // Prevenir requisições duplicadas
+        if (isLoading) {
+            console.log('Já está carregando dados, ignorando requisição duplicada');
+            return;
+        }
+
+        isLoading = true;
         showLoading();
         
         const params = new URLSearchParams({
@@ -100,21 +107,42 @@ document.addEventListener('DOMContentLoaded', function() {
             ...currentFilters
         });
         
-        fetch(`/api/admin/diagnostico-iot/dados?${params}`)
-            .then(response => response.json())
+        // Adicionar timeout para evitar carregamento infinito
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 segundos
+        
+        fetch(`/api/admin/diagnostico-iot/dados?${params}`, {
+            signal: controller.signal
+        })
+            .then(response => {
+                clearTimeout(timeoutId);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                return response.json();
+            })
             .then(data => {
                 hideLoading();
                 
-                if (data.status === 'ok') {
-                    displayLotes(data);
+                if (data.sucesso && data.dados) {
+                    displayLotes(data.dados);
                 } else {
-                    showError('Erro ao carregar dados: ' + (data.mensagem || 'Desconhecido'));
+                    showError('Erro ao carregar dados: ' + (data.erro || 'Desconhecido'));
                 }
             })
             .catch(error => {
                 hideLoading();
-                showError('Erro de rede ao carregar dados');
+                if (error.name === 'AbortError') {
+                    showError('Tempo limite excedido ao carregar dados');
+                } else {
+                    showError('Erro de rede ao carregar dados');
+                }
                 console.error('Erro:', error);
+            })
+            .finally(() => {
+                isLoading = false;
             });
     }
     
@@ -163,9 +191,12 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const resultadoClass = `status-${lote.resultado.toLowerCase()}`;
             
+            // Truncar ID do lote para exibição
+            const loteIdTruncado = lote.lote_id ? lote.lote_id.substring(0, 8) + '...' : '-';
+            
             row.innerHTML = `
                 <td>${dataRecebimento}</td>
-                <td><code>${lote.lote_id.substring(0, 8)}...</code></td>
+                <td><code>${loteIdTruncado}</code></td>
                 <td><span class="status-badge ${resultadoClass}">${lote.resultado}</span></td>
                 <td>${lote.total_recebidas}</td>
                 <td>${lote.total_processadas}</td>
@@ -183,17 +214,15 @@ document.addEventListener('DOMContentLoaded', function() {
         prevPageBtn.disabled = !paginacao.has_prev;
         nextPageBtn.disabled = !paginacao.has_next;
         
-        // Show table, hide empty/error
-        emptyState.style.display = 'none';
-        errorState.style.display = 'none';
-        document.querySelector('.table-section').style.display = 'block';
+        // Show content, hide empty/error
+        showContent();
     }
     
     function showLoading() {
         loadingState.style.display = 'block';
         emptyState.style.display = 'none';
         errorState.style.display = 'none';
-        document.querySelector('.table-section').style.display = 'none';
+        contentSection.style.display = 'none';
     }
     
     function hideLoading() {
@@ -203,13 +232,19 @@ document.addEventListener('DOMContentLoaded', function() {
     function showEmpty() {
         emptyState.style.display = 'block';
         errorState.style.display = 'none';
-        document.querySelector('.table-section').style.display = 'none';
+        contentSection.style.display = 'none';
     }
     
     function showError(message) {
         errorState.style.display = 'block';
         document.getElementById('error-message').textContent = message;
         emptyState.style.display = 'none';
-        document.querySelector('.table-section').style.display = 'none';
+        contentSection.style.display = 'none';
+    }
+    
+    function showContent() {
+        emptyState.style.display = 'none';
+        errorState.style.display = 'none';
+        contentSection.style.display = 'block';
     }
 });

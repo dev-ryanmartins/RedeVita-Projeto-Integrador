@@ -14,6 +14,26 @@
     margin-bottom: 0.5rem;
 }
 
+/* Campos de data/hora datetime-local seguindo padrão global */
+.input-with-icon input[type="datetime-local"] {
+    padding-left: 44px !important;
+    padding-right: 14px !important;
+    min-height: 42px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    background: var(--bg-input) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius) !important;
+    color: var(--text-main) !important;
+    font-size: 0.9rem !important;
+}
+
+.input-with-icon input[type="datetime-local"]:focus {
+    border-color: #38bdf8 !important;
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.15) !important;
+    outline: none !important;
+}
+
 .card {
     background-color: var(--bg-card);
     border-radius: 12px;

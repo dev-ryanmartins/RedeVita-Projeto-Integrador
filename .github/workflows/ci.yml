@@ -440,3 +440,79 @@ jobs:
         export PYTHONPATH="../backend:$PYTHONPATH"
         pytest ../tests/test_agendamento_entrega.py --collect-only | grep "test session starts"
         pytest ../tests/test_agendamento_entrega.py --collect-only | grep "collected"
+
+  smoke-test-docker-compose:
+    runs-on: ubuntu-latest
+    name: Smoke Test Docker Compose
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build application image
+      run: |
+        docker build -t redevita-app:smoke-test .
+
+    - name: Run smoke test with Docker Compose
+      run: |
+        export COMPOSE_PROJECT_NAME=redevita_smoke_test_${{ github.run_id }}
+        
+        # Start services
+        docker compose -f docker-compose.smoke-test.yml up -d
+        
+        # Wait for services to be healthy with timeout
+        echo "Aguardando serviços ficarem saudáveis..."
+        timeout 120 bash -c '
+          until docker compose -f docker-compose.smoke-test.yml ps | grep -q "web.*healthy"; do
+            echo "Aguardando web service..."
+            sleep 5
+          done
+        ' || {
+          echo "Timeout: Web service não ficou saudável"
+          docker compose -f docker-compose.smoke-test.yml ps
+          docker compose -f docker-compose.smoke-test.yml logs --no-log-prefix
+          exit 1
+        }
+        
+        # Test /health endpoint (liveness)
+        echo "Testando /health endpoint..."
+        response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5000/health)
+        if [ "$response" -eq 200 ]; then
+          echo "✓ /health retornou 200"
+        else
+          echo "✗ /health retornou $response (esperado 200)"
+          exit 1
+        fi
+        
+        # Test /healthz endpoint (readiness with database)
+        echo "Testando /healthz endpoint..."
+        response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5000/healthz)
+        if [ "$response" -eq 200 ]; then
+          echo "✓ /healthz retornou 200"
+        else
+          echo "✗ /healthz retornou $response (esperado 200)"
+          exit 1
+        fi
+        
+        echo "Smoke test concluído com sucesso"
+
+    - name: Cleanup Docker Compose on success
+      if: always()
+      run: |
+        export COMPOSE_PROJECT_NAME=redevita_smoke_test_${{ github.run_id }}
+        docker compose -f docker-compose.smoke-test.yml down -v --remove-orphans
+
+    - name: Collect logs on failure
+      if: failure()
+      run: |
+        export COMPOSE_PROJECT_NAME=redevita_smoke_test_${{ github.run_id }}
+        echo "=== Docker Compose PS ==="
+        docker compose -f docker-compose.smoke-test.yml ps
+        echo ""
+        echo "=== Web Service Logs ==="
+        docker compose -f docker-compose.smoke-test.yml logs --no-log-prefix web
+        echo ""
+        echo "=== DB Service Logs ==="
+        docker compose -f docker-compose.smoke-test.yml logs --no-log-prefix db

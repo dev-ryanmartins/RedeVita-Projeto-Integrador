@@ -35,7 +35,7 @@
         <!-- Lado do Formulário -->
         <div class="login-side-form" style="background-color: #151c2a;">
             
-            <div class="form-content">
+            <div class="form-content" role="main">
                 <h2>Bem-vindo!</h2>
                 <p class="subtitle">Acesse sua conta para continuar.</p>
 
@@ -62,6 +62,7 @@
                             <input type="text" name="identificador" id="identificador"
                                    placeholder="seu@email.com ou CPF" required
                                    autocomplete="username" aria-required="true"
+                                   aria-label="CPF ou E-mail"
                                    aria-describedby="{% if messages %}flash-messages{% endif %}">
                         </div>
                     </div>
@@ -72,24 +73,24 @@
                             <i class="fas fa-lock" aria-hidden="true"></i>
                             <input type="password" name="senha" id="senha"
                                    placeholder="••••••••" required autocomplete="current-password"
-                                   aria-required="true"
+                                   aria-required="true" aria-label="Senha"
                                    aria-describedby="{% if messages %}flash-messages{% endif %}">
                         </div>
                     </div>
 
-                    <div class="forgot-pass-container" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                    <div class="forgot-pass-container" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;" role="group" aria-label="Opções adicionais">
                         <span style="font-size:0.85rem; color:#94a3b8; display:inline-flex; align-items:center; gap:6px;">
-                            <i class="fas fa-shield-alt" style="color:#38bdf8;"></i> Ambiente seguro
+                            <i class="fas fa-shield-alt" style="color:#38bdf8;" aria-hidden="true"></i> Ambiente seguro
                         </span>
                         <a href="{{ url_for('auth.recuperar_senha') }}" class="forgot-link" style="color:#38bdf8; font-size:0.88rem; font-weight:500; text-decoration:none;">Esqueceu a senha?</a>
                     </div>
 
                     <button type="submit" class="btn-primary-gradient" style="width:100%; display:inline-flex; align-items:center; justify-content:center; gap:8px;">
-                        Entrar no Sistema <i class="fas fa-arrow-right"></i>
+                        Entrar no Sistema <i class="fas fa-arrow-right" aria-hidden="true"></i>
                     </button>
                 </form>
 
-                <div class="auth-footer" style="margin-top: 24px; text-align: center;">
+                <div class="auth-footer" style="margin-top: 24px; text-align: center;" role="complementary" aria-label="Links de cadastro">
                     <p style="color:#94a3b8; font-size:0.9rem;">Não tem uma conta? <a href="{{ url_for('auth.cadastro') }}" style="color:#38bdf8; font-weight:600; text-decoration:none;">Cadastre-se</a></p>
                 </div>
             </div>

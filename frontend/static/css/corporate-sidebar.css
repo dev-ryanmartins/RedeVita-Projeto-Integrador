@@ -37,6 +37,8 @@ body {
     margin-left: var(--sidebar-width);
     transition: margin-left 0.3s ease;
     padding: 0;
+    min-height: 100vh;
+    overflow-x: hidden;
 }
 
 /* ==========================================================================

@@ -33,8 +33,11 @@ class NecessidadeInstitucional(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     
-    # Instituição (nome informado, pois não há vínculo confiável com Farmacia)
-    nome_instituicao = db.Column(db.String(200), nullable=False)
+    # Instituição (vínculo real com entidade Instituicao)
+    instituicao_id = db.Column(db.Integer, db.ForeignKey("instituicoes.id"), nullable=True)
+    
+    # Campo legado para compatibilidade (será removido após migração completa)
+    nome_instituicao = db.Column(db.String(200), nullable=True)
     
     # Produto (referência opcional para catálogo existente)
     medicamento_referencia_id = db.Column(
@@ -72,6 +75,7 @@ class NecessidadeInstitucional(db.Model):
     revisado_por = db.relationship("Usuario", foreign_keys=[revisado_por_id], overlaps='usuario')
     encerrado_por = db.relationship("Usuario", foreign_keys=[encerrado_por_id], overlaps='usuario')
     referencia = db.relationship("MedicamentoReferencia", backref="necessidades", lazy=True)
+    instituicao = db.relationship("Instituicao", foreign_keys=[instituicao_id], lazy=True)
     
     def __repr__(self):
         return f"<NecessidadeInstitucional {self.nome_instituicao} - {self.produto_descritivo or 'N/A'}>"

@@ -52,6 +52,15 @@ from app.routes.perfil_resiliencia import perfil_resiliencia_bp
 from app.routes.necessidade_institucional import necessidade_institucional_bp
 from app.routes.agendamento_entrega import agendamento_entrega_bp
 from app.routes.recibo_doacao import recibo_doacao_bp
+from app.routes.instituicoes import instituicoes_bp
+from app.routes.oferta_medicamento import oferta_medicamento_bp
+from app.routes.reserva_oferta import reserva_oferta_bp
+from app.routes.matching import matching_bp
+from app.routes.aprovacao_farmaceutica import aprovacao_farmaceutica_bp
+from app.routes.despacho import despacho_bp
+from app.routes.entrega_institucional import entrega_institucional_bp
+from app.routes.recibo_entrega import recibo_entrega_bp
+from app.routes.receita_anexo import receita_anexo_bp
 from app.core.error_handlers import registrar_handlers_api
 from app.core.middleware import request_id_middleware
 
@@ -206,6 +215,15 @@ def create_app(config_overrides=None):
     app.register_blueprint(necessidade_institucional_bp)
     app.register_blueprint(agendamento_entrega_bp)
     app.register_blueprint(recibo_doacao_bp)
+    app.register_blueprint(instituicoes_bp)
+    app.register_blueprint(oferta_medicamento_bp)
+    app.register_blueprint(reserva_oferta_bp)
+    app.register_blueprint(matching_bp)
+    app.register_blueprint(aprovacao_farmaceutica_bp)
+    app.register_blueprint(despacho_bp)
+    app.register_blueprint(entrega_institucional_bp)
+    app.register_blueprint(recibo_entrega_bp)
+    app.register_blueprint(receita_anexo_bp)
 
     registrar_handlers_limite(app)
     registrar_handlers_api(app)

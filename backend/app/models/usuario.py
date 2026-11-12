@@ -15,6 +15,8 @@ class Usuario(db.Model, UserMixin):
     ativo = db.Column(db.Boolean, default=True, nullable=True)
     senha_trocada = db.Column(db.Boolean, default=True, nullable=False)
     credencial_versao = db.Column(db.Integer, default=1, nullable=False)
+    farmacia_id = db.Column(db.Integer, db.ForeignKey("farmacias.id"), nullable=True)
+    instituicao_id = db.Column(db.Integer, db.ForeignKey("instituicoes.id"), nullable=True)
 
     def __repr__(self):
         return f"<Usuario {self.nome}>"
@@ -33,3 +35,6 @@ class Usuario(db.Model, UserMixin):
     def minhas_doacoes(self):
         """Backward-compatible alias for the user's donation relationship."""
         return self.doacoes
+
+    farmacia = db.relationship("Farmacia", foreign_keys=[farmacia_id], lazy=True)
+    instituicao = db.relationship("Instituicao", foreign_keys=[instituicao_id], lazy=True)

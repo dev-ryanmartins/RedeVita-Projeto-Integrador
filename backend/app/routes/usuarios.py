@@ -1,6 +1,8 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required
 from app.models.usuario import Usuario
+from app.models.farmacia import Farmacia
+from app.models.instituicao import Instituicao
 from app.database import db
 from app.core.decorators import admin_required, audit_critical_action
 from app.utils.log_helper import registrar_log
@@ -16,7 +18,9 @@ usuarios_bp = Blueprint("usuarios", __name__)
 @admin_required
 def listar_usuarios():
     usuarios = Usuario.query.order_by(Usuario.id).all()
-    return render_template("usuarios.html", usuarios=usuarios)
+    farmacias = Farmacia.query.all()
+    instituicoes = Instituicao.query.all()
+    return render_template("usuarios.html", usuarios=usuarios, farmacias=farmacias, instituicoes=instituicoes)
 
 
 @usuarios_bp.route("/usuarios/cadastrar", methods=["POST"])
@@ -145,5 +149,129 @@ def toggle_ativo(uid):
     except Exception:
         db.session.rollback()
         flash("Erro ao alterar status do usuário.", "danger")
+
+    return redirect(url_for("usuarios.listar_usuarios"))
+
+
+@usuarios_bp.route("/usuario/<int:uid>/farmacia", methods=["POST"])
+@login_required
+@admin_required
+def associar_farmacia(uid):
+    """Associa um usuário a uma farmácia."""
+    usuario = db.session.get(Usuario, uid)
+    if not usuario:
+        flash("Usuário não encontrado.", "danger")
+        return redirect(url_for("usuarios.listar_usuarios"))
+
+    farmacia_id = request.form.get("farmacia_id", type=int)
+    
+    if not farmacia_id:
+        flash("Selecione uma farmácia.", "danger")
+        return redirect(url_for("usuarios.listar_usuarios"))
+
+    farmacia = Farmacia.query.get(farmacia_id)
+    if not farmacia:
+        flash("Farmácia não encontrada.", "danger")
+        return redirect(url_for("usuarios.listar_usuarios"))
+
+    try:
+        usuario.farmacia_id = farmacia_id
+        db.session.commit()
+        registrar_log(
+            "Associação Farmácia",
+            f'Usuário "{usuario.nome}" associado à farmácia "{farmacia.nome_fantasia}"',
+        )
+        flash(f'{usuario.nome} associado à farmácia {farmacia.nome_fantasia}.', "success")
+    except Exception:
+        db.session.rollback()
+        flash("Erro ao associar farmácia. Tente novamente.", "danger")
+
+    return redirect(url_for("usuarios.listar_usuarios"))
+
+
+@usuarios_bp.route("/usuario/<int:uid>/farmacia/remover", methods=["POST"])
+@login_required
+@admin_required
+def remover_farmacia(uid):
+    """Remove o vínculo de um usuário com farmácia."""
+    usuario = db.session.get(Usuario, uid)
+    if not usuario:
+        flash("Usuário não encontrado.", "danger")
+        return redirect(url_for("usuarios.listar_usuarios"))
+
+    try:
+        farmacia_anterior = usuario.farmacia.nome_fantasia if usuario.farmacia else "Nenhuma"
+        usuario.farmacia_id = None
+        db.session.commit()
+        registrar_log(
+            "Remoção Associação Farmácia",
+            f'Usuário "{usuario.nome}" desvinculado da farmácia "{farmacia_anterior}"',
+        )
+        flash(f'{usuario.nome} desvinculado da farmácia.', "success")
+    except Exception:
+        db.session.rollback()
+        flash("Erro ao remover vínculo. Tente novamente.", "danger")
+
+    return redirect(url_for("usuarios.listar_usuarios"))
+
+
+@usuarios_bp.route("/usuario/<int:uid>/instituicao", methods=["POST"])
+@login_required
+@admin_required
+def associar_instituicao(uid):
+    """Associa um usuário a uma instituição."""
+    usuario = db.session.get(Usuario, uid)
+    if not usuario:
+        flash("Usuário não encontrado.", "danger")
+        return redirect(url_for("usuarios.listar_usuarios"))
+
+    instituicao_id = request.form.get("instituicao_id", type=int)
+    
+    if not instituicao_id:
+        flash("Selecione uma instituição.", "danger")
+        return redirect(url_for("usuarios.listar_usuarios"))
+
+    instituicao = Instituicao.query.get(instituicao_id)
+    if not instituicao:
+        flash("Instituição não encontrada.", "danger")
+        return redirect(url_for("usuarios.listar_usuarios"))
+
+    try:
+        usuario.instituicao_id = instituicao_id
+        db.session.commit()
+        registrar_log(
+            "Associação Instituição",
+            f'Usuário "{usuario.nome}" associado à instituição "{instituicao.nome}"',
+        )
+        flash(f'{usuario.nome} associado à instituição {instituicao.nome}.', "success")
+    except Exception:
+        db.session.rollback()
+        flash("Erro ao associar instituição. Tente novamente.", "danger")
+
+    return redirect(url_for("usuarios.listar_usuarios"))
+
+
+@usuarios_bp.route("/usuario/<int:uid>/instituicao/remover", methods=["POST"])
+@login_required
+@admin_required
+def remover_instituicao(uid):
+    """Remove o vínculo de um usuário com instituição."""
+    usuario = db.session.get(Usuario, uid)
+    if not usuario:
+        flash("Usuário não encontrado.", "danger")
+        return redirect(url_for("usuarios.listar_usuarios"))
+
+    try:
+        instituicao_anterior = usuario.instituicao.nome if usuario.instituicao else "Nenhuma"
+        usuario.instituicao_id = None
+        db.session.commit()
+        registrar_log(
+            "Remoção Associação Instituição",
+            f'Usuário "{usuario.nome}" desvinculado da instituição "{instituicao_anterior}"',
+        )
+        flash(f'{usuario.nome} desvinculado da instituição.', "success")
+    except Exception:
+        db.session.rollback()
+        flash("Erro ao remover vínculo. Tente novamente.", "danger")
 
     return redirect(url_for("usuarios.listar_usuarios"))

@@ -68,7 +68,6 @@ class PDFGenerator:
             elementos.append(Spacer(1, 0.5*cm))
 
             return elementos
-
         except Exception as e:
             logger.error(f"Erro ao criar cabeçalho: {str(e)}")
             return []
@@ -95,105 +94,53 @@ class PDFGenerator:
 
             elementos = []
             elementos.append(Spacer(1, 1*cm))
-            elementos.append(Paragraph(
-                "RedeVita - Sistema de Gestão de Medicamentos | "
-                "Documento Oficial | Não válido como prescrição médica",
-                estilo_rodape
-            ))
+            elementos.append(Paragraph(self.texto_marca_dagua, estilo_rodape))
+            elementos.append(Spacer(1, 0.3*cm))
 
             return elementos
-
         except Exception as e:
             logger.error(f"Erro ao criar rodapé: {str(e)}")
             return []
 
-    def gerar_pdf_doacao(self, dados_doacao: Dict) -> bytes:
+    def gerar_pdf_doacao(self, dados_doacao: Dict) -> Optional[bytes]:
         try:
-            from reportlab.lib.pagesizes import A4
             from reportlab.lib import colors
             from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-            from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+            from reportlab.lib.styles import getSampleStyleSheet
             from reportlab.lib.units import cm
+            from io import BytesIO
 
             buffer = BytesIO()
+            doc = SimpleDocTemplate(buffer, pagesize=(21*cm, 29.7*cm), rightMargin=2*cm, leftMargin=2*cm, topMargin=2*cm, bottomMargin=2*cm)
 
-            doc = SimpleDocTemplate(
-                buffer,
-                pagesize=A4,
-                rightMargin=2*cm,
-                leftMargin=2*cm,
-                topMargin=2.5*cm,
-                bottomMargin=2*cm
-            )
+            elementos = []
+            elementos.extend(self.criar_cabecalho("Recibo de Doação"))
+
+            from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+            from reportlab.lib.enums import TA_LEFT
 
             styles = getSampleStyleSheet()
-            elementos = []
-
-            elementos.extend(self.criar_cabecalho("Comprovante de Doação"))
-
-            dados_tabela = [
-                ['Doador', dados_doacao.get('doador_nome', 'N/A')],
-                ['Medicamento', dados_doacao.get('medicamento_nome', 'N/A')],
-                ['Quantidade', str(dados_doacao.get('quantidade', 0))],
-                ['Lote', dados_doacao.get('lote', 'N/A')],
-                ['Validade', dados_doacao.get('data_validade', 'N/A')],
-                ['Farmácia', dados_doacao.get('farmacia_nome', 'N/A')],
-            ]
-
-            tabela = Table(dados_tabela, colWidths=[5*cm, 8*cm])
-            tabela.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f1f5f9')),
-                ('TEXTCOLOR', (0, 0), (0, -1), colors.HexColor(COR_TEXTO)),
-                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (0, -1), 10),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
-                ('BACKGROUND', (1, 0), (1, -1), colors.white),
-                ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
-                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e2e8f0')),
-                ('TOPPADDING', (0, 0), (-1, -1), 8),
-            ]))
-
-            elementos.append(tabela)
-            elementos.append(Spacer(1, 1*cm))
-
-            estilo_agradecimento = ParagraphStyle(
-                'Agradecimento',
-                parent=styles['Normal'],
-                fontSize=11,
-                textColor=colors.HexColor(COR_AZUL_PRINCIPAL),
-                spaceBefore=6,
-                spaceAfter=6,
-                fontName='Helvetica-Bold',
-                alignment=1
-            )
-
-            estilo_mensagem = ParagraphStyle(
-                'Mensagem',
+            estilo_normal = ParagraphStyle(
+                'NormalCustom',
                 parent=styles['Normal'],
                 fontSize=10,
-                textColor=colors.HexColor('#64748b'),
+                textColor=colors.HexColor(COR_TEXTO),
                 spaceAfter=6,
                 fontName='Helvetica',
-                alignment=1
+                alignment=TA_LEFT
             )
 
-            elementos.append(Paragraph("🎉 Agradecemos sua generosa doação!", estilo_agradecimento))
-            elementos.append(Paragraph(
-                "Sua contribuição ajudará muitas pessoas que necessitam desses medicamentos.",
-                estilo_mensagem
-            ))
+            elementos.append(Paragraph(f"<b>Doador:</b> {dados_doacao.get('doador', 'N/A')}", estilo_normal))
+            elementos.append(Paragraph(f"<b>Medicamento:</b> {dados_doacao.get('medicamento', 'N/A')}", estilo_normal))
+            elementos.append(Paragraph(f"<b>Quantidade:</b> {dados_doacao.get('quantidade', 'N/A')}", estilo_normal))
+            elementos.append(Paragraph(f"<b>Data:</b> {dados_doacao.get('data', 'N/A')}", estilo_normal))
 
             elementos.extend(self.criar_rodape())
 
             doc.build(elementos)
-
             pdf_bytes = buffer.getvalue()
             buffer.close()
-
             return pdf_bytes
-
         except ImportError:
             logger.error("reportlab não instalado. Use: pip install reportlab")
             raise ImportError("reportlab é necessário para gerar PDFs")
@@ -201,125 +148,45 @@ class PDFGenerator:
             logger.error(f"Erro ao gerar PDF de doação: {str(e)}")
             raise
 
-    def gerar_pdf_retirada(self, dados_retirada: Dict) -> bytes:
-        """Gera a ordem de retirada em PDF"""
+    def gerar_pdf_retirada(self, dados_retirada: Dict) -> Optional[bytes]:
         try:
-            from reportlab.lib.pagesizes import A4
             from reportlab.lib import colors
             from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-            from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+            from reportlab.lib.styles import getSampleStyleSheet
             from reportlab.lib.units import cm
+            from io import BytesIO
 
             buffer = BytesIO()
+            doc = SimpleDocTemplate(buffer, pagesize=(21*cm, 29.7*cm), rightMargin=2*cm, leftMargin=2*cm, topMargin=2*cm, bottomMargin=2*cm)
 
-            doc = SimpleDocTemplate(
-                buffer,
-                pagesize=A4,
-                rightMargin=2*cm,
-                leftMargin=2*cm,
-                topMargin=2.5*cm,
-                bottomMargin=2*cm
-            )
+            elementos = []
+            elementos.extend(self.criar_cabecalho("Comprovante de Retirada"))
+
+            from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+            from reportlab.lib.enums import TA_LEFT
 
             styles = getSampleStyleSheet()
-            elementos = []
-
-            elementos.extend(self.criar_cabecalho("Ordem de Retirada"))
-
-            estilo_secao = ParagraphStyle(
-                'Secao',
-                parent=styles['Heading2'],
-                fontSize=12,
-                textColor=colors.HexColor(COR_AZUL_PRINCIPAL),
-                spaceBefore=12,
-                spaceAfter=6,
-                fontName='Helvetica-Bold'
-            )
-
-            elementos.append(Paragraph("Dados do Paciente", estilo_secao))
-            elementos.append(Spacer(1, 0.2*cm))
-
-            dados_paciente = [
-                ['Nome', dados_retirada.get('paciente_nome', 'N/A')],
-                ['CPF', dados_retirada.get('paciente_cpf', 'N/A')],
-                ['Telefone', dados_retirada.get('paciente_telefone', 'N/A')],
-            ]
-
-            tabela_paciente = Table(dados_paciente, colWidths=[5*cm, 8*cm])
-            tabela_paciente.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f1f5f9')),
-                ('TEXTCOLOR', (0, 0), (0, -1), colors.HexColor(COR_TEXTO)),
-                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, -1), 10),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
-                ('BACKGROUND', (1, 0), (1, -1), colors.white),
-                ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
-                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e2e8f0')),
-                ('TOPPADDING', (0, 0), (-1, -1), 8),
-            ]))
-
-            elementos.append(tabela_paciente)
-            elementos.append(Spacer(1, 0.5*cm))
-
-            elementos.append(Paragraph("Medicamento a Retirar", estilo_secao))
-            elementos.append(Spacer(1, 0.2*cm))
-
-            dados_medicamento = [
-                ['Medicamento', dados_retirada.get('medicamento_nome', 'N/A')],
-                ['Quantidade', str(dados_retirada.get('quantidade', 0))],
-                ['Lote', dados_retirada.get('lote', 'N/A')],
-                ['Validade', dados_retirada.get('data_validade', 'N/A')],
-                ['Farmácia', dados_retirada.get('farmacia_nome', 'N/A')],
-            ]
-
-            tabela_medicamento = Table(dados_medicamento, colWidths=[5*cm, 8*cm])
-            tabela_medicamento.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f1f5f9')),
-                ('TEXTCOLOR', (0, 0), (0, -1), colors.HexColor(COR_TEXTO)),
-                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, -1), 10),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
-                ('BACKGROUND', (1, 0), (1, -1), colors.white),
-                ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
-                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e2e8f0')),
-                ('TOPPADDING', (0, 0), (-1, -1), 8),
-            ]))
-
-            elementos.append(tabela_medicamento)
-            elementos.append(Spacer(1, 0.8*cm))
-
-            estilo_instrucoes = ParagraphStyle(
-                'Instrucoes',
+            estilo_normal = ParagraphStyle(
+                'NormalCustom',
                 parent=styles['Normal'],
                 fontSize=10,
-                textColor=colors.HexColor('#64748b'),
-                spaceBefore=6,
+                textColor=colors.HexColor(COR_TEXTO),
                 spaceAfter=6,
                 fontName='Helvetica',
-                leading=14
+                alignment=TA_LEFT
             )
 
-            elementos.append(Paragraph(
-                "<b>Instruções:</b><br/>"
-                "1. Apresente este documento na farmácia parceira.<br/>"
-                "2. Leve documento de identificação com foto.<br/>"
-                "3. A retirada deve ser feita em até 7 dias.",
-                estilo_instrucoes
-            ))
+            elementos.append(Paragraph(f"<b>Usuário:</b> {dados_retirada.get('usuario', 'N/A')}", estilo_normal))
+            elementos.append(Paragraph(f"<b>Medicamento:</b> {dados_retirada.get('medicamento', 'N/A')}", estilo_normal))
+            elementos.append(Paragraph(f"<b>Quantidade:</b> {dados_retirada.get('quantidade', 'N/A')}", estilo_normal))
+            elementos.append(Paragraph(f"<b>Data:</b> {dados_retirada.get('data', 'N/A')}", estilo_normal))
 
             elementos.extend(self.criar_rodape())
 
             doc.build(elementos)
-
             pdf_bytes = buffer.getvalue()
             buffer.close()
-
             return pdf_bytes
-
         except ImportError:
             logger.error("reportlab não instalado. Use: pip install reportlab")
             raise ImportError("reportlab é necessário para gerar PDFs")
@@ -327,165 +194,36 @@ class PDFGenerator:
             logger.error(f"Erro ao gerar PDF de retirada: {str(e)}")
             raise
 
-    def gerar_pdf_impacto_social(self, data_inicio: str, data_fim: str, titulo: str, 
-                                   observacoes: str, dados: Dict, graficos: Dict) -> bytes:
-        """Gera PDF de relatório de impacto social"""
+    def gerar_pdf_impacto_social(self, dados_impacto: Dict) -> Optional[bytes]:
         try:
-            from reportlab.lib.pagesizes import A4
             from reportlab.lib import colors
-            from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
+            from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
             from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
             from reportlab.lib.units import cm
-            from reportlab.lib.enums import TA_LEFT, TA_CENTER
-            from base64 import b64decode
-            import os
+            from io import BytesIO
 
             buffer = BytesIO()
+            doc = SimpleDocTemplate(buffer, pagesize=(21*cm, 29.7*cm), rightMargin=2*cm, leftMargin=2*cm, topMargin=2*cm, bottomMargin=2*cm)
 
-            doc = SimpleDocTemplate(
-                buffer,
-                pagesize=A4,
-                rightMargin=2*cm,
-                leftMargin=2*cm,
-                topMargin=2.5*cm,
-                bottomMargin=2*cm
-            )
+            elementos = []
+            elementos.extend(self.criar_cabecalho("Relatório de Impacto Social"))
+
+            from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+            from reportlab.lib.enums import TA_LEFT
 
             styles = getSampleStyleSheet()
-            elementos = []
-
-            elementos.extend(self.criar_cabecalho(titulo))
-
-            # Nota: Logo SVG não é suportado diretamente pelo ReportLab
-            # Seria necessário converter SVG para PNG ou usar uma biblioteca como svglib
-            # Por enquanto, o PDF é gerado sem o logo oficial
-            logger.info("Logo não incluído no PDF (SVG não suportado pelo ReportLab)")
-
-            # Período
-            estilo_periodo = ParagraphStyle(
-                'Periodo',
+            estilo_normal = ParagraphStyle(
+                'NormalCustom',
                 parent=styles['Normal'],
                 fontSize=10,
-                textColor=colors.HexColor('#64748b'),
-                spaceAfter=12,
-                fontName='Helvetica'
-            )
-            
-            periodo_text = "Período: Geral"
-            if data_inicio and data_fim:
-                periodo_text = f"Período: {data_inicio} a {data_fim}"
-            elif data_inicio:
-                periodo_text = f"Período: A partir de {data_inicio}"
-            elif data_fim:
-                periodo_text = f"Período: Até {data_fim}"
-            
-            elementos.append(Paragraph(periodo_text, estilo_periodo))
-            elementos.append(Spacer(1, 0.3*cm))
-
-            # Observações
-            if observacoes:
-                estilo_obs = ParagraphStyle(
-                    'Observacoes',
-                    parent=styles['Normal'],
-                    fontSize=10,
-                    textColor=colors.HexColor('#64748b'),
-                    spaceAfter=12,
-                    fontName='Helvetica',
-                    leading=14
-                )
-                elementos.append(Paragraph(f"<b>Observações:</b> {observacoes}", estilo_obs))
-                elementos.append(Spacer(1, 0.5*cm))
-
-            # Métricas principais
-            estilo_secao = ParagraphStyle(
-                'Secao',
-                parent=styles['Heading2'],
-                fontSize=12,
-                textColor=colors.HexColor(COR_AZUL_PRINCIPAL),
-                spaceBefore=12,
+                textColor=colors.HexColor(COR_TEXTO),
                 spaceAfter=6,
-                fontName='Helvetica-Bold'
+                fontName='Helvetica',
+                alignment=TA_LEFT
             )
 
-            elementos.append(Paragraph("Métricas de Impacto Social", estilo_secao))
-            elementos.append(Spacer(1, 0.2*cm))
-
-            dados_metricas = [
-                ['Pacientes Beneficiados', str(dados.get('pacientes_beneficiados', 0))],
-                ['Resíduos Evitados (kg)', str(dados.get('residuos_evitados_kg', 0))],
-                ['Medicamentos Salvos', str(dados.get('medicamentos_salvos', 0))],
-                ['Medicamentos Vencidos', str(dados.get('medicamentos_vencidos', 0))],
-                ['Total de Doações', str(dados.get('total_doacoes', 0))],
-                ['Total de Farmácias', str(dados.get('total_farmacias', 0))],
-            ]
-
-            tabela_metricas = Table(dados_metricas, colWidths=[5*cm, 8*cm])
-            tabela_metricas.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f1f5f9')),
-                ('TEXTCOLOR', (0, 0), (0, -1), colors.HexColor(COR_TEXTO)),
-                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (0, -1), 10),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
-                ('BACKGROUND', (1, 0), (1, -1), colors.white),
-                ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
-                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e2e8f0')),
-                ('TOPPADDING', (0, 0), (-1, -1), 8),
-            ]))
-
-            elementos.append(tabela_metricas)
-            elementos.append(Spacer(1, 0.8*cm))
-
-            # Gráficos
-            elementos.append(Paragraph("Gráficos de Impacto", estilo_secao))
-            elementos.append(Spacer(1, 0.2*cm))
-
-            # Gráfico de Evolução
-            if 'impacto' in graficos and graficos['impacto']:
-                try:
-                    img_data = b64decode(graficos['impacto'].split(',')[1])
-                    img_buffer = BytesIO(img_data)
-                    img = Image(img_buffer, width=16*cm, height=8*cm, hAlign='CENTER')
-                    elementos.append(img)
-                    elementos.append(Spacer(1, 0.5*cm))
-                except Exception as e:
-                    logger.warning(f"Não foi possível incluir gráfico de evolução: {e}")
-                    elementos.append(Paragraph("Gráfico de Evolução não disponível", estilo_periodo))
-            else:
-                elementos.append(Paragraph("Gráfico de Evolução não disponível", estilo_periodo))
-
-            # Gráfico de Distribuição
-            if 'distribuicao' in graficos and graficos['distribuicao']:
-                try:
-                    img_data = b64decode(graficos['distribuicao'].split(',')[1])
-                    img_buffer = BytesIO(img_data)
-                    img = Image(img_buffer, width=10*cm, height=6*cm, hAlign='CENTER')
-                    elementos.append(img)
-                    elementos.append(Spacer(1, 0.5*cm))
-                except Exception as e:
-                    logger.warning(f"Não foi possível incluir gráfico de distribuição: {e}")
-                    elementos.append(Paragraph("Gráfico de Distribuição não disponível", estilo_periodo))
-            else:
-                elementos.append(Paragraph("Gráfico de Distribuição não disponível", estilo_periodo))
-
-            # Gráfico de Sustentabilidade
-            if 'sustentabilidade' in graficos and graficos['sustentabilidade']:
-                try:
-                    img_data = b64decode(graficos['sustentabilidade'].split(',')[1])
-                    img_buffer = BytesIO(img_data)
-                    img = Image(img_buffer, width=16*cm, height=8*cm, hAlign='CENTER')
-                    elementos.append(img)
-                    elementos.append(Spacer(1, 0.5*cm))
-                except Exception as e:
-                    logger.warning(f"Não foi possível incluir gráfico de sustentabilidade: {e}")
-                    elementos.append(Paragraph("Gráfico de Sustentabilidade não disponível", estilo_periodo))
-            else:
-                elementos.append(Paragraph("Gráfico de Sustentabilidade não disponível", estilo_periodo))
-
-            # Fonte dos dados
             estilo_fonte = ParagraphStyle(
-                'Fonte',
+                'FontePequena',
                 parent=styles['Normal'],
                 fontSize=9,
                 textColor=colors.HexColor('#94a3b8'),
@@ -524,6 +262,8 @@ class PDFGenerator:
                     pdf_bytes = self.gerar_pdf_doacao(dados)
                 elif tipo_documento == 'retirada':
                     pdf_bytes = self.gerar_pdf_retirada(dados)
+                elif tipo_documento == 'recibo_entrega':
+                    pdf_bytes = self.gerar_recibo_entrega(dados)
                 else:
                     raise ValueError(f"Tipo de PDF não suportado: {tipo_documento}")
 
@@ -538,6 +278,171 @@ class PDFGenerator:
                 raise
 
         _executor_pdf.submit(_gerar)
+
+    def gerar_recibo_entrega(self, dados_entrega: Dict) -> Optional[bytes]:
+        """
+        Gera PDF de recibo de entrega institucional.
+        
+        Args:
+            dados_entrega: Dicionário com dados da entrega
+                - entrega_id: ID da entrega
+                - reserva_id: ID da reserva
+                - farmacia_origem: Nome da farmácia doadora
+                - cnpj_origem: CNPJ da farmácia doadora
+                - instituicao_destino: Nome da instituição receptora
+                - cnpj_destino: CNPJ da instituição receptora
+                - medicamento_nome: Nome do medicamento
+                - medicamento_lote: Lote do medicamento
+                - medicamento_validade: Data de validade
+                - quantidade: Quantidade entregue
+                - recebido_por: Nome do usuário que recebeu
+                - recebido_em: Data/hora do recebimento
+                - observacoes: Observações do recebimento (opcional)
+                
+        Returns:
+            bytes: Conteúdo do PDF ou None em caso de erro
+        """
+        try:
+            from reportlab.lib import colors
+            from reportlab.platypus import Paragraph, Spacer, Table, TableStyle
+            from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+            from reportlab.lib.units import cm
+            from reportlab.lib.enums import TA_LEFT, TA_CENTER
+            from reportlab.pdfgen import canvas
+            from io import BytesIO
+            
+            buffer = BytesIO()
+            doc = canvas.Canvas(buffer, pagesize=(21*cm, 29.7*cm))
+            
+            # Cores
+            cor_azul = colors.HexColor(COR_AZUL_PRINCIPAL)
+            cor_texto = colors.HexColor(COR_TEXTO)
+            cor_cinza = colors.HexColor('#64748b')
+            
+            # Cabeçalho com título
+            doc.setFont('Helvetica-Bold', 16)
+            doc.setFillColor(cor_azul)
+            doc.drawString(2*cm, 27*cm, "RECIBO DE ENTREGA")
+            
+            doc.setFont('Helvetica', 10)
+            doc.setFillColor(cor_cinza)
+            doc.drawString(2*cm, 26.5*cm, f"Entrega #{dados_entrega.get('entrega_id', 'N/A')}")
+            doc.drawString(2*cm, 26.2*cm, f"Reserva #{dados_entrega.get('reserva_id', 'N/A')}")
+            
+            # Linha separadora
+            doc.setStrokeColor(cor_azul)
+            doc.setLineWidth(2)
+            doc.line(2*cm, 25.8*cm, 19*cm, 25.8*cm)
+            
+            # Seção de Origem
+            y_pos = 25*cm
+            doc.setFont('Helvetica-Bold', 12)
+            doc.setFillColor(cor_texto)
+            doc.drawString(2*cm, y_pos, "ORIGEM")
+            
+            y_pos -= 0.5*cm
+            doc.setFont('Helvetica', 10)
+            doc.setFillColor(cor_cinza)
+            doc.drawString(2*cm, y_pos, f"Farmácia: {dados_entrega.get('farmacia_origem', 'N/A')}")
+            y_pos -= 0.4*cm
+            doc.drawString(2*cm, y_pos, f"CNPJ: {dados_entrega.get('cnpj_origem', 'N/A')}")
+            
+            # Seção de Destino
+            y_pos -= 0.8*cm
+            doc.setFont('Helvetica-Bold', 12)
+            doc.setFillColor(cor_texto)
+            doc.drawString(2*cm, y_pos, "DESTINO")
+            
+            y_pos -= 0.5*cm
+            doc.setFont('Helvetica', 10)
+            doc.setFillColor(cor_cinza)
+            doc.drawString(2*cm, y_pos, f"Instituição: {dados_entrega.get('instituicao_destino', 'N/A')}")
+            y_pos -= 0.4*cm
+            doc.drawString(2*cm, y_pos, f"CNPJ: {dados_entrega.get('cnpj_destino', 'N/A')}")
+            
+            # Seção de Medicamento
+            y_pos -= 0.8*cm
+            doc.setFont('Helvetica-Bold', 12)
+            doc.setFillColor(cor_texto)
+            doc.drawString(2*cm, y_pos, "MEDICAMENTO")
+            
+            y_pos -= 0.5*cm
+            doc.setFont('Helvetica', 10)
+            doc.setFillColor(cor_cinza)
+            doc.drawString(2*cm, y_pos, f"Nome: {dados_entrega.get('medicamento_nome', 'N/A')}")
+            y_pos -= 0.4*cm
+            doc.drawString(2*cm, y_pos, f"Lote: {dados_entrega.get('medicamento_lote', 'N/A')}")
+            y_pos -= 0.4*cm
+            validade = dados_entrega.get('medicamento_validade', 'N/A')
+            if isinstance(validade, datetime):
+                validade = validade.strftime('%d/%m/%Y')
+            doc.drawString(2*cm, y_pos, f"Validade: {validade}")
+            y_pos -= 0.4*cm
+            doc.drawString(2*cm, y_pos, f"Quantidade: {dados_entrega.get('quantidade', 'N/A')} unidades")
+            
+            # Seção de Recebimento
+            y_pos -= 0.8*cm
+            doc.setFont('Helvetica-Bold', 12)
+            doc.setFillColor(cor_texto)
+            doc.drawString(2*cm, y_pos, "RECEBIMENTO")
+            
+            y_pos -= 0.5*cm
+            doc.setFont('Helvetica', 10)
+            doc.setFillColor(cor_cinza)
+            doc.drawString(2*cm, y_pos, f"Recebido por: {dados_entrega.get('recebido_por', 'N/A')}")
+            y_pos -= 0.4*cm
+            recebido_em = dados_entrega.get('recebido_em', 'N/A')
+            if isinstance(recebido_em, datetime):
+                recebido_em = recebido_em.strftime('%d/%m/%Y às %H:%M')
+            doc.drawString(2*cm, y_pos, f"Data/Hora: {recebido_em}")
+            
+            # Observações se existirem
+            observacoes = dados_entrega.get('observacoes')
+            if observacoes:
+                y_pos -= 0.8*cm
+                doc.setFont('Helvetica-Bold', 12)
+                doc.setFillColor(cor_texto)
+                doc.drawString(2*cm, y_pos, "OBSERVAÇÕES")
+                
+                y_pos -= 0.5*cm
+                doc.setFont('Helvetica', 10)
+                doc.setFillColor(cor_cinza)
+                # Quebra observações em linhas se necessário
+                lines = []
+                line = ""
+                for word in observacoes.split():
+                    if len(line + word) > 80:
+                        lines.append(line)
+                        line = word + " "
+                    else:
+                        line += word + " "
+                if line:
+                    lines.append(line)
+                
+                for line in lines[:5]:  # Máximo 5 linhas
+                    doc.drawString(2*cm, y_pos, line)
+                    y_pos -= 0.4*cm
+            
+            # Rodapé
+            y_pos = 3*cm
+            doc.setFont('Helvetica', 9)
+            doc.setFillColor(cor_cinza)
+            doc.drawString(2*cm, y_pos, "Este documento é comprovativo de recebimento e não substitui prescrição médica.")
+            y_pos -= 0.4*cm
+            doc.drawString(2*cm, y_pos, "Emitido automaticamente pelo sistema RedeVita.")
+            
+            # Marca d'água
+            doc.setFont('Helvetica', 8)
+            doc.setFillColor(colors.lightgrey)
+            doc.drawCentredString(10.5*cm, 1.5*cm, "RedeVita - Medicamentos para Todos")
+            
+            doc.save()
+            buffer.seek(0)
+            return buffer.getvalue()
+            
+        except Exception as e:
+            logger.error(f"Erro ao gerar recibo de entrega: {str(e)}")
+            return None
 
 
 _gerador_pdf: Optional[PDFGenerator] = None
@@ -561,3 +466,9 @@ def gerar_pdf_retirada_async(dados_retirada: Dict, callback=None):
     """Gera PDF de retirada de forma assíncrona"""
     gerador = obter_gerador_pdf()
     return gerador.gerar_pdf_async('retirada', dados_retirada, callback)
+
+
+def gerar_recibo_entrega_async(dados_entrega: Dict, callback=None):
+    """Gera PDF de recibo de entrega de forma assíncrona"""
+    gerador = obter_gerador_pdf()
+    return gerador.gerar_pdf_async('recibo_entrega', dados_entrega, callback)

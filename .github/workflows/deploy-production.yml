@@ -1,0 +1,110 @@
+name: Deploy Production
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy-production:
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://redevita.example.com
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Solicitar aprovação manual
+      id: approval
+      uses: trstringer/manual-approval@v1
+      with:
+        secret: ${{ secrets.GITHUB_TOKEN }}
+        approvers: dev-ryanmartins
+        minimum-approvals: 1
+    
+    - name: Configurar Python 3.12
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+    
+    - name: Instalar dependências
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f backend/requirements.txt ]; then pip install -r backend/requirements.txt; fi
+    
+    - name: Executar testes unitários
+      run: |
+        cd backend
+        export PYTHONPATH="../backend:$PYTHONPATH"
+        pytest ../tests/ --tb=short --cov=backend --cov-report=xml
+    
+    - name: Verificar cobertura
+      run: |
+        cd backend
+        coverage report --fail-under=80
+    
+    - name: Build Docker image para produção
+      run: |
+        docker build -t redevita-production:${{ github.sha }} .
+        docker tag redevita-production:${{ github.sha }} redevita-production:latest
+    
+    - name: Login no container registry
+      if: false
+      run: |
+        echo "Pendente: configurar container registry e secrets"
+        echo "O deploy produção requer:"
+        echo "  - Container registry configurado (ex: Docker Hub, GCR, ECR)"
+        echo "  - Secret REGISTRY_USERNAME"
+        echo "  - Secret REGISTRY_PASSWORD"
+        echo "  - Secret REGISTRY_URL"
+        echo "  - Secret PRODUCTION_HOST ou PRODUCTION_KUBECONFIG"
+        echo "  - Secret PRODUCTION_DATABASE_URL"
+        echo "  - Secret PRODUCTION_SECRET_KEY"
+        echo "  - Secret PRODUCTION_JWT_SECRET_KEY"
+        echo "  - Secret PRODUCTION_ANVISA_API_TOKEN (se aplicável)"
+        echo "  - Secret PRODUCTION_GOOGLE_MAPS_API_KEY (se aplicável)"
+        echo "  - Secret PRODUCTION_MAIL_* (se aplicável)"
+        echo "  - Secret PRODUCTION_TWILIO_* (se aplicável)"
+    
+    - name: Push Docker image
+      if: false
+      run: |
+        docker push redevita-production:${{ github.sha }}
+        docker push redevita-production:latest
+    
+    - name: Deploy no ambiente de produção
+      if: false
+      run: |
+        echo "Pendente: configurar deploy produção"
+        echo "O deploy produção requer:"
+        echo "  - Configuração do ambiente de produção (Kubernetes, Cloud Run, etc.)"
+        echo "  - Backup pré-deploy do banco de dados"
+        echo "  - Migrações de banco verificadas"
+        echo "  - Secrets de banco de dados produção"
+        echo "  - Secrets de serviços externos produção"
+        echo "  - DNS e domínio configurados"
+        echo "  - SSL/TLS configurado"
+        exit 1
+    
+    - name: Verificar deploy
+      if: false
+      run: |
+        echo "Pendente: configurar verificação de deploy"
+        echo "A verificação deve:"
+        echo "  - Testar health endpoint"
+        echo "  - Testar login funcional"
+        echo "  - Testar endpoints principais"
+        echo "  - Verificar integridade do deploy"
+        echo "  - Verificar logs de erro"
+        exit 1
+    
+    - name: Notificar equipe sobre deploy
+      if: false
+      run: |
+        echo "Pendente: configurar notificação"
+        echo "A notificação deve:"
+        echo "  - Enviar email/slack sobre deploy"
+        echo "  - Incluir SHA do commit"
+        echo "  - Incluir link do release"
+        exit 1

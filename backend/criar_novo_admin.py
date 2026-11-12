@@ -14,13 +14,12 @@ from app.core.security import criptografar_senha
 app = create_app()
 
 with app.app_context():
-    # Verifica se já existe admin com CPF 11111111111
+    
     admin_existente = Usuario.query.filter_by(cpf='11111111111').first()
     if admin_existente:
         print("Admin já existe com CPF 11111111111")
         print("Senha: admin123")
     else:
-        # Cria novo admin
         senha_hash = criptografar_senha("admin123")
         admin = Usuario(
             nome="Admin Principal",

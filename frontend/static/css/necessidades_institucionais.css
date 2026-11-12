@@ -1,9 +1,11 @@
-/* CSS específico para Quadro de Necessidades de Instituições */
+/* CSS específico para Quadro de Necessidades de Instituições - Seguindo padrão global.css */
 
 .alert-warning {
-    background-color: rgba(255, 193, 7, 0.1);
-    border-color: rgba(255, 193, 7, 0.3);
-    color: #ffc107;
+    background: rgba(243, 156, 18, 0.12);
+    border: 1px solid rgba(243, 156, 18, 0.3);
+    color: #f5b942;
+    border-radius: var(--radius);
+    padding: 12px 18px;
 }
 
 .alert-warning svg {
@@ -11,117 +13,149 @@
 }
 
 .card {
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background-color: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(10px);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    box-shadow: var(--shadow-sm);
 }
 
 .card-body {
-    color: #e0e0e0;
+    color: var(--text-main);
+    padding: 20px;
 }
 
 .card-title {
-    color: #ffffff;
+    color: var(--text-main);
     font-weight: 600;
+    font-size: 1.1rem;
 }
 
 .form-label {
-    color: #b0b0b0;
+    color: var(--text-muted);
+    font-weight: 500;
+    margin-bottom: 6px;
+    display: block;
+    font-size: 0.88rem;
 }
 
 .form-control,
 .form-select {
-    background-color: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #ffffff;
+    background: var(--bg-input);
+    border: 1px solid var(--border-input);
+    color: var(--text-main);
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    transition: var(--transition);
 }
 
 .form-control:focus,
 .form-select:focus {
-    background-color: rgba(255, 255, 255, 0.15);
-    border-color: #00bcd4;
-    color: #ffffff;
-    box-shadow: 0 0 0 0.2rem rgba(0, 188, 212, 0.25);
+    background: var(--bg-hover);
+    border-color: var(--primary);
+    color: var(--text-main);
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+    outline: none;
 }
 
 .form-control::placeholder {
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(148, 163, 184, 0.6);
+}
+
+.form-select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 14px;
+    padding-right: 40px;
 }
 
 .table {
-    color: #e0e0e0;
+    color: var(--text-main);
 }
 
 .table thead th {
-    border-color: rgba(255, 255, 255, 0.1);
-    color: #ffffff;
+    border-color: var(--border);
+    color: var(--text-main);
     font-weight: 600;
+    background: var(--bg-input);
+    padding: 12px;
 }
 
 .table tbody tr {
-    border-color: rgba(255, 255, 255, 0.05);
+    border-color: var(--border);
+    transition: background-color 0.2s ease;
 }
 
 .table tbody tr:hover {
-    background-color: rgba(255, 255, 255, 0.05);
+    background: var(--bg-hover);
 }
 
 .btn-primary {
-    background-color: #00bcd4;
-    border-color: #00bcd4;
+    background: var(--primary);
+    color: #fff;
+    border-color: rgba(56, 189, 248, 0.3);
+    box-shadow: 0 2px 8px rgba(2, 132, 199, 0.25);
 }
 
 .btn-primary:hover {
-    background-color: #0097a7;
-    border-color: #0097a7;
+    background: var(--primary-dark);
+    border-color: #38bdf8;
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
 }
 
 .btn-secondary {
-    background-color: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.2);
-    color: #ffffff;
+    background: #182234;
+    color: var(--text-main);
+    border-color: #2d3b52;
 }
 
 .btn-secondary:hover {
-    background-color: rgba(255, 255, 255, 0.2);
+    background: #1f2d45;
+    border-color: #3b4d6b;
     color: #ffffff;
 }
 
 .btn-info {
-    background-color: #17a2b8;
-    border-color: #17a2b8;
+    background: #0ea5e9;
+    border-color: #0ea5e9;
+    color: #ffffff;
 }
 
 .btn-info:hover {
-    background-color: #138496;
-    border-color: #138496;
+    background: #0284c7;
+    border-color: #0284c7;
 }
 
 .btn-warning {
-    background-color: #ffc107;
-    border-color: #ffc107;
+    background: var(--warning);
+    border-color: var(--warning);
     color: #000;
 }
 
 .btn-warning:hover {
-    background-color: #e0a800;
-    border-color: #e0a800;
-    color: #000;
+    background: #d97706;
+    border-color: #d97706;
 }
 
 .btn-danger {
-    background-color: #dc3545;
-    border-color: #dc3545;
+    background: var(--danger);
+    border-color: #ef4444;
+    color: #fff;
 }
 
 .btn-danger:hover {
-    background-color: #c82333;
-    border-color: #c82333;
+    background: #b91c1c;
+    color: #fff;
 }
 
 .badge {
     font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.8rem;
 }
 
 @media (prefers-reduced-motion: reduce) {

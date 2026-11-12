@@ -13,6 +13,7 @@
     <link rel="stylesheet" type="text/css" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/duotone/style.css">
     <link rel="stylesheet" type="text/css" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/forms.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/corporate-sidebar.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/glassmorphism-dashboard.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/leaflet.css') }}">
@@ -414,12 +415,6 @@
                     Sistema em conformidade com as normas da Portaria 344/98 e RDC 20/2014 para controle de medicamentos.
                 </div>
             </div>
-        </div>
-    </div>
-
-    <div class="drawer-footer">
-        <div class="drawer-footer-text">
-            RedeVita v2.0 &bull; Sistema Corporativo
         </div>
     </div>
 </div>
@@ -1199,38 +1194,6 @@
     });
 </script>
 {% block extra_js %}{% endblock %}
-
-<!-- Rodapé Corporativo - Módulo Aditivo -->
-<footer class="corporate-footer">
-    <div class="footer-content">
-        <div class="footer-section">
-            <div class="footer-brand">
-                {% from "_brand_logo.html" import brand_logo %}
-                {{ brand_logo(None, true) }}
-            </div>
-            <div class="footer-version">
-                <span class="version-label">Versão:</span>
-                <span class="version-number">1.0.0</span>
-            </div>
-        </div>
-        <div class="footer-section">
-            <div class="footer-status">
-                <span class="status-indicator online"></span>
-                <span class="status-text">Sistema Operacional</span>
-            </div>
-            <div class="footer-links">
-                <a href="{{ url_for('ajuda.ajuda') }}">Guia de Boas Práticas</a>
-                <a href="/ajuda#lgpd">Política de Privacidade</a>
-            </div>
-        </div>
-        <div class="footer-section">
-            <div class="footer-info">
-                <p>&copy; 2024 RedeVita - Sistema de Gestão Farmacêutica</p>
-                <p>Portaria 344/ANVISA Compliant</p>
-            </div>
-        </div>
-    </div>
-</footer>
 
 <style>
 .corporate-footer {

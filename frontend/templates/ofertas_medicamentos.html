@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}Ofertas de Medicamentos - RedeVita{% endblock %}
+
+{% block content %}
+<div class="glass-panel" style="padding:30px; max-width:1200px; margin:30px auto;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
+        <h2>Ofertas de Medicamentos</h2>
+        <button onclick="document.getElementById('form-criar').style.display='block'" 
+                class="btn-form btn-form-primary">
+            <i class="fas fa-plus"></i> Nova Oferta
+        </button>
+    </div>
+
+    <!-- Formulário de Criação -->
+    <div id="form-criar" class="form-section" style="display:none;">
+        <h3>Criar Oferta de Medicamento</h3>
+        <form action="{{ url_for('oferta_medicamento.criar_oferta') }}" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="farmacia_id" class="form-label">Farmácia <span class="required">*</span></label>
+                    <select class="form-select" id="farmacia_id" name="farmacia_id" required>
+                        <option value="">Selecione...</option>
+                        {% for f in farmacias %}
+                        <option value="{{ f.id }}">{{ f.nome_fantasia }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="medicamento_id" class="form-label">Medicamento <span class="required">*</span></label>
+                    <select class="form-select" id="medicamento_id" name="medicamento_id" required>
+                        <option value="">Selecione...</option>
+                        {% for m in medicamentos %}
+                        <option value="{{ m.id }}">{{ m.nome }} (Lote: {{ m.lote }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="quantidade_ofertada" class="form-label">Quantidade Ofertada <span class="required">*</span></label>
+                    <input type="number" class="form-control" id="quantidade_ofertada" name="quantidade_ofertada" required min="1">
+                </div>
+                <div class="form-group">
+                    <label for="data_expiracao" class="form-label">Data de Expiração</label>
+                    <input type="date" class="form-control" id="data_expiracao" name="data_expiracao">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="observacoes" class="form-label">Observações</label>
+                <textarea class="form-control" id="observacoes" name="observacoes" rows="3"></textarea>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-form btn-form-primary">
+                    <i class="fas fa-save"></i> Criar Oferta
+                </button>
+                <button type="button" onclick="document.getElementById('form-criar').style.display='none'" class="btn-form btn-form-secondary">
+                    Cancelar
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Tabela de Ofertas -->
+    <table style="width:100%; border-collapse:collapse; margin-top:20px;">
+        <thead>
+            <tr style="background:rgba(255,255,255,0.05);">
+                <th style="padding:15px; text-align:left; border-bottom:1px solid rgba(255,255,255,0.1);">ID</th>
+                <th style="padding:15px; text-align:left; border-bottom:1px solid rgba(255,255,255,0.1);">Medicamento</th>
+                <th style="padding:15px; text-align:left; border-bottom:1px solid rgba(255,255,255,0.1);">Farmácia</th>
+                <th style="padding:15px; text-align:left; border-bottom:1px solid rgba(255,255,255,0.1);">Ofertada</th>
+                <th style="padding:15px; text-align:left; border-bottom:1px solid rgba(255,255,255,0.1);">Reservada</th>
+                <th style="padding:15px; text-align:left; border-bottom:1px solid rgba(255,255,255,0.1);">Disponível</th>
+                <th style="padding:15px; text-align:left; border-bottom:1px solid rgba(255,255,255,0.1);">Status</th>
+                <th style="padding:15px; text-align:center; border-bottom:1px solid rgba(255,255,255,0.1);">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for o in ofertas %}
+            <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                <td style="padding:15px;">{{ o.id }}</td>
+                <td style="padding:15px;">
+                    {{ o.medicamento.nome if o.medicamento else 'N/A' }}
+                    {% if o.medicamento %}
+                    <span style="color:var(--text-muted); font-size:0.85rem;">(Lote: {{ o.medicamento.lote }})</span>
+                    {% endif %}
+                </td>
+                <td style="padding:15px;">{{ o.farmacia.nome_fantasia if o.farmacia else 'N/A' }}</td>
+                <td style="padding:15px;">{{ o.quantidade_ofertada }}</td>
+                <td style="padding:15px;">{{ o.quantidade_reservada }}</td>
+                <td style="padding:15px;">{{ o.quantidade_disponivel }}</td>
+                <td style="padding:15px;">
+                    {% if o.status == 'disponivel' %}
+                        <span class="status-pill green">Disponível</span>
+                    {% elif o.status == 'reservada' %}
+                        <span class="status-pill yellow">Reservada</span>
+                    {% elif o.status == 'confirmada' %}
+                        <span class="status-pill blue">Confirmada</span>
+                    {% elif o.status == 'cancelada' %}
+                        <span class="status-pill red">Cancelada</span>
+                    {% elif o.status == 'expirada' %}
+                        <span class="status-pill gray">Expirada</span>
+                    {% endif %}
+                </td>
+                <td style="padding:15px; text-align:center;">
+                    {% if o.status in ['disponivel', 'reservada'] %}
+                    <form action="{{ url_for('oferta_medicamento.cancelar_oferta', oid=o.id) }}" method="POST" style="display:inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn-icon btn-delete" title="Cancelar oferta">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </form>
+                    {% endif %}
+                    {% if o.status == 'disponivel' %}
+                    <form action="{{ url_for('oferta_medicamento.expirar_oferta', oid=o.id) }}" method="POST" style="display:inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn-icon btn-edit" title="Expirar oferta">
+                            <i class="fas fa-clock"></i>
+                        </button>
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="8" style="padding:30px; text-align:center; color:var(--text-muted);">
+                    Nenhuma oferta cadastrada.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

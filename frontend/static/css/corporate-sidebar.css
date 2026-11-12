@@ -904,18 +904,6 @@ i.fas, i.fa, .fas, .fa {
     line-height: 1.5;
 }
 
-.drawer-footer {
-    padding: 16px 24px;
-    border-top: 1px solid var(--drawer-border);
-    background: rgba(15, 23, 42, 0.5);
-}
-
-.drawer-footer-text {
-    font-size: 0.75rem;
-    color: #64748b;
-    text-align: center;
-}
-
 .mobile-menu-toggle {
     position: fixed;
     top: 16px;

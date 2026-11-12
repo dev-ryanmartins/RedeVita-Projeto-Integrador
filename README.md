@@ -56,6 +56,15 @@ Abra o navegador em `http://127.0.0.1:5000` e faça login com as credenciais pro
 
 **Importante:** No primeiro acesso, você será solicitado a alterar a senha inicial por uma de sua escolha.
 
+## Credenciais de Acesso (Versão de Teste)
+
+Para fins de análise e teste, as seguintes credenciais podem ser utilizadas:
+
+- **Email:** admin@redevita.com
+- **Senha:** Redevita@2024
+
+*Nota: Estas credenciais são provisionadas automaticamente no ambiente de teste para facilitar a análise do sistema.*
+
 ## Características
 
 - **Interface glassmorphism moderna** com tema escuro/claro

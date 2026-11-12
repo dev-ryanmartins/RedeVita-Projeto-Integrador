@@ -268,7 +268,7 @@ textarea:focus {
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: 480px;
+  max-width: 520px;
   background: rgba(21, 28, 42, 0.92);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
@@ -277,10 +277,14 @@ textarea:focus {
   padding: 40px 36px;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.05);
   box-sizing: border-box;
+  margin: 0 auto;
+  overflow: hidden;
 }
 
+
 .auth-card-wide {
-  max-width: 560px;
+  max-width: 520px;
+  padding: 40px 36px;
 }
 
 .auth-brand-center {
@@ -568,5 +572,90 @@ textarea:focus {
     .auth-back-link {
         justify-content: center;
         width: 100%;
+    }
+}
+
+/* ==========================================================================
+   CORREÇÃO DE ALINHAMENTO ESQUERDA PARA FORMULÁRIOS
+   ========================================================================== */
+.form-group {
+    text-align: left !important;
+    align-items: flex-start !important;
+}
+
+.form-group label {
+    text-align: left !important;
+}
+
+.form-group small {
+    text-align: left !important;
+}
+
+.auth-header,
+.form-header,
+.auth-brand-center {
+    text-align: center !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.auth-header h2,
+.form-header h2,
+.auth-brand-center h2 {
+    text-align: center !important;
+}
+
+.auth-header p,
+.form-header p,
+.auth-brand-center p.subtitle {
+    text-align: center !important;
+}
+
+.auth-brand-center .brand-logo-wrap {
+    align-self: center;
+}
+
+/* Grid para campos em duas colunas */
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+}
+
+@media (min-width: 768px) {
+    .form-row {
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+}
+
+/* Garantir que inputs ocupem largura total */
+.form-group input,
+.form-group select,
+.form-group textarea,
+.form-group .input-with-icon {
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* Layout vertical unificado para formulários */
+.form-vertical {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Padding uniforme para cards de autenticação */
+.auth-card-modern,
+.auth-card-compact,
+.auth-card-wide {
+    padding: 32px 28px !important;
+}
+
+@media (max-width: 576px) {
+    .auth-card-modern,
+    .auth-card-compact,
+    .auth-card-wide {
+        padding: 24px 20px !important;
     }
 }

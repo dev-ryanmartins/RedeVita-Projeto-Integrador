@@ -52,6 +52,7 @@ body {
     overflow-x: hidden !important;
     width: 100%;
     transition: background-color 0.3s ease, color 0.3s ease;
+    overflow-y: auto;
 }
 
 img, svg, video, canvas, iframe, picture {
@@ -505,11 +506,12 @@ code { font-family: 'Courier New', monospace; }
 
 .page-wrapper {
     padding: 28px 30px;
-    max-width: 1200px;
+    max-width: 100%;
     margin: 0 auto;
     width: 100%;
     box-sizing: border-box;
     overflow-x: hidden;
+    overflow-y: auto;
 }
 
 .page-header {
@@ -545,6 +547,11 @@ code { font-family: 'Courier New', monospace; }
     color: var(--text-muted);
     font-size: 0.82rem;
     border-top: 1px solid var(--border);
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    overflow-y: visible;
+    box-sizing: border-box;
 }
 
 /* ==========================================================================
@@ -1452,7 +1459,10 @@ textarea:focus {
     border-radius: 14px;
     overflow: hidden;
     overflow-x: auto;
+    overflow-y: visible;
     box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.25);
+    width: 100%;
+    max-width: 100%;
 }
 
 .table-toolbar {

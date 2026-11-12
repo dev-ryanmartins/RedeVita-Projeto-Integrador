@@ -22,12 +22,13 @@
     <div class="card mb-4">
         <div class="card-body">
             <form method="POST">
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="nome_instituicao" class="form-label">Nome da Instituição *</label>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="nome_instituicao" class="form-label">Nome da Instituição <span class="required">*</span></label>
                         <input type="text" class="form-control" id="nome_instituicao" name="nome_instituicao" required placeholder="Ex: Hospital Municipal">
                     </div>
-                    <div class="col-md-6 mb-3">
+                    <div class="form-group">
                         <label for="medicamento_referencia_id" class="form-label">Referência do Medicamento</label>
                         <select class="form-select" id="medicamento_referencia_id" name="medicamento_referencia_id">
                             <option value="">Selecione...</option>
@@ -37,26 +38,28 @@
                         </select>
                     </div>
                 </div>
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="produto_descritivo" class="form-label">Produto (se não houver referência) *</label>
-                        <input type="text" class="form-control" id="produto_descritivo" name="produto_descritivo" placeholder="Ex: Dipirona 500mg">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="produto_descritivo" class="form-label">Produto (se não houver referência) <span class="required">*</span></label>
+                        <input type="text" class="form-control" id="produto_descritivo" name="produto_descritivo" required placeholder="Ex: Dipirona 500mg">
                     </div>
-                    <div class="col-md-3 mb-3">
-                        <label for="quantidade_solicitada" class="form-label">Quantidade *</label>
+                    <div class="form-group">
+                        <label for="quantidade_solicitada" class="form-label">Quantidade <span class="required">*</span></label>
                         <input type="number" class="form-control" id="quantidade_solicitada" name="quantidade_solicitada" required min="1">
                     </div>
-                    <div class="col-md-3 mb-3">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
                         <label for="unidade" class="form-label">Unidade</label>
                         <input type="text" class="form-control" id="unidade" name="unidade" value="unidade">
                     </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-4 mb-3">
+                    <div class="form-group">
                         <label for="data_desejada" class="form-label">Data Desejada</label>
                         <input type="date" class="form-control" id="data_desejada" name="data_desejada">
                     </div>
-                    <div class="col-md-4 mb-3">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
                         <label for="prioridade" class="form-label">Prioridade</label>
                         <select class="form-select" id="prioridade" name="prioridade">
                             <option value="baixa">Baixa</option>
@@ -65,12 +68,16 @@
                             <option value="urgente">Urgente</option>
                         </select>
                     </div>
-                    <div class="col-md-4 mb-3">
+                    <div class="form-group">
                         <label for="observacoes" class="form-label">Observações</label>
                         <textarea class="form-control" id="observacoes" name="observacoes" rows="1"></textarea>
                     </div>
                 </div>
-                <button type="submit" class="btn btn-primary">Registrar Necessidade</button>
+                <div class="form-actions">
+                    <button type="submit" class="btn-form btn-form-primary">
+                        <i class="fas fa-plus"></i> Registrar Necessidade
+                    </button>
+                </div>
             </form>
         </div>
     </div>

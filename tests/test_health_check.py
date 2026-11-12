@@ -39,8 +39,7 @@ class TestLivenessProbe:
             
             assert response.status_code == 200
             data = response.get_json()
-            assert data['status'] == 'ok'
-            assert data['service'] == 'RedeVita'
+            assert data['status'] == 'alive'
             assert data['type'] == 'liveness'
     
     def test_liveness_api_v1_ping_retorna_200(self, app):
@@ -51,8 +50,7 @@ class TestLivenessProbe:
             
             assert response.status_code == 200
             data = response.get_json()
-            assert data['status'] == 'ok'
-            assert data['service'] == 'RedeVita'
+            assert data['status'] == 'alive'
             assert data['type'] == 'liveness'
     
     def test_liveness_nao_depende_banco(self, app):

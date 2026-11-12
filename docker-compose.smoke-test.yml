@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - DATABASE_URL=mysql+pymysql://smoke_test_user:smoke_test_password_123@db:3306/smoke_test_db
+      - SECRET_KEY=smoke_test_secret_key_12345678901234567890
+      - JWT_SECRET_KEY=smoke_test_jwt_secret_12345678901234567890
+      - JWT_EXPIRATION=3600
+      - FLASK_ENV=production
+      - SQLALCHEMY_TRACK_MODIFICATIONS=false
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  db:
+    image: mysql:8.0
+    environment:
+      - MYSQL_ROOT_PASSWORD=smoke_test_root_password_123
+      - MYSQL_DATABASE=smoke_test_db
+      - MYSQL_USER=smoke_test_user
+      - MYSQL_PASSWORD=smoke_test_password_123
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-psmoke_test_root_password_123"]
+      interval: 10s
+      timeout: 5s
+      retries: 5

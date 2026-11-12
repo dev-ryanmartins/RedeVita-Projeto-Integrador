@@ -194,7 +194,7 @@ class PDFGenerator:
             logger.error(f"Erro ao gerar PDF de retirada: {str(e)}")
             raise
 
-    def gerar_pdf_impacto_social(self, dados_impacto: Dict) -> Optional[bytes]:
+    def gerar_pdf_impacto_social(self, data_inicio: str, data_fim: str, titulo: str, observacoes: str, dados: Dict, graficos: Dict) -> Optional[bytes]:
         try:
             from reportlab.lib import colors
             from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
@@ -206,7 +206,7 @@ class PDFGenerator:
             doc = SimpleDocTemplate(buffer, pagesize=(21*cm, 29.7*cm), rightMargin=2*cm, leftMargin=2*cm, topMargin=2*cm, bottomMargin=2*cm)
 
             elementos = []
-            elementos.extend(self.criar_cabecalho("Relatório de Impacto Social"))
+            elementos.extend(self.criar_cabecalho(titulo))
 
             from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
             from reportlab.lib.enums import TA_LEFT
@@ -231,7 +231,43 @@ class PDFGenerator:
                 fontName='Helvetica',
                 leading=12
             )
-            
+
+            # Adicionar período
+            elementos.append(Paragraph(f"<b>Período:</b> {data_inicio} a {data_fim}", estilo_normal))
+
+            # Adicionar observações se existirem
+            if observacoes:
+                elementos.append(Paragraph(f"<b>Observações:</b> {observacoes}", estilo_normal))
+
+            # Adicionar métricas
+            elementos.append(Spacer(1, 0.3*cm))
+            elementos.append(Paragraph("<b>Métricas:</b>", estilo_normal))
+
+            metricas_data = [
+                ['Pacientes Beneficiados', str(dados.get('pacientes_beneficiados', 0))],
+                ['Resíduos Evitados (kg)', str(dados.get('residuos_evitados_kg', 0))],
+                ['Medicamentos Salvos', str(dados.get('medicamentos_salvos', 0))],
+                ['Medicamentos Vencidos', str(dados.get('medicamentos_vencidos', 0))],
+                ['Total Doações', str(dados.get('total_doacoes', 0))],
+                ['Total Farmácias', str(dados.get('total_farmacias', 0))],
+                ['Total Pacientes', str(dados.get('total_pacientes', 0))],
+                ['Total Medicamentos', str(dados.get('total_medicamentos', 0))],
+            ]
+
+            tabela_metricas = Table(metricas_data, colWidths=[7*cm, 4*cm])
+            tabela_metricas.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f1f5f9')),
+                ('TEXTCOLOR', (0, 0), (0, -1), colors.HexColor(COR_TEXTO)),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+                ('FONTSIZE', (0, 0), (-1, -1), 9),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+                ('TOPPADDING', (0, 0), (-1, -1), 8),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e2e8f0')),
+            ]))
+            elementos.append(tabela_metricas)
+
+            elementos.append(Spacer(1, 0.3*cm))
             elementos.append(Paragraph(
                 "<b>Fonte dos dados:</b> Sistema RedeVita - Banco de Dados Interno. "
                 "Métricas calculadas com base em doações, estoque e registros operacionais.",

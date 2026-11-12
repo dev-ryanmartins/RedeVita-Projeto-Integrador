@@ -9,3 +9,9 @@ from app.models.recuperacao_senha import RecuperacaoSenha
 from app.models.necessidade_institucional import NecessidadeInstitucional
 from app.models.agendamento_entrega import AgendamentoEntrega
 from app.models.doacao_etapa import DoacaoEtapa
+from app.models.instituicao import Instituicao
+from app.models.oferta_medicamento import OfertaMedicamento
+from app.models.reserva_oferta import ReservaOferta
+from app.models.aprovacao_farmaceutica import AprovacaoFarmaceutica
+from app.models.entrega_institucional import EntregaInstitucional
+from app.models.receita_anexo import ReceitaAnexo

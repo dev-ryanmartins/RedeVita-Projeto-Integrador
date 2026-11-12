@@ -32,6 +32,7 @@ def app():
         'PRIVATE_STORAGE_DIR': '/tmp/redevita_test_storage',
     })
     with app.app_context():
+        # Cria tabelas em ordem explícita para evitar problemas de foreign key
         db.create_all()
         yield app
         db.drop_all()
@@ -59,6 +60,7 @@ def cenario_completo(app):
         ativo=True
     )
     db.session.add(instituicao)
+    db.session.flush()  # Flush para gerar o ID da instituição
     
     # Cria medicamento não controlado
     data_validade = datetime.now() + timedelta(days=365)
@@ -498,10 +500,11 @@ def test_exposicao_dados_arquivos(app, cenario_completo):
         criado_por_id=cenario['farmaceutico'].id
     )
     db.session.add(oferta)
-    
+    db.session.flush()  # Flush para gerar o ID da oferta
+
     from app.models.movimento_estoque import MovimentoEstoque
     from app.models.oferta_medicamento import OfertaMedicamento as OfertaModel
-    
+
     reserva = ReservaOferta(
         oferta_id=oferta.id,
         instituicao_id=cenario['instituicao'].id,
@@ -553,10 +556,11 @@ def test_estados_transicoes_validas(app, cenario_completo):
         criado_por_id=cenario['farmaceutico'].id
     )
     db.session.add(oferta)
-    
+    db.session.flush()  # Flush para gerar o ID da oferta
+
     from app.models.movimento_estoque import MovimentoEstoque
     from app.models.oferta_medicamento import OfertaMedicamento as OfertaModel
-    
+
     reserva = ReservaOferta(
         oferta_id=oferta.id,
         instituicao_id=cenario['instituicao'].id,

@@ -30,6 +30,24 @@ cp .env.example .env
 
 ### Passo 3: Iniciar o servidor
 
+**Passo 3.1 (Opcional): Iniciar servidor SMTP de depuração para testes de e-mail**
+
+Para testar envios de e-mail sem credenciais reais, inicie o servidor SMTP de depuração em um terminal separado:
+
+```bash
+python start_smtp_debug.py
+```
+
+Ou usando o módulo smtpd nativo do Python:
+
+```bash
+python -m smtpd -c DebuggingServer -n localhost 1025
+```
+
+O servidor irá exibir todos os e-mails enviados pelo Flask no console.
+
+**Passo 3.2: Iniciar o servidor Flask**
+
 ```bash
 cd backend
 python main.py

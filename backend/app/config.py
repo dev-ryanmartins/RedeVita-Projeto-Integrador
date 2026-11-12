@@ -64,12 +64,27 @@ class Config:
     elif SQLALCHEMY_DATABASE_URI.startswith("sqlite"):
         SQLALCHEMY_ENGINE_OPTIONS["connect_args"] = {"timeout": 5}
 
-    MAIL_SERVER = os.environ.get("MAIL_SERVER", "smtp.gmail.com")
-    MAIL_PORT = int(os.environ.get("MAIL_PORT", 587))
-    MAIL_USE_TLS = os.environ.get("MAIL_USE_TLS", "true").lower() == "true"
-    MAIL_USERNAME = os.environ.get("MAIL_USERNAME", "")
-    MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD", "")
-    MAIL_DEFAULT_SENDER = os.environ.get("MAIL_DEFAULT_SENDER", "RedeVita <nao-responda@redevita.com>")
+    # Email configuration
+    if ENV == "development" or ENV == "testing":
+        # Use local SMTP debugging server for development/testing
+        # Start with: python -m smtpd -c DebuggingServer -n localhost 1025
+        MAIL_SERVER = os.environ.get("MAIL_SERVER", "localhost")
+        MAIL_PORT = int(os.environ.get("MAIL_PORT", 1025))
+        MAIL_USE_TLS = False
+        MAIL_USE_SSL = False
+        MAIL_USERNAME = ""
+        MAIL_PASSWORD = ""
+        MAIL_DEFAULT_SENDER = os.environ.get("MAIL_DEFAULT_SENDER", "RedeVita <noreply@redevita.com>")
+        MAIL_DEBUG = True
+    else:
+        # Production email settings
+        MAIL_SERVER = os.environ.get("MAIL_SERVER", "smtp.gmail.com")
+        MAIL_PORT = int(os.environ.get("MAIL_PORT", 587))
+        MAIL_USE_TLS = os.environ.get("MAIL_USE_TLS", "true").lower() == "true"
+        MAIL_USERNAME = os.environ.get("MAIL_USERNAME", "")
+        MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD", "")
+        MAIL_DEFAULT_SENDER = os.environ.get("MAIL_DEFAULT_SENDER", "RedeVita <nao-responda@redevita.com>")
+        MAIL_DEBUG = False
 
     TWILIO_ACCOUNT_SID = os.environ.get("TWILIO_ACCOUNT_SID", "")
     TWILIO_AUTH_TOKEN = os.environ.get("TWILIO_AUTH_TOKEN", "")

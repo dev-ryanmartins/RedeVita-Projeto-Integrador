@@ -10,6 +10,20 @@ logger = logging.getLogger(__name__)
 health_bp = Blueprint("health", __name__)
 
 
+@health_bp.route("/health")
+def liveness_check():
+    """
+    Liveness probe: verifica se a aplicação está rodando.
+    Não verifica dependências externas (banco de dados).
+    Sempre retorna 200 se o servidor Flask estiver respondendo.
+    """
+    return jsonify({
+        "status": "alive",
+        "timestamp": datetime.utcnow().isoformat(),
+        "type": "liveness"
+    }), 200
+
+
 @health_bp.route("/healthz")
 def readiness_check():
     """

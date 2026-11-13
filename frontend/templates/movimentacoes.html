@@ -28,16 +28,16 @@
 
 {% block content %}
 <div class="page-wrapper">
-    <div class="page-header">
-        <div>
-            <h2><i class="fas fa-exchange-alt"></i> Movimentações de Estoque</h2>
-            <p class="page-subtitle">Visão consolidada de entradas e saídas de medicamentos.</p>
+    <div class="page-header-corporate">
+        <div class="page-header-content">
+            <h1><i class="fas fa-exchange-alt"></i> Movimentações de Estoque</h1>
+            <p class="subtitle">Visão consolidada de entradas e saídas de medicamentos</p>
         </div>
-        <div style="display:flex; gap:10px;">
-            <a href="{{ url_for('donation.nova_doacao') }}" class="btn-secondary">
+        <div class="dashboard-header-actions">
+            <a href="{{ url_for('donation.nova_doacao') }}" class="btn-form btn-form-secondary">
                 <i class="fas fa-hand-holding-heart"></i> Doações
             </a>
-            <a href="{{ url_for('donation.triagem') }}" class="btn-primary">
+            <a href="{{ url_for('donation.triagem') }}" class="btn-form btn-form-primary">
                 <i class="fas fa-clipboard-check"></i> Recebimento
             </a>
         </div>

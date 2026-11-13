@@ -1059,3 +1059,150 @@ html.light-theme .risk-count {
     color: #0f172a;
 }
 
+/* ==========================================================================
+   ALINHAMENTO DOS CARDS DE KPIs (ALTURAS UNIFORMES)
+   ========================================================================== */
+.stats-grid-corporate .stat-card-corporate {
+    justify-content: space-between;
+    min-height: 170px;
+}
+
+.stats-grid-corporate .stat-info-corporate {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    width: 100%;
+}
+
+.stats-grid-corporate .stat-value-corporate {
+    margin-bottom: 0;
+}
+
+.stats-grid-corporate .stat-trend-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    align-self: flex-start;
+    margin-top: auto;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.stats-grid-corporate .stat-trend-indicator.trend-up {
+    background: rgba(16, 185, 129, 0.18);
+    color: #34d399;
+}
+
+.stats-grid-corporate .stat-trend-indicator.trend-down {
+    background: rgba(244, 63, 94, 0.18);
+    color: #fb7185;
+}
+
+.stats-grid-corporate .stat-trend-indicator.trend-neutral {
+    background: rgba(148, 163, 184, 0.18);
+    color: #cbd5e1;
+}
+
+/* ==========================================================================
+   RESPONSIVIDADE ADITIVA DOS CARDS DE KPIs
+   ========================================================================== */
+@media (max-width: 768px) {
+    body .stats-grid-corporate {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ==========================================================================
+   NORMALIZAÇÃO DE ESTADOS (SEMÁFORO SANITÁRIO) — CORES COERENTES
+   ========================================================================== */
+.status-pill.green,
+.status-pill.success,
+.status-badge.green,
+.iot-badge.badge-green,
+.pill-safe {
+    background: rgba(16, 185, 129, 0.14);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.status-pill.yellow,
+.status-pill.warning,
+.status-badge.yellow,
+.iot-badge.badge-yellow,
+.pill-warning {
+    background: rgba(245, 158, 11, 0.14);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+.status-pill.red,
+.status-pill.danger,
+.status-badge.red,
+.iot-badge.badge-red,
+.pill-critical {
+    background: rgba(244, 63, 94, 0.14);
+    color: #fb7185;
+    border: 1px solid rgba(244, 63, 94, 0.35);
+}
+
+.status-pill.blue,
+.pill-moderate {
+    background: rgba(56, 189, 248, 0.14);
+    color: #38bdf8;
+    border: 1px solid rgba(56, 189, 248, 0.35);
+}
+
+.status-badge,
+.iot-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 2px 9px;
+    border-radius: 9999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+html.light-theme .status-pill.green,
+html.light-theme .status-pill.success,
+html.light-theme .status-badge.green,
+html.light-theme .iot-badge.badge-green,
+html.light-theme .pill-safe {
+    background: rgba(16, 185, 129, 0.12);
+    color: #047857;
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+html.light-theme .status-pill.yellow,
+html.light-theme .status-pill.warning,
+html.light-theme .status-badge.yellow,
+html.light-theme .iot-badge.badge-yellow,
+html.light-theme .pill-warning {
+    background: rgba(245, 158, 11, 0.14);
+    color: #b45309;
+    border-color: rgba(245, 158, 11, 0.3);
+}
+
+html.light-theme .status-pill.red,
+html.light-theme .status-pill.danger,
+html.light-theme .status-badge.red,
+html.light-theme .iot-badge.badge-red,
+html.light-theme .pill-critical {
+    background: rgba(244, 63, 94, 0.12);
+    color: #be123c;
+    border-color: rgba(244, 63, 94, 0.3);
+}
+
+html.light-theme .status-pill.blue,
+html.light-theme .pill-moderate {
+    background: rgba(56, 189, 248, 0.12);
+    color: #0369a1;
+    border-color: rgba(56, 189, 248, 0.3);
+}
+

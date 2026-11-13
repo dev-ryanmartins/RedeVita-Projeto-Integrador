@@ -106,7 +106,7 @@
 }
 
 .btn-corporate-primary {
-    background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+    background: linear-gradient(135deg, var(--primary) 0%, #0284c7 100%);
     color: white;
     box-shadow: 0 4px 16px rgba(56, 189, 248, 0.3);
     border: 1px solid rgba(56, 189, 248, 0.4);
@@ -181,7 +181,7 @@
 
 .time-filter-label i {
     font-size: 0.95rem;
-    color: #38bdf8;
+    color: var(--primary);
 }
 
 .time-filter-buttons {
@@ -214,7 +214,7 @@
 .time-filter-btn.active {
     background: linear-gradient(135deg, rgba(56, 189, 248, 0.25) 0%, rgba(56, 189, 248, 0.15) 100%);
     border-color: rgba(56, 189, 248, 0.4);
-    color: #38bdf8;
+    color: var(--primary);
     box-shadow: 0 2px 8px rgba(56, 189, 248, 0.2);
 }
 
@@ -239,7 +239,7 @@
     height: 40px;
     border-radius: 10px;
     background: rgba(244, 63, 94, 0.2);
-    color: #f43f5e;
+    color: var(--danger);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -321,7 +321,7 @@
     border-radius: 20px;
     font-size: 0.8rem;
     font-weight: 700;
-    color: #10b981;
+    color: var(--success);
     white-space: nowrap;
 }
 
@@ -329,7 +329,7 @@
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: #10b981;
+    background: var(--success);
     animation: pulse 2s infinite;
 }
 
@@ -443,7 +443,7 @@
 
 .stat-icon-corporate.blue {
     background: linear-gradient(135deg, rgba(56, 189, 248, 0.2) 0%, rgba(56, 189, 248, 0.1) 100%);
-    color: #38bdf8;
+    color: var(--primary);
     border: 1px solid rgba(56, 189, 248, 0.3);
 }
 
@@ -455,13 +455,13 @@
 
 .stat-icon-corporate.green {
     background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0.1) 100%);
-    color: #10b981;
+    color: var(--success);
     border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
 .stat-icon-corporate.red {
     background: linear-gradient(135deg, rgba(244, 63, 94, 0.2) 0%, rgba(244, 63, 94, 0.1) 100%);
-    color: #f43f5e;
+    color: var(--danger);
     border: 1px solid rgba(244, 63, 94, 0.3);
 }
 
@@ -521,12 +521,12 @@
 
 .stat-trend.positive {
     background: rgba(16, 185, 129, 0.15);
-    color: #10b981;
+    color: var(--success);
 }
 
 .stat-trend.negative {
     background: rgba(244, 63, 94, 0.15);
-    color: #f43f5e;
+    color: var(--danger);
 }
 
 /* ==========================================================================
@@ -573,7 +573,7 @@
 }
 
 .chart-card-header-corporate h3 i {
-    color: #38bdf8;
+    color: var(--primary);
 }
 
 .chart-badge-corporate {
@@ -583,7 +583,7 @@
     border-radius: 12px;
     font-size: 0.75rem;
     font-weight: 700;
-    color: #38bdf8;
+    color: var(--primary);
 }
 
 .chart-container-corporate {
@@ -667,18 +667,18 @@
     background: rgba(255, 255, 255, 0.06);
     border-color: rgba(56, 189, 248, 0.3);
     transform: translateY(-2px);
-    color: #38bdf8;
+    color: var(--primary);
 }
 
 .action-btn-corporate.primary {
     background: rgba(56, 189, 248, 0.15);
     border-color: rgba(56, 189, 248, 0.3);
-    color: #38bdf8;
+    color: var(--primary);
 }
 
 .action-btn-corporate.primary:hover {
     background: rgba(56, 189, 248, 0.25);
-    color: #38bdf8;
+    color: var(--primary);
 }
 
 /* ==========================================================================
@@ -742,7 +742,7 @@
 
 .status-pill-corporate.green {
     background: rgba(16, 185, 129, 0.15);
-    color: #10b981;
+    color: var(--success);
     border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
@@ -754,7 +754,7 @@
 
 .status-pill-corporate.red {
     background: rgba(244, 63, 94, 0.15);
-    color: #f43f5e;
+    color: var(--danger);
     border: 1px solid rgba(244, 63, 94, 0.3);
 }
 
@@ -891,4 +891,10 @@
         width: 100%;
         justify-content: center;
     }
+}
+
+.alert-banner-corporate,
+.time-filter-container,
+.stat-icon-corporate {
+    border-radius: var(--radius-md);
 }

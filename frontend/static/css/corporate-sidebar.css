@@ -8,17 +8,17 @@
     --sidebar-active: rgba(56, 189, 248, 0.18);
     --sidebar-active-border: rgba(56, 189, 248, 0.5);
     --sidebar-text: #cbd5e1;
-    --sidebar-text-active: #38bdf8;
+    --sidebar-text-active: var(--primary);
     --glass-bg: rgba(15, 23, 42, 0.7);
     --glass-border: rgba(255, 255, 255, 0.1);
     --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
     --drawer-width: 320px;
     --drawer-bg: rgba(15, 23, 42, 0.98);
     --drawer-border: rgba(255, 255, 255, 0.12);
-    --alert-badge-bg: #ef4444;
+    --alert-badge-bg: var(--danger);
     --alert-badge-color: #ffffff;
-    --trend-up-color: #10b981;
-    --trend-down-color: #ef4444;
+    --trend-up-color: var(--success);
+    --trend-down-color: var(--danger);
 }
 
 body {
@@ -56,7 +56,7 @@ body {
     border-right: 1px solid var(--sidebar-border);
     display: flex;
     flex-direction: column;
-    z-index: 1000;
+    z-index: var(--z-sidebar);
     transition: width 0.3s ease, transform 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
     box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3);
 }
@@ -93,7 +93,7 @@ body {
 }
 
 .sidebar-header .brand-rede {
-    color: #38bdf8 !important;
+    color: var(--primary) !important;
 }
 
 .sidebar-header .brand-vita {
@@ -210,7 +210,7 @@ body {
     transform: translateY(-50%);
     width: 3px;
     height: 60%;
-    background: #38bdf8;
+    background: var(--primary);
     border-radius: 0 2px 2px 0;
 }
 
@@ -337,12 +337,12 @@ i.fas, i.fa, .fas, .fa {
 
 .nav-item:hover .nav-item-icon {
     background: rgba(56, 189, 248, 0.15);
-    color: #38bdf8;
+    color: var(--primary);
 }
 
 .nav-item.active .nav-item-icon {
     background: rgba(56, 189, 248, 0.2);
-    color: #38bdf8;
+    color: var(--primary);
 }
 
 .nav-item-text {
@@ -393,7 +393,7 @@ i.fas, i.fa, .fas, .fa {
     font-size: 0.8rem;
     font-weight: 600;
     white-space: nowrap;
-    z-index: 1001;
+    z-index: var(--z-drawer-overlay);
     opacity: 0;
     visibility: hidden;
     transition: all 0.2s ease;
@@ -411,23 +411,23 @@ i.fas, i.fa, .fas, .fa {
 }
 
 .nav-item.admin:hover {
-    border-left-color: #f43f5e;
+    border-left-color: var(--danger);
     background: rgba(244, 63, 94, 0.1);
 }
 
 .nav-item.admin.active {
-    border-left-color: #f43f5e;
+    border-left-color: var(--danger);
     background: rgba(244, 63, 94, 0.15);
-    color: #f43f5e;
+    color: var(--danger);
     border-color: rgba(244, 63, 94, 0.4);
 }
 
 .nav-item.admin.active::before {
-    background: #f43f5e;
+    background: var(--danger);
 }
 
 .nav-item.admin .nav-item-icon {
-    color: #f43f5e;
+    color: var(--danger);
 }
 
 .sidebar-footer {
@@ -464,7 +464,7 @@ i.fas, i.fa, .fas, .fa {
     justify-content: center;
     font-size: 0.9rem;
     font-weight: 700;
-    color: #38bdf8;
+    color: var(--primary);
     flex-shrink: 0;
 }
 
@@ -552,15 +552,15 @@ i.fas, i.fa, .fas, .fa {
     justify-content: center;
     cursor: pointer;
     transition: all 0.2s ease;
-    z-index: 1001;
+    z-index: calc(var(--z-sidebar) + 1);
     font-size: 0.9rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .sidebar-collapse-btn:hover {
-    background: #38bdf8;
+    background: var(--primary);
     color: white;
-    border-color: #38bdf8;
+    border-color: var(--primary);
     transform: translateY(-50%) scale(1.1);
 }
 
@@ -581,7 +581,7 @@ i.fas, i.fa, .fas, .fa {
     background: rgba(0, 0, 0, 0.6);
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
-    z-index: 2000;
+    z-index: var(--z-drawer-overlay);
     opacity: 0;
     visibility: hidden;
     transition: all 0.3s ease;
@@ -602,7 +602,7 @@ i.fas, i.fa, .fas, .fa {
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-left: 1px solid var(--drawer-border);
-    z-index: 2001;
+    z-index: var(--z-drawer);
     transition: right 0.3s ease;
     display: flex;
     flex-direction: column;
@@ -690,7 +690,7 @@ i.fas, i.fa, .fas, .fa {
     justify-content: center;
     font-size: 1.2rem;
     font-weight: 700;
-    color: #38bdf8;
+    color: var(--primary);
 }
 
 .account-details {
@@ -744,23 +744,23 @@ i.fas, i.fa, .fas, .fa {
 .drawer-btn.primary {
     background: rgba(56, 189, 248, 0.15);
     border-color: rgba(56, 189, 248, 0.3);
-    color: #38bdf8;
+    color: var(--primary);
 }
 
 .drawer-btn.primary:hover {
     background: rgba(56, 189, 248, 0.25);
-    color: #38bdf8;
+    color: var(--primary);
 }
 
 .drawer-btn.danger {
     background: rgba(244, 63, 94, 0.1);
     border-color: rgba(244, 63, 94, 0.25);
-    color: #f43f5e;
+    color: var(--danger);
 }
 
 .drawer-btn.danger:hover {
     background: rgba(244, 63, 94, 0.2);
-    color: #f43f5e;
+    color: var(--danger);
 }
 
 .theme-toggle {
@@ -797,7 +797,7 @@ i.fas, i.fa, .fas, .fa {
 }
 
 .theme-toggle-switch.active {
-    background: #38bdf8;
+    background: var(--primary);
 }
 
 .theme-toggle-switch::after {
@@ -862,13 +862,13 @@ i.fas, i.fa, .fas, .fa {
 .font-control-btn:hover {
     background: rgba(255, 255, 255, 0.1);
     border-color: rgba(255, 255, 255, 0.2);
-    color: #38bdf8;
+    color: var(--primary);
 }
 
 .font-control-value {
     font-size: 0.85rem;
     font-weight: 600;
-    color: #38bdf8;
+    color: var(--primary);
     min-width: 45px;
     text-align: center;
 }
@@ -885,7 +885,7 @@ i.fas, i.fa, .fas, .fa {
     height: 32px;
     border-radius: 8px;
     background: rgba(16, 185, 129, 0.2);
-    color: #10b981;
+    color: var(--success);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -895,7 +895,7 @@ i.fas, i.fa, .fas, .fa {
 .anvisa-alert-title {
     font-size: 0.9rem;
     font-weight: 700;
-    color: #10b981;
+    color: var(--success);
 }
 
 .anvisa-alert-text {
@@ -921,7 +921,7 @@ i.fas, i.fa, .fas, .fa {
     justify-content: center;
     cursor: pointer;
     transition: all 0.2s ease;
-    z-index: 999;
+    z-index: var(--z-mobile-toggle);
     font-size: 1.2rem;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
@@ -929,7 +929,7 @@ i.fas, i.fa, .fas, .fa {
 .mobile-menu-toggle:hover {
     background: rgba(56, 189, 248, 0.2);
     border-color: rgba(56, 189, 248, 0.3);
-    color: #38bdf8;
+    color: var(--primary);
 }
 
 @media (max-width: 768px) {
@@ -1039,7 +1039,7 @@ i.fas, i.fa, .fas, .fa {
 }
 
 .fullscreen-toggle-label i {
-    color: #38bdf8;
+    color: var(--primary);
 }
 
 .fullscreen-toggle-status {
@@ -1048,11 +1048,11 @@ i.fas, i.fa, .fas, .fa {
 }
 
 .fullscreen-toggle.active .fullscreen-toggle-status {
-    color: #10b981;
+    color: var(--success);
 }
 
 .fullscreen-toggle.active .fullscreen-toggle-label i {
-    color: #10b981;
+    color: var(--success);
 }
 
 .command-palette-overlay {
@@ -1064,7 +1064,7 @@ i.fas, i.fa, .fas, .fa {
     background: rgba(0, 0, 0, 0.7);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    z-index: 2000;
+    z-index: var(--z-palette-overlay);
     display: none;
     opacity: 0;
     transition: opacity 0.2s ease;
@@ -1114,7 +1114,7 @@ i.fas, i.fa, .fas, .fa {
 }
 
 .command-palette-search:focus {
-    border-color: #38bdf8;
+    border-color: var(--primary);
     box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.15);
 }
 
@@ -1194,7 +1194,7 @@ i.fas, i.fa, .fas, .fa {
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #38bdf8;
+    color: var(--primary);
     font-size: 1rem;
     flex-shrink: 0;
 }
@@ -1264,7 +1264,7 @@ i.fas, i.fa, .fas, .fa {
     height: 32px;
     border-radius: 8px;
     background: rgba(16, 185, 129, 0.2);
-    color: #10b981;
+    color: var(--success);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1274,7 +1274,7 @@ i.fas, i.fa, .fas, .fa {
 .audit-stamp-title {
     font-size: 0.9rem;
     font-weight: 700;
-    color: #10b981;
+    color: var(--success);
 }
 
 .audit-stamp-content {
@@ -1300,7 +1300,7 @@ i.fas, i.fa, .fas, .fa {
 
 .audit-stamp-signature {
     font-family: 'Courier New', monospace;
-    color: #10b981;
+    color: var(--success);
     font-size: 0.9rem;
     font-weight: 700;
     padding: 8px;
@@ -1331,7 +1331,7 @@ i.fas, i.fa, .fas, .fa {
     gap: 10px;
     font-size: 1rem;
     font-weight: 700;
-    color: #f43f5e;
+    color: var(--danger);
 }
 
 .iot-simulator-title i {
@@ -1369,7 +1369,7 @@ i.fas, i.fa, .fas, .fa {
 
 .iot-simulator-btn.critical {
     background: rgba(239, 68, 68, 0.2);
-    color: #ef4444;
+    color: var(--danger);
     border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
@@ -1379,7 +1379,7 @@ i.fas, i.fa, .fas, .fa {
 
 .iot-simulator-btn.reset {
     background: rgba(16, 185, 129, 0.2);
-    color: #10b981;
+    color: var(--success);
     border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
@@ -1398,7 +1398,7 @@ i.fas, i.fa, .fas, .fa {
 
 .iot-simulator-status.active {
     background: rgba(244, 63, 94, 0.1);
-    color: #f43f5e;
+    color: var(--danger);
     border: 1px solid rgba(244, 63, 94, 0.2);
 }
 
@@ -1423,7 +1423,7 @@ i.fas, i.fa, .fas, .fa {
     gap: 10px;
     font-size: 1rem;
     font-weight: 700;
-    color: #38bdf8;
+    color: var(--primary);
 }
 
 .stock-prediction-title i {
@@ -1436,7 +1436,7 @@ i.fas, i.fa, .fas, .fa {
     border-radius: 20px;
     font-size: 0.75rem;
     font-weight: 600;
-    color: #38bdf8;
+    color: var(--primary);
 }
 
 .stock-prediction-content {
@@ -1464,7 +1464,7 @@ i.fas, i.fa, .fas, .fa {
     height: 32px;
     border-radius: 8px;
     background: rgba(56, 189, 248, 0.2);
-    color: #38bdf8;
+    color: var(--primary);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1493,11 +1493,11 @@ i.fas, i.fa, .fas, .fa {
 }
 
 .stock-prediction-item-trend.risk {
-    color: #ef4444;
+    color: var(--danger);
 }
 
 .stock-prediction-item-trend.safe {
-    color: #10b981;
+    color: var(--success);
 }
 
 /* Toggle de Alto Contraste - Módulo Aditivo */
@@ -1535,7 +1535,7 @@ i.fas, i.fa, .fas, .fa {
     position: absolute;
     width: 18px;
     height: 18px;
-    background: #38bdf8;
+    background: var(--primary);
     border-radius: 50%;
     top: 3px;
     left: 3px;
@@ -1543,7 +1543,7 @@ i.fas, i.fa, .fas, .fa {
 }
 
 .contrast-toggle-switch.active {
-    background: #38bdf8;
+    background: var(--primary);
 }
 
 .contrast-toggle-switch.active::after {
@@ -1601,4 +1601,11 @@ body.high-contrast textarea {
 
 .stock-prediction-item-trend.warning {
     color: #f59e0b;
+}
+
+.account-avatar-large,
+.command-palette,
+.stock-prediction-widget,
+.mobile-menu-toggle {
+    border-radius: var(--radius-md);
 }

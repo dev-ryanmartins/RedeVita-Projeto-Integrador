@@ -42,6 +42,7 @@
     padding: 9px 10px; border-bottom: 1px solid rgba(255,255,255,.04);
 }
 .med-expiry-table tr:last-child td { border-bottom: none; }
+.table-wrapper { overflow-x: auto; }
 
 .badge-vencido  { background: rgba(192,57,43,.2); color: #ff6b6b; padding: 2px 8px; border-radius: 10px; font-size: 0.72rem; font-weight: 700; }
 .badge-critico  { background: rgba(231,76,60,.15); color: #e74c3c; padding: 2px 8px; border-radius: 10px; font-size: 0.72rem; font-weight: 700; }
@@ -179,6 +180,7 @@
             {% endif %}
         </h3>
         {% if meds_30 %}
+        <div class="table-wrapper">
         <table class="med-expiry-table">
             <thead><tr><th>Medicamento</th><th>Validade</th><th>Qtd</th><th>Status</th></tr></thead>
             <tbody>
@@ -197,6 +199,7 @@
                 {% endfor %}
             </tbody>
         </table>
+        </div>
         {% else %}
         <div class="empty-med"><i class="fas fa-check-circle" style="color:var(--success);font-size:1.5rem;display:block;margin-bottom:8px;"></i>Nenhum vencendo em 30 dias.</div>
         {% endif %}
@@ -212,6 +215,7 @@
         </h3>
         <span style="background:rgba(231,76,60,.15);color:#e74c3c;padding:2px 10px;border-radius:10px;font-size:.78rem;font-weight:700;">{{ meds_venc|length }} item(s)</span>
     </div>
+    <div class="table-wrapper">
     <table class="med-expiry-table">
         <thead><tr><th>Medicamento</th><th>Princípio Ativo</th><th>Lote</th><th>Venceu em</th><th>Qtd</th></tr></thead>
         <tbody>
@@ -226,6 +230,7 @@
             {% endfor %}
         </tbody>
     </table>
+    </div>
 </div>
 {% endif %}
 
@@ -238,6 +243,7 @@
         </h3>
         <span style="background:rgba(52,152,219,.15);color:#3498db;padding:2px 10px;border-radius:10px;font-size:.78rem;font-weight:700;">{{ meds_baixo|length }} item(s)</span>
     </div>
+    <div class="table-wrapper">
     <table class="med-expiry-table">
         <thead><tr><th>Medicamento</th><th>Lote</th><th>Validade</th><th>Qtd</th></tr></thead>
         <tbody>
@@ -251,6 +257,7 @@
             {% endfor %}
         </tbody>
     </table>
+    </div>
 </div>
 {% endif %}
 
@@ -261,6 +268,7 @@
         <h3 style="font-size:1rem;font-weight:700;margin:0;"><i class="fas fa-calendar-alt" style="color:#f5cb2f;"></i> Vencendo entre 30 e 60 dias</h3>
         <span style="color:var(--text-muted);font-size:.82rem;">{{ meds_60|length - meds_30|length }} item(s)</span>
     </div>
+    <div class="table-wrapper">
     <table class="med-expiry-table">
         <thead><tr><th>Medicamento</th><th>Princípio Ativo</th><th>Lote</th><th>Validade</th><th>Qtd</th></tr></thead>
         <tbody>
@@ -275,6 +283,7 @@
             {% endif %}{% endfor %}
         </tbody>
     </table>
+    </div>
 </div>
 {% endif %}
 {% endblock %}

@@ -10,6 +10,27 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+    <style>
+        .auth-card {
+            border-radius: 20px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.55);
+        }
+
+        .auth-card .auth-header { margin-bottom: 26px; }
+        .auth-card .auth-header h2 { letter-spacing: -0.01em; }
+        .auth-card .auth-header p { color: #a7b5c8; }
+
+        .auth-card .form-group { margin-bottom: 18px; }
+        .auth-card .form-row { gap: 18px; }
+
+        .auth-card input:focus-visible,
+        .auth-card select:focus-visible,
+        .auth-card button:focus-visible,
+        .auth-card a:focus-visible {
+            outline: 2px solid #7dd3fc !important;
+            outline-offset: 2px;
+        }
+    </style>
 </head>
 {% from "_brand_logo.html" import brand_logo %}
 <body style="background-color: #0b0f17;">

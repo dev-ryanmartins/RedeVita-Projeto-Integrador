@@ -25,6 +25,28 @@
     --shadow:       0 8px 30px rgba(0, 0, 0, 0.5);
     --shadow-sm:    0 4px 12px rgba(0, 0, 0, 0.3);
     --transition:   all 0.2s ease;
+
+    --z-sidebar: 1000;
+    --z-mobile-toggle: 1100;
+    --z-dropdown: 1500;
+    --z-modal-overlay: 1800;
+    --z-modal: 1810;
+    --z-drawer-overlay: 1900;
+    --z-drawer: 1910;
+    --z-palette-overlay: 1920;
+    --z-palette: 1930;
+    --z-thermal-alert: 9000;
+    --z-toast: 9999;
+
+    --radius-sm: 8px;
+    --radius-md: 12px;
+
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 24px;
+    --space-6: 32px;
 }
 
 *, *::before, *::after {
@@ -210,7 +232,7 @@ code { font-family: 'Courier New', monospace; }
     left: 0;
     right: 0;
     height: 2px;
-    background: linear-gradient(90deg, #38bdf8 0%, #e11d48 100%);
+    background: linear-gradient(90deg, var(--primary) 0%, #e11d48 100%);
 }
 
 .container-nav {
@@ -250,7 +272,7 @@ code { font-family: 'Courier New', monospace; }
     place-items: center;
     flex: 0 0 auto;
     border-radius: 12px;
-    background: linear-gradient(145deg, #38bdf8 0%, #0284c7 100%);
+    background: linear-gradient(145deg, var(--primary) 0%, #0284c7 100%);
     box-shadow: 0 8px 18px rgba(2, 132, 199, 0.28);
 }
 .brand-logo__icon svg { width: 28px; height: 28px; overflow: visible; }
@@ -269,7 +291,7 @@ code { font-family: 'Courier New', monospace; }
     font-weight: 800;
     letter-spacing: -0.04em;
 }
-.brand-logo__wordmark strong { color: #38bdf8; }
+.brand-logo__wordmark strong { color: var(--primary); }
 .brand-logo__wordmark span { color: var(--text-main); }
 .brand-logo--compact .brand-logo__icon { width: 34px; height: 34px; border-radius: 10px; }
 .brand-logo--compact .brand-logo__icon svg { width: 25px; height: 25px; }
@@ -288,7 +310,7 @@ code { font-family: 'Courier New', monospace; }
 }
 
 .redevita-brand:focus-visible {
-    outline: 2px solid #38bdf8 !important;
+    outline: 2px solid var(--primary) !important;
     outline-offset: 4px;
     border-radius: 6px;
 }
@@ -321,7 +343,7 @@ code { font-family: 'Courier New', monospace; }
 }
 
 .redevita-brand-text .brand-rede {
-    color: #38bdf8 !important;
+    color: var(--primary) !important;
 }
 
 .redevita-brand-text .brand-vita {
@@ -409,14 +431,14 @@ code { font-family: 'Courier New', monospace; }
 }
 
 .nav-links li a.active {
-    color: #38bdf8;
+    color: var(--primary);
     background: rgba(56, 189, 248, 0.15);
     border-color: rgba(56, 189, 248, 0.35);
     box-shadow: 0 0 12px rgba(56, 189, 248, 0.15);
 }
 
 .nav-links li a.active i {
-    color: #38bdf8;
+    color: var(--primary);
 }
 
 .btn-logout {
@@ -468,7 +490,7 @@ code { font-family: 'Courier New', monospace; }
     place-items: center;
     font-size: 0.78rem;
     font-weight: 700;
-    color: #38bdf8;
+    color: var(--primary);
 }
 .user-meta {
     display: flex;
@@ -885,6 +907,7 @@ code { font-family: 'Courier New', monospace; }
 /* ==========================================================================
    FOOTER
    ========================================================================== */
+.main-footer {
     width: 100%;
     max-width: 100%;
     overflow-x: hidden;
@@ -985,7 +1008,7 @@ code { font-family: 'Courier New', monospace; }
 }
 .btn-primary:hover {
     background: #0369a1;
-    border-color: #38bdf8;
+    border-color: var(--primary);
     color: #fff;
     box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
 }
@@ -1011,7 +1034,7 @@ code { font-family: 'Courier New', monospace; }
 .btn-danger {
     background: #dc2626;
     color: #fff;
-    border-color: #ef4444;
+    border-color: var(--danger);
     box-shadow: 0 2px 8px rgba(220, 38, 38, 0.25);
 }
 .btn-danger:hover {
@@ -1057,7 +1080,7 @@ code { font-family: 'Courier New', monospace; }
 .btn-secondary:focus-visible,
 .btn-danger:focus-visible,
 .btn-success:focus-visible {
-    outline: 2px solid #38bdf8;
+    outline: 2px solid var(--primary);
     outline-offset: 2px;
 }
 
@@ -1444,7 +1467,7 @@ code { font-family: 'Courier New', monospace; }
     position: fixed;
     top: 20px;
     right: 20px;
-    z-index: 9999;
+    z-index: var(--z-thermal-alert);
     transition: var(--transition);
 }
 
@@ -1490,7 +1513,7 @@ code { font-family: 'Courier New', monospace; }
     position: fixed;
     top: 20px;
     right: 20px;
-    z-index: 9999;
+    z-index: var(--z-thermal-alert);
     transition: var(--transition);
 }
 
@@ -1599,7 +1622,7 @@ label {
 .input-with-icon:focus-within .ph,
 .input-with-icon:focus-within .ph-duotone,
 .input-with-icon:focus-within svg {
-  color: #38bdf8 !important;
+  color: var(--primary) !important;
 }
 
 /* Reset e remoção de decorações nativas em inputs do tipo search (evita lupa duplicada e botão X nativo) */
@@ -1623,7 +1646,7 @@ input[type="search"] {
 }
 
 input[type="search"]:focus {
-  border-color: #38bdf8 !important;
+  border-color: var(--primary) !important;
   box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.15) !important;
 }
 
@@ -1681,14 +1704,14 @@ input[type="search"]:focus {
 
 .search-input-wrapper input[type="search"]:focus,
 .search-input-wrapper input[type="text"]:focus {
-    border-color: #38bdf8;
+    border-color: var(--primary);
     box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.15);
     background: rgba(15, 23, 42, 0.85);
 }
 
 .search-input-wrapper:focus-within i,
 .search-input-wrapper:focus-within .ph {
-    color: #38bdf8;
+    color: var(--primary);
     transform: translateY(-50%) scale(1.1);
 }
 
@@ -1733,7 +1756,7 @@ input[type="search"] {
 input:focus,
 select:focus,
 textarea:focus {
-  border-color: #38bdf8 !important;
+  border-color: var(--primary) !important;
   box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.15) !important;
 }
 
@@ -1841,7 +1864,7 @@ textarea:focus {
 .table-search:focus-within .ph,
 .table-search:focus-within .ph-duotone,
 .table-search:focus-within svg {
-    color: #38bdf8;
+    color: var(--primary);
 }
 .table-search input,
 .table-search input[type="search"],
@@ -1864,7 +1887,7 @@ textarea:focus {
 .table-search input:focus,
 .table-search input[type="search"]:focus,
 .table-search input[type="text"]:focus {
-    border-color: #38bdf8 !important;
+    border-color: var(--primary) !important;
     box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.15) !important;
 }
 .table-search-hint {
@@ -1952,7 +1975,7 @@ textarea:focus {
     border: 1px solid rgba(16, 185, 129, 0.25);
 }
 .status-pill.success::before,
-.status-pill.green::before { background: #10b981; }
+.status-pill.green::before { background: var(--success); }
 
 .status-pill.warning,
 .status-pill.yellow {
@@ -1970,14 +1993,14 @@ textarea:focus {
     border: 1px solid rgba(239, 68, 68, 0.25);
 }
 .status-pill.danger::before,
-.status-pill.red::before { background: #ef4444; }
+.status-pill.red::before { background: var(--danger); }
 
 .status-pill.blue {
     background: rgba(56, 189, 248, 0.12);
-    color: #38bdf8;
+    color: var(--primary);
     border: 1px solid rgba(56, 189, 248, 0.25);
 }
-.status-pill.blue::before { background: #38bdf8; }
+.status-pill.blue::before { background: var(--primary); }
 
 @keyframes pulse-dot {
     0%, 100% { opacity: 1; transform: scale(1); }
@@ -2027,7 +2050,7 @@ textarea:focus {
     inset: 0;
     background: rgba(0,0,0,0.75);
     backdrop-filter: blur(4px);
-    z-index: 1000;
+    z-index: var(--z-modal-overlay);
     align-items: center;
     justify-content: center;
     padding: 20px;
@@ -2202,7 +2225,7 @@ textarea:focus {
     flex-shrink: 0;
     background: var(--card-icon-bg, rgba(255, 255, 255, 0.04));
     border: 1px solid var(--card-icon-border, rgba(255, 255, 255, 0.1));
-    color: var(--card-accent, #38bdf8);
+    color: var(--card-accent, var(--primary));
     transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
                 box-shadow 0.25s ease;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
@@ -2228,13 +2251,13 @@ textarea:focus {
 
 .stat-card--blue,
 .stat-card:has(.stat-icon.blue) {
-    --card-accent: #38bdf8;
+    --card-accent: var(--primary);
     --card-border-hover: rgba(56, 189, 248, 0.45);
     --card-glow: rgba(56, 189, 248, 0.2);
     --card-icon-bg: rgba(56, 189, 248, 0.12);
     --card-icon-border: rgba(56, 189, 248, 0.22);
 }
-.stat-icon.blue   { background: rgba(56, 189, 248, 0.12); color: #38bdf8; border-color: rgba(56, 189, 248, 0.22); }
+.stat-icon.blue   { background: rgba(56, 189, 248, 0.12); color: var(--primary); border-color: rgba(56, 189, 248, 0.22); }
 
 .stat-card--yellow,
 .stat-card:has(.stat-icon.yellow) {
@@ -2248,7 +2271,7 @@ textarea:focus {
 
 .stat-card--green,
 .stat-card:has(.stat-icon.green) {
-    --card-accent: #10b981;
+    --card-accent: var(--success);
     --card-border-hover: rgba(16, 185, 129, 0.45);
     --card-glow: rgba(16, 185, 129, 0.2);
     --card-icon-bg: rgba(16, 185, 129, 0.12);
@@ -2258,13 +2281,13 @@ textarea:focus {
 
 .stat-card--red,
 .stat-card:has(.stat-icon.red) {
-    --card-accent: #f43f5e;
+    --card-accent: var(--danger);
     --card-border-hover: rgba(244, 63, 94, 0.48);
     --card-glow: rgba(244, 63, 94, 0.2);
     --card-icon-bg: rgba(244, 63, 94, 0.12);
     --card-icon-border: rgba(244, 63, 94, 0.22);
 }
-.stat-icon.red    { background: rgba(239, 68, 68, 0.12);   color: #ef4444; border-color: rgba(239, 68, 68, 0.22); }
+.stat-icon.red    { background: rgba(239, 68, 68, 0.12);   color: var(--danger); border-color: rgba(239, 68, 68, 0.22); }
 
 .stat-card--orange,
 .stat-card:has(.stat-icon.orange) {
@@ -2589,7 +2612,7 @@ textarea:focus {
 .welcome-banner__status {
     flex: 0 0 auto;
     font-size: 0.78rem;
-    color: #38bdf8;
+    color: var(--primary);
     background: rgba(56, 189, 248, 0.1);
     border: 1px solid rgba(56, 189, 248, 0.2);
     padding: 0.4rem 0.8rem;
@@ -2778,7 +2801,7 @@ textarea:focus {
     input:focus,
     select:focus,
     textarea:focus {
-        border-color: #38bdf8 !important;
+        border-color: var(--primary) !important;
         box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.15) !important;
     }
 
@@ -3891,7 +3914,7 @@ html.reading-simplified li {
     position: fixed;
     top: 24px;
     right: 24px;
-    z-index: 999999;
+    z-index: var(--z-toast);
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -3992,26 +4015,26 @@ html.reading-simplified li {
 
 /* Variantes de cores do Toast */
 .toast-success {
-    border-left: 4px solid #10b981;
+    border-left: 4px solid var(--success);
 }
 .toast-success .toast-icon {
-    color: #10b981;
+    color: var(--success);
 }
 .toast-success .toast-progress {
-    background-color: #10b981;
+    background-color: var(--success);
 }
 
 .toast-danger,
 .toast-error {
-    border-left: 4px solid #ef4444;
+    border-left: 4px solid var(--danger);
 }
 .toast-danger .toast-icon,
 .toast-error .toast-icon {
-    color: #ef4444;
+    color: var(--danger);
 }
 .toast-danger .toast-progress,
 .toast-error .toast-progress {
-    background-color: #ef4444;
+    background-color: var(--danger);
 }
 
 .toast-warning {
@@ -4112,7 +4135,7 @@ label.table-search {
 .search-input-wrapper:focus-within .fas,
 .dashboard-search-wrapper:focus-within i,
 .dashboard-search-wrapper:focus-within .fas {
-    color: #38bdf8 !important;
+    color: var(--primary) !important;
 }
 
 .table-search input,
@@ -4310,7 +4333,7 @@ input[data-table-search] {
     margin-top: 4px;
     max-height: 250px;
     overflow-y: auto;
-    z-index: 1000;
+    z-index: var(--z-dropdown);
     box-shadow: var(--shadow-sm);
 }
 
@@ -4356,12 +4379,12 @@ input[data-table-search] {
 
 .sugestao-fonte.anvisa {
     background: rgba(56, 189, 248, 0.15);
-    color: #38bdf8;
+    color: var(--primary);
 }
 
 .sugestao-fonte.interno {
     background: rgba(16, 185, 129, 0.15);
-    color: #10b981;
+    color: var(--success);
 }
 
 .sugestao-fonte.referencia {
@@ -4381,5 +4404,23 @@ input[data-table-search] {
     text-align: center;
     color: var(--text-muted);
     font-size: 0.85rem;
+}
+
+.card,
+.table-wrapper,
+.modal-box {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+.table-wrapper,
+.stat-card,
+.metric-card,
+.stat-icon {
+    border-radius: var(--radius-md);
+}
+
+.stat-card::before,
+.metric-card::before {
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
 }
 

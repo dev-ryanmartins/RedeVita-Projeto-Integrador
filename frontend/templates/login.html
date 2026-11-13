@@ -12,6 +12,70 @@
     <link rel="stylesheet" type="text/css" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/duotone/style.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+    <style>
+        #flash-messages {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+
+        #flash-messages .alert {
+            margin-bottom: 0;
+            padding: 12px 14px;
+            border-radius: 10px;
+            font-size: 0.88rem;
+            font-weight: 500;
+            line-height: 1.45;
+            align-items: flex-start;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+        }
+
+        #flash-messages .alert i {
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        #flash-messages .alert-danger {
+            background: rgba(231, 76, 60, 0.16);
+            border: 1px solid rgba(231, 76, 60, 0.4);
+            color: #ffb4b4;
+        }
+
+        #flash-messages .alert-success {
+            background: rgba(46, 204, 113, 0.16);
+            border: 1px solid rgba(46, 204, 113, 0.4);
+            color: #9ff0bf;
+        }
+
+        #flash-messages .alert-warning {
+            background: rgba(243, 156, 18, 0.16);
+            border: 1px solid rgba(243, 156, 18, 0.4);
+            color: #ffd28a;
+        }
+
+        #flash-messages .alert-info {
+            background: rgba(52, 152, 219, 0.16);
+            border: 1px solid rgba(52, 152, 219, 0.4);
+            color: #a7d6f5;
+        }
+
+        html.light-theme #flash-messages .alert-danger { background: rgba(239, 68, 68, 0.1); border-color: rgba(185, 28, 28, 0.4); color: #991b1b; }
+        html.light-theme #flash-messages .alert-success { background: rgba(34, 197, 94, 0.12); border-color: rgba(22, 163, 74, 0.4); color: #14532d; }
+        html.light-theme #flash-messages .alert-warning { background: rgba(245, 158, 11, 0.14); border-color: rgba(180, 83, 9, 0.4); color: #92400e; }
+        html.light-theme #flash-messages .alert-info { background: rgba(14, 165, 233, 0.1); border-color: rgba(3, 105, 161, 0.4); color: #075985; }
+
+        .login-side-form .form-group label { letter-spacing: 0.01em; }
+        .login-side-form .subtitle { color: #a7b5c8; }
+
+        .login-side-form input:focus-visible,
+        .login-side-form select:focus-visible,
+        .login-side-form button:focus-visible,
+        .login-side-form a:focus-visible {
+            outline: 2px solid #7dd3fc !important;
+            outline-offset: 2px;
+        }
+    </style>
 </head>
 {% from "_brand_logo.html" import brand_logo %}
 <body style="background-color: #0b0f17;">
@@ -41,7 +105,7 @@
 
                 {% with messages = get_flashed_messages(with_categories=true) %}
                     {% if messages %}
-                        <div id="flash-messages" role="alert" aria-live="polite">
+                        <div id="flash-messages" role="alert" aria-live="polite" aria-atomic="true">
                             {% for category, message in messages %}
                                 <div class="alert alert-{{ 'danger' if category == 'danger' or category == 'error' else category }}" style="margin-bottom:16px; display:flex; align-items:center; gap:8px;">
                                     <i class="fas fa-exclamation-circle" aria-hidden="true"></i>

@@ -3,14 +3,16 @@
 
 {% block content %}
 <div class="page-wrapper">
-    <div class="page-header">
-        <div>
-            <h2><i class="fas fa-prescription"></i> Receituário Digital</h2>
-            <p class="page-subtitle">Emita ordens de retirada de medicamentos vinculadas a pacientes e médicos.</p>
+    <div class="page-header-corporate">
+        <div class="page-header-content">
+            <h1><i class="fas fa-prescription"></i> Receituário Digital</h1>
+            <p class="subtitle">Emita ordens de retirada de medicamentos vinculadas a pacientes e médicos</p>
         </div>
-        <a href="{{ url_for('pacientes.listar_pacientes') }}" class="btn-secondary">
-            <i class="fas fa-arrow-left"></i> Voltar a Pacientes
-        </a>
+        <div class="dashboard-header-actions">
+            <a href="{{ url_for('pacientes.listar_pacientes') }}" class="btn-form btn-form-secondary">
+                <i class="fas fa-arrow-left"></i> Voltar a Pacientes
+            </a>
+        </div>
     </div>
 
     <div class="dashboard-grid">

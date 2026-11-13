@@ -3,23 +3,23 @@
 
 {% block content %}
 <div class="page-wrapper">
-    <div class="page-header">
-        <div>
-            <h2><i class="fas fa-pills"></i> Inventário de Medicamentos</h2>
-            <p class="page-subtitle">Gerencie o estoque de medicamentos cadastrados.</p>
+    <div class="page-header-corporate">
+        <div class="page-header-content">
+            <h1><i class="fas fa-pills"></i> Inventário de Medicamentos</h1>
+            <p class="subtitle">Gerencie o estoque de medicamentos cadastrados</p>
         </div>
         <div style="display:flex; gap:10px;">
             <div style="display:flex; gap:8px;">
-                <a href="{{ url_for('relatorios.exportar_medicamentos') }}" class="btn-secondary"
+                <a href="{{ url_for('relatorios.exportar_medicamentos') }}" class="btn-form btn-form-secondary"
                    style="justify-content:center;" data-export-button>
                     <svg class="download-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg> CSV
                 </a>
-                <a href="{{ url_for('relatorios.exportar_medicamentos_pdf') }}" class="btn-secondary"
+                <a href="{{ url_for('relatorios.exportar_medicamentos_pdf') }}" class="btn-form btn-form-secondary"
                    style="justify-content:center;" data-export-button>
                     <svg class="download-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg> PDF
                 </a>
             </div>
-            <button class="btn-primary" onclick="abrirModal('modal-add')">
+            <button class="btn-form btn-form-primary" onclick="abrirModal('modal-add')">
                 <i class="fas fa-plus"></i> Novo Medicamento
             </button>
         </div>

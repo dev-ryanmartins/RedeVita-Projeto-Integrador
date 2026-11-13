@@ -9,11 +9,11 @@
 {% block content %}
 <div class="page-wrapper">
 
-    <div class="dashboard-header-corporate">
-        <div class="dashboard-header-content">
-            <h1>Olá, {{ (current_user.nome.split()[0] if current_user.is_authenticated else 'Usuário') }}!</h1>
+    <div class="page-header-corporate">
+        <div class="page-header-content">
+            <h1><i class="fas fa-home"></i> Olá, {{ (current_user.nome.split()[0] if current_user.is_authenticated else 'Usuário') }}!</h1>
             <p class="subtitle">Resumo completo da RedeVita em
-                <strong>{{ now.strftime('%d/%m/%Y') if now else '' }}</strong>.</p>
+                <strong>{{ now.strftime('%d/%m/%Y') if now else '' }}</strong></p>
         </div>
         <div class="dashboard-header-actions">
             <div class="time-filter-container">
@@ -24,13 +24,13 @@
                     <button class="time-filter-btn" data-period="month" onclick="filterPeriod('month')">Este Mês</button>
                 </div>
             </div>
-            <a href="{{ url_for('relatorios.relatorios') }}" class="btn-corporate btn-corporate-secondary">
+            <a href="{{ url_for('relatorios.relatorios') }}" class="btn-form btn-form-secondary">
                 <i class="fas fa-chart-bar"></i> Relatórios
             </a>
-            <a href="{{ url_for('donation.nova_doacao') }}" class="btn-corporate btn-corporate-primary">
+            <a href="{{ url_for('donation.nova_doacao') }}" class="btn-form btn-form-primary">
                 <i class="fas fa-plus"></i> Nova Doação
             </a>
-            <a href="{{ url_for('inventory.exportar_csv') }}" class="btn-corporate btn-corporate-secondary">
+            <a href="{{ url_for('inventory.exportar_csv') }}" class="btn-form btn-form-secondary">
                 <i class="fas fa-download"></i> Exportar CSV
             </a>
         </div>

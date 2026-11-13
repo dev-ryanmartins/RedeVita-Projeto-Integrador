@@ -555,6 +555,344 @@ code { font-family: 'Courier New', monospace; }
 }
 
 /* ==========================================================================
+   CLASSES CORPORATIVAS
+   ========================================================================== */
+
+.page-header-corporate {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 24px;
+    padding: 20px 24px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+}
+
+.page-header-content h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0;
+}
+
+.page-header-content h1 i {
+    color: var(--primary);
+}
+
+.page-header-content .subtitle {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-top: 4px;
+}
+
+.card-corporate {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+
+.card-header-corporate {
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-hover);
+}
+
+.card-header-corporate h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+}
+
+.card-header-corporate h3 i {
+    color: var(--primary);
+}
+
+.card-body-corporate {
+    padding: 24px;
+}
+
+.alert-banner-corporate {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 20px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 20px;
+    box-shadow: var(--shadow-sm);
+}
+
+.alert-banner-corporate.warning {
+    border-color: var(--warning);
+    background: rgba(243, 156, 18, 0.1);
+}
+
+.alert-banner-corporate.danger {
+    border-color: var(--danger);
+    background: rgba(231, 76, 60, 0.1);
+}
+
+.alert-banner-corporate.success {
+    border-color: var(--success);
+    background: rgba(46, 204, 113, 0.1);
+}
+
+.alert-banner-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.alert-banner-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: var(--bg-input);
+    color: var(--warning);
+    font-size: 16px;
+}
+
+.alert-banner-corporate.danger .alert-banner-icon {
+    color: var(--danger);
+}
+
+.alert-banner-corporate.success .alert-banner-icon {
+    color: var(--success);
+}
+
+.alert-banner-text {
+    flex: 1;
+    color: var(--text-main);
+    font-size: 0.9rem;
+}
+
+.alert-banner-text strong {
+    display: block;
+    margin-bottom: 2px;
+}
+
+.alert-banner-action {
+    color: var(--primary);
+    font-size: 0.88rem;
+    font-weight: 500;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.alert-banner-action:hover {
+    color: var(--primary-dark);
+}
+
+.table-wrapper-corporate {
+    overflow-x: auto;
+    overflow-y: visible;
+    width: 100%;
+    max-width: 100%;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+}
+
+.styled-table-corporate {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--bg-card);
+}
+
+.styled-table-corporate thead {
+    background: var(--bg-hover);
+}
+
+.styled-table-corporate th {
+    padding: 14px 16px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: var(--text-main);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+}
+
+.styled-table-corporate td {
+    padding: 14px 16px;
+    color: var(--text-main);
+    font-size: 0.9rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.styled-table-corporate tbody tr:hover {
+    background: var(--bg-hover);
+}
+
+.styled-table-corporate tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.status-pill-corporate {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.status-pill-corporate.green {
+    background: rgba(46, 204, 113, 0.15);
+    color: var(--success);
+    border: 1px solid rgba(46, 204, 113, 0.3);
+}
+
+.status-pill-corporate.yellow {
+    background: rgba(243, 156, 18, 0.15);
+    color: var(--warning);
+    border: 1px solid rgba(243, 156, 18, 0.3);
+}
+
+.status-pill-corporate.red {
+    background: rgba(231, 76, 60, 0.15);
+    color: var(--danger);
+    border: 1px solid rgba(231, 76, 60, 0.3);
+}
+
+.status-pill-corporate.blue {
+    background: rgba(52, 152, 219, 0.15);
+    color: var(--primary);
+    border: 1px solid rgba(52, 152, 219, 0.3);
+}
+
+.status-pill-corporate.gray {
+    background: rgba(148, 163, 184, 0.15);
+    color: var(--text-muted);
+    border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.empty-state-corporate {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    text-align: center;
+    color: var(--text-muted);
+}
+
+.empty-state-corporate i {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.empty-state-corporate p {
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+.btn-corporate-sm {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    border: 1px solid transparent;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.btn-corporate-sm:hover {
+    transform: translateY(-1px);
+}
+
+.btn-corporate-info {
+    background: rgba(52, 152, 219, 0.15);
+    color: var(--primary);
+    border-color: rgba(52, 152, 219, 0.3);
+}
+
+.btn-corporate-info:hover {
+    background: rgba(52, 152, 219, 0.25);
+    border-color: var(--primary);
+}
+
+.btn-corporate-warning {
+    background: rgba(243, 156, 18, 0.15);
+    color: var(--warning);
+    border-color: rgba(243, 156, 18, 0.3);
+}
+
+.btn-corporate-warning:hover {
+    background: rgba(243, 156, 18, 0.25);
+    border-color: var(--warning);
+}
+
+.btn-corporate-danger {
+    background: rgba(231, 76, 60, 0.15);
+    color: var(--danger);
+    border-color: rgba(231, 76, 60, 0.3);
+}
+
+.btn-corporate-danger:hover {
+    background: rgba(231, 76, 60, 0.25);
+    border-color: var(--danger);
+}
+
+.action-buttons-inline {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.inline-form {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.form-select-sm {
+    padding: 6px 32px 6px 12px;
+    font-size: 0.85rem;
+    border-radius: 6px;
+}
+
+/* ==========================================================================
+   FOOTER
+   ========================================================================== */
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    overflow-y: visible;
+    box-sizing: border-box;
+}
+
+/* ==========================================================================
    FLASH MESSAGES
    ========================================================================== */
 .flash-messages {

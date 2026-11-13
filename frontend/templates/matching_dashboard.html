@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Matching Ofertas-Necessidades - RedeVita{% endblock %}
+
+{% block content %}
+<div class="glass-panel" style="padding:30px; max-width:1200px; margin:30px auto;">
+    <h2>Matching Ofertas-Necessidades</h2>
+    <p style="color:var(--text-muted); margin-bottom:30px;">
+        Sistema de correspondência automática entre ofertas de medicamentos e necessidades institucionais.
+    </p>
+
+    <table style="width:100%; border-collapse:collapse; margin-top:20px;">
+        <thead>
+            <tr style="background:rgba(255,255,255,0.05);">
+                <th style="padding:15px; text-align:left; border-bottom:1px solid rgba(255,255,255,0.1);">ID</th>
+                <th style="padding:15px; text-align:left; border-bottom:1px solid rgba(255,255,255,0.1);">Instituição</th>
+                <th style="padding:15px; text-align:left; border-bottom:1px solid rgba(255,255,255,0.1);">Produto</th>
+                <th style="padding:15px; text-align:left; border-bottom:1px solid rgba(255,255,255,0.1);">Quantidade</th>
+                <th style="padding:15px; text-align:left; border-bottom:1px solid rgba(255,255,255,0.1);">Prioridade</th>
+                <th style="padding:15px; text-align:left; border-bottom:1px solid rgba(255,255,255,0.1);">Status</th>
+                <th style="padding:15px; text-align:center; border-bottom:1px solid rgba(255,255,255,0.1);">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for n in necessidades %}
+            <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                <td style="padding:15px;">{{ n.id }}</td>
+                <td style="padding:15px;">{{ n.instituicao.nome if n.instituicao else n.nome_instituicao }}</td>
+                <td style="padding:15px;">{{ n.produto_descritivo or 'N/A' }}</td>
+                <td style="padding:15px;">{{ n.quantidade_solicitada }}</td>
+                <td style="padding:15px;">{{ n.prioridade }}</td>
+                <td style="padding:15px;">{{ n.status }}</td>
+                <td style="padding:15px; text-align:center;">
+                    <button onclick="buscarMatches({{ n.id }})" class="btn-primary" style="padding:5px 10px; font-size:0.85rem;">
+                        <i class="fas fa-search"></i> Buscar Matches
+                    </button>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="7" style="padding:30px; text-align:center; color:var(--text-muted);">
+                    Nenhuma necessidade cadastrada.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Div para mostrar resultados de matching -->
+    <div id="resultados-matching" style="margin-top:30px; display:none; padding:20px; 
+         background:rgba(255,255,255,0.05); border-radius:10px; border:1px solid rgba(255,255,255,0.1);">
+        <h3 style="margin-bottom:15px;">Resultados do Matching</h3>
+        <div id="lista-matches"></div>
+    </div>
+</div>
+
+<script>
+function buscarMatches(necessidadeId) {
+    fetch(`/matching/api/sugerir_para_necessidade/${necessidadeId}`)
+        .then(response => response.json())
+        .then(data => {
+            const container = document.getElementById('resultados-matching');
+            const lista = document.getElementById('lista-matches');
+            
+            container.style.display = 'block';
+            lista.innerHTML = '';
+            
+            if (data.matches && data.matches.length > 0) {
+                data.matches.forEach(match => {
+                    lista.innerHTML += `
+                        <div style="padding:15px; margin-bottom:10px; background:rgba(255,255,255,0.03); border-radius:5px; border:1px solid rgba(255,255,255,0.1);">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <div>
+                                    <strong>${match.medicamento}</strong> - ${match.farmacia}
+                                    <span style="color:var(--text-muted); font-size:0.85rem; margin-left:10px;">
+                                        ${match.quantidade_disponivel} disponíveis
+                                    </span>
+                                </div>
+                                <div style="text-align:right;">
+                                    <span style="background:rgba(0,255,0,0.2); color:#0f0; padding:5px 10px; border-radius:5px;">
+                                        Pontuação: ${match.pontuacao}
+                                    </span>
+                                </div>
+                            </div>
+                            <div style="color:var(--text-muted); font-size:0.85rem; margin-top:5px;">
+                                ${match.motivo}
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                lista.innerHTML = '<p style="color:var(--text-muted);">Nenhum match encontrado.</p>';
+            }
+        });
+}
+</script>
+{% endblock %}

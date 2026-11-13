@@ -15,7 +15,11 @@ CREATE TABLE IF NOT EXISTS usuarios (
   email VARCHAR(150) NULL UNIQUE,
   senha VARCHAR(255) NOT NULL,
   cargo VARCHAR(50) DEFAULT 'Voluntário',
-  ativo BOOLEAN DEFAULT TRUE
+  ativo BOOLEAN DEFAULT TRUE,
+  senha_trocada BOOLEAN NOT NULL DEFAULT TRUE,
+  credencial_versao INT NOT NULL DEFAULT 1,
+  farmacia_id INT NULL,
+  instituicao_id INT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS medicamentos_referencia (
@@ -40,7 +44,9 @@ CREATE TABLE IF NOT EXISTS medicamentos (
   tarja VARCHAR(30) NOT NULL DEFAULT 'Sem Tarja',
   principio_ativo VARCHAR(120) NULL,
   uso_continuo BOOLEAN DEFAULT FALSE,
+  ativo BOOLEAN NOT NULL DEFAULT TRUE,
   referencia_id INT NULL,
+  observacoes TEXT NULL,
   CONSTRAINT fk_medicamentos_referencia FOREIGN KEY (referencia_id) REFERENCES medicamentos_referencia(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -60,6 +66,8 @@ CREATE TABLE IF NOT EXISTS farmacias (
   cnpj VARCHAR(20) NOT NULL UNIQUE,
   endereco VARCHAR(255) NOT NULL,
   responsavel VARCHAR(150) NOT NULL,
+  latitude FLOAT NULL,
+  longitude FLOAT NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -69,6 +77,8 @@ CREATE TABLE IF NOT EXISTS pacientes (
   cpf VARCHAR(14) NOT NULL UNIQUE,
   data_nascimento DATE NOT NULL,
   endereco VARCHAR(255) NULL,
+  telefone VARCHAR(20) NULL,
+  email VARCHAR(150) NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -96,6 +106,13 @@ CREATE TABLE IF NOT EXISTS doacoes (
   medicamento_id INT NOT NULL,
   data_doacao DATETIME DEFAULT CURRENT_TIMESTAMP,
   quantidade INT NOT NULL,
+  peso_gramas FLOAT NULL,
+  status_conferencia VARCHAR(50) DEFAULT 'APROVADO',
+  cancelado BOOLEAN NOT NULL DEFAULT FALSE,
+  cancelado_por_id INT NULL,
+  cancelado_em DATETIME NULL,
+  justificativa_cancelamento TEXT NULL,
+  compensacao_id INT NULL,
   CONSTRAINT fk_doacoes_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
   CONSTRAINT fk_doacoes_medicamento FOREIGN KEY (medicamento_id) REFERENCES medicamentos(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -109,6 +126,29 @@ CREATE TABLE IF NOT EXISTS logs_atividade (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_logs_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Instituições receptoras (referenciada por usuarios.instituicao_id)
+CREATE TABLE IF NOT EXISTS instituicoes (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  nome VARCHAR(200) NOT NULL,
+  cnpj VARCHAR(18) NULL UNIQUE,
+  endereco VARCHAR(300) NULL,
+  responsavel VARCHAR(100) NULL,
+  telefone VARCHAR(20) NULL,
+  email VARCHAR(150) NULL,
+  ativo BOOLEAN NOT NULL DEFAULT TRUE,
+  criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Chaves estrangeiras adicionadas após a criação de todas as tabelas
+-- (garante integridade referencial mesmo com a ordem de criação acima)
+ALTER TABLE usuarios
+  ADD CONSTRAINT fk_usuarios_farmacia FOREIGN KEY (farmacia_id) REFERENCES farmacias(id) ON DELETE SET NULL,
+  ADD CONSTRAINT fk_usuarios_instituicao FOREIGN KEY (instituicao_id) REFERENCES instituicoes(id) ON DELETE SET NULL;
+
+ALTER TABLE doacoes
+  ADD CONSTRAINT fk_doacoes_cancelado_por FOREIGN KEY (cancelado_por_id) REFERENCES usuarios(id) ON DELETE SET NULL,
+  ADD CONSTRAINT fk_doacoes_compensacao FOREIGN KEY (compensacao_id) REFERENCES doacoes(id) ON DELETE SET NULL;
 
 SET FOREIGN_KEY_CHECKS = 1;
 

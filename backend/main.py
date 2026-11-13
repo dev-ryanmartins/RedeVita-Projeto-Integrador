@@ -83,11 +83,13 @@ CSP = {
         "'unsafe-inline'",
         'https://fonts.googleapis.com',
         'https://cdnjs.cloudflare.com',
+        'https://unpkg.com',
     ],
     'font-src': [
         "'self'",
         'https://fonts.gstatic.com',
         'https://cdnjs.cloudflare.com',
+        'https://unpkg.com',
     ],
     'img-src': [
         "'self'",

@@ -42,6 +42,9 @@ class Config:
         # In development, generate a different key than session
         JWT_SECRET_KEY = SECRET_KEY + "-jwt-different"
 
+    # Explicit session-secret alias (kept in sync with SECRET_KEY)
+    SESSION_SECRET = SECRET_KEY
+
     DATABASE_URL = os.environ.get("DATABASE_URL", "")
 
     if DATABASE_URL.startswith("postgres://"):
@@ -64,27 +67,33 @@ class Config:
     elif SQLALCHEMY_DATABASE_URI.startswith("sqlite"):
         SQLALCHEMY_ENGINE_OPTIONS["connect_args"] = {"timeout": 5}
 
+    # External integrations
+    # ViaCEP public postal-code API (trailing slash kept for safe concatenation)
+    VIA_CEP_API_URL = os.environ.get("VIA_CEP_API_URL") or "https://viacep.com.br/ws/"
+
     # Email configuration
+    # Development/testing default: local SMTP debugging server
+    #   python -m smtpd -c DebuggingServer -n localhost 1025
+    # Production default: Mailtrap Sandbox (sandbox.smtp.mailtrap.io:2525)
+    # Every value can be overridden through environment variables.
     if ENV == "development" or ENV == "testing":
-        # Use local SMTP debugging server for development/testing
-        # Start with: python -m smtpd -c DebuggingServer -n localhost 1025
-        MAIL_SERVER = os.environ.get("MAIL_SERVER", "localhost")
-        MAIL_PORT = int(os.environ.get("MAIL_PORT", 1025))
-        MAIL_USE_TLS = False
-        MAIL_USE_SSL = False
-        MAIL_USERNAME = ""
-        MAIL_PASSWORD = ""
+        MAIL_SERVER = os.environ.get("MAIL_SERVER") or "localhost"
+        MAIL_PORT = int(os.environ.get("MAIL_PORT") or 1025)
+        MAIL_USE_TLS = os.environ.get("MAIL_USE_TLS", "false").lower() == "true"
+        MAIL_USE_SSL = os.environ.get("MAIL_USE_SSL", "false").lower() == "true"
+        MAIL_USERNAME = os.environ.get("MAIL_USERNAME", "")
+        MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD", "")
         MAIL_DEFAULT_SENDER = os.environ.get("MAIL_DEFAULT_SENDER", "RedeVita <noreply@redevita.com>")
-        MAIL_DEBUG = True
+        MAIL_DEBUG = os.environ.get("MAIL_DEBUG", "true").lower() == "true"
     else:
-        # Production email settings
-        MAIL_SERVER = os.environ.get("MAIL_SERVER", "smtp.gmail.com")
-        MAIL_PORT = int(os.environ.get("MAIL_PORT", 587))
+        MAIL_SERVER = os.environ.get("MAIL_SERVER") or "sandbox.smtp.mailtrap.io"
+        MAIL_PORT = int(os.environ.get("MAIL_PORT") or 2525)
         MAIL_USE_TLS = os.environ.get("MAIL_USE_TLS", "true").lower() == "true"
+        MAIL_USE_SSL = os.environ.get("MAIL_USE_SSL", "false").lower() == "true"
         MAIL_USERNAME = os.environ.get("MAIL_USERNAME", "")
         MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD", "")
         MAIL_DEFAULT_SENDER = os.environ.get("MAIL_DEFAULT_SENDER", "RedeVita <nao-responda@redevita.com>")
-        MAIL_DEBUG = False
+        MAIL_DEBUG = os.environ.get("MAIL_DEBUG", "false").lower() == "true"
 
     TWILIO_ACCOUNT_SID = os.environ.get("TWILIO_ACCOUNT_SID", "")
     TWILIO_AUTH_TOKEN = os.environ.get("TWILIO_AUTH_TOKEN", "")

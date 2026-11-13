@@ -8,9 +8,16 @@ services:
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - SECRET_KEY=${SECRET_KEY}
+      - SESSION_SECRET=${SESSION_SECRET}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
       - JWT_EXPIRATION=${JWT_EXPIRATION:-3600}
       - FLASK_ENV=${FLASK_ENV:-production}
+      - VIA_CEP_API_URL=${VIA_CEP_API_URL:-https://viacep.com.br/ws/}
+      - MAIL_SERVER=${MAIL_SERVER:-sandbox.smtp.mailtrap.io}
+      - MAIL_PORT=${MAIL_PORT:-2525}
+      - MAIL_USE_TLS=${MAIL_USE_TLS:-true}
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
     depends_on:
       db:
         condition: service_healthy

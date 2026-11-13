@@ -3,13 +3,13 @@
 
 {% block content %}
 <div class="page-wrapper">
-    <div class="page-header">
-        <div>
-            <h2><i class="fas fa-chart-bar"></i> Relatórios e Exportação</h2>
-            <p class="page-subtitle">Visualize alertas e exporte dados em CSV/PDF para análise.</p>
+    <div class="page-header-corporate">
+        <div class="page-header-content">
+            <h1><i class="fas fa-chart-bar"></i> Relatórios e Exportação</h1>
+            <p class="subtitle">Visualize alertas e exporte dados em CSV/PDF para análise</p>
         </div>
         <div style="display:flex; gap:10px;">
-            <a href="{{ url_for('relatorios.exportar_sumario_pdf') }}" class="btn-primary">
+            <a href="{{ url_for('relatorios.exportar_sumario_pdf') }}" class="btn-form btn-form-primary">
                 <i class="fas fa-file-pdf"></i> Sumário PDF
             </a>
         </div>

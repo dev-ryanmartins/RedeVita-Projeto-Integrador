@@ -50,7 +50,7 @@ class TestLivenessProbe:
             
             assert response.status_code == 200
             data = response.get_json()
-            assert data['status'] == 'alive'
+            assert data['status'] == 'ok'
             assert data['type'] == 'liveness'
     
     def test_liveness_nao_depende_banco(self, app):

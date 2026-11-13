@@ -53,3 +53,16 @@ tmp/
 .replit
 replit.nix
 attached_assets/
+
+# E2E testing
+e2e/
+e2e-results.xml
+test-results/
+playwright-report/
+playwright.config.ts
+locustfile.py
+
+# Node.js
+node_modules/
+package-lock.json
+package.json

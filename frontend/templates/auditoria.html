@@ -63,21 +63,18 @@
 {% endblock %}
 
 {% block content %}
-<div class="page-wrapper" style="background-color: var(--bg-app); color: var(--text-primary);">
-    <div class="page-header">
-        <div>
-            <h2 style="color: var(--text-primary);"><i class="fas fa-vials" style="color: var(--primary-blue);"></i> Auditoria de Validade</h2>
-            <p class="page-subtitle" style="color: var(--text-secondary);">Controle de lotes vencidos e próximos ao vencimento. Conformidade ANVISA / Portaria 344.</p>
+<div class="page-wrapper">
+    <div class="page-header-corporate">
+        <div class="page-header-content">
+            <h1><i class="fas fa-vials"></i> Auditoria de Validade</h1>
+            <p class="subtitle">Controle de lotes vencidos e próximos ao vencimento. Conformidade ANVISA / Portaria 344</p>
         </div>
         <div style="display:flex; gap:10px; align-items:center;">
             <span style="color:var(--text-muted); font-size:0.82rem;">
                 <i class="fas fa-calendar-day"></i> {{ hoje.strftime('%d/%m/%Y') }}
             </span>
             {% if current_user.cargo in ('Admin', 'Farmacêutico') %}
-            <a href="{{ url_for('inventory.listar_medicamentos') }}" class="btn-secondary"
-               style="background: var(--bg-surface); border: 1px solid var(--border-default); color: var(--text-primary); padding: 8px 16px; border-radius: 8px; text-decoration: none; display: flex; align-items: center; gap: 8px;"
-               onmouseover="this.style.backgroundColor='var(--bg-card-hover)';"
-               onmouseout="this.style.backgroundColor='var(--bg-surface)';">
+            <a href="{{ url_for('inventory.listar_medicamentos') }}" class="btn-form btn-form-secondary">
                 <i class="fas fa-pills"></i> Ir ao Inventário
             </a>
             {% endif %}

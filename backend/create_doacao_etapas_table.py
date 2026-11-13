@@ -13,7 +13,7 @@ from app.database import db
 app = create_app()
 
 with app.app_context():
-    # Cria apenas a tabela doacoes_etapas se não existir
+
     inspector = db.inspect(db.engine)
     if inspector.has_table('doacoes_etapas'):
         print("Tabela 'doacoes_etapas' já existe.")

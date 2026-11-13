@@ -33,24 +33,25 @@
 {% block content %}
 <div class="page-wrapper">
 
-    <div class="page-header">
-        <div>
-            <h2><i class="fas fa-hand-holding-heart"></i> Gerenciar Doações</h2>
-            <p class="page-subtitle">Registre a saída de medicamentos para unidades ou pacientes.</p>
+    <div class="page-header-corporate">
+        <div class="page-header-content">
+            <h1><i class="fas fa-hand-holding-heart"></i> Gerenciar Doações</h1>
+            <p class="subtitle">Registre a saída de medicamentos para unidades ou pacientes</p>
         </div>
     </div>
 
-    <div class="quick-actions" style="margin-bottom: 28px;">
-        <h3>Registrar Nova Saída</h3>
-        <form action="{{ url_for('donation.nova_doacao') }}" method="POST">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-end;">
-
-                <div class="form-group" style="flex: 2; min-width: 240px;">
-                    <label for="medicamento_id">Medicamento <span class="required">*</span></label>
-                    <div class="input-with-icon">
-                        <i class="fas fa-pills"></i>
-                        <select name="medicamento_id" id="medicamento_id" required>
+    <div class="card-corporate">
+        <div class="card-header-corporate">
+            <h3><i class="fas fa-plus-circle"></i> Registrar Nova Saída</h3>
+        </div>
+        <div class="card-body-corporate">
+            <form action="{{ url_for('donation.nova_doacao') }}" method="POST" class="form-section">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <div class="form-row-4">
+                    <div class="form-group">
+                        <label for="medicamento_id">Medicamento <span class="required">*</span></label>
+                        <select id="medicamento_id" name="medicamento_id" required>
                             <option value="">Selecione o medicamento...</option>
                             {% for med in medicamentos %}
                             <option value="{{ med.id }}" data-lote="{{ med.lote }}" data-validade="{{ med.data_validade.strftime('%d/%m/%Y') if med.data_validade else 'N/A' }}" data-controlled="{{ 'true' if med.controlado else 'false' }}">
@@ -59,29 +60,20 @@
                             {% endfor %}
                         </select>
                     </div>
-                </div>
 
-                <div class="form-group" style="min-width: 130px;">
-                    <label for="quantidade">Quantidade <span class="required">*</span></label>
-                    <div class="input-with-icon">
-                        <i class="fas fa-hashtag"></i>
-                        <input type="number" name="quantidade" id="quantidade" min="1" placeholder="Ex: 10" required>
+                    <div class="form-group">
+                        <label for="quantidade">Quantidade <span class="required">*</span></label>
+                        <input type="number" id="quantidade" name="quantidade" min="1" placeholder="Ex: 10" required>
                     </div>
-                </div>
 
-                <div class="form-group" style="flex: 1; min-width: 200px;">
-                    <label for="receita_medica">Receita Médica <span class="required" id="receita-required">*</span></label>
-                    <div class="input-with-icon">
-                        <i class="fas fa-prescription"></i>
-                        <input type="text" name="receita_medica" id="receita_medica" placeholder="Número da receita ou CRM do médico" required>
+                    <div class="form-group">
+                        <label for="receita_medica">Receita Médica <span class="required" id="receita-required">*</span></label>
+                        <input type="text" id="receita_medica" name="receita_medica" placeholder="Número da receita ou CRM do médico" required>
                     </div>
-                </div>
 
-                <div class="form-group" style="min-width: 180px;">
-                    <label for="aprovacao_farmaceutico">Aprovação Farmacêutico <span class="required">*</span></label>
-                    <div class="input-with-icon">
-                        <i class="fas fa-user-md"></i>
-                        <select name="aprovacao_farmaceutico" id="aprovacao_farmaceutico" required>
+                    <div class="form-group">
+                        <label for="aprovacao_farmaceutico">Aprovação Farmacêutico <span class="required">*</span></label>
+                        <select id="aprovacao_farmaceutico" name="aprovacao_farmaceutico" required>
                             <option value="">Selecione...</option>
                             <option value="aprovado">✓ Aprovado</option>
                             <option value="pendente">⏳ Pendente</option>
@@ -89,13 +81,13 @@
                     </div>
                 </div>
 
-                <div style="margin-bottom: 0;">
-                    <button type="submit" class="btn-primary" style="height: 42px; margin-top: auto;" onclick="validarReceita(event)">
+                <div class="form-actions">
+                    <button type="submit" class="btn-form btn-form-primary" onclick="validarReceita(event)">
                         <i class="fas fa-check"></i> Confirmar
                     </button>
                 </div>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
 
     <div class="recent-section">

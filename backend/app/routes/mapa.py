@@ -226,29 +226,13 @@ def estabelecimentos_proximos():
     except (TypeError, ValueError):
         raio = 5000
 
-    query = (
-        f"[out:json][timeout:10];"
-        f"("
-        f'nwr["amenity"~"^(pharmacy|hospital|clinic|doctors)$"](around:{int(raio)},{lat},{lon});'
-        f'nwr["healthcare"](around:{int(raio)},{lat},{lon});'
-        f");"
-        f"out center tags 100;"
-    )
+    # Overpass API instável/bloqueada — usa Nominatim com viewbox limitada.
+    # Uma consulta por tipo de estabelecimento (rate limit: ~1 req/s).
+    delta_lat = raio / 111320.0
+    delta_lon = raio / (111320.0 * max(0.2, math.cos(math.radians(lat))))
+    viewbox = f"{lon - delta_lon},{lat + delta_lat},{lon + delta_lon},{lat - delta_lat}"
 
-    try:
-        resp = requests.post(
-            "https://overpass-api.de/api/interpreter",
-            data={"data": query},
-            headers={"User-Agent": "RedeVita/1.0 (projeto integrador - mapa de saude)"},
-            timeout=15,
-        )
-        resp.raise_for_status()
-        elementos = resp.json().get("elements", [])
-    except Exception as e:
-        current_app.logger.warning(f"Falha na consulta Overpass: {e}")
-        return resposta_erro("Serviço de estabelecimentos indisponível", 502)
-
-    tipo_label = {
+    consultas = {
         "pharmacy": "Farmácia",
         "hospital": "Hospital",
         "clinic": "Clínica / UBS",
@@ -256,23 +240,53 @@ def estabelecimentos_proximos():
     }
 
     estabelecimentos = []
-    for el in elementos:
-        tags = el.get("tags") or {}
-        elat = el.get("lat") or (el.get("center") or {}).get("lat")
-        elon = el.get("lon") or (el.get("center") or {}).get("lon")
-        if elat is None or elon is None:
+    vistos = set()
+    falhas = 0
+    for termo, label in consultas.items():
+        try:
+            resp = requests.get(
+                "https://nominatim.openstreetmap.org/search",
+                params={
+                    "q": termo,
+                    "format": "jsonv2",
+                    "viewbox": viewbox,
+                    "bounded": 1,
+                    "limit": 50,
+                    "countrycodes": "br",
+                },
+                headers={"User-Agent": "RedeVita/1.0 (projeto integrador - mapa de saude)"},
+                timeout=10,
+            )
+            resp.raise_for_status()
+            resultados = resp.json()
+        except Exception as e:
+            current_app.logger.warning(f"Nominatim falhou para '{termo}': {e}")
+            falhas += 1
             continue
-        amenity = tags.get("amenity") or "healthcare"
-        estabelecimentos.append(
-            {
-                "nome": tags.get("name") or tags.get("name:pt") or tipo_label.get(amenity, "Estabelecimento de saúde"),
-                "lat": float(elat),
-                "lon": float(elon),
-                "tipo": amenity,
-                "tipo_label": tipo_label.get(amenity, tags.get("healthcare", "Estabelecimento de saúde")),
-                "endereco": tags.get("addr:street", "") + (", " + tags.get("addr:housenumber", "") if tags.get("addr:housenumber") else ""),
-            }
-        )
+
+        for r in resultados:
+            try:
+                elat, elon = float(r["lat"]), float(r["lon"])
+            except (KeyError, TypeError, ValueError):
+                continue
+            chave = (round(elat, 5), round(elon, 5), r.get("display_name", "")[:40])
+            if chave in vistos:
+                continue
+            vistos.add(chave)
+            endereco = r.get("display_name", "")
+            estabelecimentos.append(
+                {
+                    "nome": r.get("name") or endereco.split(",")[0] or label,
+                    "lat": elat,
+                    "lon": elon,
+                    "tipo": termo,
+                    "tipo_label": label,
+                    "endereco": endereco,
+                }
+            )
+
+    if not estabelecimentos and falhas == len(consultas):
+        return resposta_erro("Serviço de estabelecimentos indisponível", 502)
 
     return resposta_ok({"estabelecimentos": estabelecimentos, "total": len(estabelecimentos), "raio_m": int(raio)})
 

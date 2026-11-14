@@ -66,3 +66,6 @@ locustfile.py
 node_modules/
 package-lock.json
 package.json
+
+# Documentacao local de apresentacao (nao versionada)
+GUIA_APRESENTACAO.md

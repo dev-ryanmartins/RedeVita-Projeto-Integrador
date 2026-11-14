@@ -99,9 +99,12 @@ class SMSService:
         
         try:
             from twilio.rest import Client
-            
-            # Cria cliente Twilio
-            client = Client(config['account_sid'], config['auth_token'])
+            from twilio.http.http_client import TwilioHttpClient
+
+            # Cliente HTTP com timeout curto (apresentação/offline) para não
+            # bloquear a requisição caso a rede externa esteja indisponível.
+            http_client = TwilioHttpClient(timeout=5)
+            client = Client(config['account_sid'], config['auth_token'], http_client=http_client)
             
             # Envia SMS
             message_obj = client.messages.create(

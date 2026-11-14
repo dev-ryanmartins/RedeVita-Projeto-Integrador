@@ -141,8 +141,8 @@ class EmailService:
             if message.html_body:
                 msg.attach(MIMEText(message.html_body, 'html'))
             
-            # Conecta ao servidor SMTP com timeout
-            with smtplib.SMTP(config['server'], config['port'], timeout=30) as server:
+            # Conecta ao servidor SMTP com timeout curto (apresentação/offline)
+            with smtplib.SMTP(config['server'], config['port'], timeout=5) as server:
                 if config['use_tls']:
                     server.starttls()
                 server.login(config['username'], config['password'])

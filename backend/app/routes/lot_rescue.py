@@ -10,7 +10,12 @@ NOTA: Não faz alterações em dados reais. Apenas simulação.
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for
 from flask_login import login_required, current_user
 from app.core.decorators import farmaceutico_required, admin_required
-from app.core.api_responses import resposta_ok, resposta_erro
+from app.core.api_responses import (
+    resposta_ok,
+    resposta_erro,
+    ERRO_VALIDACAO,
+    ERRO_INTERNO,
+)
 from app.services.lot_rescue_service import LotRescueService
 import logging
 
@@ -72,16 +77,10 @@ def listar_lotes():
 
     except ValueError as e:
         logger.warning(f"Parâmetro inválido: {e}")
-        return resposta_erro(
-            mensagem=str(e),
-            codigo=400
-        )
+        return resposta_erro(ERRO_VALIDACAO, str(e), 400)
     except Exception as e:
         logger.error(f"Erro ao listar lotes: {e}")
-        return resposta_erro(
-            mensagem="Erro ao listar lotes",
-            codigo=500
-        )
+        return resposta_erro(ERRO_INTERNO, "Erro ao listar lotes", 500)
 
 
 @lot_rescue_bp.route('/api/janela-resgate-lotes/resumo', methods=['GET'])
@@ -115,16 +114,10 @@ def resumo_lotes():
 
     except ValueError as e:
         logger.warning(f"Parâmetro inválido: {e}")
-        return resposta_erro(
-            mensagem=str(e),
-            codigo=400
-        )
+        return resposta_erro(ERRO_VALIDACAO, str(e), 400)
     except Exception as e:
         logger.error(f"Erro ao calcular resumo: {e}")
-        return resposta_erro(
-            mensagem="Erro ao calcular resumo",
-            codigo=500
-        )
+        return resposta_erro(ERRO_INTERNO, "Erro ao calcular resumo", 500)
 
 
 @lot_rescue_bp.route('/api/janela-resgate-lotes/simular', methods=['POST'])
@@ -146,26 +139,17 @@ def simular_cenario():
         data = request.get_json()
 
         if not data:
-            return resposta_erro(
-                mensagem="Corpo da requisição vazio",
-                codigo=400
-            )
+            return resposta_erro(ERRO_VALIDACAO, "Corpo da requisição vazio", 400)
 
         lote_id = data.get('lote_id')
         etapas = data.get('etapas')
         seed = data.get('seed')
 
         if not lote_id:
-            return resposta_erro(
-                mensagem="lote_id é obrigatório",
-                codigo=400
-            )
+            return resposta_erro(ERRO_VALIDACAO, "lote_id é obrigatório", 400)
 
         if not etapas or not isinstance(etapas, list):
-            return resposta_erro(
-                mensagem="etapas deve ser uma lista não vazia",
-                codigo=400
-            )
+            return resposta_erro(ERRO_VALIDACAO, "etapas deve ser uma lista não vazia", 400)
 
         service = LotRescueService()
         resultado = service.simular_cenario_resgate(
@@ -181,13 +165,7 @@ def simular_cenario():
 
     except ValueError as e:
         logger.warning(f"Parâmetro inválido: {e}")
-        return resposta_erro(
-            mensagem=str(e),
-            codigo=400
-        )
+        return resposta_erro(ERRO_VALIDACAO, str(e), 400)
     except Exception as e:
         logger.error(f"Erro ao simular cenário: {e}")
-        return resposta_erro(
-            mensagem="Erro ao simular cenário",
-            codigo=500
-        )
+        return resposta_erro(ERRO_INTERNO, "Erro ao simular cenário", 500)

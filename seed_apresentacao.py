@@ -25,6 +25,8 @@ for caminho in (BASE_DIR, BACKEND_DIR):
     if caminho not in sys.path:
         sys.path.insert(0, caminho)
 
+from sqlalchemy.exc import IntegrityError
+
 from backend.main import create_app
 from app.database import db
 from app.core.security import criptografar_senha
@@ -108,13 +110,27 @@ def _formatar_cpf(cpf: str) -> str:
 
 
 def _primeiro_ou_criar(modelo, filtros, **campos):
-    """Busca por chave natural; cria se não existir; retorna (obj, criado)."""
+    """Busca por chave natural; cria se não existir; retorna (obj, criado).
+
+    Idempotente por construção: se o registro já existir (pela chave natural)
+    é reaproveitado. A inserção usa um SAVEPOINT para que, caso a chave natural
+    informada não cubra alguma constraint UNIQUE (ex.: e-mail já usado por outro
+    registro), o erro de chave duplicada seja absorvido sem abortar a transação
+    externa — o script pode ser reexecutado quantas vezes for necessário.
+    """
     obj = modelo.query.filter_by(**filtros).first()
     if obj:
         return obj, False
     obj = modelo(**campos)
-    db.session.add(obj)
-    db.session.flush()
+    try:
+        with db.session.begin_nested():
+            db.session.add(obj)
+    except IntegrityError:
+        # Chave já existente: reaproveita o registro existente.
+        obj = modelo.query.filter_by(**filtros).first()
+        if obj is None:
+            raise
+        return obj, False
     return obj, True
 
 

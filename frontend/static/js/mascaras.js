@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 try {
                     const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`, {
-                        signal: AbortSignal.timeout(10000) // Timeout de 10 segundos
+                        signal: AbortSignal.timeout(5000) // Timeout de 5 segundos (contingência offline)
                     });
                     
                     if (!response.ok) {

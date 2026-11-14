@@ -10,7 +10,12 @@ NOTA: Não faz alterações em dados reais. Apenas análise.
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for
 from flask_login import login_required
 from app.core.decorators import admin_required
-from app.core.api_responses import resposta_ok, resposta_erro
+from app.core.api_responses import (
+    resposta_ok,
+    resposta_erro,
+    ERRO_VALIDACAO,
+    ERRO_INTERNO,
+)
 from app.services.iot_integrity_radar import IotIntegrityRadarService
 import logging
 
@@ -64,16 +69,10 @@ def obter_resumo():
 
     except ValueError as e:
         logger.warning(f"Parâmetro inválido: {e}")
-        return resposta_erro(
-            mensagem=str(e),
-            codigo=400
-        )
+        return resposta_erro(ERRO_VALIDACAO, str(e), 400)
     except Exception as e:
         logger.error(f"Erro ao calcular resumo: {e}")
-        return resposta_erro(
-            mensagem="Erro ao calcular resumo",
-            codigo=500
-        )
+        return resposta_erro(ERRO_INTERNO, "Erro ao calcular resumo", 500)
 
 
 @iot_integrity_radar_bp.route('/api/radar-integridade-telemetria/frescor', methods=['GET'])
@@ -105,16 +104,10 @@ def analisar_frescor():
 
     except ValueError as e:
         logger.warning(f"Parâmetro inválido: {e}")
-        return resposta_erro(
-            mensagem=str(e),
-            codigo=400
-        )
+        return resposta_erro(ERRO_VALIDACAO, str(e), 400)
     except Exception as e:
         logger.error(f"Erro ao analisar frescor: {e}")
-        return resposta_erro(
-            mensagem="Erro ao analisar frescor",
-            codigo=500
-        )
+        return resposta_erro(ERRO_INTERNO, "Erro ao analisar frescor", 500)
 
 
 @iot_integrity_radar_bp.route('/api/radar-integridade-telemetria/lacunas', methods=['GET'])
@@ -157,16 +150,10 @@ def analisar_lacunas():
 
     except ValueError as e:
         logger.warning(f"Parâmetro inválido: {e}")
-        return resposta_erro(
-            mensagem=str(e),
-            codigo=400
-        )
+        return resposta_erro(ERRO_VALIDACAO, str(e), 400)
     except Exception as e:
         logger.error(f"Erro ao analisar lacunas: {e}")
-        return resposta_erro(
-            mensagem="Erro ao analisar lacunas",
-            codigo=500
-        )
+        return resposta_erro(ERRO_INTERNO, "Erro ao analisar lacunas", 500)
 
 
 @iot_integrity_radar_bp.route('/api/radar-integridade-telemetria/duplicidades', methods=['GET'])
@@ -206,16 +193,10 @@ def analisar_duplicidades():
 
     except ValueError as e:
         logger.warning(f"Parâmetro inválido: {e}")
-        return resposta_erro(
-            mensagem=str(e),
-            codigo=400
-        )
+        return resposta_erro(ERRO_VALIDACAO, str(e), 400)
     except Exception as e:
         logger.error(f"Erro ao analisar duplicidades: {e}")
-        return resposta_erro(
-            mensagem="Erro ao analisar duplicidades",
-            codigo=500
-        )
+        return resposta_erro(ERRO_INTERNO, "Erro ao analisar duplicidades", 500)
 
 
 @iot_integrity_radar_bp.route('/api/radar-integridade-telemetria/futuros', methods=['GET'])
@@ -258,13 +239,7 @@ def analisar_futuros():
 
     except ValueError as e:
         logger.warning(f"Parâmetro inválido: {e}")
-        return resposta_erro(
-            mensagem=str(e),
-            codigo=400
-        )
+        return resposta_erro(ERRO_VALIDACAO, str(e), 400)
     except Exception as e:
         logger.error(f"Erro ao analisar timestamps futuros: {e}")
-        return resposta_erro(
-            mensagem="Erro ao analisar timestamps futuros",
-            codigo=500
-        )
+        return resposta_erro(ERRO_INTERNO, "Erro ao analisar timestamps futuros", 500)

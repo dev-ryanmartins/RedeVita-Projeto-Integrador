@@ -1584,7 +1584,8 @@ def receber_telemetria_lote():
             db.session.commit()
         except Exception as e:
             # Falha de persistência não deve alterar a resposta ao cliente
-            # mas deve ser registrada no log
+            # mas deve ser registrada no log, com rollback para não travar a sessão.
+            db.session.rollback()
             registrar_log("Erro Persistência Lote", f"Falha ao registrar lote {lote_id}: {str(e)}")
         
         return resposta_ok({

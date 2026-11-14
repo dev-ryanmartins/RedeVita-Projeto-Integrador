@@ -13,6 +13,7 @@ import time
 import re
 from datetime import datetime
 from flask_login import login_user, logout_user, login_required, current_user
+from sqlalchemy.exc import SQLAlchemyError
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 
 from app.models.usuario import Usuario
@@ -196,7 +197,12 @@ def trocar_senha_obrigatoria():
         # Atualiza senha e marca como trocada
         current_user.senha = criptografar_senha(nova_senha)
         current_user.senha_trocada = True
-        db.session.commit()
+        try:
+            db.session.commit()
+        except SQLAlchemyError:
+            db.session.rollback()
+            flash("Não foi possível alterar a senha. Tente novamente.", "danger")
+            return render_template("trocar_senha_obrigatoria.html")
         
         registrar_log("Senha Inicial Trocada", f'Usuário "{current_user.nome}" trocou senha inicial obrigatória')
         flash("Senha alterada com sucesso! Bem-vindo ao sistema.", "success")

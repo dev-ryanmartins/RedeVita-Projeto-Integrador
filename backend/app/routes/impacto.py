@@ -6,7 +6,12 @@ from app.models.paciente import Paciente
 from app.models.farmacia import Farmacia
 from app.database import db
 from app.core.decorators import equipe_clinica_required
-from app.core.api_responses import resposta_ok, resposta_erro
+from app.core.api_responses import (
+    resposta_ok,
+    resposta_erro,
+    ERRO_VALIDACAO,
+    ERRO_INTERNO,
+)
 from app.utils.pdf_generator import obter_gerador_pdf
 from datetime import date, datetime
 from io import BytesIO
@@ -74,10 +79,7 @@ def exportar_pdf():
         data = request.get_json()
         
         if not data:
-            return resposta_erro(
-                mensagem="Corpo da requisição vazio",
-                codigo=400
-            )
+            return resposta_erro(ERRO_VALIDACAO, "Corpo da requisição vazio", 400)
         
         data_inicio = data.get("data_inicio")
         data_fim = data.get("data_fim")
@@ -119,12 +121,10 @@ def exportar_pdf():
     except ImportError as e:
         logger.error(f"reportlab não instalado: {e}")
         return resposta_erro(
-            mensagem="Biblioteca de PDF não instalada. Contate o administrador.",
-            codigo=500
+            ERRO_INTERNO,
+            "Biblioteca de PDF não instalada. Contate o administrador.",
+            500
         )
     except Exception as e:
         logger.error(f"Erro ao exportar PDF: {e}")
-        return resposta_erro(
-            mensagem="Erro ao gerar PDF",
-            codigo=500
-        )
+        return resposta_erro(ERRO_INTERNO, "Erro ao gerar PDF", 500)

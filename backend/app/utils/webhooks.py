@@ -131,7 +131,7 @@ class WebhookManager:
                 endpoint.url,
                 json=payload,
                 headers=headers,
-                timeout=10
+                timeout=5
             )
             
             if response.status_code in [200, 201, 202]:

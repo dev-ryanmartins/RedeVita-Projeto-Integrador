@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
+from sqlalchemy.exc import SQLAlchemyError
 from app.models.campanha import Campanha
 from app.database import db
 from app.core.decorators import admin_required, equipe_clinica_required
@@ -62,8 +63,13 @@ def nova_campanha():
     )
     
     db.session.add(campanha)
-    db.session.commit()
-    
+    try:
+        db.session.commit()
+    except SQLAlchemyError:
+        db.session.rollback()
+        flash("Não foi possível criar a campanha. Tente novamente.", "danger")
+        return redirect(url_for("campanhas.listar_campanhas"))
+
     flash("Campanha criada com sucesso!", "success")
     return redirect(url_for("campanhas.listar_campanhas"))
 
@@ -82,7 +88,13 @@ def toggle_status(campanha_id):
         campanha.status = 'concluida'
     else:
         campanha.status = 'ativa'
-    
-    db.session.commit()
+
+    try:
+        db.session.commit()
+    except SQLAlchemyError:
+        db.session.rollback()
+        flash("Não foi possível atualizar o status da campanha. Tente novamente.", "danger")
+        return redirect(url_for("campanhas.listar_campanhas"))
+
     flash("Status da campanha atualizado!", "success")
     return redirect(url_for("campanhas.listar_campanhas"))

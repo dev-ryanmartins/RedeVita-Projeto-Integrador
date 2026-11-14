@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
+from sqlalchemy.exc import SQLAlchemyError
 from app.database import db
 from app.core.security import criptografar_senha, verificar_senha
 from app.utils.log_helper import registrar_log
@@ -21,7 +22,12 @@ def meu_perfil():
                 return redirect(url_for("perfil.meu_perfil"))
             current_user.nome = nome
             current_user.email = email
-            db.session.commit()
+            try:
+                db.session.commit()
+            except SQLAlchemyError:
+                db.session.rollback()
+                flash("Não foi possível atualizar o perfil. Tente novamente.", "danger")
+                return redirect(url_for("perfil.meu_perfil"))
             registrar_log("Perfil Atualizado", "Usuário atualizou dados do perfil")
             flash("Perfil atualizado com sucesso!", "success")
 
@@ -39,7 +45,12 @@ def meu_perfil():
                 flash("A confirmação de senha não confere.", "danger")
                 return redirect(url_for("perfil.meu_perfil"))
             current_user.senha = criptografar_senha(nova_senha)
-            db.session.commit()
+            try:
+                db.session.commit()
+            except SQLAlchemyError:
+                db.session.rollback()
+                flash("Não foi possível alterar a senha. Tente novamente.", "danger")
+                return redirect(url_for("perfil.meu_perfil"))
             registrar_log("Senha Alterada", "Usuário alterou sua própria senha")
             flash("Senha alterada com sucesso!", "success")
 

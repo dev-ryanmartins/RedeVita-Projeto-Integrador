@@ -1,5 +1,6 @@
 import math
 import os
+import requests
 from flask import Blueprint, render_template, current_app, request
 from flask_login import login_required
 from app.models.farmacia import Farmacia
@@ -165,6 +166,115 @@ def mapa_saude():
             default_lng=-47.4526,
             mapbox_token=os.getenv("MAPBOX_ACCESS_TOKEN", ""),
         )
+
+
+@mapa_bp.route("/api/mapa/geocodificar")
+@login_required
+def geocodificar_endereco():
+    """Geocodifica um endereço/CEP via Nominatim (OpenStreetMap)."""
+    termo = (request.args.get("q") or "").strip()
+    if len(termo) < 3:
+        return resposta_erro("Informe um endereço ou CEP para buscar", 400)
+
+    try:
+        resp = requests.get(
+            "https://nominatim.openstreetmap.org/search",
+            params={
+                "q": termo,
+                "format": "jsonv2",
+                "limit": 1,
+                "countrycodes": "br",
+            },
+            headers={"User-Agent": "RedeVita/1.0 (projeto integrador - mapa de saude)"},
+            timeout=8,
+        )
+        resp.raise_for_status()
+        resultados = resp.json()
+    except Exception as e:
+        current_app.logger.warning(f"Falha na geocodificação: {e}")
+        return resposta_erro("Serviço de geocodificação indisponível", 502)
+
+    if not resultados:
+        return resposta_erro("Endereço não encontrado", 404)
+
+    r = resultados[0]
+    return resposta_ok(
+        {
+            "lat": float(r["lat"]),
+            "lon": float(r["lon"]),
+            "endereco": r.get("display_name", ""),
+        }
+    )
+
+
+@mapa_bp.route("/api/mapa/estabelecimentos")
+@login_required
+def estabelecimentos_proximos():
+    """Lista farmácias, UBS, hospitais e clínicas num raio via Overpass (OSM)."""
+    try:
+        lat = float(request.args.get("lat"))
+        lon = float(request.args.get("lon"))
+    except (TypeError, ValueError):
+        return resposta_erro("lat e lon são obrigatórios", 400)
+
+    valido, erro = validar_coordenada(lat, lon)
+    if not valido:
+        return resposta_erro(erro, 400)
+
+    try:
+        raio = min(float(request.args.get("raio", 5000)), 15000)
+    except (TypeError, ValueError):
+        raio = 5000
+
+    query = (
+        f"[out:json][timeout:10];"
+        f"("
+        f'nwr["amenity"~"^(pharmacy|hospital|clinic|doctors)$"](around:{int(raio)},{lat},{lon});'
+        f'nwr["healthcare"](around:{int(raio)},{lat},{lon});'
+        f");"
+        f"out center tags 100;"
+    )
+
+    try:
+        resp = requests.post(
+            "https://overpass-api.de/api/interpreter",
+            data={"data": query},
+            headers={"User-Agent": "RedeVita/1.0 (projeto integrador - mapa de saude)"},
+            timeout=15,
+        )
+        resp.raise_for_status()
+        elementos = resp.json().get("elements", [])
+    except Exception as e:
+        current_app.logger.warning(f"Falha na consulta Overpass: {e}")
+        return resposta_erro("Serviço de estabelecimentos indisponível", 502)
+
+    tipo_label = {
+        "pharmacy": "Farmácia",
+        "hospital": "Hospital",
+        "clinic": "Clínica / UBS",
+        "doctors": "Consultório",
+    }
+
+    estabelecimentos = []
+    for el in elementos:
+        tags = el.get("tags") or {}
+        elat = el.get("lat") or (el.get("center") or {}).get("lat")
+        elon = el.get("lon") or (el.get("center") or {}).get("lon")
+        if elat is None or elon is None:
+            continue
+        amenity = tags.get("amenity") or "healthcare"
+        estabelecimentos.append(
+            {
+                "nome": tags.get("name") or tags.get("name:pt") or tipo_label.get(amenity, "Estabelecimento de saúde"),
+                "lat": float(elat),
+                "lon": float(elon),
+                "tipo": amenity,
+                "tipo_label": tipo_label.get(amenity, tags.get("healthcare", "Estabelecimento de saúde")),
+                "endereco": tags.get("addr:street", "") + (", " + tags.get("addr:housenumber", "") if tags.get("addr:housenumber") else ""),
+            }
+        )
+
+    return resposta_ok({"estabelecimentos": estabelecimentos, "total": len(estabelecimentos), "raio_m": int(raio)})
 
 
 @mapa_bp.route("/api/mapa/proximidade", methods=["POST"])

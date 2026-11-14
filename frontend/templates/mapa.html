@@ -420,6 +420,11 @@
             <span>Farmácias Cadastradas</span>
             <span class="filter-count" id="countFarmacias" aria-live="polite">0</span>
           </label>
+          <label class="mapa-filter-item" for="filterExternos">
+            <input type="checkbox" id="filterExternos" checked onchange="toggleLayer('externos',this.checked)" aria-label="Exibir estabelecimentos de saúde próximos no mapa">
+            <span class="filter-dot orange"></span>
+            <span>Estabelecimentos próximos (não parceiros)</span>
+          </label>
         </div>
       </div>
     </div>
@@ -486,7 +491,7 @@
   let map = null;
   let userLat = null, userLng = null;
   let userMarker = null;
-  let markers = { farmacia: [] };
+  let markers = { farmacia: [], externos: [] };
   let filtroAcesso = 'todos';
   const contadores = { farmacia: 0 };
 
@@ -726,10 +731,19 @@
 
   function performSearch() {
     const searchTerm = document.getElementById('mapaSearch').value.trim();
-    if (!searchTerm || !map) return;
+    if (!searchTerm) return;
+
+    // CEP (8 dígitos) ou termo com "cep" → geocodifica e mostra arredores
+    const digitos = searchTerm.replace(/\D/g, '');
+    if (digitos.length === 8 || /cep/i.test(searchTerm)) {
+      buscarPorCep(searchTerm);
+      return;
+    }
+
+    if (!map) return;
 
     // Busca apenas nas farmácias cadastradas
-    const found = FARMACIAS_REDEVITA.find(f => 
+    const found = FARMACIAS_REDEVITA.find(f =>
       f.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
       f.endereco.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -739,6 +753,65 @@
       setStatus('Farmácia encontrada: ' + found.nome);
     } else {
       setStatus('Farmácia não encontrada na base cadastrada');
+    }
+  }
+
+  async function buscarPorCep(termo) {
+    if (!map) return;
+    setStatus('Buscando endereço…');
+    try {
+      const resp = await fetch(`/api/mapa/geocodificar?q=${encodeURIComponent(termo)}`);
+      const json = await resp.json();
+      const dados = json.dados || json.data || {};
+      if (!resp.ok || !dados.lat) {
+        setStatus('Endereço não encontrado. Tente um CEP válido.');
+        return;
+      }
+      map.setView([dados.lat, dados.lon], 14);
+      setStatus('Localização: ' + (dados.endereco || termo));
+      carregarEstabelecimentos(dados.lat, dados.lon);
+    } catch (e) {
+      setStatus('Erro ao buscar endereço');
+    }
+  }
+
+  async function carregarEstabelecimentos(lat, lon) {
+    // Remove marcadores externos anteriores
+    markers.externos.forEach(m => map.removeLayer(m));
+    markers.externos = [];
+
+    setStatus('Buscando estabelecimentos próximos…');
+    try {
+      const resp = await fetch(`/api/mapa/estabelecimentos?lat=${lat}&lon=${lon}&raio=5000`);
+      const json = await resp.json();
+      const dados = json.dados || json.data || {};
+      const lista = dados.estabelecimentos || [];
+
+      lista.forEach(e => {
+        const marker = L.circleMarker([e.lat, e.lon], {
+          radius: 7,
+          fillColor: '#64748b',
+          color: '#e2e8f0',
+          weight: 1.5,
+          opacity: 0.9,
+          fillOpacity: 0.85
+        });
+        marker.bindPopup(
+          `<div style="font-family:Inter,sans-serif;min-width:180px;max-width:230px">
+            <strong style="color:#94a3b8;font-size:0.85rem">${e.nome}</strong><br>
+            <span style="color:#aaa;font-size:0.75rem">${e.tipo_label || 'Estabelecimento de saúde'}</span><br>
+            <span style="color:#f59e0b;font-size:0.72rem;font-weight:700">Não parceiro RedeVita</span>
+          </div>`
+        );
+        if (document.getElementById('filterExternos').checked) {
+          marker.addTo(map);
+        }
+        markers.externos.push(marker);
+      });
+
+      setStatus(`${lista.length} estabelecimento(s) encontrado(s) num raio de 5 km`);
+    } catch (e) {
+      setStatus('Não foi possível carregar estabelecimentos próximos');
     }
   }
 

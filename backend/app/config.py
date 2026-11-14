@@ -116,17 +116,13 @@ class Config:
     if DATABASE_URL.startswith("mysql://"):
         DATABASE_URL = DATABASE_URL.replace("mysql://", "mysql+pymysql://", 1)
 
-    # Fallback automático: se um banco externo (MySQL/Postgres) estiver configurado
-    # mas indisponível no ambiente, cai para o SQLite local de apresentação.
-    if DATABASE_URL and (DATABASE_URL.startswith("mysql") or DATABASE_URL.startswith("postgresql")):
-        if _banco_configurado_disponivel(DATABASE_URL):
-            SQLALCHEMY_DATABASE_URI = DATABASE_URL
-        else:
-            SQLALCHEMY_DATABASE_URI = SQLITE_FALLBACK_URI
-    elif DATABASE_URL:
+    # Em produção, se houver um DATABASE_URL definido, usa-o diretamente — sem
+    # fallback silencioso para SQLite, que no Railway é efêmero e perde dados a
+    # cada restart. O fallback para SQLite só ocorre quando DATABASE_URL está
+    # vazio (ambiente de desenvolvimento/apresentação local).
+    if DATABASE_URL:
         SQLALCHEMY_DATABASE_URI = DATABASE_URL
     else:
-        # Ambiente de demonstração/apresentação sem .env: usa SQLite local.
         SQLALCHEMY_DATABASE_URI = SQLITE_FALLBACK_URI
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False

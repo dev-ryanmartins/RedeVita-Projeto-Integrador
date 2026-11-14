@@ -147,6 +147,42 @@ def _inicializar_banco(app, tentativas=6):
             raise
 
 
+def _executar_seed_demo(app):
+    """Popula os dados de apresentação no primeiro arranque (banco vazio).
+
+    A operação é idempotente: só executa quando ``DEMO_MODE`` está ativo e ainda
+    não há usuários cadastrados, de modo que reinícios/redeploys em um banco já
+    populado são ignorados. Qualquer falha é registrada no log sem derrubar o
+    boot — a aplicação continua no ar mesmo que o seed não conclua.
+    """
+    if app.config.get("TESTING") or not app.config.get("DEMO_MODE"):
+        return
+
+    # O script de seed vive na raiz do projeto (fora de backend/), então garante
+    # que a raiz esteja no sys.path para que possa ser importado.
+    raiz_projeto = os.path.dirname(BACKEND_DIR)
+    if raiz_projeto not in sys.path:
+        sys.path.insert(0, raiz_projeto)
+
+    from app.database import db
+    from app.models.usuario import Usuario
+
+    try:
+        if db.session.query(Usuario.query.exists()).scalar():
+            return
+
+        from seed_apresentacao import popular
+
+        app.logger.info("DEMO_MODE ativo e banco vazio: populando dados de apresentação...")
+        popular(app)
+        app.logger.info("Dados de demonstração carregados com sucesso.")
+    except Exception:
+        db.session.rollback()
+        app.logger.exception(
+            "Falha ao popular os dados de demonstração; a aplicação continuará sem os dados de exemplo."
+        )
+
+
 def create_app(config_overrides=None):
     """Create and configure the Flask application.
 
@@ -399,6 +435,8 @@ def create_app(config_overrides=None):
         # Não aplica migrations no startup - use 'flask db upgrade' para isso.
         # A criação do esquema e o seed toleram a corrida entre múltiplos workers.
         _inicializar_banco(app)
+        # Em DEMO_MODE, garante que o link online já suba populado (idempotente).
+        _executar_seed_demo(app)
 
     return app
 

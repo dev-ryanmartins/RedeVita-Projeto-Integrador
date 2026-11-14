@@ -1,0 +1,6 @@
+# Dependências de produção (Railway/Render/Docker).
+# O builder do Railway (Nixpacks) procura por "requirements.txt" na RAIZ do
+# repositório. As dependências reais ficam em backend/requirements.txt; este
+# arquivo apenas as reexporta para que a detecção e a instalação funcionem sem
+# duplicar a lista (gunicorn + psycopg2-binary + PyMySQL já estão incluídos lá).
+-r backend/requirements.txt

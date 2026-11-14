@@ -443,7 +443,7 @@
       <p>Carregando Mapa de Saúde…</p>
     </div>
 
-    <div id="map"></div>
+    <div id="map" data-mapbox-token="{{ mapbox_token }}"></div>
 
     <!-- Botão Resetar Localização -->
     <button class="mapa-reset-btn" id="btnReset" title="Resetar localização" onclick="resetLocalizacao()">
@@ -467,6 +467,7 @@
   const FARMACIAS_REDEVITA = {{ farmacias_json | safe }};
   const DEFAULT_LAT = {{ default_lat }};
   const DEFAULT_LNG = {{ default_lng }};
+  const MAPBOX_TOKEN = document.getElementById('map').dataset.mapboxToken || '';
 
   const COLOR = {
     farmacia: '#10b981',
@@ -602,12 +603,23 @@
       // Inicializa mapa com Leaflet
       map = L.map('map').setView([DEFAULT_LAT, DEFAULT_LNG], 13);
 
-      // Adiciona camada de mapa escuro (sem necessidade de API key)
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-        subdomains: 'abcd',
-        maxZoom: 19
-      }).addTo(map);
+      // Usa tiles do Mapbox quando o token estiver configurado;
+      // caso contrário, faz fallback para o OpenStreetMap público.
+      if (MAPBOX_TOKEN) {
+        L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+          attribution: '&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+          id: 'mapbox/streets-v12',
+          tileSize: 512,
+          zoomOffset: -1,
+          maxZoom: 19,
+          accessToken: MAPBOX_TOKEN
+        }).addTo(map);
+      } else {
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          maxZoom: 19
+        }).addTo(map);
+      }
 
       // Se não houver farmácias cadastradas, mostra mensagem
       if (!FARMACIAS_REDEVITA || FARMACIAS_REDEVITA.length === 0) {

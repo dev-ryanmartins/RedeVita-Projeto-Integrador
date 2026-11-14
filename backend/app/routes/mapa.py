@@ -1,4 +1,5 @@
 import math
+import os
 from flask import Blueprint, render_template, current_app, request
 from flask_login import login_required
 from app.models.farmacia import Farmacia
@@ -135,9 +136,14 @@ def mapa_saude():
         # Não há mais dependência de Google Maps API Key
         default_lat = -23.5015
         default_lng = -47.4526
+        mapbox_token = os.getenv("MAPBOX_ACCESS_TOKEN", "")
 
         return render_template(
-            "mapa.html", farmacias_json=farmacias_json, default_lat=default_lat, default_lng=default_lng
+            "mapa.html",
+            farmacias_json=farmacias_json,
+            default_lat=default_lat,
+            default_lng=default_lng,
+            mapbox_token=mapbox_token,
         )
     except Exception as e:
         current_app.logger.error(f"Erro ao carregar mapa: {str(e)}")
@@ -152,7 +158,13 @@ def mapa_saude():
                 "has_prev": False,
             }
         )
-        return render_template("mapa.html", farmacias_json=farmacias_json, default_lat=-23.5015, default_lng=-47.4526)
+        return render_template(
+            "mapa.html",
+            farmacias_json=farmacias_json,
+            default_lat=-23.5015,
+            default_lng=-47.4526,
+            mapbox_token=os.getenv("MAPBOX_ACCESS_TOKEN", ""),
+        )
 
 
 @mapa_bp.route("/api/mapa/proximidade", methods=["POST"])

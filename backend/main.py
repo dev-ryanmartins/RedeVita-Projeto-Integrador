@@ -150,12 +150,16 @@ def _inicializar_banco(app, tentativas=6):
 def _executar_seed_demo(app):
     """Popula os dados de apresentação no primeiro arranque (banco vazio).
 
-    A operação é idempotente: só executa quando ``DEMO_MODE`` está ativo e ainda
-    não há usuários cadastrados, de modo que reinícios/redeploys em um banco já
-    populado são ignorados. Qualquer falha é registrada no log sem derrubar o
-    boot — a aplicação continua no ar mesmo que o seed não conclua.
+    A operação é idempotente: só executa quando ainda não há usuários
+    cadastrados, de modo que reinícios/redeploys em um banco já populado são
+    ignorados. Qualquer falha é registrada no log sem derrubar o boot — a
+    aplicação continua no ar mesmo que o seed não conclua.
+
+    O seed roda independentemente de ``DEMO_MODE`` (que controla apenas os
+    atalhos visuais de acesso rápido), garantindo que as contas de demonstração
+    estejam sempre disponíveis para login, inclusive em produção.
     """
-    if app.config.get("TESTING") or not app.config.get("DEMO_MODE"):
+    if app.config.get("TESTING"):
         return
 
     # O script de seed vive na raiz do projeto (fora de backend/), então garante

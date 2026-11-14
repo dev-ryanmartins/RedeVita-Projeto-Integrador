@@ -80,9 +80,7 @@ def novo_medico():
         return redirect(url_for("medicos.listar_medicos"))
 
     try:
-        medico = Medico(
-            nome=nome, crm=crm, especialidade=especialidade, contato=contato
-        )
+        medico = Medico(nome=nome, crm=crm, especialidade=especialidade, contato=contato)
         db.session.add(medico)
         db.session.commit()
         registrar_log("Novo Médico", f'Médico "{nome}" ({crm}) cadastrado')
@@ -142,7 +140,7 @@ def editar_medico(medico_id):
 @medicos_bp.route("/medico/<int:medico_id>/excluir", methods=["POST"])
 @login_required
 @admin_required
-@audit_critical_action('EXCLUSÃO_MÉDICO')
+@audit_critical_action("EXCLUSÃO_MÉDICO")
 def excluir_medico(medico_id):
     medico = db.session.get(Medico, medico_id)
     if not medico:

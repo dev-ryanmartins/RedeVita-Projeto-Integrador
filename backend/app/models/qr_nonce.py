@@ -18,8 +18,9 @@ class QRNonce(db.Model):
     Stores an opaque token that can be used once to dispense a prescription.
     The token is randomly generated and does not contain personal or clinical data.
     """
+
     __tablename__ = "qr_nonces"
-    __table_args__ = {'extend_existing': True}
+    __table_args__ = {"extend_existing": True}
 
     id = db.Column(db.Integer, primary_key=True)
     nonce = db.Column(db.String(64), unique=True, nullable=False, index=True)
@@ -71,12 +72,7 @@ class QRNonce(db.Model):
         nonce = cls.generate_nonce()
         expira_em = datetime.utcnow() + timedelta(minutes=expiracao_minutos)
 
-        qr_nonce = cls(
-            nonce=nonce,
-            receita_id=receita_id,
-            gerado_por_id=gerado_por_id,
-            expira_em=expira_em
-        )
+        qr_nonce = cls(nonce=nonce, receita_id=receita_id, gerado_por_id=gerado_por_id, expira_em=expira_em)
 
         db.session.add(qr_nonce)
         # Note: caller must commit to allow atomic transaction across nonce, stock, and prescription

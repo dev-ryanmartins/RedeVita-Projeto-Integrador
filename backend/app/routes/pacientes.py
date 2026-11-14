@@ -1,4 +1,3 @@
-import os
 import re
 import uuid
 from flask import (
@@ -11,6 +10,7 @@ from flask import (
     current_app,
 )
 from flask_login import login_required, current_user
+from sqlalchemy.orm import joinedload
 from datetime import datetime, timedelta
 from app.models.paciente import Paciente
 from app.models.receita import Receita
@@ -60,25 +60,25 @@ def _validate_file_magic_bytes(file) -> tuple[bool, str]:
     """
     # Magic bytes signatures
     MAGIC_BYTES = {
-        b'\xFF\xD8\xFF': 'jpg',
-        b'\x89\x50\x4E\x47\x0D\x0A\x1A\x0A': 'png',
-        b'\x52\x49\x46\x46': 'webp',  # RIFF header (WEBP uses this)
-        b'%PDF': 'pdf',
+        b"\xff\xd8\xff": "jpg",
+        b"\x89\x50\x4e\x47\x0d\x0a\x1a\x0a": "png",
+        b"\x52\x49\x46\x46": "webp",  # RIFF header (WEBP uses this)
+        b"%PDF": "pdf",
     }
-    
+
     # Read first 8 bytes for magic byte detection
     file.seek(0)
     header = file.read(8)
     file.seek(0)  # Reset file pointer
-    
+
     if not header:
         return False, "Arquivo vazio ou corrompido"
-    
+
     # Check magic bytes
     for magic, file_type in MAGIC_BYTES.items():
         if header.startswith(magic):
             return True, file_type
-    
+
     return False, "Tipo de arquivo não detectado. Arquivo pode estar corrompido ou disfarçado."
 
 
@@ -100,6 +100,7 @@ def _salvar_imagem_receita(file) -> str | None:
     storage = get_storage_service()
     storage_path = storage.save_file(file, filename, folder="receitas")
     return storage_path
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Pacientes
@@ -151,9 +152,7 @@ def novo_paciente():
         return redirect(url_for("pacientes.listar_pacientes"))
 
     try:
-        paciente = Paciente(
-            nome=nome, cpf=cpf_fmt, data_nascimento=data_nasc, endereco=endereco or None
-        )
+        paciente = Paciente(nome=nome, cpf=cpf_fmt, data_nascimento=data_nasc, endereco=endereco or None)
         db.session.add(paciente)
         db.session.commit()
         registrar_log("Novo Paciente", f'Paciente "{nome}" ({cpf_fmt}) cadastrado')
@@ -219,7 +218,7 @@ def editar_paciente(pid):
 @pacientes_bp.route("/paciente/<int:pid>/excluir", methods=["POST"])
 @login_required
 @admin_required
-@audit_critical_action('EXCLUSÃO_PACIENTE')
+@audit_critical_action("EXCLUSÃO_PACIENTE")
 def excluir_paciente(pid):
     paciente = db.session.get(Paciente, pid)
     if not paciente:
@@ -234,9 +233,7 @@ def excluir_paciente(pid):
         flash(f'Paciente "{nome}" removido com sucesso.', "success")
     except Exception:
         db.session.rollback()
-        flash(
-            "Erro ao remover paciente. Verifique se há receitas vinculadas.", "danger"
-        )
+        flash("Erro ao remover paciente. Verifique se há receitas vinculadas.", "danger")
 
     return redirect(url_for("pacientes.listar_pacientes"))
 
@@ -252,52 +249,50 @@ def excluir_paciente(pid):
 def receituario():
     pagina = request.args.get("page", 1, type=int)
     por_pagina = 20
-    
+
     try:
-        receitas = Receita.query.order_by(Receita.data_emissao.desc()).paginate(
-            page=pagina, per_page=por_pagina, error_out=False
+        receitas = (
+            Receita.query.options(
+                joinedload(Receita.paciente),
+                joinedload(Receita.medico),
+                joinedload(Receita.medicamento),
+            )
+            .order_by(Receita.data_emissao.desc())
+            .paginate(page=pagina, per_page=por_pagina, error_out=False)
         )
     except Exception:
         receitas = None
-    
+
     try:
         pacientes = Paciente.query.order_by(Paciente.nome).all()
     except Exception:
         pacientes = []
-    
+
     try:
         medicos = Medico.query.order_by(Medico.nome).all()
     except Exception:
         medicos = []
-    
+
     try:
-        medicamentos = (
-            Medicamento.query.filter(Medicamento.quantidade > 0)
-            .order_by(Medicamento.nome)
-            .all()
-        )
+        medicamentos = Medicamento.query.filter(Medicamento.quantidade > 0).order_by(Medicamento.nome).all()
     except Exception:
         medicamentos = []
-    
+
     try:
         total_pendentes = Receita.query.filter_by(status="pendente").count()
     except Exception:
         total_pendentes = 0
-    
+
     try:
         total_dispensadas = Receita.query.filter_by(status="dispensada").count()
     except Exception:
         total_dispensadas = 0
-    
+
     try:
-        total_controladas = (
-            Receita.query.join(Medicamento)
-            .filter(Medicamento.tarja == "Portaria 344")
-            .count()
-        )
+        total_controladas = Receita.query.join(Medicamento).filter(Medicamento.tarja == "Portaria 344").count()
     except Exception:
         total_controladas = 0
-    
+
     return render_template(
         "receituario.html",
         receitas=receitas,
@@ -347,9 +342,7 @@ def nova_receita():
     if file and file.filename:
         resultado = _salvar_imagem_receita(file)
         if resultado is False:
-            flash(
-                "Formato de imagem não suportado. Use JPG, PNG, WEBP ou PDF.", "danger"
-            )
+            flash("Formato de imagem não suportado. Use JPG, PNG, WEBP ou PDF.", "danger")
             return redirect(url_for("pacientes.receituario"))
         imagem_url = resultado
 
@@ -445,49 +438,46 @@ def dar_baixa_receita(rid):
         else:
             registrar_log(
                 "Dispensação de Receita",
-                f'Receita #{receita.id} — Paciente "{receita.paciente.nome}" — '
-                f"dispensada por {current_user.nome}",
+                f'Receita #{receita.id} — Paciente "{receita.paciente.nome}" — ' f"dispensada por {current_user.nome}",
             )
-        
+
         # Enviar notificações de dispensação
         codigo_reserva = f"RES-{receita.id:06d}"
         medicamento_nome = receita.medicamento.nome if receita.medicamento else "Medicamento"
         endereco_coleta = "Farmácia Central - Av. Principal, 1000"  # Em produção, buscar da farmácia real
-        data_limite = (receita.dispensada_em + timedelta(days=7)).strftime('%d/%m/%Y')
-        
+        data_limite = (receita.dispensada_em + timedelta(days=7)).strftime("%d/%m/%Y")
+
         # Enviar e-mail se paciente tiver e-mail cadastrado
-        if receita.paciente and hasattr(receita.paciente, 'email') and receita.paciente.email:
+        if receita.paciente and hasattr(receita.paciente, "email") and receita.paciente.email:
             email_service.send_reserva_confirmation_async(
                 to_email=receita.paciente.email,
                 nome_paciente=receita.paciente.nome,
                 medicamento=medicamento_nome,
                 codigo_reserva=codigo_reserva,
                 endereco_coleta=endereco_coleta,
-                data_limite=data_limite
+                data_limite=data_limite,
             )
-        
+
         # Enviar SMS se paciente tiver telefone cadastrado
-        if receita.paciente and hasattr(receita.paciente, 'telefone') and receita.paciente.telefone:
+        if receita.paciente and hasattr(receita.paciente, "telefone") and receita.paciente.telefone:
             sms_service.send_reserva_confirmation_async(
-                to_phone=receita.paciente.telefone,
-                codigo_reserva=codigo_reserva,
-                endereco=endereco_coleta
+                to_phone=receita.paciente.telefone, codigo_reserva=codigo_reserva, endereco=endereco_coleta
             )
-        
+
         # Enviar notificação WhatsApp existente (compatibilidade)
-        if receita.paciente and hasattr(receita.paciente, 'telefone') and receita.paciente.telefone:
+        if receita.paciente and hasattr(receita.paciente, "telefone") and receita.paciente.telefone:
             telefone = receita.paciente.telefone
-            if not telefone.startswith('+'):
-                telefone = '+55' + ''.join(c for c in telefone if c.isdigit())
-            
+            if not telefone.startswith("+"):
+                telefone = "+55" + "".join(c for c in telefone if c.isdigit())
+
             notif_result = enviar_notificacao_dispensacao(
-                telefone=telefone,
-                paciente_nome=receita.paciente.nome,
-                medicamento_nome=medicamento_nome
+                telefone=telefone, paciente_nome=receita.paciente.nome, medicamento_nome=medicamento_nome
             )
-            if notif_result.get('enviado'):
+            if notif_result.get("enviado"):
                 # Log sanitizado - sem telefone
-                current_app.logger.warning(f"Notificação não enviada para paciente {receita.paciente.nome}: {notif_result.get('mensagem')}")
+                current_app.logger.warning(
+                    f"Notificação não enviada para paciente {receita.paciente.nome}: {notif_result.get('mensagem')}"
+                )
 
         flash(f"Receita #{receita.id} dispensada com sucesso!", "success")
     except Exception:

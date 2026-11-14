@@ -11,17 +11,19 @@ from app.models.medicamento import Medicamento
 from app.models.farmacia import Farmacia
 from app.models.usuario import Usuario
 from app.core.security import criptografar_senha
-from datetime import datetime, timedelta
+from datetime import datetime
 
 
 @pytest.fixture
 def app():
     """App Flask com banco temporário."""
-    app = create_app({
-        'TESTING': True,
-        'SQLALCHEMY_DATABASE_URI': 'sqlite:///:memory:',
-        'WTF_CSRF_ENABLED': False,
-    })
+    app = create_app(
+        {
+            "TESTING": True,
+            "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
+            "WTF_CSRF_ENABLED": False,
+        }
+    )
     with app.app_context():
         db.create_all()
         yield app
@@ -36,7 +38,7 @@ def farmacia(app):
         razao_social="Farmácia Teste LTDA",
         cnpj="12345678000190",
         endereco="Rua Teste, 123",
-        responsavel="Responsável Teste"
+        responsavel="Responsável Teste",
     )
     db.session.add(farmacia)
     db.session.commit()
@@ -47,11 +49,7 @@ def farmacia(app):
 def medicamento(app):
     """Medicamento de teste."""
     medicamento = Medicamento(
-        nome="Paracetamol 500mg",
-        lote="LOTE123",
-        data_validade=datetime(2025, 12, 31),
-        quantidade=100,
-        ativo=True
+        nome="Paracetamol 500mg", lote="LOTE123", data_validade=datetime(2025, 12, 31), quantidade=100, ativo=True
     )
     db.session.add(medicamento)
     db.session.commit()
@@ -67,7 +65,7 @@ def usuario(app):
         email="usuario@teste.com",
         senha=criptografar_senha("senha123"),
         cargo="Admin",
-        ativo=True
+        ativo=True,
     )
     db.session.add(usuario)
     db.session.commit()
@@ -82,11 +80,11 @@ def test_criar_oferta(farmacia, medicamento, usuario):
         quantidade_ofertada=50,
         quantidade_reservada=0,
         status=StatusOferta.DISPONIVEL.value,
-        criado_por_id=usuario.id
+        criado_por_id=usuario.id,
     )
     db.session.add(oferta)
     db.session.commit()
-    
+
     db.session.refresh(oferta)
     assert oferta.id is not None
     assert oferta.quantidade_ofertada == 50
@@ -103,11 +101,11 @@ def test_reservar_quantidade_disponivel(farmacia, medicamento, usuario):
         quantidade_ofertada=50,
         quantidade_reservada=0,
         status=StatusOferta.DISPONIVEL.value,
-        criado_por_id=usuario.id
+        criado_por_id=usuario.id,
     )
     db.session.add(oferta)
     db.session.commit()
-    
+
     # Reserva 20 unidades
     resultado = oferta.reservar(20)
     assert resultado is True
@@ -123,11 +121,11 @@ def test_reservar_acima_disponivel(farmacia, medicamento, usuario):
         quantidade_ofertada=50,
         quantidade_reservada=0,
         status=StatusOferta.DISPONIVEL.value,
-        criado_por_id=usuario.id
+        criado_por_id=usuario.id,
     )
     db.session.add(oferta)
     db.session.commit()
-    
+
     # Tenta reservar 60 unidades (tem apenas 50)
     resultado = oferta.reservar(60)
     assert resultado is False
@@ -143,11 +141,11 @@ def test_reservar_quantidade_negativa(farmacia, medicamento, usuario):
         quantidade_ofertada=50,
         quantidade_reservada=0,
         status=StatusOferta.DISPONIVEL.value,
-        criado_por_id=usuario.id
+        criado_por_id=usuario.id,
     )
     db.session.add(oferta)
     db.session.commit()
-    
+
     # Tenta reservar quantidade negativa
     resultado = oferta.reservar(-10)
     assert resultado is False
@@ -162,11 +160,11 @@ def test_liberar_reserva(farmacia, medicamento, usuario):
         quantidade_ofertada=50,
         quantidade_reservada=20,
         status=StatusOferta.DISPONIVEL.value,
-        criado_por_id=usuario.id
+        criado_por_id=usuario.id,
     )
     db.session.add(oferta)
     db.session.commit()
-    
+
     # Libera 10 unidades
     oferta.liberar_reserva(10)
     assert oferta.quantidade_reservada == 10
@@ -181,11 +179,11 @@ def test_liberar_reserva_quantidade_negativa(farmacia, medicamento, usuario):
         quantidade_ofertada=50,
         quantidade_reservada=20,
         status=StatusOferta.DISPONIVEL.value,
-        criado_por_id=usuario.id
+        criado_por_id=usuario.id,
     )
     db.session.add(oferta)
     db.session.commit()
-    
+
     reserva_original = oferta.quantidade_reservada
     oferta.liberar_reserva(-10)
     assert oferta.quantidade_reservada == reserva_original
@@ -199,11 +197,11 @@ def test_cancelar_oferta_disponivel(farmacia, medicamento, usuario):
         quantidade_ofertada=50,
         quantidade_reservada=0,
         status=StatusOferta.DISPONIVEL.value,
-        criado_por_id=usuario.id
+        criado_por_id=usuario.id,
     )
     db.session.add(oferta)
     db.session.commit()
-    
+
     resultado = oferta.cancelar()
     assert resultado is True
     assert oferta.status == StatusOferta.CANCELADA.value
@@ -218,11 +216,11 @@ def test_cancelar_oferta_reservada(farmacia, medicamento, usuario):
         quantidade_ofertada=50,
         quantidade_reservada=20,
         status=StatusOferta.RESERVADA.value,
-        criado_por_id=usuario.id
+        criado_por_id=usuario.id,
     )
     db.session.add(oferta)
     db.session.commit()
-    
+
     resultado = oferta.cancelar()
     assert resultado is True
     assert oferta.status == StatusOferta.CANCELADA.value
@@ -237,11 +235,11 @@ def test_cancelar_oferta_confirmada(farmacia, medicamento, usuario):
         quantidade_ofertada=50,
         quantidade_reservada=50,
         status=StatusOferta.CONFIRMADA.value,
-        criado_por_id=usuario.id
+        criado_por_id=usuario.id,
     )
     db.session.add(oferta)
     db.session.commit()
-    
+
     resultado = oferta.cancelar()
     assert resultado is False
     assert oferta.status == StatusOferta.CONFIRMADA.value
@@ -255,11 +253,11 @@ def test_expirar_oferta(farmacia, medicamento, usuario):
         quantidade_ofertada=50,
         quantidade_reservada=20,
         status=StatusOferta.DISPONIVEL.value,
-        criado_por_id=usuario.id
+        criado_por_id=usuario.id,
     )
     db.session.add(oferta)
     db.session.commit()
-    
+
     resultado = oferta.expirar()
     assert resultado is True
     assert oferta.status == StatusOferta.EXPIRADA.value
@@ -274,11 +272,11 @@ def test_expirar_oferta_nao_disponivel(farmacia, medicamento, usuario):
         quantidade_ofertada=50,
         quantidade_reservada=0,
         status=StatusOferta.RESERVADA.value,
-        criado_por_id=usuario.id
+        criado_por_id=usuario.id,
     )
     db.session.add(oferta)
     db.session.commit()
-    
+
     resultado = oferta.expirar()
     assert resultado is False
     assert oferta.status == StatusOferta.RESERVADA.value
@@ -292,11 +290,11 @@ def test_confirmar_oferta(farmacia, medicamento, usuario):
         quantidade_ofertada=50,
         quantidade_reservada=50,
         status=StatusOferta.APROVADA.value,  # Deve estar APROVADA antes de CONFIRMADA
-        criado_por_id=usuario.id
+        criado_por_id=usuario.id,
     )
     db.session.add(oferta)
     db.session.commit()
-    
+
     resultado = oferta.confirmar()
     assert resultado is True
     assert oferta.status == StatusOferta.CONFIRMADA.value
@@ -310,11 +308,11 @@ def test_confirmar_oferta_nao_reservada(farmacia, medicamento, usuario):
         quantidade_ofertada=50,
         quantidade_reservada=0,
         status=StatusOferta.DISPONIVEL.value,
-        criado_por_id=usuario.id
+        criado_por_id=usuario.id,
     )
     db.session.add(oferta)
     db.session.commit()
-    
+
     resultado = oferta.confirmar()
     assert resultado is False
     assert oferta.status == StatusOferta.DISPONIVEL.value
@@ -323,14 +321,14 @@ def test_confirmar_oferta_nao_reservada(farmacia, medicamento, usuario):
 def test_migration_cria_tabela_ofertas(app):
     """Migration deve criar tabela ofertas_medicamentos."""
     from backend.migrations_custom.create_oferta_medicamento_table import migrate
-    
+
     # Executa migration
     migrate()
-    
+
     # Verifica se a tabela existe
     inspector = db.inspect(db.engine)
     tables = inspector.get_table_names()
-    assert 'ofertas_medicamentos' in tables
+    assert "ofertas_medicamentos" in tables
 
 
 def test_data_expiracao(farmacia, medicamento, usuario):
@@ -343,10 +341,10 @@ def test_data_expiracao(farmacia, medicamento, usuario):
         quantidade_reservada=0,
         status=StatusOferta.DISPONIVEL.value,
         data_expiracao=data_expiracao,
-        criado_por_id=usuario.id
+        criado_por_id=usuario.id,
     )
     db.session.add(oferta)
     db.session.commit()
-    
+
     db.session.refresh(oferta)
     assert oferta.data_expiracao == data_expiracao

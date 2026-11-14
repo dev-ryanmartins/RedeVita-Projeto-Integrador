@@ -1,4 +1,5 @@
 """Migration manual para adicionar campo senha_trocada."""
+
 import sys
 import os
 
@@ -9,6 +10,7 @@ if BASE_DIR not in sys.path:
 from sqlalchemy import text
 from backend.main import create_app
 from app.database import db
+
 
 def upgrade():
     """Adiciona campo senha_trocada à tabela usuarios."""
@@ -26,6 +28,7 @@ def upgrade():
             else:
                 print(f"Erro na migration: {e}")
                 db.session.rollback()
+
 
 if __name__ == "__main__":
     upgrade()

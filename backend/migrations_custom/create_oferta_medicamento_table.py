@@ -9,15 +9,16 @@ from main import create_app
 def migrate():
     """Cria a tabela ofertas_medicamentos"""
     app = create_app()
-    
+
     with app.app_context():
         # Verifica se a tabela já existe
         inspector = db.inspect(db.engine)
         tables = inspector.get_table_names()
-        
-        if 'ofertas_medicamentos' not in tables:
+
+        if "ofertas_medicamentos" not in tables:
             # Cria a tabela usando SQLAlchemy
             from app.models.oferta_medicamento import OfertaMedicamento
+
             OfertaMedicamento.__table__.create(db.engine, checkfirst=True)
         else:
             pass
@@ -26,14 +27,15 @@ def migrate():
 def rollback():
     """Remove a tabela ofertas_medicamentos"""
     app = create_app()
-    
+
     with app.app_context():
         # Verifica se a tabela existe
         inspector = db.inspect(db.engine)
         tables = inspector.get_table_names()
-        
-        if 'ofertas_medicamentos' in tables:
+
+        if "ofertas_medicamentos" in tables:
             from app.models.oferta_medicamento import OfertaMedicamento
+
             OfertaMedicamento.__table__.drop(db.engine, checkfirst=True)
         else:
             pass
@@ -41,6 +43,7 @@ def rollback():
 
 if __name__ == "__main__":
     import sys
+
     if len(sys.argv) > 1 and sys.argv[1] == "rollback":
         rollback()
     else:

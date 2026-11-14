@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required
+from sqlalchemy.orm import joinedload
 from app.models.receita import Receita
 from app.models.paciente import Paciente
 from app.models.medico import Medico
@@ -22,18 +23,20 @@ TIPOS_RECEITA = [
 @login_required
 @cargo_required("Admin", "Médico")
 def prescriptions():
-    receitas = Receita.query.order_by(Receita.data_emissao.desc()).all()
-    pacientes = Paciente.query.order_by(Paciente.nome).all()
-    medicos = Medico.query.order_by(Medico.nome).all()
-    medicamentos = (
-        Medicamento.query.filter(Medicamento.quantidade > 0)
-        .order_by(Medicamento.nome)
+    receitas = (
+        Receita.query.options(
+            joinedload(Receita.paciente),
+            joinedload(Receita.medico),
+            joinedload(Receita.medicamento),
+        )
+        .order_by(Receita.data_emissao.desc())
         .all()
     )
+    pacientes = Paciente.query.order_by(Paciente.nome).all()
+    medicos = Medico.query.order_by(Medico.nome).all()
+    medicamentos = Medicamento.query.filter(Medicamento.quantidade > 0).order_by(Medicamento.nome).all()
     total_pendentes = sum(1 for r in receitas if r.status == "pendente")
-    total_controladas = sum(
-        1 for r in receitas if r.medicamento and r.medicamento.controlado
-    )
+    total_controladas = sum(1 for r in receitas if r.medicamento and r.medicamento.controlado)
     return render_template(
         "medical_prescriptions.html",
         receitas=receitas,

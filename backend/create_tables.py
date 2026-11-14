@@ -36,16 +36,16 @@ from app.models.iot import LeituraIoT, TagRFID
 def is_production_environment():
     """Verifica se o ambiente atual é de produção."""
     # Verifica variável de ambiente FLASK_ENV
-    flask_env = os.environ.get('FLASK_ENV', '').lower()
-    if flask_env == 'production':
+    flask_env = os.environ.get("FLASK_ENV", "").lower()
+    if flask_env == "production":
         return True
-    
+
     # Verifica DATABASE_URL para identificar bancos de produção
-    database_url = os.environ.get('DATABASE_URL', '')
+    database_url = os.environ.get("DATABASE_URL", "")
     # URLs de produção geralmente contêm domínios específicos, não localhost
-    if database_url and 'localhost' not in database_url and '127.0.0.1' not in database_url:
+    if database_url and "localhost" not in database_url and "127.0.0.1" not in database_url:
         return True
-    
+
     return False
 
 
@@ -53,31 +53,25 @@ def is_safe_environment():
     """Verifica se o ambiente é seguro para operações destrutivas."""
     if is_production_environment():
         return False
-    
+
     # Verifica se é um banco de teste ou desenvolvimento
-    database_url = os.environ.get('DATABASE_URL', '')
-    safe_keywords = ['test', 'dev', 'local', 'localhost', '127.0.0.1', 'sqlite']
+    database_url = os.environ.get("DATABASE_URL", "")
+    safe_keywords = ["test", "dev", "local", "localhost", "127.0.0.1", "sqlite"]
     return any(keyword in database_url.lower() for keyword in safe_keywords)
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Criar tabelas do banco de dados RedeVita',
-        epilog='Por padrão, cria apenas tabelas ausentes (preserva dados). Use --drop para recriar tudo.'
+        description="Criar tabelas do banco de dados RedeVita",
+        epilog="Por padrão, cria apenas tabelas ausentes (preserva dados). Use --drop para recriar tudo.",
     )
+    parser.add_argument("--drop", action="store_true", help="Modo destrutivo: apaga todas as tabelas antes de recriar")
     parser.add_argument(
-        '--drop',
-        action='store_true',
-        help='Modo destrutivo: apaga todas as tabelas antes de recriar'
+        "--confirm", action="store_true", help="Confirmação explícita para modo destrutivo (requerido com --drop)"
     )
-    parser.add_argument(
-        '--confirm',
-        action='store_true',
-        help='Confirmação explícita para modo destrutivo (requerido com --drop)'
-    )
-    
+
     args = parser.parse_args()
-    
+
     print("=" * 70)
     print("CRIANDO TABELAS DO BANCO DE DADOS - RedeVita")
     print("=" * 70)
@@ -93,7 +87,7 @@ def main():
             print()
             print("⚠️  AVISO: Isso apagará TODAS as tabelas e dados!")
             sys.exit(1)
-        
+
         if is_production_environment():
             print("❌ ERRO: Operação destrutiva recusada em ambiente de produção")
             print()
@@ -101,11 +95,11 @@ def main():
             print()
             print("Para segurança, operações destrutivas não são permitidas em produção.")
             sys.exit(1)
-        
+
         if not is_safe_environment():
             print("⚠️  AVISO: Ambiente não identificado como seguro para operações destrutivas")
             print()
-            print("Detectado DATABASE_URL:", os.environ.get('DATABASE_URL', 'não configurado'))
+            print("Detectado DATABASE_URL:", os.environ.get("DATABASE_URL", "não configurado"))
             print()
             print("Operações destrutivas são permitidas apenas em:")
             print("  - Ambientes de teste")
@@ -113,15 +107,15 @@ def main():
             print("  - Bancos identificados como descartáveis")
             print()
             response = input("Deseja continuar mesmo assim? (digite 'SIM' para confirmar): ")
-            if response != 'SIM':
+            if response != "SIM":
                 print("Operação cancelada pelo usuário.")
                 sys.exit(1)
-        
+
         print("⚠️  MODO DESTRUTIVO ATIVADO")
         print("   Todas as tabelas existentes serão APAGADAS!")
         print()
         response = input("Confirme a exclusão de TODOS os dados (digite 'APAGAR'): ")
-        if response != 'APAGAR':
+        if response != "APAGAR":
             print("Operação cancelada pelo usuário.")
             sys.exit(1)
         print()
@@ -151,6 +145,7 @@ def main():
 
             print("Lista de tabelas criadas:")
             from sqlalchemy import inspect
+
             inspector = inspect(db.engine)
             tables = inspector.get_table_names()
             for table in sorted(tables):

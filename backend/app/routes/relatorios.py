@@ -25,8 +25,8 @@ try:
 except ImportError:
     REPORTLAB_DISPONIVEL = False
 
-COR_AZUL = '#0ea5e9'
-COR_TEXTO = '#1e293b'
+COR_AZUL = "#0ea5e9"
+COR_TEXTO = "#1e293b"
 
 relatorios_bp = Blueprint("relatorios", __name__)
 
@@ -35,73 +35,76 @@ def criar_cabecalho_pdf(elementos, titulo):
     styles = getSampleStyleSheet()
 
     estilo_titulo = ParagraphStyle(
-        'TituloRelatorio',
-        parent=styles['Heading1'],
+        "TituloRelatorio",
+        parent=styles["Heading1"],
         fontSize=16,
         textColor=colors.HexColor(COR_TEXTO),
         spaceAfter=6,
         spaceBefore=6,
-        fontName='Helvetica-Bold',
-        alignment=TA_LEFT
+        fontName="Helvetica-Bold",
+        alignment=TA_LEFT,
     )
 
     estilo_subtitulo = ParagraphStyle(
-        'SubtituloRelatorio',
-        parent=styles['Normal'],
+        "SubtituloRelatorio",
+        parent=styles["Normal"],
         fontSize=10,
-        textColor=colors.HexColor('#64748b'),
+        textColor=colors.HexColor("#64748b"),
         spaceAfter=12,
-        fontName='Helvetica',
-        alignment=TA_LEFT
+        fontName="Helvetica",
+        alignment=TA_LEFT,
     )
 
-    elementos.append(Spacer(1, 0.3*cm))
+    elementos.append(Spacer(1, 0.3 * cm))
     elementos.append(Paragraph(titulo, estilo_titulo))
     elementos.append(Paragraph(f"Emitido em: {date.today().strftime('%d/%m/%Y')}", estilo_subtitulo))
 
-    linha = Table([['']], colWidths=[18*cm])
-    linha.setStyle(TableStyle([
-        ('LINEABOVE', (0, 0), (-1, 0), 2, colors.HexColor(COR_AZUL)),
-        ('LINEBELOW', (0, 0), (-1, 0), 1, colors.HexColor('#e2e8f0')),
-    ]))
+    linha = Table([[""]], colWidths=[18 * cm])
+    linha.setStyle(
+        TableStyle(
+            [
+                ("LINEABOVE", (0, 0), (-1, 0), 2, colors.HexColor(COR_AZUL)),
+                ("LINEBELOW", (0, 0), (-1, 0), 1, colors.HexColor("#e2e8f0")),
+            ]
+        )
+    )
     elementos.append(linha)
-    elementos.append(Spacer(1, 0.5*cm))
+    elementos.append(Spacer(1, 0.5 * cm))
 
 
 def criar_rodape_pdf(elementos):
     styles = getSampleStyleSheet()
 
     estilo_rodape = ParagraphStyle(
-        'RodapeRelatorio',
-        parent=styles['Normal'],
+        "RodapeRelatorio",
+        parent=styles["Normal"],
         fontSize=8,
-        textColor=colors.HexColor('#94a3b8'),
+        textColor=colors.HexColor("#94a3b8"),
         spaceBefore=12,
-        fontName='Helvetica',
-        alignment=TA_CENTER
+        fontName="Helvetica",
+        alignment=TA_CENTER,
     )
-    elementos.append(Spacer(1, 1*cm))
-    elementos.append(Paragraph(
-        "RedeVita - Sistema de Gestão de Medicamentos | Relatório Oficial",
-        estilo_rodape
-    ))
+    elementos.append(Spacer(1, 1 * cm))
+    elementos.append(Paragraph("RedeVita - Sistema de Gestão de Medicamentos | Relatório Oficial", estilo_rodape))
 
 
 def aplicar_estilo_tabela(table):
     table.setStyle(
-        TableStyle([
-            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor(COR_AZUL)),
-            ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-            ("ALIGN", (0, 0), (-1, -1), "CENTER"),
-            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-            ("FONTSIZE", (0, 0), (-1, 0), 11),
-            ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
-            ("TOPPADDING", (0, 0), (-1, 0), 12),
-            ("BACKGROUND", (0, 1), (-1, -1), colors.white),
-            ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor('#e2e8f0')),
-            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-            ("FONTSIZE", (0, 1), (-1, -1), 9),
-        ])
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor(COR_AZUL)),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+                ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                ("FONTSIZE", (0, 0), (-1, 0), 11),
+                ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
+                ("TOPPADDING", (0, 0), (-1, 0), 12),
+                ("BACKGROUND", (0, 1), (-1, -1), colors.white),
+                ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#e2e8f0")),
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                ("FONTSIZE", (0, 1), (-1, -1), 9),
+            ]
+        )
     )
     return table
 
@@ -113,16 +116,10 @@ def relatorios():
     hoje = date.today()
 
     proximos_vencimento = (
-        Medicamento.query.filter(Medicamento.status_semaforo == 1)
-        .order_by(Medicamento.data_validade)
-        .all()
+        Medicamento.query.filter(Medicamento.status_semaforo == 1).order_by(Medicamento.data_validade).all()
     )
 
-    vencidos = (
-        Medicamento.query.filter(Medicamento.status_semaforo == 2)
-        .order_by(Medicamento.data_validade)
-        .all()
-    )
+    vencidos = Medicamento.query.filter(Medicamento.status_semaforo == 2).order_by(Medicamento.data_validade).all()
 
     total_medicos = Medico.query.count()
     total_farmacias = Farmacia.query.count()
@@ -319,14 +316,12 @@ def exportar_medicamentos_pdf():
     registrar_log("Exportação PDF", "Exportou lista de medicamentos em PDF")
 
     resposta = Response(content_type="application/pdf")
-    resposta.headers["Content-Disposition"] = (
-        f"attachment; filename=medicamentos_{date.today()}.pdf"
-    )
+    resposta.headers["Content-Disposition"] = f"attachment; filename=medicamentos_{date.today()}.pdf"
 
     buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter,
-                           rightMargin=1.5*cm, leftMargin=1.5*cm,
-                           topMargin=2*cm, bottomMargin=2*cm)
+    doc = SimpleDocTemplate(
+        buffer, pagesize=letter, rightMargin=1.5 * cm, leftMargin=1.5 * cm, topMargin=2 * cm, bottomMargin=2 * cm
+    )
     elementos = []
 
     criar_cabecalho_pdf(elementos, "Relatório de Medicamentos")
@@ -335,13 +330,19 @@ def exportar_medicamentos_pdf():
     mapa_status = {0: "Seguro", 1: "Próximo Vencimento", 2: "Vencido"}
 
     for medicamento in lista_medicamentos:
-        dados_tabela.append([
-            medicamento.nome,
-            medicamento.lote,
-            medicamento.data_validade.strftime("%d/%m/%Y") if hasattr(medicamento.data_validade, 'strftime') else str(medicamento.data_validade),
-            str(medicamento.quantidade),
-            mapa_status.get(medicamento.status_semaforo, ""),
-        ])
+        dados_tabela.append(
+            [
+                medicamento.nome,
+                medicamento.lote,
+                (
+                    medicamento.data_validade.strftime("%d/%m/%Y")
+                    if hasattr(medicamento.data_validade, "strftime")
+                    else str(medicamento.data_validade)
+                ),
+                str(medicamento.quantidade),
+                mapa_status.get(medicamento.status_semaforo, ""),
+            ]
+        )
 
     tabela = Table(dados_tabela, colWidths=[2.5 * inch, 1 * inch, 1 * inch, 0.5 * inch, 1.2 * inch])
     tabela = aplicar_estilo_tabela(tabela)
@@ -369,14 +370,12 @@ def exportar_medicos_pdf():
     registrar_log("Exportação PDF", "Exportou lista de médicos em PDF")
 
     resposta = Response(content_type="application/pdf")
-    resposta.headers["Content-Disposition"] = (
-        f"attachment; filename=medicos_{date.today()}.pdf"
-    )
+    resposta.headers["Content-Disposition"] = f"attachment; filename=medicos_{date.today()}.pdf"
 
     buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter,
-                           rightMargin=1.5*cm, leftMargin=1.5*cm,
-                           topMargin=2*cm, bottomMargin=2*cm)
+    doc = SimpleDocTemplate(
+        buffer, pagesize=letter, rightMargin=1.5 * cm, leftMargin=1.5 * cm, topMargin=2 * cm, bottomMargin=2 * cm
+    )
     elementos = []
 
     criar_cabecalho_pdf(elementos, "Relatório de Médicos")
@@ -384,13 +383,15 @@ def exportar_medicos_pdf():
     dados_tabela = [["Nome", "CRM", "Especialidade", "Contato", "Cadastrado em"]]
 
     for medico in lista_medicos:
-        dados_tabela.append([
-            medico.nome,
-            medico.crm,
-            medico.especialidade,
-            medico.contato or "",
-            medico.created_at.strftime("%d/%m/%Y") if medico.created_at else "",
-        ])
+        dados_tabela.append(
+            [
+                medico.nome,
+                medico.crm,
+                medico.especialidade,
+                medico.contato or "",
+                medico.created_at.strftime("%d/%m/%Y") if medico.created_at else "",
+            ]
+        )
 
     tabela = Table(dados_tabela, colWidths=[2 * inch, 1 * inch, 1.5 * inch, 1.5 * inch, 1 * inch])
     tabela = aplicar_estilo_tabela(tabela)
@@ -418,14 +419,12 @@ def exportar_farmacias_pdf():
     registrar_log("Exportação PDF", "Exportou lista de farmácias em PDF")
 
     resposta = Response(content_type="application/pdf")
-    resposta.headers["Content-Disposition"] = (
-        f"attachment; filename=farmacias_{date.today()}.pdf"
-    )
+    resposta.headers["Content-Disposition"] = f"attachment; filename=farmacias_{date.today()}.pdf"
 
     buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter,
-                           rightMargin=1.5*cm, leftMargin=1.5*cm,
-                           topMargin=2*cm, bottomMargin=2*cm)
+    doc = SimpleDocTemplate(
+        buffer, pagesize=letter, rightMargin=1.5 * cm, leftMargin=1.5 * cm, topMargin=2 * cm, bottomMargin=2 * cm
+    )
     elementos = []
 
     criar_cabecalho_pdf(elementos, "Relatório de Farmácias")
@@ -433,14 +432,16 @@ def exportar_farmacias_pdf():
     dados_tabela = [["Nome Fantasia", "Razão Social", "CNPJ", "Responsável", "Endereço", "Cadastrado em"]]
 
     for farmacia in lista_farmacias:
-        dados_tabela.append([
-            farmacia.nome_fantasia,
-            farmacia.razao_social or "",
-            farmacia.cnpj,
-            farmacia.responsavel,
-            farmacia.endereco,
-            farmacia.created_at.strftime("%d/%m/%Y") if farmacia.created_at else "",
-        ])
+        dados_tabela.append(
+            [
+                farmacia.nome_fantasia,
+                farmacia.razao_social or "",
+                farmacia.cnpj,
+                farmacia.responsavel,
+                farmacia.endereco,
+                farmacia.created_at.strftime("%d/%m/%Y") if farmacia.created_at else "",
+            ]
+        )
 
     tabela = Table(dados_tabela, colWidths=[1.5 * inch, 1.5 * inch, 1 * inch, 1 * inch, 1.5 * inch, 1 * inch])
     tabela = aplicar_estilo_tabela(tabela)
@@ -468,14 +469,12 @@ def exportar_pacientes_pdf():
     registrar_log("Exportação PDF", "Exportou lista de pacientes em PDF")
 
     resposta = Response(content_type="application/pdf")
-    resposta.headers["Content-Disposition"] = (
-        f"attachment; filename=pacientes_{date.today()}.pdf"
-    )
+    resposta.headers["Content-Disposition"] = f"attachment; filename=pacientes_{date.today()}.pdf"
 
     buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter,
-                           rightMargin=1.5*cm, leftMargin=1.5*cm,
-                           topMargin=2*cm, bottomMargin=2*cm)
+    doc = SimpleDocTemplate(
+        buffer, pagesize=letter, rightMargin=1.5 * cm, leftMargin=1.5 * cm, topMargin=2 * cm, bottomMargin=2 * cm
+    )
     elementos = []
 
     criar_cabecalho_pdf(elementos, "Relatório de Pacientes")
@@ -483,13 +482,15 @@ def exportar_pacientes_pdf():
     dados_tabela = [["Nome", "CPF", "Data de Nascimento", "Endereço", "Cadastrado em"]]
 
     for paciente in lista_pacientes:
-        dados_tabela.append([
-            paciente.nome,
-            paciente.cpf,
-            paciente.data_nascimento.strftime("%d/%m/%Y") if paciente.data_nascimento else "",
-            paciente.endereco or "",
-            paciente.created_at.strftime("%d/%m/%Y") if paciente.created_at else "",
-        ])
+        dados_tabela.append(
+            [
+                paciente.nome,
+                paciente.cpf,
+                paciente.data_nascimento.strftime("%d/%m/%Y") if paciente.data_nascimento else "",
+                paciente.endereco or "",
+                paciente.created_at.strftime("%d/%m/%Y") if paciente.created_at else "",
+            ]
+        )
 
     tabela = Table(dados_tabela, colWidths=[2 * inch, 1 * inch, 1 * inch, 1.5 * inch, 1 * inch])
     tabela = aplicar_estilo_tabela(tabela)
@@ -517,9 +518,7 @@ def exportar_doacoes_pdf():
     registrar_log("Exportação PDF", "Exportou histórico de doações em PDF")
 
     resposta = Response(content_type="application/pdf")
-    resposta.headers["Content-Disposition"] = (
-        f"attachment; filename=doacoes_{date.today()}.pdf"
-    )
+    resposta.headers["Content-Disposition"] = f"attachment; filename=doacoes_{date.today()}.pdf"
 
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=letter)
@@ -532,27 +531,31 @@ def exportar_doacoes_pdf():
     dados_tabela = [["Data/Hora", "Medicamento", "Lote", "Qtd", "Responsável", "Cargo"]]
 
     for doacao in lista_doacoes:
-        dados_tabela.append([
-            doacao.data_doacao.strftime("%d/%m/%Y %H:%M"),
-            doacao.medicamento.nome if doacao.medicamento else "—",
-            doacao.medicamento.lote if doacao.medicamento else "—",
-            str(doacao.quantidade),
-            doacao.usuario.nome if doacao.usuario else "—",
-            doacao.usuario.cargo if doacao.usuario else "—",
-        ])
+        dados_tabela.append(
+            [
+                doacao.data_doacao.strftime("%d/%m/%Y %H:%M"),
+                doacao.medicamento.nome if doacao.medicamento else "—",
+                doacao.medicamento.lote if doacao.medicamento else "—",
+                str(doacao.quantidade),
+                doacao.usuario.nome if doacao.usuario else "—",
+                doacao.usuario.cargo if doacao.usuario else "—",
+            ]
+        )
 
     tabela = Table(dados_tabela, colWidths=[1.2 * inch, 1.5 * inch, 0.8 * inch, 0.5 * inch, 1.2 * inch, 1 * inch])
     tabela.setStyle(
-        TableStyle([
-            ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
-            ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
-            ("ALIGN", (0, 0), (-1, -1), "CENTER"),
-            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-            ("FONTSIZE", (0, 0), (-1, 0), 12),
-            ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
-            ("BACKGROUND", (0, 1), (-1, -1), colors.beige),
-            ("GRID", (0, 0), (-1, -1), 1, colors.black),
-        ])
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+                ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                ("FONTSIZE", (0, 0), (-1, 0), 12),
+                ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
+                ("BACKGROUND", (0, 1), (-1, -1), colors.beige),
+                ("GRID", (0, 0), (-1, -1), 1, colors.black),
+            ]
+        )
     )
 
     elementos.append(tabela)
@@ -582,26 +585,19 @@ def exportar_sumario_pdf():
     total_pacientes = Paciente.query.count()
 
     resposta = Response(content_type="application/pdf")
-    resposta.headers["Content-Disposition"] = (
-        f"attachment; filename=sumario_redevita_{date.today()}.pdf"
-    )
+    resposta.headers["Content-Disposition"] = f"attachment; filename=sumario_redevita_{date.today()}.pdf"
 
     buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter,
-                           rightMargin=1.5*cm, leftMargin=1.5*cm,
-                           topMargin=2*cm, bottomMargin=2*cm)
+    doc = SimpleDocTemplate(
+        buffer, pagesize=letter, rightMargin=1.5 * cm, leftMargin=1.5 * cm, topMargin=2 * cm, bottomMargin=2 * cm
+    )
     elementos = []
 
     criar_cabecalho_pdf(elementos, "Sumário Executivo - RedeVita")
 
     styles = getSampleStyleSheet()
     estilo_resumo = ParagraphStyle(
-        'Resumo',
-        parent=styles['Normal'],
-        fontSize=11,
-        textColor=colors.HexColor(COR_TEXTO),
-        spaceAfter=12,
-        leading=16
+        "Resumo", parent=styles["Normal"], fontSize=11, textColor=colors.HexColor(COR_TEXTO), spaceAfter=12, leading=16
     )
 
     dados_resumo = [
@@ -619,8 +615,8 @@ def exportar_sumario_pdf():
     tabela_resumo = aplicar_estilo_tabela(tabela_resumo)
     elementos.append(tabela_resumo)
 
-    elementos.append(Spacer(1, 0.5*cm))
-    elementos.append(Paragraph("Observações:", styles['Heading3']))
+    elementos.append(Spacer(1, 0.5 * cm))
+    elementos.append(Paragraph("Observações:", styles["Heading3"]))
 
     lista_observacoes = []
     if medicamentos_vencidos > 0:

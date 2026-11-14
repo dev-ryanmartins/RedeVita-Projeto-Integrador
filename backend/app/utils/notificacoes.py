@@ -1,6 +1,5 @@
 import os
 import logging
-import threading
 from datetime import date, timedelta
 from concurrent.futures import ThreadPoolExecutor
 from app.models.medicamento import Medicamento
@@ -172,9 +171,7 @@ def enviar_email_alertas(destinatario: str, dias: int = 30) -> dict:
             html="".join(linhas_html),
         )
         mail.send(msg)
-        logger.info(
-            "E-mail de alertas enviado para %s (%d alertas)", destinatario, total
-        )
+        logger.info("E-mail de alertas enviado para %s (%d alertas)", destinatario, total)
         return {
             "ok": True,
             "mensagem": f"E-mail enviado com {total} alerta(s).",
@@ -195,12 +192,13 @@ def enviar_email_alertas_async(destinatario: str, dias: int = 30) -> None:
     Envia e-mail de alertas de forma assíncrona.
     Não bloqueia a rota HTTP.
     """
+
     def _send():
         try:
             enviar_email_alertas(destinatario, dias)
         except Exception as e:
             logger.error("Erro no envio assíncrono de alertas: %s", e)
-    
+
     _notification_executor.submit(_send)
 
 
@@ -210,9 +208,7 @@ def _get_twilio_client():
     sid = os.environ.get("TWILIO_ACCOUNT_SID", "").strip()
     token = os.environ.get("TWILIO_AUTH_TOKEN", "").strip()
     if not sid or not token:
-        raise RuntimeError(
-            "Credenciais Twilio não configuradas (TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN)."
-        )
+        raise RuntimeError("Credenciais Twilio não configuradas (TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN).")
     return Client(sid, token)
 
 
@@ -226,11 +222,7 @@ def _numero_from() -> str:
 def medicamentos_criticos(dias: int = 60):
     hoje = date.today()
     limite = hoje + timedelta(days=dias)
-    return (
-        Medicamento.query.filter(Medicamento.data_validade <= limite)
-        .order_by(Medicamento.data_validade.asc())
-        .all()
-    )
+    return Medicamento.query.filter(Medicamento.data_validade <= limite).order_by(Medicamento.data_validade.asc()).all()
 
 
 def _montar_mensagem(meds, dias: int) -> str:
@@ -287,14 +279,8 @@ def enviar_whatsapp(telefone: str, dias: int = 60) -> dict:
     try:
         client = _get_twilio_client()
         numero_from = _numero_from()
-        from_wa = (
-            f"whatsapp:{numero_from}"
-            if not numero_from.startswith("whatsapp:")
-            else numero_from
-        )
-        to_wa = (
-            f"whatsapp:{telefone}" if not telefone.startswith("whatsapp:") else telefone
-        )
+        from_wa = f"whatsapp:{numero_from}" if not numero_from.startswith("whatsapp:") else numero_from
+        to_wa = f"whatsapp:{telefone}" if not telefone.startswith("whatsapp:") else telefone
         msg = client.messages.create(body=mensagem, from_=from_wa, to=to_wa)
         logger.info("WhatsApp enviado para %s — SID %s", telefone, msg.sid)
         return {
@@ -314,16 +300,18 @@ def enviar_whatsapp(telefone: str, dias: int = 60) -> dict:
         }
 
 
-def enviar_notificacao_dispensacao(telefone: str, paciente_nome: str, medicamento_nome: str, farmacia_nome: str = "") -> dict:
+def enviar_notificacao_dispensacao(
+    telefone: str, paciente_nome: str, medicamento_nome: str, farmacia_nome: str = ""
+) -> dict:
     """
     Envia notificação WhatsApp/SMS quando uma prescrição é dispensada/liberada.
-    
+
     Args:
         telefone: Número de telefone do paciente (formato: +5511999999999)
         paciente_nome: Nome do paciente
         medicamento_nome: Nome do medicamento dispensado
         farmacia_nome: Nome da farmácia (opcional)
-    
+
     Returns:
         dict: Resultado do envio
     """
@@ -333,21 +321,21 @@ Olá, {paciente_nome}!
 
 Seu medicamento foi liberado e está pronto para retirada:
 💊 {medicamento_nome}"""
-    
+
     if farmacia_nome:
         mensagem += f"\n🏥 Local: {farmacia_nome}"
-    
+
     mensagem += "\n\nApresente este comprovante no local de retirada."
-    
+
     # Tenta WhatsApp primeiro, fallback para SMS
     try:
         client = _get_twilio_client()
         numero_from = _numero_from()
-        
+
         # WhatsApp
         from_wa = f"whatsapp:{numero_from}" if not numero_from.startswith("whatsapp:") else numero_from
         to_wa = f"whatsapp:{telefone}" if not telefone.startswith("whatsapp:") else telefone
-        
+
         try:
             msg = client.messages.create(body=mensagem, from_=from_wa, to=to_wa)
             logger.info("Notificação WhatsApp enviada para %s — SID %s", telefone, msg.sid)

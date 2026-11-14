@@ -15,13 +15,15 @@ from datetime import datetime
 @pytest.fixture
 def app():
     """Fixture para criar aplicação Flask de teste."""
-    app = create_app({
-        'TESTING': True,
-        'SQLALCHEMY_DATABASE_URI': 'sqlite:///:memory:',
-        'SQLALCHEMY_EXPIRE_ON_COMMIT': False,
-        'WTF_CSRF_ENABLED': False,
-    })
-    
+    app = create_app(
+        {
+            "TESTING": True,
+            "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
+            "SQLALCHEMY_EXPIRE_ON_COMMIT": False,
+            "WTF_CSRF_ENABLED": False,
+        }
+    )
+
     with app.app_context():
         db.create_all()
         yield app
@@ -45,90 +47,91 @@ def auth_usuario(app):
             email="usuario@teste.com",
             senha=criptografar_senha("senha123"),
             cargo="Admin",
-            ativo=True
+            ativo=True,
         )
         db.session.add(usuario)
         db.session.commit()
-        
+
         with app.test_client() as client:
-            client.post('/login', data={
-                'identificador': 'usuario@teste.com',
-                'senha': 'senha123'
-            })
+            client.post("/login", data={"identificador": "usuario@teste.com", "senha": "senha123"})
             yield client
 
 
 class TestAPIErrorResponseFormat:
     """Testes para formato de erro padronizado."""
-    
+
     def test_erro_inclui_correlation_id(self, client, app):
         """Resposta de erro deve incluir correlation_id."""
-        response = client.get('/api/inventario?limit=abc')
+        response = client.get("/api/inventario?limit=abc")
         assert response.status_code in [400, 422]
-        
+
         data = response.get_json()
         # A resposta deve ter estrutura de erro
-        assert 'erro' in data or 'sucesso' in data
+        assert "erro" in data or "sucesso" in data
         # Se houver erro, deve ter correlation_id
-        if 'erro' in data:
-            assert 'correlation_id' in data['erro']
-    
+        if "erro" in data:
+            assert "correlation_id" in data["erro"]
+
     def test_erro_inclui_codigo_maquina(self, client, app):
         """Resposta de erro deve incluir código legível por máquina em endpoints padronizados."""
         # Testar com usuário autenticado para evitar redirecionamento de login
         with app.app_context():
             from app.models.usuario import Usuario
             from app.core.security import criptografar_senha
+
             usuario = Usuario(
                 nome="Teste",
                 cpf="123.456.789-00",
                 email="teste@teste.com",
                 senha=criptografar_senha("senha123"),
                 cargo="Admin",
-                ativo=True
+                ativo=True,
             )
             db.session.add(usuario)
             db.session.commit()
-            
+
             with app.test_client() as auth_client:
-                auth_client.post('/login', data={
-                    'identificador': 'teste@teste.com',
-                    'senha': 'senha123'
-                })
+                auth_client.post("/login", data={"identificador": "teste@teste.com", "senha": "senha123"})
                 # Testar endpoint de triagem que usa novo formato
-                response = auth_client.post('/api/triagem', json={})
-                
-                if response.content_type == 'application/json':
+                response = auth_client.post("/api/triagem", json={})
+
+                if response.content_type == "application/json":
                     data = response.get_json()
-                    if 'erro' in data:
-                        assert 'codigo' in data['erro']
+                    if "erro" in data:
+                        assert "codigo" in data["erro"]
                         # Código deve ser um dos códigos definidos
                         codigos_validos = [
-                            'VALIDATION_ERROR', 'UNAUTHORIZED', 'FORBIDDEN',
-                            'NOT_FOUND', 'CONFLICT', 'INTERNAL_ERROR',
-                            'SERVICE_UNAVAILABLE', 'TIMEOUT', 'EXTERNAL_INTEGRATION_ERROR'
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "FORBIDDEN",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "INTERNAL_ERROR",
+                            "SERVICE_UNAVAILABLE",
+                            "TIMEOUT",
+                            "EXTERNAL_INTEGRATION_ERROR",
                         ]
-                        assert data['erro']['codigo'] in codigos_validos
-    
+                        assert data["erro"]["codigo"] in codigos_validos
+
     def test_erro_nao_exibe_excecao_bruta(self, client, app):
         """Resposta de erro não deve expor exceção bruta."""
-        response = client.get('/api/inventario?limit=abc')
+        response = client.get("/api/inventario?limit=abc")
         assert response.status_code in [400, 422]
-        
+
         data = response.get_json()
-        if 'erro' in data:
-            mensagem = data['erro'].get('mensagem', '')
+        if "erro" in data:
+            mensagem = data["erro"].get("mensagem", "")
             if isinstance(mensagem, str):
                 # Mensagem não deve conter traços de exceção
-                assert 'Traceback' not in mensagem
-                assert 'Exception' not in mensagem
+                assert "Traceback" not in mensagem
+                assert "Exception" not in mensagem
                 assert 'File "' not in mensagem
-                assert 'line ' not in mensagem.lower()
+                assert "line " not in mensagem.lower()
 
 
 class TestAPIInventarioContract:
     """Testes de contrato para endpoint de inventário."""
-    
+
     def test_listar_inventario_paginacao(self, client, auth_usuario, app):
         """GET /api/inventario deve suportar paginação."""
         with app.app_context():
@@ -140,20 +143,20 @@ class TestAPIInventarioContract:
                     data_validade=datetime(2025, 12, 31).date(),
                     quantidade=10,
                     status_semaforo=0,
-                    tarja="Sem Tarja"
+                    tarja="Sem Tarja",
                 )
                 db.session.add(medicamento)
             db.session.commit()
-        
-        response = client.get('/api/inventario?page=1&limit=10')
+
+        response = client.get("/api/inventario?page=1&limit=10")
         assert response.status_code == 200
-        
+
         data = response.get_json()
         # Dados podem estar em 'dados' ou direto na raiz
-        dados_content = data.get('dados', data.get('data', data))
-        assert 'medicamentos' in dados_content or 'total' in dados_content
-        assert 'correlation_id' in data
-    
+        dados_content = data.get("dados", data.get("data", data))
+        assert "medicamentos" in dados_content or "total" in dados_content
+        assert "correlation_id" in data
+
     def test_criar_medicamento_sucesso(self, client, auth_usuario, app):
         """POST /api/inventario deve criar medicamento com sucesso."""
         payload = {
@@ -161,47 +164,42 @@ class TestAPIInventarioContract:
             "lote": "LOT123",
             "data_validade": "2025-12-31",
             "quantidade": 50,
-            "tarja": "Sem Tarja"
+            "tarja": "Sem Tarja",
         }
-        
-        response = client.post('/api/inventario', json=payload)
+
+        response = client.post("/api/inventario", json=payload)
         assert response.status_code in [200, 201]
-        
+
         data = response.get_json()
-        assert 'sucesso' in data or 'success' in data
-        assert 'correlation_id' in data
-    
+        assert "sucesso" in data or "success" in data
+        assert "correlation_id" in data
+
     def test_criar_medicamento_validacao_erro(self, client, auth_usuario, app):
         """POST /api/inventario deve validar dados de entrada."""
-        payload = {
-            "nome": "",  # Nome vazio
-            "lote": "LOT123",
-            "data_validade": "2025-12-31",
-            "quantidade": 50
-        }
-        
-        response = client.post('/api/inventario', json=payload)
+        payload = {"nome": "", "lote": "LOT123", "data_validade": "2025-12-31", "quantidade": 50}  # Nome vazio
+
+        response = client.post("/api/inventario", json=payload)
         assert response.status_code in [400, 422]
-        
+
         data = response.get_json()
-        assert 'erro' in data
-        assert 'codigo' in data['erro']
-        assert 'correlation_id' in data['erro']
-    
+        assert "erro" in data
+        assert "codigo" in data["erro"]
+        assert "correlation_id" in data["erro"]
+
     def test_medicamento_nao_encontrado(self, client, auth_usuario, app):
         """DELETE /api/inventario/{id} deve retornar 404 para ID inexistente."""
-        response = client.delete('/api/inventario/99999')
+        response = client.delete("/api/inventario/99999")
         assert response.status_code == 404
-        
+
         data = response.get_json()
-        assert 'erro' in data
-        assert data['erro']['codigo'] == 'NOT_FOUND'
-        assert 'correlation_id' in data['erro']
+        assert "erro" in data
+        assert data["erro"]["codigo"] == "NOT_FOUND"
+        assert "correlation_id" in data["erro"]
 
 
 class TestAPITriagemContract:
     """Testes de contrato para endpoint de triagem."""
-    
+
     def test_triagem_sucesso(self, client, auth_usuario, app):
         """POST /api/triagem deve processar triagem com sucesso."""
         payload = {
@@ -209,16 +207,16 @@ class TestAPITriagemContract:
             "lote": "LOT123",
             "data_validade": "2030-12-31",
             "quantidade": 50,
-            "tarja": "Sem Tarja"
+            "tarja": "Sem Tarja",
         }
-        
-        response = client.post('/api/triagem', json=payload)
+
+        response = client.post("/api/triagem", json=payload)
         assert response.status_code in [200, 201]
-        
+
         data = response.get_json()
-        assert 'sucesso' in data or 'success' in data
-        assert 'correlation_id' in data
-    
+        assert "sucesso" in data or "success" in data
+        assert "correlation_id" in data
+
     def test_triagem_medicamento_vencido(self, client, auth_usuario, app):
         """POST /api/triagem deve bloquear medicamento vencido."""
         payload = {
@@ -226,19 +224,19 @@ class TestAPITriagemContract:
             "lote": "LOT123",
             "data_validade": "2020-01-01",
             "quantidade": 50,
-            "tarja": "Sem Tarja"
+            "tarja": "Sem Tarja",
         }
-        
-        response = client.post('/api/triagem', json=payload)
+
+        response = client.post("/api/triagem", json=payload)
         assert response.status_code == 422
-        
+
         data = response.get_json()
-        assert 'erro' in data
-        assert 'codigo' in data['erro']
-        assert 'correlation_id' in data['erro']
+        assert "erro" in data
+        assert "codigo" in data["erro"]
+        assert "correlation_id" in data["erro"]
         # Mensagem não deve expor detalhes técnicos
-        assert 'Traceback' not in data['erro']['mensagem']
-    
+        assert "Traceback" not in data["erro"]["mensagem"]
+
     def test_triagem_portaria_344(self, client, auth_usuario, app):
         """POST /api/triagem deve bloquear Portaria 344."""
         payload = {
@@ -246,55 +244,51 @@ class TestAPITriagemContract:
             "lote": "LOT123",
             "data_validade": "2030-12-31",
             "quantidade": 50,
-            "tarja": "Portaria 344"
+            "tarja": "Portaria 344",
         }
-        
-        response = client.post('/api/triagem', json=payload)
+
+        response = client.post("/api/triagem", json=payload)
         assert response.status_code == 422
-        
+
         data = response.get_json()
-        assert 'erro' in data
-        assert 'codigo' in data['erro']
-        assert 'correlation_id' in data['erro']
+        assert "erro" in data
+        assert "codigo" in data["erro"]
+        assert "correlation_id" in data["erro"]
 
 
 class TestAPIQRCodeContract:
     """Testes de contrato para endpoint de QR Code."""
-    
+
     def test_qrcode_validate_sem_dados(self, client, auth_usuario, app):
         """POST /api/qrcode/validate deve retornar erro sem dados."""
-        response = client.post('/api/qrcode/validate', json={})
+        response = client.post("/api/qrcode/validate", json={})
         assert response.status_code == 400
-        
+
         data = response.get_json()
-        assert 'erro' in data
+        assert "erro" in data
         # API agora usa nonce apenas, sem assinatura HMAC
-        assert "Dados do QR Code não fornecidos" in data['erro']
-    
+        assert "Dados do QR Code não fornecidos" in data["erro"]
+
     def test_qrcode_validate_sem_nonce(self, client, auth_usuario, app):
         """POST /api/qrcode/validate deve retornar erro sem nonce."""
-        payload = {
-            "nonce": ""
-        }
-        
-        response = client.post('/api/qrcode/validate', json=payload)
+        payload = {"nonce": ""}
+
+        response = client.post("/api/qrcode/validate", json=payload)
         assert response.status_code == 400
-        
+
         data = response.get_json()
-        assert 'erro' in data
+        assert "erro" in data
         # API retorna "Nonce do QR Code não fornecido"
-        assert "Nonce do QR Code não fornecido" in data['erro']
-    
+        assert "Nonce do QR Code não fornecido" in data["erro"]
+
     def test_qrcode_validate_nonce_invalido(self, client, auth_usuario, app):
         """POST /api/qrcode/validate deve rejeitar nonce inexistente."""
-        payload = {
-            "nonce": "nonce_inexistente_aleatorio"
-        }
-        
-        response = client.post('/api/qrcode/validate', json=payload)
+        payload = {"nonce": "nonce_inexistente_aleatorio"}
+
+        response = client.post("/api/qrcode/validate", json=payload)
         assert response.status_code == 404
-        
+
         data = response.get_json()
-        assert 'erro' in data
+        assert "erro" in data
         # API retorna "QR Code inválido ou não encontrado"
-        assert "QR Code inválido ou não encontrado" in data['erro']
+        assert "QR Code inválido ou não encontrado" in data["erro"]

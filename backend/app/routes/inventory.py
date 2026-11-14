@@ -13,6 +13,7 @@ from flask import (
     jsonify,
 )
 from flask_login import login_required
+from sqlalchemy.orm import joinedload
 from app.models.medicamento import Medicamento
 from app.models.medicamento_referencia import MedicamentoReferencia
 from app.models.doacao import Doacao
@@ -23,10 +24,15 @@ from app.database import db
 from app.utils.semaforo import calcular_status_semaforo
 from app.schemas.med_schema import validar_entrada_medicamento
 from app.utils.log_helper import registrar_log
-from app.utils.semaforo import calcular_status_semaforo
 from app.utils.anvisa_api import consultar_regularidade_medicamento
 from app.utils.tarja_mapper import mapear_tarja_por_principio_ativo
-from app.core.decorators import admin_required, farmaceutico_required, voluntario_required, equipe_clinica_required, audit_critical_action
+from app.core.decorators import (
+    admin_required,
+    farmaceutico_required,
+    voluntario_required,
+    equipe_clinica_required,
+    audit_critical_action,
+)
 from datetime import datetime, date
 
 inventory_bp = Blueprint("inventory", __name__)
@@ -43,9 +49,7 @@ TIPOS_RECEITA = [
 @lru_cache(maxsize=1024)
 def buscar_medicamentos_referencia(nome_busca: str):
     resultados = (
-        MedicamentoReferencia.query.filter(
-            MedicamentoReferencia.nome_comercial.ilike(f"%{nome_busca}%")
-        )
+        MedicamentoReferencia.query.filter(MedicamentoReferencia.nome_comercial.ilike(f"%{nome_busca}%"))
         .order_by(MedicamentoReferencia.nome_comercial)
         .limit(10)
         .all()
@@ -82,19 +86,17 @@ def dashboard():
     total_pacientes = Paciente.query.count()
 
     proximos_vencimento = (
-        Medicamento.query.filter_by(ativo=True).filter(Medicamento.status_semaforo == 1)
+        Medicamento.query.filter_by(ativo=True)
+        .filter(Medicamento.status_semaforo == 1)
         .order_by(Medicamento.data_validade)
         .limit(5)
         .all()
     )
-    ultimos_medicamentos = (
-        Medicamento.query.filter_by(ativo=True).order_by(Medicamento.id.desc()).limit(5).all()
-    )
+    ultimos_medicamentos = Medicamento.query.filter_by(ativo=True).order_by(Medicamento.id.desc()).limit(5).all()
     ultimos_medicos = Medico.query.order_by(Medico.id.desc()).limit(3).all()
     ultimas_farmacias = Farmacia.query.order_by(Farmacia.id.desc()).limit(3).all()
 
-    meses_abreviados = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
-                        "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
+    meses_abreviados = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
     doacoes_mensais = [0] * 6
     meses_chave = []
 
@@ -162,14 +164,16 @@ def listar_medicamentos():
     pagina = request.args.get("page", 1, type=int)
     por_pagina = 20
 
-    # Filtra apenas medicamentos ativos (não arquivados)
-    medicamentos = Medicamento.query.filter_by(ativo=True).order_by(Medicamento.id.desc()).paginate(
-        page=pagina, per_page=por_pagina, error_out=False
+    # Filtra apenas medicamentos ativos (não arquivados).
+    # joinedload evita N+1 ao renderizar o template, que acessa "med.referencia".
+    medicamentos = (
+        Medicamento.query.options(joinedload(Medicamento.referencia))
+        .filter_by(ativo=True)
+        .order_by(Medicamento.id.desc())
+        .paginate(page=pagina, per_page=por_pagina, error_out=False)
     )
 
-    referencias = MedicamentoReferencia.query.order_by(
-        MedicamentoReferencia.nome_comercial
-    ).all() or []
+    referencias = MedicamentoReferencia.query.order_by(MedicamentoReferencia.nome_comercial).all() or []
 
     total_controlados = sum(1 for m in medicamentos.items if m.controlado) or 0
     total_continuo = sum(1 for m in medicamentos.items if m.uso_continuo) or 0
@@ -196,32 +200,34 @@ def exportar_csv():
     output = io.StringIO()
     writer = csv.writer(output, delimiter=";", quoting=csv.QUOTE_ALL)
 
-    writer.writerow([
-        "Nome",
-        "Princípio Ativo",
-        "Tarja",
-        "Lote",
-        "Validade",
-        "Quantidade",
-        "Status",
-        "Uso Contínuo",
-    ])
+    writer.writerow(
+        [
+            "Nome",
+            "Princípio Ativo",
+            "Tarja",
+            "Lote",
+            "Validade",
+            "Quantidade",
+            "Status",
+            "Uso Contínuo",
+        ]
+    )
 
     for med in medicamentos:
-        writer.writerow([
-            med.nome,
-            med.principio_ativo or "—",
-            med.tarja,
-            med.lote,
-            med.data_validade.strftime("%d/%m/%Y"),
-            med.quantidade,
-            status_map.get(med.status_semaforo, "—"),
-            "Sim" if med.uso_continuo else "Não",
-        ])
+        writer.writerow(
+            [
+                med.nome,
+                med.principio_ativo or "—",
+                med.tarja,
+                med.lote,
+                med.data_validade.strftime("%d/%m/%Y"),
+                med.quantidade,
+                status_map.get(med.status_semaforo, "—"),
+                "Sim" if med.uso_continuo else "Não",
+            ]
+        )
 
-    registrar_log(
-        "Exportação CSV", f"Estoque exportado ({len(medicamentos)} medicamentos)"
-    )
+    registrar_log("Exportação CSV", f"Estoque exportado ({len(medicamentos)} medicamentos)")
 
     filename = f'estoque_redevita_{date.today().strftime("%Y%m%d")}.csv'
     return Response(
@@ -243,30 +249,32 @@ def exportar_csv_resumo():
     output = io.StringIO()
     writer = csv.writer(output, delimiter=";", quoting=csv.QUOTE_ALL)
 
-    writer.writerow([
-        "ID",
-        "Nome",
-        "Lote",
-        "Validade",
-        "Quantidade",
-        "Status",
-        "Tarja",
-    ])
+    writer.writerow(
+        [
+            "ID",
+            "Nome",
+            "Lote",
+            "Validade",
+            "Quantidade",
+            "Status",
+            "Tarja",
+        ]
+    )
 
     for med in medicamentos:
-        writer.writerow([
-            med.id,
-            med.nome,
-            med.lote,
-            med.data_validade.strftime("%d/%m/%Y"),
-            med.quantidade,
-            status_map.get(med.status_semaforo, "—"),
-            med.tarja,
-        ])
+        writer.writerow(
+            [
+                med.id,
+                med.nome,
+                med.lote,
+                med.data_validade.strftime("%d/%m/%Y"),
+                med.quantidade,
+                status_map.get(med.status_semaforo, "—"),
+                med.tarja,
+            ]
+        )
 
-    registrar_log(
-        "Exportação CSV Resumo", f"Resumo exportado ({len(medicamentos)} medicamentos)"
-    )
+    registrar_log("Exportação CSV Resumo", f"Resumo exportado ({len(medicamentos)} medicamentos)")
 
     filename = f'resumo_estoque_{date.today().strftime("%Y%m%d")}.csv'
     return Response(
@@ -279,7 +287,7 @@ def exportar_csv_resumo():
 @inventory_bp.route("/medicamento/novo", methods=["POST"])
 @login_required
 @farmaceutico_required
-@audit_critical_action('CADASTRO_MEDICAMENTO')
+@audit_critical_action("CADASTRO_MEDICAMENTO")
 def novo_medicamento():
     """Cadastra um novo medicamento no estoque"""
     dados_formulario = {
@@ -297,16 +305,16 @@ def novo_medicamento():
 
     tarja = request.form.get("tarja", "Sem Tarja").strip()
     principio_ativo = request.form.get("principio_ativo", "").strip() or None
-    
+
     # Mapeamento automático de tarja por princípio ativo
     tarja_mapeada = mapear_tarja_por_principio_ativo(dados_formulario["nome"], principio_ativo)
-    
+
     # Se o usuário selecionou "Sem Tarja" mas o mapeamento indica controle, forçar a tarja correta
     if tarja == "Sem Tarja" and tarja_mapeada != "Sem Tarja":
         tarja = tarja_mapeada
         flash(
             f'⚠️ Tarja ajustada automaticamente para "{tarja}" com base no princípio ativo/nome do medicamento conforme regulamentação ANVISA.',
-            "warning"
+            "warning",
         )
     elif tarja not in TARJAS_VALIDAS:
         tarja = tarja_mapeada
@@ -315,7 +323,7 @@ def novo_medicamento():
         if tarja == "Sem Tarja" and tarja_mapeada != "Sem Tarja":
             flash(
                 f'⚠️ Atenção: O medicamento "{dados_formulario["nome"]}" parece ser controlado ({tarja_mapeada}), mas foi classificado como "Sem Tarja". Verifique a classificação.',
-                "warning"
+                "warning",
             )
 
     uso_continuo = request.form.get("uso_continuo") == "1"
@@ -325,9 +333,12 @@ def novo_medicamento():
     try:
         data_validade = datetime.strptime(dados_formulario["data_validade"], "%Y-%m-%d").date()
         status_semaforo = calcular_status_semaforo(data_validade)
-        
+
         if status_semaforo == 2:
-            flash("ERRO BLOQUEANTE: Não é possível cadastrar medicamentos vencidos (status Vermelho). Medicamento fora da validade regulatória.", "danger")
+            flash(
+                "ERRO BLOQUEANTE: Não é possível cadastrar medicamentos vencidos (status Vermelho). Medicamento fora da validade regulatória.",
+                "danger",
+            )
             return redirect(url_for("inventory.listar_medicamentos"))
 
         novo_medicamento = Medicamento(
@@ -346,15 +357,29 @@ def novo_medicamento():
         if not validacao_ok:
             flash(f"Erro de validação ANVISA: {mensagem_erro}", "danger")
             return redirect(url_for("inventory.listar_medicamentos"))
-        
+
         if tarja == "Portaria 344":
-            flash("ERRO BLOQUEANTE: Substâncias controladas pela Portaria 344 não podem ser cadastradas automaticamente. Requer validação manual do farmacêutico responsável.", "danger")
+            flash(
+                "ERRO BLOQUEANTE: Substâncias controladas pela Portaria 344 não podem ser cadastradas automaticamente. Requer validação manual do farmacêutico responsável.",
+                "danger",
+            )
             return redirect(url_for("inventory.listar_medicamentos"))
-        
+
         principio_lower = (principio_ativo or "").lower()
-        controlled_keywords = ['antibiotico', 'antidepressivo', 'anfetamina', 'opiaceo', 'benzodiazepin', 'controlado', 'psicotropico']
+        controlled_keywords = [
+            "antibiotico",
+            "antidepressivo",
+            "anfetamina",
+            "opiaceo",
+            "benzodiazepin",
+            "controlado",
+            "psicotropico",
+        ]
         if any(keyword in principio_lower for keyword in controlled_keywords):
-            flash("ERRO BLOQUEANTE: Substâncias controladas detectadas pelo princípio ativo. Requer validação manual do farmacêutico responsável.", "danger")
+            flash(
+                "ERRO BLOQUEANTE: Substâncias controladas detectadas pelo princípio ativo. Requer validação manual do farmacêutico responsável.",
+                "danger",
+            )
             return redirect(url_for("inventory.listar_medicamentos"))
 
         if registro_ms:
@@ -362,19 +387,18 @@ def novo_medicamento():
 
             registrar_log(
                 "Consulta ANVISA",
-                f'Registro MS {registro_ms}: {resultado_anvisa["situacao"]} - {resultado_anvisa["detalhes"]}'
+                f'Registro MS {registro_ms}: {resultado_anvisa["situacao"]} - {resultado_anvisa["detalhes"]}',
             )
 
             if resultado_anvisa["regular"] is False:
                 flash(
                     f"⚠️ Alerta ANVISA: {resultado_anvisa['detalhes']}. Medicamento cadastrado com restrição sanitária.",
-                    "warning"
+                    "warning",
                 )
                 novo_medicamento.observacoes = f"RESTRIÇÃO ANVISA: {resultado_anvisa['detalhes']}"
             elif resultado_anvisa["regular"] is None:
                 flash(
-                    f"ℹ️ Nota ANVISA: {resultado_anvisa['detalhes']}. Não foi possível verificar regularidade.",
-                    "info"
+                    f"ℹ️ Nota ANVISA: {resultado_anvisa['detalhes']}. Não foi possível verificar regularidade.", "info"
                 )
 
         db.session.add(novo_medicamento)
@@ -396,7 +420,7 @@ def novo_medicamento():
 @inventory_bp.route("/medicamento/<int:med_id>/editar", methods=["POST"])
 @login_required
 @farmaceutico_required
-@audit_critical_action('EDIÇÃO_MEDICAMENTO')
+@audit_critical_action("EDIÇÃO_MEDICAMENTO")
 def editar_medicamento(med_id):
     medicamento = db.session.get(Medicamento, med_id)
     if not medicamento:
@@ -455,7 +479,7 @@ def editar_medicamento(med_id):
 @inventory_bp.route("/medicamento/<int:med_id>/baixar-estoque", methods=["POST"])
 @login_required
 @farmaceutico_required
-@audit_critical_action('BAIXA_ESTOQUE')
+@audit_critical_action("BAIXA_ESTOQUE")
 def baixar_estoque(med_id):
     medicamento = db.session.get(Medicamento, med_id)
     if not medicamento:
@@ -497,7 +521,9 @@ def baixar_estoque(med_id):
         medicamento.quantidade -= quantidade_baixa
         db.session.commit()
 
-        detalhes_log = f'Baixa de {quantidade_baixa} un. de "{medicamento.nome}" — Motivo: {motivo_baixa or "não informado"}'
+        detalhes_log = (
+            f'Baixa de {quantidade_baixa} un. de "{medicamento.nome}" — Motivo: {motivo_baixa or "não informado"}'
+        )
         if medicamento.controlado:
             detalhes_log += f" | CRM: {crm_medico} | Receita: {tipo_receita}"
             if numero_receita:
@@ -519,7 +545,7 @@ def baixar_estoque(med_id):
 @inventory_bp.route("/medicamento/<int:med_id>/excluir", methods=["POST"])
 @login_required
 @admin_required
-@audit_critical_action('EXCLUSÃO_MEDICAMENTO')
+@audit_critical_action("EXCLUSÃO_MEDICAMENTO")
 def excluir_medicamento(med_id):
     medicamento = db.session.get(Medicamento, med_id)
     if not medicamento:
@@ -538,15 +564,18 @@ def excluir_medicamento(med_id):
             medicamento.ativo = False
             db.session.commit()
 
-            tipo_log = "Portaria 344 - Arquivamento" if tarja_medicamento == "Portaria 344" else "Arquivamento de Medicamento"
+            tipo_log = (
+                "Portaria 344 - Arquivamento" if tarja_medicamento == "Portaria 344" else "Arquivamento de Medicamento"
+            )
             registrar_log(
-                tipo_log, f'Medicamento "{nome_medicamento}" (Tarja: {tarja_medicamento}) arquivado - {doacoes_vinculadas} doação(ões) vinculada(s)'
+                tipo_log,
+                f'Medicamento "{nome_medicamento}" (Tarja: {tarja_medicamento}) arquivado - {doacoes_vinculadas} doação(ões) vinculada(s)',
             )
             flash(
                 f'Medicamento "{nome_medicamento}" foi arquivado com sucesso. '
-                f'Há {doacoes_vinculadas} doação(ões) vinculada(s) ao histórico deste medicamento, '
-                f'portanto ele foi preservado para manter a integridade dos registros.',
-                "warning"
+                f"Há {doacoes_vinculadas} doação(ões) vinculada(s) ao histórico deste medicamento, "
+                f"portanto ele foi preservado para manter a integridade dos registros.",
+                "warning",
             )
         else:
             # Hard delete: remove fisicamente se não houver doações
@@ -561,10 +590,7 @@ def excluir_medicamento(med_id):
 
     except Exception as e:
         db.session.rollback()
-        flash(
-            f"Erro ao processar exclusão: {str(e)}",
-            "danger"
-        )
+        flash(f"Erro ao processar exclusão: {str(e)}", "danger")
 
     return redirect(url_for("inventory.listar_medicamentos"))
 

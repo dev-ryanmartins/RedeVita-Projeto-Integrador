@@ -5,7 +5,6 @@ Tests centralized validation rules for batch expiration, classification,
 quantity, and eligibility across web and API routes.
 """
 
-import pytest
 from datetime import date, datetime, timedelta
 from app.utils.medication_validation import (
     validate_expiration,
@@ -56,13 +55,13 @@ class TestExpirationValidation:
         # Set frozen time to 2024-01-15
         frozen_date = date(2024, 1, 15)
         set_time_provider(lambda: frozen_date)
-        
+
         try:
             # Date before frozen time should be expired
             past_date = date(2024, 1, 10)
             result = validate_expiration(past_date)
             assert result.is_valid is False
-            
+
             # Date after frozen time should be valid
             future_date = date(2024, 2, 10)
             result = validate_expiration(future_date)
@@ -74,12 +73,12 @@ class TestExpirationValidation:
     def test_expiration_with_custom_reference_date(self):
         """Expiration validation should accept custom reference date."""
         reference = date(2024, 6, 1)
-        
+
         # Date before reference should be expired
         past_date = date(2024, 5, 1)
         result = validate_expiration(past_date, reference_date=reference)
         assert result.is_valid is False
-        
+
         # Date after reference should be valid
         future_date = date(2024, 7, 1)
         result = validate_expiration(future_date, reference_date=reference)
@@ -196,7 +195,7 @@ class TestBatchCreationValidation:
             lote="LOT12345",
             data_validade=date.today() + timedelta(days=90),
             quantidade=100,
-            tarja="Sem Tarja"
+            tarja="Sem Tarja",
         )
         assert result.is_valid is True
         assert result.error_message is None
@@ -208,7 +207,7 @@ class TestBatchCreationValidation:
             lote="LOT12345",
             data_validade=date.today() - timedelta(days=10),
             quantidade=100,
-            tarja="Sem Tarja"
+            tarja="Sem Tarja",
         )
         assert result.is_valid is False
         assert "vencido" in result.error_message.lower()
@@ -220,7 +219,7 @@ class TestBatchCreationValidation:
             lote="LOT12345",
             data_validade=date.today() + timedelta(days=90),
             quantidade=100,
-            tarja="Invalid Tarja"
+            tarja="Invalid Tarja",
         )
         assert result.is_valid is False
         assert "inválida" in result.error_message.lower()
@@ -232,7 +231,7 @@ class TestBatchCreationValidation:
             lote="LOT12345",
             data_validade=date.today() + timedelta(days=90),
             quantidade=-5,
-            tarja="Sem Tarja"
+            tarja="Sem Tarja",
         )
         assert result.is_valid is False
         assert "quantidade" in result.error_message.lower()
@@ -240,11 +239,7 @@ class TestBatchCreationValidation:
     def test_batch_missing_name(self):
         """Missing name should fail validation."""
         result = validate_batch_for_creation(
-            nome="",
-            lote="LOT12345",
-            data_validade=date.today() + timedelta(days=90),
-            quantidade=100,
-            tarja="Sem Tarja"
+            nome="", lote="LOT12345", data_validade=date.today() + timedelta(days=90), quantidade=100, tarja="Sem Tarja"
         )
         assert result.is_valid is False
         assert "nome" in result.error_message.lower()
@@ -256,7 +251,7 @@ class TestBatchCreationValidation:
             lote="",
             data_validade=date.today() + timedelta(days=90),
             quantidade=100,
-            tarja="Sem Tarja"
+            tarja="Sem Tarja",
         )
         assert result.is_valid is False
         assert "lote" in result.error_message.lower()
@@ -264,11 +259,7 @@ class TestBatchCreationValidation:
     def test_batch_multiple_errors(self):
         """Multiple errors should be reported together."""
         result = validate_batch_for_creation(
-            nome="",
-            lote="",
-            data_validade=date.today() - timedelta(days=10),
-            quantidade=-5,
-            tarja="Invalid"
+            nome="", lote="", data_validade=date.today() - timedelta(days=10), quantidade=-5, tarja="Invalid"
         )
         assert result.is_valid is False
         # Should contain multiple error messages
@@ -281,18 +272,14 @@ class TestStockReductionValidation:
     def test_valid_stock_reduction(self):
         """Valid stock reduction should pass."""
         result = validate_batch_for_stock_reduction(
-            data_validade=date.today() + timedelta(days=60),
-            quantidade_solicitada=10,
-            quantidade_disponivel=100
+            data_validade=date.today() + timedelta(days=60), quantidade_solicitada=10, quantidade_disponivel=100
         )
         assert result.is_valid is True
 
     def test_stock_reduction_expired_batch(self):
         """Cannot reduce stock of expired batch."""
         result = validate_batch_for_stock_reduction(
-            data_validade=date.today() - timedelta(days=10),
-            quantidade_solicitada=10,
-            quantidade_disponivel=100
+            data_validade=date.today() - timedelta(days=10), quantidade_solicitada=10, quantidade_disponivel=100
         )
         assert result.is_valid is False
         assert "vencido" in result.error_message.lower()
@@ -300,9 +287,7 @@ class TestStockReductionValidation:
     def test_stock_reduction_insufficient_quantity(self):
         """Cannot reduce more than available."""
         result = validate_batch_for_stock_reduction(
-            data_validade=date.today() + timedelta(days=60),
-            quantidade_solicitada=150,
-            quantidade_disponivel=100
+            data_validade=date.today() + timedelta(days=60), quantidade_solicitada=150, quantidade_disponivel=100
         )
         assert result.is_valid is False
         assert "insuficiente" in result.error_message.lower()
@@ -310,9 +295,7 @@ class TestStockReductionValidation:
     def test_stock_reduction_zero_quantity(self):
         """Cannot reduce zero quantity."""
         result = validate_batch_for_stock_reduction(
-            data_validade=date.today() + timedelta(days=60),
-            quantidade_solicitada=0,
-            quantidade_disponivel=100
+            data_validade=date.today() + timedelta(days=60), quantidade_solicitada=0, quantidade_disponivel=100
         )
         assert result.is_valid is False
         assert "maior que zero" in result.error_message.lower()
@@ -320,9 +303,7 @@ class TestStockReductionValidation:
     def test_stock_reduction_negative_quantity(self):
         """Cannot reduce negative quantity."""
         result = validate_batch_for_stock_reduction(
-            data_validade=date.today() + timedelta(days=60),
-            quantidade_solicitada=-5,
-            quantidade_disponivel=100
+            data_validade=date.today() + timedelta(days=60), quantidade_solicitada=-5, quantidade_disponivel=100
         )
         assert result.is_valid is False
 
@@ -370,18 +351,18 @@ class TestSemaforoStatus:
         """Status calculation should respect frozen time."""
         frozen_date = date(2024, 1, 15)
         set_time_provider(lambda: frozen_date)
-        
+
         try:
             # 60 days after frozen time should be green
             future_date = date(2024, 3, 15)
             status = calculate_semaforo_status(future_date)
             assert status == 0
-            
+
             # 10 days after frozen time should be yellow
             near_date = date(2024, 1, 25)
             status = calculate_semaforo_status(near_date)
             assert status == 1
-            
+
             # Before frozen time should be red
             past_date = date(2024, 1, 10)
             status = calculate_semaforo_status(past_date)
@@ -415,13 +396,13 @@ class TestEligibilityForReservation:
         """Eligibility should respect frozen time."""
         frozen_date = date(2024, 6, 1)
         set_time_provider(lambda: frozen_date)
-        
+
         try:
             # After frozen time should be eligible
             future_date = date(2024, 7, 1)
             eligible = is_batch_eligible_for_reservation(future_date)
             assert eligible is True
-            
+
             # Before frozen time should not be eligible
             past_date = date(2024, 5, 1)
             eligible = is_batch_eligible_for_reservation(past_date)
@@ -444,7 +425,7 @@ class TestTimeProvider:
         """Custom time provider should return specified date."""
         custom_date = date(2024, 3, 15)
         set_time_provider(lambda: custom_date)
-        
+
         try:
             current = get_current_date()
             assert current == custom_date
@@ -456,7 +437,7 @@ class TestTimeProvider:
         custom_date = date(2024, 3, 15)
         set_time_provider(lambda: custom_date)
         set_time_provider(None)
-        
+
         current = get_current_date()
         assert isinstance(current, date)
         assert abs((current - date.today()).days) <= 1
@@ -465,7 +446,7 @@ class TestTimeProvider:
         """Provider returning datetime should be converted to date."""
         custom_datetime = datetime(2024, 3, 15, 12, 30, 45)
         set_time_provider(lambda: custom_datetime)
-        
+
         try:
             current = get_current_date()
             assert isinstance(current, date)

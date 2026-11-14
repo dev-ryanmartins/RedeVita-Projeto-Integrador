@@ -6,7 +6,7 @@ Verifica correspondência entre ofertas e necessidades
 import pytest
 from main import create_app
 from app.database import db
-from app.services.matching_service import MatchingService, MatchResultado
+from app.services.matching_service import MatchingService
 from app.models.oferta_medicamento import OfertaMedicamento, StatusOferta
 from app.models.necessidade_institucional import NecessidadeInstitucional, StatusNecessidade
 from app.models.medicamento import Medicamento
@@ -21,11 +21,13 @@ from datetime import datetime, timedelta
 @pytest.fixture
 def app():
     """App Flask com banco temporário."""
-    app = create_app({
-        'TESTING': True,
-        'SQLALCHEMY_DATABASE_URI': 'sqlite:///:memory:',
-        'WTF_CSRF_ENABLED': False,
-    })
+    app = create_app(
+        {
+            "TESTING": True,
+            "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
+            "WTF_CSRF_ENABLED": False,
+        }
+    )
     with app.app_context():
         db.create_all()
         yield app
@@ -40,7 +42,7 @@ def farmacia(app):
         razao_social="Farmácia Teste LTDA",
         cnpj="12345678000190",
         endereco="Rua Teste, 123",
-        responsavel="Responsável Teste"
+        responsavel="Responsável Teste",
     )
     db.session.add(farmacia)
     db.session.commit()
@@ -50,11 +52,7 @@ def farmacia(app):
 @pytest.fixture
 def referencia_medicamento(app):
     """Referência de medicamento de teste."""
-    referencia = MedicamentoReferencia(
-        nome_comercial="Paracetamol",
-        principio_ativo="paracetamol",
-        lista_portaria=None
-    )
+    referencia = MedicamentoReferencia(nome_comercial="Paracetamol", principio_ativo="paracetamol", lista_portaria=None)
     db.session.add(referencia)
     db.session.commit()
     return referencia
@@ -69,7 +67,7 @@ def medicamento(app, referencia_medicamento):
         data_validade=datetime.now() + timedelta(days=365),
         quantidade=100,
         referencia_id=referencia_medicamento.id,
-        ativo=True
+        ativo=True,
     )
     db.session.add(medicamento)
     db.session.commit()
@@ -80,11 +78,7 @@ def medicamento(app, referencia_medicamento):
 def instituicao(app):
     """Instituição de teste."""
     instituicao = Instituicao(
-        nome="Hospital Teste",
-        cnpj="98765432000190",
-        endereco="Av. Principal, 456",
-        responsavel="Dr. Teste",
-        ativo=True
+        nome="Hospital Teste", cnpj="98765432000190", endereco="Av. Principal, 456", responsavel="Dr. Teste", ativo=True
     )
     db.session.add(instituicao)
     db.session.commit()
@@ -100,7 +94,7 @@ def usuario(app):
         email="usuario@teste.com",
         senha=criptografar_senha("senha123"),
         cargo="Admin",
-        ativo=True
+        ativo=True,
     )
     db.session.add(usuario)
     db.session.commit()
@@ -116,7 +110,7 @@ def oferta(farmacia, medicamento, usuario):
         quantidade_ofertada=50,
         quantidade_reservada=0,
         status=StatusOferta.DISPONIVEL.value,
-        criado_por_id=usuario.id
+        criado_por_id=usuario.id,
     )
     db.session.add(oferta)
     db.session.commit()
@@ -134,7 +128,7 @@ def necessidade(instituicao, referencia_medicamento):
         unidade="unidade",
         prioridade="media",
         status=StatusNecessidade.REGISTRADA.value,
-        criado_por_id=1
+        criado_por_id=1,
     )
     db.session.add(necessidade)
     db.session.commit()
@@ -144,7 +138,7 @@ def necessidade(instituicao, referencia_medicamento):
 def test_buscar_matches_para_necessidade(oferta, necessidade):
     """Testa busca de matches para uma necessidade."""
     matches = MatchingService.buscar_matches_para_necessidade(necessidade.id)
-    
+
     assert len(matches) > 0
     assert matches[0].oferta.id == oferta.id
     assert matches[0].necessidade.id == necessidade.id
@@ -154,7 +148,7 @@ def test_buscar_matches_para_necessidade(oferta, necessidade):
 def test_buscar_matches_para_oferta(oferta, necessidade):
     """Testa busca de matches para uma oferta."""
     matches = MatchingService.buscar_matches_para_oferta(oferta.id)
-    
+
     assert len(matches) > 0
     assert matches[0].oferta.id == oferta.id
     assert matches[0].necessidade.id == necessidade.id
@@ -164,7 +158,7 @@ def test_buscar_matches_para_oferta(oferta, necessidade):
 def test_match_quantidade_suficiente(oferta, necessidade):
     """Testa match com quantidade suficiente."""
     resultado = MatchingService._calcular_match(oferta, necessidade)
-    
+
     assert resultado.compativel is True
     assert "Quantidade suficiente" in resultado.motivo
 
@@ -174,9 +168,9 @@ def test_match_quantidade_insuficiente(oferta, necessidade):
     # Aumenta a quantidade solicitada para ser maior que a disponível
     necessidade.quantidade_solicitada = 100
     db.session.commit()
-    
+
     resultado = MatchingService._calcular_match(oferta, necessidade)
-    
+
     # Oferta com quantidade menor que a solicitada não é compatível
     assert resultado.compativel is False
     assert "Quantidade insuficiente" in resultado.motivo
@@ -185,7 +179,7 @@ def test_match_quantidade_insuficiente(oferta, necessidade):
 def test_match_medicamento_exato(oferta, necessidade):
     """Testa match com medicamento exato (mesma referência)."""
     resultado = MatchingService._calcular_match(oferta, necessidade)
-    
+
     assert resultado.compativel is True
     assert "Medicamento exato" in resultado.motivo
 
@@ -198,16 +192,16 @@ def test_match_prioridade_urgente(oferta, necessidade):
     """
     necessidade.prioridade = "urgente"
     db.session.commit()
-    
+
     resultado = MatchingService._calcular_match(oferta, necessidade)
-    
+
     assert resultado.compativel is True
 
 
 def test_sugerir_reserva_compativel(oferta, necessidade):
     """Testa sugestão de reserva compatível."""
     sugestao = MatchingService.sugerir_reserva(oferta.id, necessidade.id)
-    
+
     assert sugestao["compativel"] is True
     assert sugestao["quantidade_sugerida"] == 30
     assert sugestao["oferta"]["id"] == oferta.id
@@ -219,9 +213,9 @@ def test_sugerir_reserva_incompativel(oferta, necessidade):
     # Aumenta a quantidade solicitada para ser maior que a disponível
     necessidade.quantidade_solicitada = 100
     db.session.commit()
-    
+
     sugestao = MatchingService.sugerir_reserva(oferta.id, necessidade.id)
-    
+
     # Sem quantidade suficiente, a reserva não é sugerida
     assert sugestao["compativel"] is False
     assert "Quantidade insuficiente" in sugestao["motivo"]
@@ -238,13 +232,13 @@ def test_buscar_matches_retorna_todas_necessidades_compativeis(oferta, necessida
         unidade="unidade",
         prioridade="urgente",
         status=StatusNecessidade.REGISTRADA.value,
-        criado_por_id=1
+        criado_por_id=1,
     )
     db.session.add(necessidade2)
     db.session.commit()
-    
+
     matches = MatchingService.buscar_matches_para_oferta(oferta.id)
-    
+
     # As duas necessidades são compatíveis com a oferta
     assert len(matches) == 2
     assert all(match.compativel for match in matches)
@@ -260,13 +254,13 @@ def test_limite_matches(oferta, necessidade):
             quantidade_ofertada=50,
             quantidade_reservada=0,
             status=StatusOferta.DISPONIVEL.value,
-            criado_por_id=1
+            criado_por_id=1,
         )
         db.session.add(oferta_extra)
     db.session.commit()
-    
+
     matches = MatchingService.buscar_matches_para_necessidade(necessidade.id, limite=5)
-    
+
     assert len(matches) <= 5
 
 
@@ -274,9 +268,9 @@ def test_match_oferta_nao_disponivel(oferta, necessidade):
     """Testa que ofertas não disponíveis não são retornadas."""
     oferta.status = StatusOferta.CANCELADA.value
     db.session.commit()
-    
+
     matches = MatchingService.buscar_matches_para_necessidade(necessidade.id)
-    
+
     # Não deve retornar a oferta cancelada
     for match in matches:
         assert match.oferta.status == StatusOferta.DISPONIVEL.value
@@ -286,9 +280,9 @@ def test_match_necessidade_nao_ativa(oferta, necessidade):
     """Testa que necessidades não ativas não são retornadas."""
     necessidade.status = StatusNecessidade.ENCERRADA.value
     db.session.commit()
-    
+
     matches = MatchingService.buscar_matches_para_oferta(oferta.id)
-    
+
     # Não deve retornar a necessidade encerrada
     for match in matches:
         assert match.necessidade.status in [StatusNecessidade.REGISTRADA.value, StatusNecessidade.EM_REVISAO.value]

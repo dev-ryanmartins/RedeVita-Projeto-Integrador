@@ -9,7 +9,7 @@ Este serviço estende o Laboratório de Crises com funcionalidades de:
 NOTA: Reutiliza ColdCrisisSimulator. Não cria dados reais.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import List, Dict, Any, Optional
 from app.services.cold_crisis_simulator import ColdCrisisSimulator
 
@@ -19,9 +19,9 @@ class ColdCrisisReplayService:
 
     # Limites de replay
     MAX_VELOCIDADE = 10  # Multiplicador máximo de velocidade
-    MIN_VELOCIDADE = 1   # Multiplicador mínimo de velocidade
-    MAX_ETAPAS = 50      # Máximo de etapas por execução
-    MAX_COMPARACOES = 2 # Máximo de execuções por comparação
+    MIN_VELOCIDADE = 1  # Multiplicador mínimo de velocidade
+    MAX_ETAPAS = 50  # Máximo de etapas por execução
+    MAX_COMPARACOES = 2  # Máximo de execuções por comparação
 
     # Roteiro de treinamento (versão 1.0)
     ROTEIRO_VERSAO = "1.0"
@@ -33,95 +33,95 @@ class ColdCrisisReplayService:
             {
                 "id": "reconhecer_alerta",
                 "nome": "Reconhecer o alerta simulado",
-                "descricao": "Identificar que o sistema reportou falha de energia"
+                "descricao": "Identificar que o sistema reportou falha de energia",
             },
             {
                 "id": "verificar_cobertura",
                 "nome": "Verificar cobertura de telemetria",
-                "descricao": "Consultar o intervalo de leituras disponíveis no período"
+                "descricao": "Consultar o intervalo de leituras disponíveis no período",
             },
             {
                 "id": "avaliar_temperatura",
                 "nome": "Avaliar aumento de temperatura",
-                "descricao": "Analisar a variação de temperatura durante a falha"
+                "descricao": "Analisar a variação de temperatura durante a falha",
             },
             {
                 "id": "consultar_checklist",
                 "nome": "Consultar checklist de treinamento",
-                "descricao": "Acessar o checklist de procedimentos para falha de energia"
+                "descricao": "Acessar o checklist de procedimentos para falha de energia",
             },
             {
                 "id": "encaminhar_responsavel",
                 "nome": "Encaminhar para revisão do responsável",
-                "descricao": "Documentar o cenário fictício para revisão do responsável"
-            }
+                "descricao": "Documentar o cenário fictício para revisão do responsável",
+            },
         ],
         "falha_rede": [
             {
                 "id": "reconhecer_falha_rede",
                 "nome": "Reconhecer a falha de rede",
-                "descricao": "Identificar que há leituras pendentes de transmissão"
+                "descricao": "Identificar que há leituras pendentes de transmissão",
             },
             {
                 "id": "quantificar_pendentes",
                 "nome": "Quantificar leituras pendentes",
-                "descricao": "Contar quantas leituras estão acumuladas localmente"
+                "descricao": "Contar quantas leituras estão acumuladas localmente",
             },
             {
                 "id": "verificar_integridade",
                 "nome": "Verificar integridade dos dados",
-                "descricao": "Confirmar que as leituras pendentes foram enviadas"
+                "descricao": "Confirmar que as leituras pendentes foram enviadas",
             },
             {
                 "id": "consultar_checklist",
                 "nome": "Consultar checklist de treinamento",
-                "descricao": "Acessar o checklist de procedimentos para falha de rede"
-            }
+                "descricao": "Acessar o checklist de procedimentos para falha de rede",
+            },
         ],
         "falha_sensor": [
             {
                 "id": "identificar_sensor",
                 "nome": "Identificar sensor com falha",
-                "descricao": "Localizar qual sensor está reportando lacunas"
+                "descricao": "Localizar qual sensor está reportando lacunas",
             },
             {
                 "id": "avaliar_lacunas",
                 "nome": "Avaliar lacunas na série",
-                "descricao": "Analisar o intervalo de dados ausentes"
+                "descricao": "Analisar o intervalo de dados ausentes",
             },
             {
                 "id": "verificar_substituicao",
                 "nome": "Verificar substituição de sensor",
-                "descricao": "Confirmar que o sensor foi substituído corretamente"
+                "descricao": "Confirmar que o sensor foi substituído corretamente",
             },
             {
                 "id": "consultar_checklist",
                 "nome": "Consultar checklist de treinamento",
-                "descricao": "Acessar o checklist de procedimentos para falha de sensor"
-            }
+                "descricao": "Acessar o checklist de procedimentos para falha de sensor",
+            },
         ],
         "recuperacao": [
             {
                 "id": "monitorar_recuperacao",
                 "nome": "Monitorar recuperação gradual",
-                "descricao": "Acompanhar o retorno às condições ideais"
+                "descricao": "Acompanhar o retorno às condições ideais",
             },
             {
                 "id": "validar_condicoes",
                 "nome": "Validar condições finais",
-                "descricao": "Confirmar que o ambiente está dentro dos parâmetros ideais"
+                "descricao": "Confirmar que o ambiente está dentro dos parâmetros ideais",
             },
             {
                 "id": "documentar_tempo",
                 "nome": "Documentar tempo de recuperação",
-                "descricao": "Registrar o tempo necessário para estabilização"
+                "descricao": "Registrar o tempo necessário para estabilização",
             },
             {
                 "id": "consultar_checklist",
                 "nome": "Consultar checklist de treinamento",
-                "descricao": "Acessar o checklist de procedimentos para recuperação"
-            }
-        ]
+                "descricao": "Acessar o checklist de procedimentos para recuperação",
+            },
+        ],
     }
 
     def __init__(self):
@@ -153,15 +153,11 @@ class ColdCrisisReplayService:
         return {
             "versao": self.ROTEIRO_VERSAO,
             "data": self.ROTEIRO_DATA,
-            "aviso": "Este roteiro é material demonstrativo de treinamento. Não representa procedimento oficial, protocolo clínico, orientação da Anvisa ou política operacional aprovada."
+            "aviso": "Este roteiro é material demonstrativo de treinamento. Não representa procedimento oficial, protocolo clínico, orientação da Anvisa ou política operacional aprovada.",
         }
 
     def iniciar_replay(
-        self,
-        cenario: str,
-        duracao_horas: int,
-        intervalo_minutos: int,
-        seed: Optional[int] = None
+        self, cenario: str, duracao_horas: int, intervalo_minutos: int, seed: Optional[int] = None
     ) -> Dict[str, Any]:
         """
         Inicia um replay de um cenário.
@@ -182,9 +178,7 @@ class ColdCrisisReplayService:
         # Gerar cenário com seed
         simulador = ColdCrisisSimulator(seed=seed)
         resultado = simulador.obter_cenario(
-            tipo=cenario,
-            duracao_horas=duracao_horas,
-            intervalo_minutos=intervalo_minutos
+            tipo=cenario, duracao_horas=duracao_horas, intervalo_minutos=intervalo_minutos
         )
 
         # Preparar execução de replay
@@ -200,17 +194,12 @@ class ColdCrisisReplayService:
             "tempo_virtual": 0,
             "escolhas": [],
             "resultado_cenario": resultado,
-            "concluido": False
+            "concluido": False,
         }
 
         return execucao
 
-    def adicionar_escolha(
-        self,
-        execucao: Dict[str, Any],
-        etapa_id: str,
-        tempo_virtual: float
-    ) -> Dict[str, Any]:
+    def adicionar_escolha(self, execucao: Dict[str, Any], etapa_id: str, tempo_virtual: float) -> Dict[str, Any]:
         """
         Adiciona uma escolha do participante à execução.
 
@@ -228,18 +217,12 @@ class ColdCrisisReplayService:
             return execucao
 
         # Adicionar escolha
-        escolha = {
-            "etapa_id": etapa_id,
-            "tempo_virtual": tempo_virtual,
-            "timestamp": datetime.utcnow().isoformat()
-        }
+        escolha = {"etapa_id": etapa_id, "tempo_virtual": tempo_virtual, "timestamp": datetime.utcnow().isoformat()}
         execucao["escolhas"].append(escolha)
 
         # Marcar etapa como coberta
         execucao["etapas_cobertas"].append(etapas_pendentes[0])
-        execucao["etapas_pendentes"] = [
-            e for e in execucao["etapas_pendentes"] if e["id"] != etapa_id
-        ]
+        execucao["etapas_pendentes"] = [e for e in execucao["etapas_pendentes"] if e["id"] != etapa_id]
 
         # Atualizar tempo virtual
         execucao["tempo_virtual"] = tempo_virtual
@@ -274,14 +257,10 @@ class ColdCrisisReplayService:
             "etapas_cobertas": etapas_cobertas,
             "etapas_pendentes": len(execucao["etapas_pendentes"]),
             "porcentagem_cobertura": round(porcentagem, 1),
-            "concluido": execucao["concluido"]
+            "concluido": execucao["concluido"],
         }
 
-    def comparar_execucoes(
-        self,
-        execucao1: Dict[str, Any],
-        execucao2: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def comparar_execucoes(self, execucao1: Dict[str, Any], execucao2: Dict[str, Any]) -> Dict[str, Any]:
         """
         Compara duas execuções do mesmo cenário.
 
@@ -301,7 +280,9 @@ class ColdCrisisReplayService:
         cobertura2 = self.calcular_cobertura(execucao2)
 
         # Comparar etapas cobertas
-        etapas_comuns = set(e["id"] for e in execucao1["etapas_cobertas"]) & set(e["id"] for e in execucao2["etapas_cobertas"])
+        etapas_comuns = set(e["id"] for e in execucao1["etapas_cobertas"]) & set(
+            e["id"] for e in execucao2["etapas_cobertas"]
+        )
         etapas_exclusivas_1 = set(e["id"] for e in execucao1["etapas_cobertas"]) - etapas_comuns
         etapas_exclusivas_2 = set(e["id"] for e in execucao2["etapas_cobertas"]) - etapas_comuns
 
@@ -314,15 +295,11 @@ class ColdCrisisReplayService:
             "etapas_exclusivas_2": list(etapas_exclusivas_2),
             "tempo_virtual_1": execucao1["tempo_virtual"],
             "tempo_virtual_2": execucao2["tempo_virtual"],
-            "diferenca_tempo": execucao2["tempo_virtual"] - execucao1["tempo_virtual"]
+            "diferenca_tempo": execucao2["tempo_virtual"] - execucao1["tempo_virtual"],
         }
 
     def validar_parametros_replay(
-        self,
-        cenario: str,
-        duracao_horas: int,
-        intervalo_minutos: int,
-        velocidade: int = 1
+        self, cenario: str, duracao_horas: int, intervalo_minutos: int, velocidade: int = 1
     ) -> None:
         """
         Valida parâmetros de replay.

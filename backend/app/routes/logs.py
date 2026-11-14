@@ -1,5 +1,6 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, Response
+from flask import Blueprint, render_template, request, redirect, url_for, flash, Response
 from flask_login import login_required
+from sqlalchemy.orm import joinedload
 from app.models.log_atividade import LogAtividade
 from app.core.decorators import admin_required
 from app.database import db
@@ -17,8 +18,10 @@ def listar_logs():
     pagina = request.args.get("page", 1, type=int)
     por_pagina = 50
     try:
-        logs = LogAtividade.query.order_by(LogAtividade.created_at.desc()).paginate(
-            page=pagina, per_page=por_pagina, error_out=False
+        logs = (
+            LogAtividade.query.options(joinedload(LogAtividade.usuario))
+            .order_by(LogAtividade.created_at.desc())
+            .paginate(page=pagina, per_page=por_pagina, error_out=False)
         )
     except Exception:
         logs = None
@@ -66,27 +69,24 @@ def export_logs():
         logs_data = []
         for log in logs:
             log_dict = {
-                'id': log.id,
-                'usuario_id': log.usuario_id,
-                'acao': log.acao,
-                'detalhes': log.detalhes,
-                'ip': log.ip,
-                'created_at': log.created_at.isoformat() if log.created_at else None
+                "id": log.id,
+                "usuario_id": log.usuario_id,
+                "acao": log.acao,
+                "detalhes": log.detalhes,
+                "ip": log.ip,
+                "created_at": log.created_at.isoformat() if log.created_at else None,
             }
             logs_data.append(log_dict)
 
         response = Response(
             json.dumps(logs_data, indent=2, ensure_ascii=False),
-            mimetype='application/json',
+            mimetype="application/json",
             headers={
-                'Content-Disposition': f'attachment; filename=logs_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json'
-            }
+                "Content-Disposition": f'attachment; filename=logs_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json'
+            },
         )
 
-        registrar_log(
-            'Exportação de Logs',
-            f'Exportados {len(logs_data)} registros de log_atividade'
-        )
+        registrar_log("Exportação de Logs", f"Exportados {len(logs_data)} registros de log_atividade")
 
         return response
 

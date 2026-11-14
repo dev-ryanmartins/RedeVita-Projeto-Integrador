@@ -32,6 +32,7 @@ logger = logging.getLogger(__name__)
 
 class VerificationStatus(Enum):
     """Estados de verificação de medicamento."""
+
     NOT_VERIFIED = "not_verified"  # Não foi possível verificar (seguro)
     VERIFIED_REQUIRES_PRESCRIPTION = "verified_requires_prescription"  # Verificado e exige receita
     VERIFIED_NO_PRESCRIPTION = "verified_no_prescription"  # Verificado e não exige receita
@@ -43,9 +44,9 @@ class ANVISAAPI:
     """Cliente para integração com a API da ANVISA"""
 
     def __init__(self):
-        self.token = os.environ.get('ANVISA_API_TOKEN', '')
+        self.token = os.environ.get("ANVISA_API_TOKEN", "")
         self.contract_confirmed = False  # Contrato não confirmado
-        self.base_url = 'https://api-gateway.prd.apps.anvisa.gov.br'  # URL oficial (mas não usado sem confirmação)
+        self.base_url = "https://api-gateway.prd.apps.anvisa.gov.br"  # URL oficial (mas não usado sem confirmação)
         self.timeout = 10  # segundos
 
     def _get_headers(self) -> Dict[str, str]:
@@ -55,9 +56,9 @@ class ANVISAAPI:
             return {}
 
         return {
-            'Authorization': f'Bearer {self.token}',
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
+            "Authorization": f"Bearer {self.token}",
+            "Content-Type": "application/json",
+            "Accept": "application/json",
         }
 
     def consultar_medicamento(self, registro_ms: str) -> Tuple[bool, Optional[Dict], Optional[str]]:
@@ -69,7 +70,7 @@ class ANVISAAPI:
 
         Returns:
             Tuple (sucesso, dados, erro)
-        
+
         NOTA: DESABILITADO ATÉ CONFIRMAÇÃO DE CONTRATO
         """
         if not self.contract_confirmed:
@@ -94,17 +95,17 @@ class ANVISAAPI:
 
         Returns:
             Dicionário com status de regularidade e detalhes
-        
+
         NOTA: DESABILITADO ATÉ CONFIRMAÇÃO DE CONTRATO
         """
         resultado = {
-            'registro_ms': registro_ms,
-            'status': VerificationStatus.NOT_VERIFIED.value,
-            'situacao': 'Não verificado',
-            'detalhes': 'Contrato da API ANVISA não confirmado - endpoint desabilitado',
-            'data_consulta': datetime.now().isoformat(),
-            'fonte': 'API ANVISA (desabilitada)',
-            'pode_aprovar': False  # NUNCA aprova automaticamente
+            "registro_ms": registro_ms,
+            "status": VerificationStatus.NOT_VERIFIED.value,
+            "situacao": "Não verificado",
+            "detalhes": "Contrato da API ANVISA não confirmado - endpoint desabilitado",
+            "data_consulta": datetime.now().isoformat(),
+            "fonte": "API ANVISA (desabilitada)",
+            "pode_aprovar": False,  # NUNCA aprova automaticamente
         }
 
         logger.warning(f"Verificação ANVISA desabilitada para registro {registro_ms}: contrato não confirmado")
@@ -120,7 +121,7 @@ class ANVISAAPI:
 
         Returns:
             Tuple (valido, mensagem)
-        
+
         NOTA: DESABILITADO ATÉ CONFIRMAÇÃO DE CONTRATO
         """
         if not self.contract_confirmed:
@@ -139,7 +140,7 @@ class ANVISAAPI:
 
         Returns:
             Tuple (sucesso, resultados, erro)
-        
+
         NOTA: DESABILITADO ATÉ CONFIRMAÇÃO DE CONTRATO
         """
         if not self.contract_confirmed:
@@ -161,35 +162,39 @@ class ANVISAAPI:
 
         Returns:
             Dicionário com informações sobre exigência de receita
-        
+
         NOTA: DESABILITADO ATÉ CONFIRMAÇÃO DE CONTRATO
         Retorna apenas classificação local por tarja, sem heurística de nome para aprovar
         """
         resultado = {
-            'exige_receita': None,  # None = não verificado (não é False)
-            'tipo_receita': None,
-            'tarja': tarja,
-            'mensagem': 'Verificação ANVISA desabilitada - contrato não confirmado',
-            'alerta': True,  # Alerta porque não foi verificado
-            'status': VerificationStatus.NOT_VERIFIED.value,
-            'data_consulta': datetime.now().isoformat(),
-            'fonte': 'Tarja local (API ANVISA desabilitada)',
-            'pode_aprovar': False  # NUNCA aprova automaticamente
+            "exige_receita": None,  # None = não verificado (não é False)
+            "tipo_receita": None,
+            "tarja": tarja,
+            "mensagem": "Verificação ANVISA desabilitada - contrato não confirmado",
+            "alerta": True,  # Alerta porque não foi verificado
+            "status": VerificationStatus.NOT_VERIFIED.value,
+            "data_consulta": datetime.now().isoformat(),
+            "fonte": "Tarja local (API ANVISA desabilitada)",
+            "pode_aprovar": False,  # NUNCA aprova automaticamente
         }
 
         # Classificação baseada APENAS na tarja informada (sem heurística de nome)
-        tarjas_controle = ['Tarja Vermelha', 'Tarja Preta', 'Preto', 'Vermelha', 'Portaria 344']
+        tarjas_controle = ["Tarja Vermelha", "Tarja Preta", "Preto", "Vermelha", "Portaria 344"]
         if any(t in tarja for t in tarjas_controle):
-            resultado['exige_receita'] = True
-            resultado['tipo_receita'] = 'Receita de Controle Especial'
-            resultado['mensagem'] = 'Medicamento de controle especial (classificação por tarja). Verificação ANVISA desabilitada.'
-        elif tarja == 'Tarja Amarela':
-            resultado['exige_receita'] = True
-            resultado['tipo_receita'] = 'Receita Simples'
-            resultado['mensagem'] = 'Medicamento de venda sob prescrição (classificação por tarja). Verificação ANVISA desabilitada.'
+            resultado["exige_receita"] = True
+            resultado["tipo_receita"] = "Receita de Controle Especial"
+            resultado["mensagem"] = (
+                "Medicamento de controle especial (classificação por tarja). Verificação ANVISA desabilitada."
+            )
+        elif tarja == "Tarja Amarela":
+            resultado["exige_receita"] = True
+            resultado["tipo_receita"] = "Receita Simples"
+            resultado["mensagem"] = (
+                "Medicamento de venda sob prescrição (classificação por tarja). Verificação ANVISA desabilitada."
+            )
         else:
-            resultado['exige_receita'] = None  # Não assume isento
-            resultado['mensagem'] = 'Não foi possível verificar exigência de receita. Verificação ANVISA desabilitada.'
+            resultado["exige_receita"] = None  # Não assume isento
+            resultado["mensagem"] = "Não foi possível verificar exigência de receita. Verificação ANVISA desabilitada."
 
         logger.warning(f"Verificação de receita ANVISA desabilitada para '{nome_medicamento}': contrato não confirmado")
         return resultado

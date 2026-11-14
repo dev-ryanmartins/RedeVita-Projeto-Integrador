@@ -1,5 +1,5 @@
 import requests
-from flask import Blueprint, jsonify, current_app
+from flask import Blueprint, jsonify
 from flask_login import login_required
 from functools import lru_cache
 
@@ -33,7 +33,7 @@ def _sumarizar_bula_simplificada(item: dict) -> dict:
     nome = item.get("nomeProduto", "")
     generico = item.get("nomeGenerico", "")
     laboratorio = item.get("laboratorio", "")
-    
+
     # Informações simplificadas baseadas nos dados da ANVISA
     resumo = {
         "nome": nome,
@@ -47,7 +47,7 @@ def _sumarizar_bula_simplificada(item: dict) -> dict:
         "url_bula_paciente": item.get("urlBulaPacienteProtegido", ""),
         "url_bula_profissional": item.get("urlBulaProfissionalProtegido", ""),
     }
-    
+
     return resumo
 
 
@@ -57,7 +57,7 @@ def _traduzir_indicacoes(item: dict) -> str:
     Em produção, isso poderia usar uma API de IA para processar o texto completo.
     """
     # Simulação - em produção seria processado via IA
-    return f"Medicamento usado para tratar condições específicas conforme prescrição médica. Consulte seu médico para mais informações."
+    return "Medicamento usado para tratar condições específicas conforme prescrição médica. Consulte seu médico para mais informações."
 
 
 def _traduzir_posologia(item: dict) -> str:
@@ -76,11 +76,11 @@ def _extrair_alertas(item: dict) -> list:
         "⚠️ Informe seu médico sobre alergias e outros medicamentos em uso.",
         "⚠️ Mantenha fora do alcance de crianças.",
     ]
-    
+
     # Verifica se é controlado (Portaria 344)
     if "tarja" in item and item["tarja"] in ["Portaria 344", "Tarja Vermelha"]:
         alertas.insert(0, "🔴 Medicamento de controle especial - retenção de receita obrigatória")
-    
+
     return alertas
 
 
@@ -104,16 +104,12 @@ def consultar_bula(nome):
 
         if not resultados:
             return (
-                jsonify(
-                    {
-                        "erro": "Nenhuma bula encontrada para este medicamento na base ANVISA."
-                    }
-                ),
+                jsonify({"erro": "Nenhuma bula encontrada para este medicamento na base ANVISA."}),
                 404,
             )
 
         item = resultados[0]
-        
+
         # Retorna dados completos da ANVISA
         dados_completos = {
             "nomeProduto": item.get("nomeProduto", ""),
@@ -124,10 +120,10 @@ def consultar_bula(nome):
             "urlBulaProfissional": item.get("urlBulaProfissionalProtegido", ""),
             "total": data.get("totalElements", 0),
         }
-        
+
         # Adiciona versão simplificada
         dados_completos["resumo_simplificado"] = _sumarizar_bula_simplificada(item)
-        
+
         return jsonify(dados_completos)
 
     except requests.exceptions.Timeout:
@@ -157,17 +153,13 @@ def consultar_bula_simplificada(nome):
 
         if not resultados:
             return (
-                jsonify(
-                    {
-                        "erro": "Nenhuma bula encontrada para este medicamento na base ANVISA."
-                    }
-                ),
+                jsonify({"erro": "Nenhuma bula encontrada para este medicamento na base ANVISA."}),
                 404,
             )
 
         item = resultados[0]
         resumo = _sumarizar_bula_simplificada(item)
-        
+
         return jsonify(resumo)
 
     except requests.exceptions.Timeout:

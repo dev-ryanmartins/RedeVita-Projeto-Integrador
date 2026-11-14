@@ -7,9 +7,9 @@ de tempo até a validade de lotes.
 NOTA: Não faz alterações em dados reais. Apenas simulação.
 """
 
-from flask import Blueprint, render_template, request, jsonify, redirect, url_for
-from flask_login import login_required, current_user
-from app.core.decorators import farmaceutico_required, admin_required
+from flask import Blueprint, render_template, request, redirect, url_for
+from flask_login import login_required
+from app.core.decorators import farmaceutico_required
 from app.core.api_responses import (
     resposta_ok,
     resposta_erro,
@@ -21,17 +21,17 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-lot_rescue_bp = Blueprint('lot_rescue', __name__)
+lot_rescue_bp = Blueprint("lot_rescue", __name__)
 
 
-@lot_rescue_bp.route('/lot-rescue', methods=['GET'])
+@lot_rescue_bp.route("/lot-rescue", methods=["GET"])
 @login_required
 def lot_rescue_alias():
     """Alias amigável para a Janela de Resgate de Lotes."""
-    return redirect(url_for('lot_rescue.janela_resgate'))
+    return redirect(url_for("lot_rescue.janela_resgate"))
 
 
-@lot_rescue_bp.route('/janela-resgate-lotes', methods=['GET'])
+@lot_rescue_bp.route("/janela-resgate-lotes", methods=["GET"])
 @login_required
 @farmaceutico_required
 def janela_resgate():
@@ -40,10 +40,10 @@ def janela_resgate():
 
     Acesso apenas para Admin e Farmacêutico.
     """
-    return render_template('lot_rescue.html')
+    return render_template("lot_rescue.html")
 
 
-@lot_rescue_bp.route('/api/janela-resgate-lotes/lotes', methods=['GET'])
+@lot_rescue_bp.route("/api/janela-resgate-lotes/lotes", methods=["GET"])
 @login_required
 @farmaceutico_required
 def listar_lotes():
@@ -58,22 +58,13 @@ def listar_lotes():
         JSON com lista de lotes
     """
     try:
-        horizon_dias = request.args.get('horizon_dias', 30, type=int)
-        nome_medicamento = request.args.get('nome_medicamento', None, type=str)
+        horizon_dias = request.args.get("horizon_dias", 30, type=int)
+        nome_medicamento = request.args.get("nome_medicamento", None, type=str)
 
         service = LotRescueService()
-        lotes = service.listar_lotes_para_resgate(
-            horizon_dias=horizon_dias,
-            nome_medicamento=nome_medicamento
-        )
+        lotes = service.listar_lotes_para_resgate(horizon_dias=horizon_dias, nome_medicamento=nome_medicamento)
 
-        return resposta_ok(
-            dados={
-                'lotes': lotes,
-                'total': len(lotes)
-            },
-            mensagem="Lotes listados com sucesso"
-        )
+        return resposta_ok(dados={"lotes": lotes, "total": len(lotes)}, mensagem="Lotes listados com sucesso")
 
     except ValueError as e:
         logger.warning(f"Parâmetro inválido: {e}")
@@ -83,7 +74,7 @@ def listar_lotes():
         return resposta_erro(ERRO_INTERNO, "Erro ao listar lotes", 500)
 
 
-@lot_rescue_bp.route('/api/janela-resgate-lotes/resumo', methods=['GET'])
+@lot_rescue_bp.route("/api/janela-resgate-lotes/resumo", methods=["GET"])
 @login_required
 @farmaceutico_required
 def resumo_lotes():
@@ -98,19 +89,13 @@ def resumo_lotes():
         JSON com resumo estatístico
     """
     try:
-        horizon_dias = request.args.get('horizon_dias', 30, type=int)
-        nome_medicamento = request.args.get('nome_medicamento', None, type=str)
+        horizon_dias = request.args.get("horizon_dias", 30, type=int)
+        nome_medicamento = request.args.get("nome_medicamento", None, type=str)
 
         service = LotRescueService()
-        resumo = service.calcular_resumo_lotes(
-            horizon_dias=horizon_dias,
-            nome_medicamento=nome_medicamento
-        )
+        resumo = service.calcular_resumo_lotes(horizon_dias=horizon_dias, nome_medicamento=nome_medicamento)
 
-        return resposta_ok(
-            dados=resumo,
-            mensagem="Resumo calculado com sucesso"
-        )
+        return resposta_ok(dados=resumo, mensagem="Resumo calculado com sucesso")
 
     except ValueError as e:
         logger.warning(f"Parâmetro inválido: {e}")
@@ -120,7 +105,7 @@ def resumo_lotes():
         return resposta_erro(ERRO_INTERNO, "Erro ao calcular resumo", 500)
 
 
-@lot_rescue_bp.route('/api/janela-resgate-lotes/simular', methods=['POST'])
+@lot_rescue_bp.route("/api/janela-resgate-lotes/simular", methods=["POST"])
 @login_required
 @farmaceutico_required
 def simular_cenario():
@@ -141,9 +126,9 @@ def simular_cenario():
         if not data:
             return resposta_erro(ERRO_VALIDACAO, "Corpo da requisição vazio", 400)
 
-        lote_id = data.get('lote_id')
-        etapas = data.get('etapas')
-        seed = data.get('seed')
+        lote_id = data.get("lote_id")
+        etapas = data.get("etapas")
+        seed = data.get("seed")
 
         if not lote_id:
             return resposta_erro(ERRO_VALIDACAO, "lote_id é obrigatório", 400)
@@ -152,16 +137,9 @@ def simular_cenario():
             return resposta_erro(ERRO_VALIDACAO, "etapas deve ser uma lista não vazia", 400)
 
         service = LotRescueService()
-        resultado = service.simular_cenario_resgate(
-            lote_id=lote_id,
-            etapas=etapas,
-            seed=seed
-        )
+        resultado = service.simular_cenario_resgate(lote_id=lote_id, etapas=etapas, seed=seed)
 
-        return resposta_ok(
-            dados=resultado,
-            mensagem="Simulação executada com sucesso"
-        )
+        return resposta_ok(dados=resultado, mensagem="Simulação executada com sucesso")
 
     except ValueError as e:
         logger.warning(f"Parâmetro inválido: {e}")

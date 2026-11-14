@@ -3,7 +3,7 @@ from app.database import db
 
 class MedicamentoReferencia(db.Model):
     __tablename__ = "medicamentos_referencia"
-    __table_args__ = {'extend_existing': True}
+    __table_args__ = {"extend_existing": True}
 
     id = db.Column(db.Integer, primary_key=True)
     nome_comercial = db.Column(db.String(120), nullable=False)

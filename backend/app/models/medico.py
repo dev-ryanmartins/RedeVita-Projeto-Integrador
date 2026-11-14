@@ -4,7 +4,7 @@ from datetime import datetime
 
 class Medico(db.Model):
     __tablename__ = "medicos"
-    __table_args__ = {'extend_existing': True}
+    __table_args__ = {"extend_existing": True}
 
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(150), nullable=False)

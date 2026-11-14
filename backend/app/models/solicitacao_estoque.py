@@ -4,8 +4,9 @@ from datetime import datetime
 
 class SolicitacaoEstoque(db.Model):
     """Modelo para solicitações de estoque."""
+
     __tablename__ = "solicitacoes_estoque"
-    __table_args__ = {'extend_existing': True}
+    __table_args__ = {"extend_existing": True}
 
     id = db.Column(db.Integer, primary_key=True)
     usuario_id = db.Column(db.Integer, db.ForeignKey("usuarios.id"), nullable=False)

@@ -35,24 +35,24 @@ def validar_forca_senha(senha):
     """
     if len(senha) < 8:
         return False, "Senha deve ter no mínimo 8 caracteres"
-    
+
     if len(senha) > 128:
         return False, "Senha muito longa (máximo 128 caracteres)"
-    
+
     # Verifica se contém pelo menos uma letra maiúscula
-    if not re.search(r'[A-Z]', senha):
+    if not re.search(r"[A-Z]", senha):
         return False, "Senha deve conter pelo menos uma letra maiúscula"
-    
+
     # Verifica se contém pelo menos uma letra minúscula
-    if not re.search(r'[a-z]', senha):
+    if not re.search(r"[a-z]", senha):
         return False, "Senha deve conter pelo menos uma letra minúscula"
-    
+
     # Verifica se contém pelo menos um número
-    if not re.search(r'\d', senha):
+    if not re.search(r"\d", senha):
         return False, "Senha deve conter pelo menos um número"
-    
+
     # Verifica se contém pelo menos um caractere especial
     if not re.search(r'[!@#$%^&*(),.?":{}|<>]', senha):
         return False, "Senha deve conter pelo menos um caractere especial"
-    
+
     return True, "Senha válida"

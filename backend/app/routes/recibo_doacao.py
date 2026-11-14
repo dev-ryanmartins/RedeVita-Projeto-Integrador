@@ -1,10 +1,8 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
+from flask import Blueprint, render_template, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
 from app.models.doacao import Doacao
 from app.models.doacao_etapa import DoacaoEtapa, TipoEtapa, OrigemEvento
-from app.database import db
-from app.core.decorators import admin_required, operador_required, equipe_clinica_required
-from datetime import datetime
+from app.core.decorators import operador_required
 
 recibo_doacao_bp = Blueprint("recibo_doacao", __name__)
 
@@ -25,11 +23,7 @@ def recibo(doacao_id):
     etapas = DoacaoEtapa.query.filter_by(doacao_id=doacao_id).order_by(DoacaoEtapa.data_hora.asc()).all()
 
     return render_template(
-        "recibo_doacao.html",
-        doacao=doacao,
-        etapas=etapas,
-        TipoEtapa=TipoEtapa,
-        OrigemEvento=OrigemEvento
+        "recibo_doacao.html", doacao=doacao, etapas=etapas, TipoEtapa=TipoEtapa, OrigemEvento=OrigemEvento
     )
 
 
@@ -46,7 +40,4 @@ def api_etapas(doacao_id):
 
     etapas = DoacaoEtapa.query.filter_by(doacao_id=doacao_id).order_by(DoacaoEtapa.data_hora.asc()).all()
 
-    return jsonify({
-        "doacao_id": doacao_id,
-        "etapas": [etapa.to_dict() for etapa in etapas]
-    })
+    return jsonify({"doacao_id": doacao_id, "etapas": [etapa.to_dict() for etapa in etapas]})

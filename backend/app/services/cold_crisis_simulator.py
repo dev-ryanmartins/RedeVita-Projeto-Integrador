@@ -52,7 +52,7 @@ class ColdCrisisSimulator:
         umidade_base: float,
         variacao_temp: float = 0.0,
         variacao_umid: float = 0.0,
-        dispositivo_id: str = "SENSOR-001"
+        dispositivo_id: str = "SENSOR-001",
     ) -> Dict[str, Any]:
         """
         Gera uma leitura sintética com variação.
@@ -91,15 +91,10 @@ class ColdCrisisSimulator:
             "umidade": round(umidade, 1),
             "dispositivo_id": dispositivo_id,
             "status": status,
-            "simulado": True
+            "simulado": True,
         }
 
-    def _generate_event(
-        self,
-        timestamp: datetime,
-        tipo: str,
-        descricao: str
-    ) -> Dict[str, Any]:
+    def _generate_event(self, timestamp: datetime, tipo: str, descricao: str) -> Dict[str, Any]:
         """
         Gera um evento simulado.
 
@@ -111,18 +106,9 @@ class ColdCrisisSimulator:
         Returns:
             Dicionário com evento simulado
         """
-        return {
-            "timestamp": timestamp.isoformat(),
-            "tipo": tipo,
-            "descricao": descricao,
-            "simulado": True
-        }
+        return {"timestamp": timestamp.isoformat(), "tipo": tipo, "descricao": descricao, "simulado": True}
 
-    def gerar_cenario_falha_energia(
-        self,
-        duracao_horas: int = 6,
-        intervalo_minutos: int = 15
-    ) -> Dict[str, Any]:
+    def gerar_cenario_falha_energia(self, duracao_horas: int = 6, intervalo_minutos: int = 15) -> Dict[str, Any]:
         """
         Gera cenário de falha de energia com aumento gradual de temperatura.
 
@@ -149,20 +135,18 @@ class ColdCrisisSimulator:
 
         # Período normal antes da falha
         while timestamp < falha_inicio:
-            leitura = self._generate_reading(
-                timestamp=timestamp,
-                temperatura_base=5.0,
-                umidade_base=50.0
-            )
+            leitura = self._generate_reading(timestamp=timestamp, temperatura_base=5.0, umidade_base=50.0)
             leituras.append(leitura)
             timestamp += timedelta(minutes=intervalo_minutos)
 
         # Evento de falha de energia
-        eventos.append(self._generate_event(
-            timestamp=falha_inicio,
-            tipo="FALHA_ENERGIA",
-            descricao="Falha de energia detectada - sistema de refrigeração interrompido"
-        ))
+        eventos.append(
+            self._generate_event(
+                timestamp=falha_inicio,
+                tipo="FALHA_ENERGIA",
+                descricao="Falha de energia detectada - sistema de refrigeração interrompido",
+            )
+        )
 
         # Período de falha - temperatura subindo gradualmente
         tempo_falha = 0
@@ -170,21 +154,20 @@ class ColdCrisisSimulator:
             # Temperatura sobe gradualmente (0.5°C por hora)
             variacao_temp = tempo_falha * 0.5
             leitura = self._generate_reading(
-                timestamp=timestamp,
-                temperatura_base=5.0,
-                umidade_base=50.0,
-                variacao_temp=variacao_temp
+                timestamp=timestamp, temperatura_base=5.0, umidade_base=50.0, variacao_temp=variacao_temp
             )
             leituras.append(leitura)
             timestamp += timedelta(minutes=intervalo_minutos)
             tempo_falha += intervalo_minutos / 60.0
 
         # Evento de retorno da energia
-        eventos.append(self._generate_event(
-            timestamp=falha_fim,
-            tipo="ENERGIA_RESTAURADA",
-            descricao="Energia restaurada - sistema de refrigeração reiniciado"
-        ))
+        eventos.append(
+            self._generate_event(
+                timestamp=falha_fim,
+                tipo="ENERGIA_RESTAURADA",
+                descricao="Energia restaurada - sistema de refrigeração reiniciado",
+            )
+        )
 
         # Período de recuperação
         while timestamp < fim:
@@ -192,10 +175,7 @@ class ColdCrisisSimulator:
             tempo_recuperacao = (timestamp - falha_fim).total_seconds() / 3600.0
             variacao_temp = max(0, 3.0 - tempo_recuperacao)
             leitura = self._generate_reading(
-                timestamp=timestamp,
-                temperatura_base=5.0,
-                umidade_base=50.0,
-                variacao_temp=variacao_temp
+                timestamp=timestamp, temperatura_base=5.0, umidade_base=50.0, variacao_temp=variacao_temp
             )
             leituras.append(leitura)
             timestamp += timedelta(minutes=intervalo_minutos)
@@ -208,14 +188,10 @@ class ColdCrisisSimulator:
             "leituras": leituras,
             "eventos": eventos,
             "estatisticas": self._calcular_estatisticas(leituras),
-            "simulado": True
+            "simulado": True,
         }
 
-    def gerar_cenario_falha_rede(
-        self,
-        duracao_horas: int = 4,
-        intervalo_minutos: int = 10
-    ) -> Dict[str, Any]:
+    def gerar_cenario_falha_rede(self, duracao_horas: int = 4, intervalo_minutos: int = 10) -> Dict[str, Any]:
         """
         Gera cenário de indisponibilidade de rede com leituras pendentes.
 
@@ -243,39 +219,35 @@ class ColdCrisisSimulator:
 
         # Período normal com transmissão
         while timestamp < falha_inicio:
-            leitura = self._generate_reading(
-                timestamp=timestamp,
-                temperatura_base=5.0,
-                umidade_base=50.0
-            )
+            leitura = self._generate_reading(timestamp=timestamp, temperatura_base=5.0, umidade_base=50.0)
             leitura["transmitido"] = True
             leituras.append(leitura)
             timestamp += timedelta(minutes=intervalo_minutos)
 
         # Evento de falha de rede
-        eventos.append(self._generate_event(
-            timestamp=falha_inicio,
-            tipo="FALHA_REDE",
-            descricao="Falha de rede detectada - leituras serão armazenadas localmente"
-        ))
+        eventos.append(
+            self._generate_event(
+                timestamp=falha_inicio,
+                tipo="FALHA_REDE",
+                descricao="Falha de rede detectada - leituras serão armazenadas localmente",
+            )
+        )
 
         # Período de falha - leituras acumuladas
         while timestamp < falha_fim:
-            leitura = self._generate_reading(
-                timestamp=timestamp,
-                temperatura_base=5.0,
-                umidade_base=50.0
-            )
+            leitura = self._generate_reading(timestamp=timestamp, temperatura_base=5.0, umidade_base=50.0)
             leitura["transmitido"] = False
             leituras_pendentes.append(leitura)
             timestamp += timedelta(minutes=intervalo_minutos)
 
         # Evento de retorno da rede
-        eventos.append(self._generate_event(
-            timestamp=falha_fim,
-            tipo="REDE_RESTAURADA",
-            descricao=f"Rede restaurada - {len(leituras_pendentes)} leituras pendentes enviadas"
-        ))
+        eventos.append(
+            self._generate_event(
+                timestamp=falha_fim,
+                tipo="REDE_RESTAURADA",
+                descricao=f"Rede restaurada - {len(leituras_pendentes)} leituras pendentes enviadas",
+            )
+        )
 
         # Período de recuperação - leituras pendentes enviadas
         for leitura in leituras_pendentes:
@@ -285,11 +257,7 @@ class ColdCrisisSimulator:
 
         # Período normal após recuperação
         while timestamp < fim:
-            leitura = self._generate_reading(
-                timestamp=timestamp,
-                temperatura_base=5.0,
-                umidade_base=50.0
-            )
+            leitura = self._generate_reading(timestamp=timestamp, temperatura_base=5.0, umidade_base=50.0)
             leitura["transmitido"] = True
             leituras.append(leitura)
             timestamp += timedelta(minutes=intervalo_minutos)
@@ -303,14 +271,10 @@ class ColdCrisisSimulator:
             "eventos": eventos,
             "leituras_pendentes": len(leituras_pendentes),
             "estatisticas": self._calcular_estatisticas(leituras),
-            "simulado": True
+            "simulado": True,
         }
 
-    def gerar_cenario_falha_sensor(
-        self,
-        duracao_horas: int = 5,
-        intervalo_minutos: int = 15
-    ) -> Dict[str, Any]:
+    def gerar_cenario_falha_sensor(self, duracao_horas: int = 5, intervalo_minutos: int = 15) -> Dict[str, Any]:
         """
         Gera cenário de falha de sensor com lacunas na série de leituras.
 
@@ -338,49 +302,42 @@ class ColdCrisisSimulator:
         # Período normal
         while timestamp < falha_inicio:
             leitura = self._generate_reading(
-                timestamp=timestamp,
-                temperatura_base=5.0,
-                umidade_base=50.0,
-                dispositivo_id="SENSOR-001"
+                timestamp=timestamp, temperatura_base=5.0, umidade_base=50.0, dispositivo_id="SENSOR-001"
             )
             leituras.append(leitura)
             timestamp += timedelta(minutes=intervalo_minutos)
 
         # Evento de falha do sensor
-        eventos.append(self._generate_event(
-            timestamp=falha_inicio,
-            tipo="FALHA_SENSOR",
-            descricao="Falha no sensor SENSOR-001 detectada - leituras interrompidas"
-        ))
+        eventos.append(
+            self._generate_event(
+                timestamp=falha_inicio,
+                tipo="FALHA_SENSOR",
+                descricao="Falha no sensor SENSOR-001 detectada - leituras interrompidas",
+            )
+        )
 
         # Período de falha - lacunas nos dados
         while timestamp < falha_fim:
             # Apenas algumas leituras durante a falha (intermitente)
             if self._rng.random() < 0.2:  # 20% de chance de leitura
                 leitura = self._generate_reading(
-                    timestamp=timestamp,
-                    temperatura_base=5.0,
-                    umidade_base=50.0,
-                    dispositivo_id="SENSOR-001"
+                    timestamp=timestamp, temperatura_base=5.0, umidade_base=50.0, dispositivo_id="SENSOR-001"
                 )
                 leitura["intermitente"] = True
                 leituras.append(leitura)
             timestamp += timedelta(minutes=intervalo_minutos)
 
         # Evento de substituição do sensor
-        eventos.append(self._generate_event(
-            timestamp=falha_fim,
-            tipo="SENSOR_SUBSTITUIDO",
-            descricao="Sensor SENSOR-001 substituído por SENSOR-002"
-        ))
+        eventos.append(
+            self._generate_event(
+                timestamp=falha_fim, tipo="SENSOR_SUBSTITUIDO", descricao="Sensor SENSOR-001 substituído por SENSOR-002"
+            )
+        )
 
         # Período normal com novo sensor
         while timestamp < fim:
             leitura = self._generate_reading(
-                timestamp=timestamp,
-                temperatura_base=5.0,
-                umidade_base=50.0,
-                dispositivo_id="SENSOR-002"
+                timestamp=timestamp, temperatura_base=5.0, umidade_base=50.0, dispositivo_id="SENSOR-002"
             )
             leituras.append(leitura)
             timestamp += timedelta(minutes=intervalo_minutos)
@@ -394,14 +351,10 @@ class ColdCrisisSimulator:
             "eventos": eventos,
             "lacunas": self._contar_lacunas(leituras, intervalo_minutos),
             "estatisticas": self._calcular_estatisticas(leituras),
-            "simulado": True
+            "simulado": True,
         }
 
-    def gerar_cenario_recuperacao(
-        self,
-        duracao_horas: int = 8,
-        intervalo_minutos: int = 15
-    ) -> Dict[str, Any]:
+    def gerar_cenario_recuperacao(self, duracao_horas: int = 8, intervalo_minutos: int = 15) -> Dict[str, Any]:
         """
         Gera cenário de recuperação do ambiente após restabelecimento.
 
@@ -418,7 +371,6 @@ class ColdCrisisSimulator:
             Dicionário com cenário completo
         """
         inicio = datetime.now() - timedelta(hours=duracao_horas)
-        crise_inicio = inicio
         crise_fim = inicio + timedelta(hours=3)
         recuperacao_inicio = crise_fim
         fim = inicio + timedelta(hours=duracao_horas)
@@ -431,20 +383,19 @@ class ColdCrisisSimulator:
         while timestamp < crise_fim:
             variacao_temp = 4.0  # Temperatura elevada
             leitura = self._generate_reading(
-                timestamp=timestamp,
-                temperatura_base=5.0,
-                umidade_base=50.0,
-                variacao_temp=variacao_temp
+                timestamp=timestamp, temperatura_base=5.0, umidade_base=50.0, variacao_temp=variacao_temp
             )
             leituras.append(leitura)
             timestamp += timedelta(minutes=intervalo_minutos)
 
         # Evento de início da recuperação
-        eventos.append(self._generate_event(
-            timestamp=recuperacao_inicio,
-            tipo="INICIO_RECUPERACAO",
-            descricao="Ações de recuperação iniciadas - resfriamento ativo"
-        ))
+        eventos.append(
+            self._generate_event(
+                timestamp=recuperacao_inicio,
+                tipo="INICIO_RECUPERACAO",
+                descricao="Ações de recuperação iniciadas - resfriamento ativo",
+            )
+        )
 
         # Período de recuperação gradual
         tempo_recuperacao = 0
@@ -452,21 +403,20 @@ class ColdCrisisSimulator:
             # Temperatura volta ao normal gradualmente
             variacao_temp = max(0, 4.0 - tempo_recuperacao * 0.8)
             leitura = self._generate_reading(
-                timestamp=timestamp,
-                temperatura_base=5.0,
-                umidade_base=50.0,
-                variacao_temp=variacao_temp
+                timestamp=timestamp, temperatura_base=5.0, umidade_base=50.0, variacao_temp=variacao_temp
             )
             leituras.append(leitura)
             timestamp += timedelta(minutes=intervalo_minutos)
             tempo_recuperacao += intervalo_minutos / 60.0
 
         # Evento de recuperação completa
-        eventos.append(self._generate_event(
-            timestamp=fim,
-            tipo="RECUPERACAO_COMPLETA",
-            descricao="Ambiente recuperado - condições ideais restauradas"
-        ))
+        eventos.append(
+            self._generate_event(
+                timestamp=fim,
+                tipo="RECUPERACAO_COMPLETA",
+                descricao="Ambiente recuperado - condições ideais restauradas",
+            )
+        )
 
         return {
             "cenario": "recuperacao",
@@ -476,7 +426,7 @@ class ColdCrisisSimulator:
             "leituras": leituras,
             "eventos": eventos,
             "estatisticas": self._calcular_estatisticas(leituras),
-            "simulado": True
+            "simulado": True,
         }
 
     def _calcular_estatisticas(self, leituras: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -499,7 +449,7 @@ class ColdCrisisSimulator:
             "status_normal": status.count("NORMAL"),
             "status_alerta": status.count("ALERTA"),
             "status_critico": status.count("CRÍTICO"),
-            "status_frio": status.count("FRIO")
+            "status_frio": status.count("FRIO"),
         }
 
     def _contar_lacunas(self, leituras: List[Dict[str, Any]], intervalo_minutos: int) -> int:
@@ -510,7 +460,7 @@ class ColdCrisisSimulator:
         lacunas = 0
         for i in range(1, len(leituras)):
             tempo_atual = datetime.fromisoformat(leituras[i]["timestamp"])
-            tempo_anterior = datetime.fromisoformat(leituras[i-1]["timestamp"])
+            tempo_anterior = datetime.fromisoformat(leituras[i - 1]["timestamp"])
             diferenca = (tempo_atual - tempo_anterior).total_seconds() / 60
             if diferenca > intervalo_minutos * 1.5:  # Mais de 1.5x o intervalo esperado
                 lacunas += 1
@@ -535,7 +485,7 @@ class ColdCrisisSimulator:
             "falha_energia": self.gerar_cenario_falha_energia,
             "falha_rede": self.gerar_cenario_falha_rede,
             "falha_sensor": self.gerar_cenario_falha_sensor,
-            "recuperacao": self.gerar_cenario_recuperacao
+            "recuperacao": self.gerar_cenario_recuperacao,
         }
 
         if tipo not in cenarios:
@@ -549,21 +499,21 @@ class ColdCrisisSimulator:
             {
                 "id": "falha_energia",
                 "nome": "Falha de Energia",
-                "descricao": "Falha de energia com aumento gradual de temperatura"
+                "descricao": "Falha de energia com aumento gradual de temperatura",
             },
             {
                 "id": "falha_rede",
                 "nome": "Falha de Rede",
-                "descricao": "Indisponibilidade de rede com leituras pendentes"
+                "descricao": "Indisponibilidade de rede com leituras pendentes",
             },
             {
                 "id": "falha_sensor",
                 "nome": "Falha de Sensor",
-                "descricao": "Falha ou interrupção de um sensor com lacunas na série de leituras"
+                "descricao": "Falha ou interrupção de um sensor com lacunas na série de leituras",
             },
             {
                 "id": "recuperacao",
                 "nome": "Recuperação",
-                "descricao": "Recuperação do ambiente após restabelecimento das condições"
-            }
+                "descricao": "Recuperação do ambiente após restabelecimento das condições",
+            },
         ]

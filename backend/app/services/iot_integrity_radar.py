@@ -34,15 +34,7 @@ class IotIntegrityRadarService:
     TOLERANCIA_FUTURO_MINUTOS = 60  # Tolerância para timestamps no futuro (60 minutos)
 
     # Intervalos de análise disponíveis (hipóteses)
-    INTERVALOS_ANALISE = {
-        '5min': 5,
-        '15min': 15,
-        '30min': 30,
-        '1h': 60,
-        '6h': 360,
-        '12h': 720,
-        '24h': 1440
-    }
+    INTERVALOS_ANALISE = {"5min": 5, "15min": 15, "30min": 30, "1h": 60, "6h": 360, "12h": 720, "24h": 1440}
 
     def __init__(self):
         """Inicializa o serviço."""
@@ -64,15 +56,16 @@ class IotIntegrityRadarService:
         data_limite = datetime.utcnow() - timedelta(days=periodo_dias)
 
         # Buscar última leitura por dispositivo
-        ultimas_leituras = db.session.query(
-            LeituraIoT.dispositivo_id,
-            func.max(LeituraIoT.data_hora).label('ultima_leitura'),
-            func.count(LeituraIoT.id).label('total_leituras')
-        ).filter(
-            LeituraIoT.data_hora >= data_limite
-        ).group_by(
-            LeituraIoT.dispositivo_id
-        ).all()
+        ultimas_leituras = (
+            db.session.query(
+                LeituraIoT.dispositivo_id,
+                func.max(LeituraIoT.data_hora).label("ultima_leitura"),
+                func.count(LeituraIoT.id).label("total_leituras"),
+            )
+            .filter(LeituraIoT.data_hora >= data_limite)
+            .group_by(LeituraIoT.dispositivo_id)
+            .all()
+        )
 
         dispositivos = []
         agora = datetime.utcnow()
@@ -93,26 +86,28 @@ class IotIntegrityRadarService:
                 dias_desde_ultima = None
                 status_frescor = "sem_dados"
 
-            dispositivos.append({
-                'dispositivo_id': dispositivo_id,
-                'ultima_leitura': ultima_leitura.isoformat() if ultima_leitura else None,
-                'horas_desde_ultima': horas_desde_ultima,
-                'dias_desde_ultima': dias_desde_ultima,
-                'status_frescor': status_frescor,
-                'total_leituras': total_leituras
-            })
+            dispositivos.append(
+                {
+                    "dispositivo_id": dispositivo_id,
+                    "ultima_leitura": ultima_leitura.isoformat() if ultima_leitura else None,
+                    "horas_desde_ultima": horas_desde_ultima,
+                    "dias_desde_ultima": dias_desde_ultima,
+                    "status_frescor": status_frescor,
+                    "total_leituras": total_leituras,
+                }
+            )
 
         # Ordenar por frescor (mais antigos primeiro)
-        dispositivos.sort(key=lambda x: x['dias_desde_ultima'] or 999, reverse=True)
+        dispositivos.sort(key=lambda x: x["dias_desde_ultima"] or 999, reverse=True)
 
         return dispositivos
 
     def analisar_lacunas_temporais(
         self,
-        intervalo_minutos: str = '1h',
+        intervalo_minutos: str = "1h",
         farmacia_id: Optional[int] = None,
         dispositivo_id: Optional[str] = None,
-        periodo_dias: int = 7
+        periodo_dias: int = 7,
     ) -> List[Dict[str, Any]]:
         """
         Analisa lacunas temporais na telemetria.
@@ -136,9 +131,7 @@ class IotIntegrityRadarService:
         data_inicio = datetime.utcnow() - timedelta(days=periodo_dias)
 
         # Construir query
-        query = LeituraIoT.query.filter(
-            LeituraIoT.data_hora >= data_inicio
-        )
+        query = LeituraIoT.query.filter(LeituraIoT.data_hora >= data_inicio)
 
         if farmacia_id:
             query = query.filter(LeituraIoT.farmacia_id == farmacia_id)
@@ -147,10 +140,7 @@ class IotIntegrityRadarService:
             query = query.filter(LeituraIoT.dispositivo_id == dispositivo_id)
 
         # Ordenar por dispositivo e timestamp
-        leituras = query.order_by(
-            LeituraIoT.dispositivo_id,
-            LeituraIoT.data_hora
-        ).all()
+        leituras = query.order_by(LeituraIoT.dispositivo_id, LeituraIoT.data_hora).all()
 
         # Analisar lacunas por dispositivo
         lacunas = []
@@ -174,23 +164,22 @@ class IotIntegrityRadarService:
 
                 # Se o intervalo for maior que o esperado (com tolerância de 50%)
                 if delta_minutos > intervalo_esperado * 1.5:
-                    lacunas.append({
-                        'dispositivo_id': dispositivo,
-                        'farmacia_id': leitura_atual.farmacia_id,
-                        'timestamp_anterior': leitura_anterior.data_hora.isoformat(),
-                        'timestamp_atual': leitura_atual.data_hora.isoformat(),
-                        'delta_minutos': delta_minutos,
-                        'intervalo_esperado_minutos': intervalo_esperado,
-                        'gravidade': 'alta' if delta_minutos > intervalo_esperado * 3 else 'moderada'
-                    })
+                    lacunas.append(
+                        {
+                            "dispositivo_id": dispositivo,
+                            "farmacia_id": leitura_atual.farmacia_id,
+                            "timestamp_anterior": leitura_anterior.data_hora.isoformat(),
+                            "timestamp_atual": leitura_atual.data_hora.isoformat(),
+                            "delta_minutos": delta_minutos,
+                            "intervalo_esperado_minutos": intervalo_esperado,
+                            "gravidade": "alta" if delta_minutos > intervalo_esperado * 3 else "moderada",
+                        }
+                    )
 
         return lacunas
 
     def analisar_duplicidade_candidatos(
-        self,
-        periodo_dias: int = 7,
-        farmacia_id: Optional[int] = None,
-        dispositivo_id: Optional[str] = None
+        self, periodo_dias: int = 7, farmacia_id: Optional[int] = None, dispositivo_id: Optional[str] = None
     ) -> List[Dict[str, Any]]:
         """
         Analisa candidatos a duplicidade (leituras idênticas).
@@ -212,9 +201,7 @@ class IotIntegrityRadarService:
         data_inicio = datetime.utcnow() - timedelta(days=periodo_dias)
 
         # Construir query
-        query = LeituraIoT.query.filter(
-            LeituraIoT.data_hora >= data_inicio
-        )
+        query = LeituraIoT.query.filter(LeituraIoT.data_hora >= data_inicio)
 
         if farmacia_id:
             query = query.filter(LeituraIoT.farmacia_id == farmacia_id)
@@ -233,7 +220,7 @@ class IotIntegrityRadarService:
                 leitura.data_hora.isoformat(),
                 leitura.temperatura,
                 leitura.umidade,
-                leitura.luminosidade_lux
+                leitura.luminosidade_lux,
             )
 
             if fingerprint not in grupos:
@@ -244,19 +231,21 @@ class IotIntegrityRadarService:
         duplicidades = []
         for fingerprint, grupo in grupos.items():
             if len(grupo) > 1:
-                duplicidades.append({
-                    'dispositivo_id': grupo[0].dispositivo_id,
-                    'farmacia_id': grupo[0].farmacia_id,
-                    'timestamp': grupo[0].data_hora.isoformat(),
-                    'temperatura': grupo[0].temperatura,
-                    'umidade': grupo[0].umidade,
-                    'luminosidade_lux': grupo[0].luminosidade_lux,
-                    'quantidade': len(grupo),
-                    'ids': [l.id for l in grupo]
-                })
+                duplicidades.append(
+                    {
+                        "dispositivo_id": grupo[0].dispositivo_id,
+                        "farmacia_id": grupo[0].farmacia_id,
+                        "timestamp": grupo[0].data_hora.isoformat(),
+                        "temperatura": grupo[0].temperatura,
+                        "umidade": grupo[0].umidade,
+                        "luminosidade_lux": grupo[0].luminosidade_lux,
+                        "quantidade": len(grupo),
+                        "ids": [l.id for l in grupo],
+                    }
+                )
 
         # Ordenar por quantidade (mais candidatos primeiro)
-        duplicidades.sort(key=lambda x: x['quantidade'], reverse=True)
+        duplicidades.sort(key=lambda x: x["quantidade"], reverse=True)
 
         return duplicidades
 
@@ -265,7 +254,7 @@ class IotIntegrityRadarService:
         tolerancia_minutos: int = 60,
         periodo_dias: int = 7,
         farmacia_id: Optional[int] = None,
-        dispositivo_id: Optional[str] = None
+        dispositivo_id: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
         """
         Analisa leituras com timestamps no futuro.
@@ -289,9 +278,7 @@ class IotIntegrityRadarService:
         # Construir query
         query = LeituraIoT.query.filter(
             and_(
-                LeituraIoT.data_hora > agora,
-                LeituraIoT.data_hora <= limite_futuro,
-                LeituraIoT.data_hora >= data_inicio
+                LeituraIoT.data_hora > agora, LeituraIoT.data_hora <= limite_futuro, LeituraIoT.data_hora >= data_inicio
             )
         )
 
@@ -306,26 +293,25 @@ class IotIntegrityRadarService:
         futuros = []
         for leitura in leituras_futuro:
             delta_minutos = (leitura.data_hora - agora).total_seconds() / 60
-            futuros.append({
-                'id': leitura.id,
-                'dispositivo_id': leitura.dispositivo_id,
-                'farmacia_id': leitura.farmacia_id,
-                'data_hora': leitura.data_hora.isoformat(),
-                'temperatura': leitura.temperatura,
-                'umidade': leitura.umidade,
-                'delta_minutos': delta_minutos,
-                'tolerancia_minutos': tolerancia_minutos
-            })
+            futuros.append(
+                {
+                    "id": leitura.id,
+                    "dispositivo_id": leitura.dispositivo_id,
+                    "farmacia_id": leitura.farmacia_id,
+                    "data_hora": leitura.data_hora.isoformat(),
+                    "temperatura": leitura.temperatura,
+                    "umidade": leitura.umidade,
+                    "delta_minutos": delta_minutos,
+                    "tolerancia_minutos": tolerancia_minutos,
+                }
+            )
 
         # Ordenar por delta (mais no futuro primeiro)
-        futuros.sort(key=lambda x: x['delta_minutos'], reverse=True)
+        futuros.sort(key=lambda x: x["delta_minutos"], reverse=True)
 
         return futuros
 
-    def obter_resumo(
-        self,
-        periodo_dias: int = 7
-    ) -> Dict[str, Any]:
+    def obter_resumo(self, periodo_dias: int = 7) -> Dict[str, Any]:
         """
         Obtém resumo dos sinais de integridade.
 
@@ -337,8 +323,8 @@ class IotIntegrityRadarService:
         """
         try:
             frescor = self.analisar_frescor(periodo_dias=periodo_dias)
-            dispositivos_sem_dados = [d for d in frescor if d['status_frescor'] == 'sem_dados']
-            dispositivos_antigos = [d for d in frescor if d['status_frescor'] == 'antigo']
+            dispositivos_sem_dados = [d for d in frescor if d["status_frescor"] == "sem_dados"]
+            dispositivos_antigos = [d for d in frescor if d["status_frescor"] == "antigo"]
         except Exception:
             frescor = []
             dispositivos_sem_dados = []
@@ -360,12 +346,12 @@ class IotIntegrityRadarService:
             futuros = []
 
         return {
-            'periodo_dias': periodo_dias,
-            'total_dispositivos': len(frescor),
-            'dispositivos_sem_dados': len(dispositivos_sem_dados),
-            'dispositivos_antigos': len(dispositivos_antigos),
-            'total_lacunas': len(lacunas),
-            'total_duplicidades': len(duplicidades),
-            'total_futuros': len(futuros),
-            'intervalos_disponiveis': list(self.INTERVALOS_ANALISE.keys())
+            "periodo_dias": periodo_dias,
+            "total_dispositivos": len(frescor),
+            "dispositivos_sem_dados": len(dispositivos_sem_dados),
+            "dispositivos_antigos": len(dispositivos_antigos),
+            "total_lacunas": len(lacunas),
+            "total_duplicidades": len(duplicidades),
+            "total_futuros": len(futuros),
+            "intervalos_disponiveis": list(self.INTERVALOS_ANALISE.keys()),
         }

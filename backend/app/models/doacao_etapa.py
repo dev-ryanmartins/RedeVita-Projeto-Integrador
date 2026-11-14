@@ -5,6 +5,7 @@ from enum import Enum
 
 class TipoEtapa(Enum):
     """Tipos de etapas que podem ser registradas em uma doação."""
+
     REGISTRO_CRIADO = "registro_criado"
     PESAGEM_REGISTRADA = "pesagem_registrada"
     CONFERENCIA_MANUAL_REQUERIDA = "conferencia_manual_requerida"
@@ -15,21 +16,33 @@ class TipoEtapa(Enum):
 
 class OrigemEvento(Enum):
     """Origem do evento: sistema ou ação manual do usuário."""
+
     SISTEMA = "sistema"
     USUARIO = "usuario"
 
 
 class DoacaoEtapa(db.Model):
     """Registro auditável de etapas de uma doação."""
+
     __tablename__ = "doacoes_etapas"
-    __table_args__ = {'extend_existing': True}
+    __table_args__ = {"extend_existing": True}
 
     id = db.Column(db.Integer, primary_key=True)
     doacao_id = db.Column(db.Integer, db.ForeignKey("doacoes.id"), nullable=False, index=True)
     tipo_etapa = db.Column(db.String(50), nullable=False, comment="Tipo da etapa (enum TipoEtapa)")
     data_hora = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, comment="Data/hora do evento em UTC")
-    usuario_id = db.Column(db.Integer, db.ForeignKey("usuarios.id"), nullable=True, comment="Usuário responsável (null para eventos automáticos)")
-    origem = db.Column(db.String(20), nullable=False, default=OrigemEvento.SISTEMA.value, comment="Origem do evento (enum OrigemEvento)")
+    usuario_id = db.Column(
+        db.Integer,
+        db.ForeignKey("usuarios.id"),
+        nullable=True,
+        comment="Usuário responsável (null para eventos automáticos)",
+    )
+    origem = db.Column(
+        db.String(20),
+        nullable=False,
+        default=OrigemEvento.SISTEMA.value,
+        comment="Origem do evento (enum OrigemEvento)",
+    )
     observacao = db.Column(db.Text, nullable=True, comment="Observação opcional sobre a etapa")
 
     # Campos de auditoria

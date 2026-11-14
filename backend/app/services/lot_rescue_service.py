@@ -15,7 +15,6 @@ LIMITAÇÕES:
 
 from datetime import date, timedelta
 from typing import List, Dict, Optional, Any
-from app.database import db
 from app.models.medicamento import Medicamento
 
 
@@ -34,9 +33,7 @@ class LotRescueService:
         pass
 
     def listar_lotes_para_resgate(
-        self,
-        horizon_dias: int = 30,
-        nome_medicamento: Optional[str] = None
+        self, horizon_dias: int = 30, nome_medicamento: Optional[str] = None
     ) -> List[Dict[str, Any]]:
         """
         Lista lotes ativos com validade dentro do horizonte especificado.
@@ -59,7 +56,7 @@ class LotRescueService:
         query = Medicamento.query.filter(
             Medicamento.ativo == True,
             Medicamento.data_validade <= data_limite,
-            Medicamento.data_validade >= date.today()
+            Medicamento.data_validade >= date.today(),
         )
 
         # Filtro opcional por nome
@@ -73,29 +70,28 @@ class LotRescueService:
         for lote in lotes:
             dias_para_vencer = (lote.data_validade - date.today()).days
 
-            lotes_para_resgate.append({
-                'id': lote.id,
-                'nome': lote.nome,
-                'lote': lote.lote,
-                'data_validade': lote.data_validade.isoformat(),
-                'dias_para_vencer': dias_para_vencer,
-                'quantidade_cadastrada': lote.quantidade,
-                'status_semaforo': lote.status_semaforo,
-                'tarja': lote.tarja,
-                'controlado': lote.controlado,
-                'principio_ativo': lote.principio_ativo
-            })
+            lotes_para_resgate.append(
+                {
+                    "id": lote.id,
+                    "nome": lote.nome,
+                    "lote": lote.lote,
+                    "data_validade": lote.data_validade.isoformat(),
+                    "dias_para_vencer": dias_para_vencer,
+                    "quantidade_cadastrada": lote.quantidade,
+                    "status_semaforo": lote.status_semaforo,
+                    "tarja": lote.tarja,
+                    "controlado": lote.controlado,
+                    "principio_ativo": lote.principio_ativo,
+                }
+            )
 
         # Ordenar por dias para vencer (mais críticos primeiro)
-        lotes_para_resgate.sort(key=lambda x: x['dias_para_vencer'])
+        lotes_para_resgate.sort(key=lambda x: x["dias_para_vencer"])
 
         return lotes_para_resgate
 
     def simular_cenario_resgate(
-        self,
-        lote_id: int,
-        etapas: List[Dict[str, Any]],
-        seed: Optional[int] = None
+        self, lote_id: int, etapas: List[Dict[str, Any]], seed: Optional[int] = None
     ) -> Dict[str, Any]:
         """
         Simula um cenário de resgate com etapas hipotéticas.
@@ -118,7 +114,7 @@ class LotRescueService:
 
         total_duracao_dias = 0
         for etapa in etapas:
-            duracao = etapa.get('duracao_dias', 0)
+            duracao = etapa.get("duracao_dias", 0)
             if duracao < self.MIN_ETAPA_DIAS or duracao > self.MAX_ETAPA_DIAS:
                 raise ValueError(f"Duração da etapa deve ser entre {self.MIN_ETAPA_DIAS} e {self.MAX_ETAPA_DIAS} dias")
             total_duracao_dias += duracao
@@ -146,32 +142,28 @@ class LotRescueService:
             mensagem = f"Compatível com as hipóteses informadas. Margem de {margem_dias} dias."
 
         return {
-            'lote_id': lote_id,
-            'nome': lote.nome,
-            'lote': lote.lote,
-            'data_validade': lote.data_validade.isoformat(),
-            'dias_para_vencer': dias_para_vencer,
-            'quantidade_cadastrada': lote.quantidade,
-            'etapas': etapas,
-            'total_duracao_dias': total_duracao_dias,
-            'margem_dias': margem_dias,
-            'resultado': resultado,
-            'mensagem': mensagem,
-            'simulado': True,
-            'limitacoes': [
+            "lote_id": lote_id,
+            "nome": lote.nome,
+            "lote": lote.lote,
+            "data_validade": lote.data_validade.isoformat(),
+            "dias_para_vencer": dias_para_vencer,
+            "quantidade_cadastrada": lote.quantidade,
+            "etapas": etapas,
+            "total_duracao_dias": total_duracao_dias,
+            "margem_dias": margem_dias,
+            "resultado": resultado,
+            "mensagem": mensagem,
+            "simulado": True,
+            "limitacoes": [
                 "Saldo baseado em quantidade cadastrada (não derivado de ledger)",
                 "Não há vínculo direto entre lote e farmácia",
                 "Coordenadas da farmácia podem ser nulas (sem cálculo de distância)",
                 "Leituras IoT não vinculadas a lotes (sem dados térmicos)",
-                "Não há alteração de dados reais durante simulação"
-            ]
+                "Não há alteração de dados reais durante simulação",
+            ],
         }
 
-    def calcular_resumo_lotes(
-        self,
-        horizon_dias: int = 30,
-        nome_medicamento: Optional[str] = None
-    ) -> Dict[str, Any]:
+    def calcular_resumo_lotes(self, horizon_dias: int = 30, nome_medicamento: Optional[str] = None) -> Dict[str, Any]:
         """
         Calcula resumo de lotes para resgate.
 
@@ -182,31 +174,28 @@ class LotRescueService:
         Returns:
             Dicionário com resumo estatístico
         """
-        lotes = self.listar_lotes_para_resgate(
-            horizon_dias=horizon_dias,
-            nome_medicamento=nome_medicamento
-        )
+        lotes = self.listar_lotes_para_resgate(horizon_dias=horizon_dias, nome_medicamento=nome_medicamento)
 
         if not lotes:
             return {
-                'total_lotes': 0,
-                'total_quantidade': 0,
-                'lotes_criticos': 0,
-                'lotes_atencao': 0,
-                'lotes_normais': 0,
-                'horizonte_dias': horizon_dias
+                "total_lotes": 0,
+                "total_quantidade": 0,
+                "lotes_criticos": 0,
+                "lotes_atencao": 0,
+                "lotes_normais": 0,
+                "horizonte_dias": horizon_dias,
             }
 
-        total_quantidade = sum(l['quantidade_cadastrada'] for l in lotes)
-        lotes_criticos = sum(1 for l in lotes if l['dias_para_vencer'] <= 7)
-        lotes_atencao = sum(1 for l in lotes if 7 < l['dias_para_vencer'] <= 30)
-        lotes_normais = sum(1 for l in lotes if l['dias_para_vencer'] > 30)
+        total_quantidade = sum(l["quantidade_cadastrada"] for l in lotes)
+        lotes_criticos = sum(1 for l in lotes if l["dias_para_vencer"] <= 7)
+        lotes_atencao = sum(1 for l in lotes if 7 < l["dias_para_vencer"] <= 30)
+        lotes_normais = sum(1 for l in lotes if l["dias_para_vencer"] > 30)
 
         return {
-            'total_lotes': len(lotes),
-            'total_quantidade': total_quantidade,
-            'lotes_criticos': lotes_criticos,
-            'lotes_atencao': lotes_atencao,
-            'lotes_normais': lotes_normais,
-            'horizonte_dias': horizon_dias
+            "total_lotes": len(lotes),
+            "total_quantidade": total_quantidade,
+            "lotes_criticos": lotes_criticos,
+            "lotes_atencao": lotes_atencao,
+            "lotes_normais": lotes_normais,
+            "horizonte_dias": horizon_dias,
         }

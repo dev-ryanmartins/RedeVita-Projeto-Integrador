@@ -8,9 +8,6 @@ from flask import (
     current_app,
     session,
 )
-import secrets
-import time
-import re
 from datetime import datetime
 from flask_login import login_user, logout_user, login_required, current_user
 from sqlalchemy.exc import SQLAlchemyError
@@ -21,8 +18,8 @@ from app.models.recuperacao_senha import RecuperacaoSenha
 from app.core.security import verificar_senha, criptografar_senha, validar_forca_senha
 from app.core.jwt_auth import gerar_token
 from app.utils.log_helper import registrar_log
-from app.utils.sanitize import limpar, validar_cpf_digitos
-from app.utils.document_validation import validar_cpf, normalizar_cpf
+from app.utils.sanitize import limpar
+from app.utils.document_validation import validar_cpf
 from app.extensions import limiter
 from app.database import db
 
@@ -35,16 +32,76 @@ auth_bp = Blueprint("auth", __name__)
 # sistema. Só funcionam quando DEMO_MODE estiver ativo (padrão em dev/apresentação).
 # ---------------------------------------------------------------------------
 DEMO_CONTAS = [
-    {"slug": "admin", "perfil": "Administrador", "categoria": "Admin", "email": "admin@redevita.demo", "icone": "fa-user-shield"},
-    {"slug": "farmacia1", "perfil": "Farmácia Central", "categoria": "Farmácia", "email": "farmacia1@redevita.demo", "icone": "fa-clinic-medical"},
-    {"slug": "farmacia2", "perfil": "Farmácia Popular do Éden", "categoria": "Farmácia", "email": "farmacia2@redevita.demo", "icone": "fa-store"},
-    {"slug": "medico1", "perfil": "Médico (Dr. João)", "categoria": "Médico", "email": "medico1@redevita.demo", "icone": "fa-user-doctor"},
-    {"slug": "medico2", "perfil": "Médica (Dra. Helena)", "categoria": "Médico", "email": "medico2@redevita.demo", "icone": "fa-user-doctor"},
-    {"slug": "paciente1", "perfil": "Paciente (Maria)", "categoria": "Paciente", "email": "paciente1@redevita.demo", "icone": "fa-user"},
-    {"slug": "paciente2", "perfil": "Paciente (José)", "categoria": "Paciente", "email": "paciente2@redevita.demo", "icone": "fa-user"},
-    {"slug": "paciente3", "perfil": "Paciente (Fernanda)", "categoria": "Paciente", "email": "paciente3@redevita.demo", "icone": "fa-user"},
-    {"slug": "instituicao1", "perfil": "Instituição (Lar S. Vicente)", "categoria": "Instituição", "email": "instituicao1@redevita.demo", "icone": "fa-building"},
-    {"slug": "instituicao2", "perfil": "Instituição (Casa Esperança)", "categoria": "Instituição", "email": "instituicao2@redevita.demo", "icone": "fa-building"},
+    {
+        "slug": "admin",
+        "perfil": "Administrador",
+        "categoria": "Admin",
+        "email": "admin@redevita.demo",
+        "icone": "fa-user-shield",
+    },
+    {
+        "slug": "farmacia1",
+        "perfil": "Farmácia Central",
+        "categoria": "Farmácia",
+        "email": "farmacia1@redevita.demo",
+        "icone": "fa-clinic-medical",
+    },
+    {
+        "slug": "farmacia2",
+        "perfil": "Farmácia Popular do Éden",
+        "categoria": "Farmácia",
+        "email": "farmacia2@redevita.demo",
+        "icone": "fa-store",
+    },
+    {
+        "slug": "medico1",
+        "perfil": "Médico (Dr. João)",
+        "categoria": "Médico",
+        "email": "medico1@redevita.demo",
+        "icone": "fa-user-doctor",
+    },
+    {
+        "slug": "medico2",
+        "perfil": "Médica (Dra. Helena)",
+        "categoria": "Médico",
+        "email": "medico2@redevita.demo",
+        "icone": "fa-user-doctor",
+    },
+    {
+        "slug": "paciente1",
+        "perfil": "Paciente (Maria)",
+        "categoria": "Paciente",
+        "email": "paciente1@redevita.demo",
+        "icone": "fa-user",
+    },
+    {
+        "slug": "paciente2",
+        "perfil": "Paciente (José)",
+        "categoria": "Paciente",
+        "email": "paciente2@redevita.demo",
+        "icone": "fa-user",
+    },
+    {
+        "slug": "paciente3",
+        "perfil": "Paciente (Fernanda)",
+        "categoria": "Paciente",
+        "email": "paciente3@redevita.demo",
+        "icone": "fa-user",
+    },
+    {
+        "slug": "instituicao1",
+        "perfil": "Instituição (Lar S. Vicente)",
+        "categoria": "Instituição",
+        "email": "instituicao1@redevita.demo",
+        "icone": "fa-building",
+    },
+    {
+        "slug": "instituicao2",
+        "perfil": "Instituição (Casa Esperança)",
+        "categoria": "Instituição",
+        "email": "instituicao2@redevita.demo",
+        "icone": "fa-building",
+    },
 ]
 
 DEMO_EMAILS = {conta["email"] for conta in DEMO_CONTAS}
@@ -64,9 +121,9 @@ for _conta in DEMO_CONTAS:
 def _autenticar_demo(usuario):
     """Efetiva o login de uma conta de demonstração e devolve a resposta HTTP."""
     login_user(usuario)
-    session['usuario_id'] = usuario.id
-    session['usuario_nome'] = usuario.nome
-    session['usuario_cargo'] = usuario.cargo
+    session["usuario_id"] = usuario.id
+    session["usuario_nome"] = usuario.nome
+    session["usuario_cargo"] = usuario.cargo
     registrar_log(
         "Login",
         f'Usuário "{usuario.nome}" ({usuario.cargo}) entrou via acesso rápido (demonstração) — IP: {request.remote_addr}',
@@ -79,9 +136,7 @@ def _autenticar_demo(usuario):
         redirect_url = url_for("inventory.dashboard")
 
     resposta = redirect(redirect_url)
-    resposta.set_cookie(
-        "redevita_token", token, httponly=True, samesite="Lax", max_age=3600
-    )
+    resposta.set_cookie("redevita_token", token, httponly=True, samesite="Lax", max_age=3600)
     return resposta
 
 
@@ -114,31 +169,29 @@ def login():
                 db.or_(
                     Usuario.email.ilike(identificador_raw.strip()),
                     Usuario.cpf == identificador_raw.strip(),
-                    Usuario.cpf == cpf
+                    Usuario.cpf == cpf,
                 )
             ).first()
 
         if usuario and verificar_senha(usuario.senha, senha) and usuario.ativo:
             login_user(usuario)
-            session['usuario_id'] = usuario.id
-            session['usuario_nome'] = usuario.nome
-            session['usuario_cargo'] = usuario.cargo
+            session["usuario_id"] = usuario.id
+            session["usuario_nome"] = usuario.nome
+            session["usuario_cargo"] = usuario.cargo
             registrar_log(
                 "Login",
                 f'Usuário "{usuario.nome}" ({usuario.cargo}) fez login — IP: {request.remote_addr}',
             )
             token = gerar_token(usuario)
-            
+
             # Redirecionamento: se senha não foi trocada, forçar troca
             if not usuario.senha_trocada:
                 redirect_url = url_for("auth.trocar_senha_obrigatoria")
             else:
                 redirect_url = url_for("inventory.dashboard")
-            
+
             resposta = redirect(redirect_url)
-            resposta.set_cookie(
-                "redevita_token", token, httponly=True, samesite="Lax", max_age=3600
-            )
+            resposta.set_cookie("redevita_token", token, httponly=True, samesite="Lax", max_age=3600)
             return resposta
 
         registrar_log(
@@ -185,15 +238,15 @@ def trocar_senha_obrigatoria():
     if request.method == "POST":
         nova_senha = request.form.get("nova_senha", "")
         confirmar = request.form.get("confirmar_senha", "")
-        
+
         if not nova_senha or len(nova_senha) < 8:
             flash("A senha deve ter pelo menos 8 caracteres.", "danger")
             return render_template("trocar_senha_obrigatoria.html")
-        
+
         if nova_senha != confirmar:
             flash("A confirmação de senha não confere.", "danger")
             return render_template("trocar_senha_obrigatoria.html")
-        
+
         # Atualiza senha e marca como trocada
         current_user.senha = criptografar_senha(nova_senha)
         current_user.senha_trocada = True
@@ -203,11 +256,11 @@ def trocar_senha_obrigatoria():
             db.session.rollback()
             flash("Não foi possível alterar a senha. Tente novamente.", "danger")
             return render_template("trocar_senha_obrigatoria.html")
-        
+
         registrar_log("Senha Inicial Trocada", f'Usuário "{current_user.nome}" trocou senha inicial obrigatória')
         flash("Senha alterada com sucesso! Bem-vindo ao sistema.", "success")
         return redirect(url_for("inventory.dashboard"))
-    
+
     return render_template("trocar_senha_obrigatoria.html")
 
 
@@ -302,7 +355,7 @@ def recuperar_senha():
                 db.or_(
                     Usuario.email.ilike(identificador.strip()),
                     Usuario.cpf == identificador.strip(),
-                    Usuario.cpf == clean_cpf
+                    Usuario.cpf == clean_cpf,
                 )
             ).first()
 
@@ -315,19 +368,19 @@ def recuperar_senha():
         token_existente = RecuperacaoSenha.query.filter(
             RecuperacaoSenha.usuario_id == usuario.id,
             RecuperacaoSenha.usado_em == None,
-            RecuperacaoSenha.expira_em > datetime.utcnow()
+            RecuperacaoSenha.expira_em > datetime.utcnow(),
         ).first()
-        
+
         if token_existente:
-            flash("Você já solicitou uma recuperação de senha recentemente. Aguarde o código antes de solicitar novamente.", "warning")
+            flash(
+                "Você já solicitou uma recuperação de senha recentemente. Aguarde o código antes de solicitar novamente.",
+                "warning",
+            )
             return render_template("recuperar_senha.html")
 
         # Cria token seguro no servidor
         recuperacao = RecuperacaoSenha.criar_token(
-            usuario_id=usuario.id,
-            ip_origem=request.remote_addr,
-            expiracao_minutos=15,
-            max_tentativas=5
+            usuario_id=usuario.id, ip_origem=request.remote_addr, expiracao_minutos=15, max_tentativas=5
         )
 
         # Log seguro - NÃO exibe o token
@@ -340,6 +393,7 @@ def recuperar_senha():
         # Como não há canal verificado configurado, o fluxo está bloqueado
         # Para fins de teste, exibimos o token no frontend (apenas em desenvolvimento)
         from flask import current_app
+
         if current_app.config.get("ENV") == "development":
             flash(f"Token de desenvolvimento (apenas para teste): {recuperacao.token}", "info")
         else:
@@ -352,6 +406,7 @@ def recuperar_senha():
 
 
 @auth_bp.route("/verificar-codigo", methods=["GET", "POST"])
+@limiter.limit("10 per minute; 60 per hour")
 def verificar_codigo():
     recuperacao_id = session.get("pwd_recovery_id")
     if not recuperacao_id:
@@ -365,7 +420,7 @@ def verificar_codigo():
 
     if request.method == "POST":
         token_digitado = limpar(request.form.get("token", ""), max_len=64)
-        
+
         # Verifica validade do token
         if not recuperacao.is_valido():
             if recuperacao.tentativas >= recuperacao.max_tentativas:
@@ -387,7 +442,7 @@ def verificar_codigo():
         session["pwd_recovery_usuario_id"] = recuperacao.usuario_id
         registrar_log(
             "Recuperação de Senha",
-            f'Token validado com sucesso para usuário ID {recuperacao.usuario_id} — IP: {request.remote_addr}',
+            f"Token validado com sucesso para usuário ID {recuperacao.usuario_id} — IP: {request.remote_addr}",
         )
         return redirect(url_for("auth.redefinir_senha"))
 
@@ -399,7 +454,7 @@ def verificar_codigo():
 def redefinir_senha():
     recuperacao_id = session.get("pwd_recovery_id")
     usuario_id_esperado = session.get("pwd_recovery_usuario_id")
-    
+
     if not recuperacao_id or not usuario_id_esperado:
         flash("Sessão de recuperação expirada ou inválida. Inicie a recuperação novamente.", "danger")
         return redirect(url_for("auth.recuperar_senha"))
@@ -431,19 +486,19 @@ def redefinir_senha():
         if usuario:
             try:
                 usuario.senha = criptografar_senha(nova_senha)
-                
+
                 # Marca token como usado (uso único)
                 recuperacao.marcar_como_usado()
-                
+
                 # Invalida sessões/tokens anteriores do usuário (aumenta versão de credencial)
                 usuario.credencial_versao += 1
-                
+
                 db.session.commit()
-                
+
                 # Limpa sessão de recuperação
                 session.pop("pwd_recovery_id", None)
                 session.pop("pwd_recovery_usuario_id", None)
-                
+
                 registrar_log(
                     "Redefinição de Senha",
                     f'Senha do usuário "{usuario.nome}" redefinida com sucesso — IP: {request.remote_addr}',
@@ -514,6 +569,7 @@ def logout():
     except Exception:
         pass
     from flask import session as flask_session
+
     flask_session.clear()
     resposta = redirect(url_for("auth.login"))
     cookie_name = current_app.config.get("SESSION_COOKIE_NAME", "session")

@@ -9,16 +9,8 @@ pharmacy_bp = Blueprint("pharmacy", __name__, url_prefix="/pharmacy")
 
 def _dados_auditoria():
     hoje = date.today()
-    vencidos = (
-        Medicamento.query.filter(Medicamento.status_semaforo == 2)
-        .order_by(Medicamento.data_validade)
-        .all()
-    )
-    proximos = (
-        Medicamento.query.filter(Medicamento.status_semaforo == 1)
-        .order_by(Medicamento.data_validade)
-        .all()
-    )
+    vencidos = Medicamento.query.filter(Medicamento.status_semaforo == 2).order_by(Medicamento.data_validade).all()
+    proximos = Medicamento.query.filter(Medicamento.status_semaforo == 1).order_by(Medicamento.data_validade).all()
     controlados_criticos = [m for m in vencidos + proximos if m.controlado]
     total_unidades_vencidas = sum(m.quantidade for m in vencidos)
     return dict(

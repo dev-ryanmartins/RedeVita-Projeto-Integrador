@@ -53,7 +53,6 @@ def _banco_configurado_disponivel(uri: str) -> bool:
         return False
 
 
-
 class Config:
     ENV = os.environ.get("FLASK_ENV", "development")
     DEBUG = os.environ.get("FLASK_DEBUG", "true").lower() == "true"
@@ -62,10 +61,7 @@ class Config:
     # Modo demonstração/apresentação: habilita o "acesso rápido" na tela de login
     # e o seletor de perfil para navegar entre as telas. Ativado por padrão em
     # ambientes que não são de produção e pode ser desligado com DEMO_MODE=false.
-    DEMO_MODE = (
-        os.environ.get("DEMO_MODE", "true" if ENV != "production" else "false").lower()
-        == "true"
-    )
+    DEMO_MODE = os.environ.get("DEMO_MODE", "true" if ENV != "production" else "false").lower() == "true"
 
     # ------------------------------------------------------------------
     # Segredos unificados
@@ -122,9 +118,7 @@ class Config:
 
     # Fallback automático: se um banco externo (MySQL/Postgres) estiver configurado
     # mas indisponível no ambiente, cai para o SQLite local de apresentação.
-    if DATABASE_URL and (
-        DATABASE_URL.startswith("mysql") or DATABASE_URL.startswith("postgresql")
-    ):
+    if DATABASE_URL and (DATABASE_URL.startswith("mysql") or DATABASE_URL.startswith("postgresql")):
         if _banco_configurado_disponivel(DATABASE_URL):
             SQLALCHEMY_DATABASE_URI = DATABASE_URL
         else:
@@ -190,13 +184,13 @@ class Config:
 
     # Session cookie security
     SESSION_COOKIE_SAMESITE = "Lax"
-    
+
     # In production with HTTPS, cookies must be Secure
     if ENV == "production":
         SESSION_COOKIE_SECURE = True
     else:
         SESSION_COOKIE_SECURE = os.environ.get("SESSION_COOKIE_SECURE", "false").lower() == "true"
-    
+
     SESSION_COOKIE_HTTPONLY = True
 
     # CSRF protection - enabled by default for security
@@ -224,7 +218,5 @@ class Config:
     # local. Nunca dependemos de buckets externos (S3/Cloudinary) no ambiente
     # de demonstração: os diretórios são criados automaticamente no arranque.
     STORAGE_BACKEND = os.environ.get("STORAGE_BACKEND", "local")
-    PRIVATE_STORAGE_DIR = os.environ.get("PRIVATE_STORAGE_DIR") or os.path.join(
-        _PROJECT_ROOT, "private", "uploads"
-    )
+    PRIVATE_STORAGE_DIR = os.environ.get("PRIVATE_STORAGE_DIR") or os.path.join(_PROJECT_ROOT, "private", "uploads")
     LOCAL_UPLOAD_DIR = os.environ.get("LOCAL_UPLOAD_DIR", "uploads")

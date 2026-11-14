@@ -12,19 +12,19 @@ Testa:
 import pytest
 from main import create_app
 from app.database import db
-from app.models.usuario import Usuario
-from app.core.security import criptografar_senha
 
 
 @pytest.fixture
 def app():
     """Cria aplicação de teste."""
-    app = create_app({
-        'TESTING': True,
-        'SQLALCHEMY_DATABASE_URI': 'sqlite:///:memory:',
-        'WTF_CSRF_ENABLED': False,
-        'SECRET_KEY': 'test-secret-key'
-    })
+    app = create_app(
+        {
+            "TESTING": True,
+            "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
+            "WTF_CSRF_ENABLED": False,
+            "SECRET_KEY": "test-secret-key",
+        }
+    )
     with app.app_context():
         db.create_all()
         yield app
@@ -41,9 +41,9 @@ class TestAcessoLaboratorio:
 
     def test_visitante_redirecionado_login(self, client):
         """Visitante não autenticado deve ser redirecionado ao login."""
-        response = client.get('/laboratorio-crise-cadeia-frio')
+        response = client.get("/laboratorio-crise-cadeia-frio")
         assert response.status_code == 302
-        assert '/login' in response.location
+        assert "/login" in response.location
 
 
 class TestCenariosSimulacao:
@@ -52,47 +52,52 @@ class TestCenariosSimulacao:
     def test_cenario_falha_energia(self):
         """Cenário de falha de energia deve gerar dados corretos."""
         from app.services.cold_crisis_simulator import ColdCrisisSimulator
+
         simulador = ColdCrisisSimulator(seed=12345)
         resultado = simulador.gerar_cenario_falha_energia(duracao_horas=6, intervalo_minutos=15)
 
-        assert resultado['cenario'] == 'falha_energia'
-        assert resultado['simulado'] is True
-        assert len(resultado['leituras']) > 0
-        assert len(resultado['eventos']) > 0
+        assert resultado["cenario"] == "falha_energia"
+        assert resultado["simulado"] is True
+        assert len(resultado["leituras"]) > 0
+        assert len(resultado["eventos"]) > 0
 
     def test_cenario_falha_rede(self):
         """Cenário de falha de rede deve gerar dados corretos."""
         from app.services.cold_crisis_simulator import ColdCrisisSimulator
+
         simulador = ColdCrisisSimulator(seed=12345)
         resultado = simulador.gerar_cenario_falha_rede(duracao_horas=4, intervalo_minutos=10)
 
-        assert resultado['cenario'] == 'falha_rede'
-        assert resultado['leituras_pendentes'] > 0
+        assert resultado["cenario"] == "falha_rede"
+        assert resultado["leituras_pendentes"] > 0
 
     def test_cenario_falha_sensor(self):
         """Cenário de falha de sensor deve gerar dados corretos."""
         from app.services.cold_crisis_simulator import ColdCrisisSimulator
+
         simulador = ColdCrisisSimulator(seed=12345)
         resultado = simulador.gerar_cenario_falha_sensor(duracao_horas=5, intervalo_minutos=15)
 
-        assert resultado['cenario'] == 'falha_sensor'
-        assert 'lacunas' in resultado
+        assert resultado["cenario"] == "falha_sensor"
+        assert "lacunas" in resultado
 
     def test_cenario_recuperacao(self):
         """Cenário de recuperação deve gerar dados corretos."""
         from app.services.cold_crisis_simulator import ColdCrisisSimulator
+
         simulador = ColdCrisisSimulator(seed=12345)
         resultado = simulador.gerar_cenario_recuperacao(duracao_horas=8, intervalo_minutos=15)
 
-        assert resultado['cenario'] == 'recuperacao'
+        assert resultado["cenario"] == "recuperacao"
 
     def test_cenario_invalido_erro(self):
         """Cenário inválido deve levantar ValueError."""
         from app.services.cold_crisis_simulator import ColdCrisisSimulator
+
         simulador = ColdCrisisSimulator(seed=12345)
 
         with pytest.raises(ValueError):
-            simulador.obter_cenario(tipo='cenario_invalido')
+            simulador.obter_cenario(tipo="cenario_invalido")
 
 
 class TestValidacaoParametros:
@@ -101,24 +106,18 @@ class TestValidacaoParametros:
     def test_obter_cenario_com_seed(self):
         """Seed deve ser aceita quando fornecida."""
         from app.services.cold_crisis_simulator import ColdCrisisSimulator
+
         simulador = ColdCrisisSimulator(seed=12345)
-        resultado = simulador.obter_cenario(
-            tipo='falha_energia',
-            duracao_horas=6,
-            intervalo_minutos=15
-        )
-        assert resultado['simulado'] is True
+        resultado = simulador.obter_cenario(tipo="falha_energia", duracao_horas=6, intervalo_minutos=15)
+        assert resultado["simulado"] is True
 
     def test_obter_cenario_sem_seed(self):
         """Seed opcional deve funcionar quando não fornecida."""
         from app.services.cold_crisis_simulator import ColdCrisisSimulator
+
         simulador = ColdCrisisSimulator()
-        resultado = simulador.obter_cenario(
-            tipo='falha_energia',
-            duracao_horas=6,
-            intervalo_minutos=15
-        )
-        assert resultado['simulado'] is True
+        resultado = simulador.obter_cenario(tipo="falha_energia", duracao_horas=6, intervalo_minutos=15)
+        assert resultado["simulado"] is True
 
 
 class TestReprodutibilidade:
@@ -127,6 +126,7 @@ class TestReprodutibilidade:
     def test_mesma_seed_mesmo_resultado(self):
         """Mesma seed deve produzir o mesmo resultado."""
         from app.services.cold_crisis_simulator import ColdCrisisSimulator
+
         seed = 12345
 
         simulador1 = ColdCrisisSimulator(seed=seed)
@@ -136,12 +136,12 @@ class TestReprodutibilidade:
         resultado2 = simulador2.gerar_cenario_falha_energia(duracao_horas=6, intervalo_minutos=15)
 
         # Mesmas temperaturas (determinístico)
-        leituras1 = resultado1['leituras']
-        leituras2 = resultado2['leituras']
+        leituras1 = resultado1["leituras"]
+        leituras2 = resultado2["leituras"]
 
         assert len(leituras1) == len(leituras2)
         for i in range(len(leituras1)):
-            assert leituras1[i]['temperatura'] == leituras2[i]['temperatura']
+            assert leituras1[i]["temperatura"] == leituras2[i]["temperatura"]
 
 
 class TestSemAlteracaoDadosReais:

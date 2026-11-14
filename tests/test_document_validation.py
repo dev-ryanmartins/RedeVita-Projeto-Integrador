@@ -12,7 +12,7 @@ import sys
 import os
 
 # Adiciona o diretório backend ao path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'backend'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "backend"))
 
 from app.utils.document_validation import (
     validar_cpf,
@@ -21,7 +21,6 @@ from app.utils.document_validation import (
     normalizar_cnpj,
     formatar_cpf,
     formatar_cnpj,
-    DocumentValidationError
 )
 
 
@@ -182,33 +181,33 @@ class TestCompatibilidadeLegacy(unittest.TestCase):
     def test_validar_cpf_legado_usa_servico_unificado(self):
         """Testa que função legada em validators.py usa serviço unificado"""
         from app.utils.validators import validar_cpf as validar_cpf_legado
-        
+
         # CPF válido
         self.assertTrue(validar_cpf_legado("529.982.247-25"))
-        
+
         # CPF inválido
         self.assertFalse(validar_cpf_legado("111.111.111-11"))
 
     def test_validar_cnpj_legado_usa_servico_unificado(self):
         """Testa que função legada em validators.py usa serviço unificado"""
         from app.utils.validators import validar_cnpj as validar_cnpj_legado
-        
+
         # CNPJ numérico válido
         self.assertTrue(validar_cnpj_legado("11.444.777/0001-61"))
-        
+
         # CNPJ numérico inválido
         self.assertFalse(validar_cnpj_legado("11.111.111/1111-11"))
 
     def test_validar_cpf_digitos_usa_servico_unificado(self):
         """Testa que função legada em sanitize.py usa serviço unificado"""
         from app.utils.sanitize import validar_cpf_digitos
-        
+
         # CPF válido
         self.assertTrue(validar_cpf_digitos("529.982.247-25"))
-        
+
         # CPF inválido
         self.assertFalse(validar_cpf_digitos("111.111.111-11"))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main(verbosity=2)

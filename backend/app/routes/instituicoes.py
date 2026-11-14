@@ -7,7 +7,6 @@ from app.utils.log_helper import registrar_log
 from app.utils.sanitize import limpar
 from app.utils.document_validation import validar_cnpj
 
-
 instituicoes_bp = Blueprint("instituicoes", __name__, url_prefix="/instituicoes")
 
 
@@ -56,7 +55,7 @@ def cadastrar_instituicao():
             responsavel=responsavel if responsavel else None,
             telefone=telefone if telefone else None,
             email=email if email else None,
-            ativo=True
+            ativo=True,
         )
         db.session.add(instituicao)
         db.session.commit()
@@ -100,10 +99,7 @@ def editar_instituicao(pid):
 
     # Verifica duplicidade de CNPJ (exceto a própria instituição)
     if cnpj:
-        existente = Instituicao.query.filter(
-            Instituicao.cnpj == cnpj,
-            Instituicao.id != pid
-        ).first()
+        existente = Instituicao.query.filter(Instituicao.cnpj == cnpj, Instituicao.id != pid).first()
         if existente:
             flash("Já existe uma instituição com este CNPJ.", "danger")
             return redirect(url_for("instituicoes.listar_instituicoes"))

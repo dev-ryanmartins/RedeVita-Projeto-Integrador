@@ -5,12 +5,12 @@ NOTA: Funcionalidade Admin-only devido à ausência de vínculo confiável
 entre usuários e instituições/farmácias no modelo atual.
 """
 
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
+from sqlalchemy.orm import joinedload
 from app.database import db
 from app.core.decorators import admin_required
 from app.models.necessidade_institucional import NecessidadeInstitucional, StatusNecessidade, PrioridadeNecessidade
-from app.models.usuario import Usuario
 from app.models.medicamento_referencia import MedicamentoReferencia
 from datetime import datetime
 
@@ -32,20 +32,20 @@ def listar_necessidades():
         data_desejada_str = request.form.get("data_desejada", "").strip()
         prioridade = request.form.get("prioridade", PrioridadeNecessidade.MEDIA.value).strip()
         observacoes = request.form.get("observacoes", "").strip() or None
-        
+
         # Validações básicas
         if not nome_instituicao:
             flash("Nome da instituição é obrigatório.", "danger")
             return redirect(url_for("necessidade_institucional.listar_necessidades"))
-        
+
         if not produto_descritivo and not medicamento_referencia_id:
             flash("Informe o produto (referência ou descritivo).", "danger")
             return redirect(url_for("necessidade_institucional.listar_necessidades"))
-        
+
         if not quantidade_solicitada or quantidade_solicitada <= 0:
             flash("Quantidade deve ser maior que zero.", "danger")
             return redirect(url_for("necessidade_institucional.listar_necessidades"))
-        
+
         # Parse data
         data_desejada = None
         if data_desejada_str:
@@ -54,7 +54,7 @@ def listar_necessidades():
             except ValueError:
                 flash("Data desejada inválida. Use formato AAAA-MM-DD.", "danger")
                 return redirect(url_for("necessidade_institucional.listar_necessidades"))
-        
+
         try:
             necessidade = NecessidadeInstitucional(
                 nome_instituicao=nome_instituicao,
@@ -66,7 +66,7 @@ def listar_necessidades():
                 prioridade=prioridade,
                 status=StatusNecessidade.RASCUNHO.value,
                 criado_por_id=current_user.id,
-                observacoes=observacoes
+                observacoes=observacoes,
             )
             db.session.add(necessidade)
             db.session.commit()
@@ -74,30 +74,34 @@ def listar_necessidades():
         except Exception:
             db.session.rollback()
             flash("Erro ao registrar necessidade. Tente novamente.", "danger")
-        
+
         return redirect(url_for("necessidade_institucional.listar_necessidades"))
-    
+
     # Filtros
     status_filtro = request.args.get("status", "").strip()
     prioridade_filtro = request.args.get("prioridade", "").strip()
-    
-    query = NecessidadeInstitucional.query
-    
+
+    # joinedload evita N+1 ao exibir referência e instituição de cada necessidade.
+    query = NecessidadeInstitucional.query.options(
+        joinedload(NecessidadeInstitucional.referencia),
+        joinedload(NecessidadeInstitucional.instituicao),
+    )
+
     if status_filtro:
         query = query.filter(NecessidadeInstitucional.status == status_filtro)
-    
+
     if prioridade_filtro:
         query = query.filter(NecessidadeInstitucional.prioridade == prioridade_filtro)
-    
+
     necessidades = query.order_by(NecessidadeInstitucional.criado_em.desc()).all()
     referencias = MedicamentoReferencia.query.all()
-    
+
     return render_template(
         "necessidades_institucionais.html",
         necessidades=necessidades,
         referencias=referencias,
         status_filtro=status_filtro,
-        prioridade_filtro=prioridade_filtro
+        prioridade_filtro=prioridade_filtro,
     )
 
 
@@ -107,13 +111,13 @@ def listar_necessidades():
 def revisar_necessidade(id):
     """Revisar uma necessidade."""
     necessidade = NecessidadeInstitucional.query.get_or_404(id)
-    
+
     novo_status = request.form.get("status").strip()
-    
+
     if novo_status not in [s.value for s in StatusNecessidade]:
         flash("Status inválido.", "danger")
         return redirect(url_for("necessidade_institucional.listar_necessidades"))
-    
+
     try:
         necessidade.status = novo_status
         necessidade.revisado_por_id = current_user.id
@@ -123,7 +127,7 @@ def revisar_necessidade(id):
     except Exception:
         db.session.rollback()
         flash("Erro ao revisar necessidade. Tente novamente.", "danger")
-    
+
     return redirect(url_for("necessidade_institucional.listar_necessidades"))
 
 
@@ -133,7 +137,7 @@ def revisar_necessidade(id):
 def encerrar_necessidade(id):
     """Encerrar uma necessidade."""
     necessidade = NecessidadeInstitucional.query.get_or_404(id)
-    
+
     try:
         necessidade.status = StatusNecessidade.ENCERRADA.value
         necessidade.encerrado_por_id = current_user.id
@@ -143,7 +147,7 @@ def encerrar_necessidade(id):
     except Exception:
         db.session.rollback()
         flash("Erro ao encerrar necessidade. Tente novamente.", "danger")
-    
+
     return redirect(url_for("necessidade_institucional.listar_necessidades"))
 
 

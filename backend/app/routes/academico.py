@@ -17,7 +17,6 @@ from app.utils.iot_telemetry import iot_simulator
 from app.utils.trie_busca import buscar_entidades_rapida
 from app.utils.log_helper import registrar_log
 
-
 academico_bp = Blueprint("academico", __name__)
 
 
@@ -50,28 +49,29 @@ def _serializar_farmacia(farmacia: Farmacia) -> dict:
 def monitoramento_iot():
     """
     Painel complementar para a simulação de cadeia de frio.
-    
+
     REGRA DE SEGURANÇA: Apenas Farmacêutico e Admin podem acessar.
     Conforme Portaria 344/ANVISA - controle de medicamentos refrigerados/controlados.
-    
+
     EXCEÇÃO PARA ADMIN: Admin pode acessar mesmo sem farmácias cadastradas para fins de apresentação.
     """
     from flask_login import current_user
-    
+
     # Verifica se há farmácias cadastradas
     total_farmacias = Farmacia.query.count()
-    
+
     # ADMIN tem acesso irrestrito - pode acessar mesmo sem farmácias
     # Para Farmacêutico, exige farmácia cadastrada
     if total_farmacias == 0 and not cargo_permitido(current_user.cargo, ("Admin",)):
         from flask import flash, redirect, url_for
+
         flash(
             "Cadastre uma farmácia parceira antes de acessar o painel de monitoramento IoT. "
             "Conforme Portaria 344/ANVISA, todo monitoramento deve estar vinculado a uma farmácia.",
-            "warning"
+            "warning",
         )
         return redirect(url_for("inventory.dashboard"))
-    
+
     # Se não houver farmácias e for Admin, usa dados de demonstração
     if total_farmacias == 0:
         sensores = []  # Lista vazia para Admin demonstrar o painel sem dados
@@ -79,14 +79,14 @@ def monitoramento_iot():
     else:
         sensores = iot_simulator.obter_todas_leituras()
         farmacias = Farmacia.query.all()
-    
+
     return render_template(
         "monitoramento_iot.html",
         sensores=sensores,
         farmacias=farmacias,
         alertas=sum(1 for sensor in sensores if sensor["status"] != "NORMAL"),
         atualizado_em=datetime.utcnow().isoformat(),
-        total_farmacias=total_farmacias
+        total_farmacias=total_farmacias,
     )
 
 
@@ -98,53 +98,50 @@ def novo_registro_termico():
     Registra manualmente uma nova leitura de temperatura e umidade.
     """
     from flask import request, flash, redirect, url_for
-    
+
     farmacia_id = request.form.get("farmacia_id")
     temperatura = request.form.get("temperatura")
     umidade = request.form.get("umidade")
     status = request.form.get("status")
     tipo_item = request.form.get("tipo_item", "").strip()
     nome_lote = request.form.get("nome_lote", "").strip()
-    
+
     if not farmacia_id or not temperatura or not umidade or not status or not tipo_item or not nome_lote:
         flash("Preencha todos os campos obrigatórios.", "danger")
         return redirect(url_for("academico.monitoramento_iot"))
-    
+
     try:
         temp_float = float(temperatura)
         umid_float = float(umidade)
-        
+
         # Validar faixas regulatórias Anvisa
         if temp_float < -10 or temp_float > 40:
             flash("Temperatura fora da faixa válida (-10°C a 40°C).", "danger")
             return redirect(url_for("academico.monitoramento_iot"))
-        
+
         if umid_float < 0 or umid_float > 100:
             flash("Umidade fora da faixa válida (0% a 100%).", "danger")
             return redirect(url_for("academico.monitoramento_iot"))
-        
+
         # Registrar leitura no simulador
         farmacia = Farmacia.query.get(farmacia_id)
         if not farmacia:
             flash("Farmácia não encontrada.", "danger")
             return redirect(url_for("academico.monitoramento_iot"))
-        
+
         # Adicionar leitura ao simulador
         iot_simulator.adicionar_leitura_manual(
-            farmacia_id=farmacia_id,
-            temperatura=temp_float,
-            umidade=umid_float,
-            status=status
+            farmacia_id=farmacia_id, temperatura=temp_float, umidade=umid_float, status=status
         )
-        
+
         registrar_log(
             "Registro Térmico Manual",
-            f"Leitura registrada para {farmacia.nome_fantasia}: {temp_float}°C, {umid_float}% umidade, status {status} | Item: {tipo_item} - Lote: {nome_lote}"
+            f"Leitura registrada para {farmacia.nome_fantasia}: {temp_float}°C, {umid_float}% umidade, status {status} | Item: {tipo_item} - Lote: {nome_lote}",
         )
-        
+
         flash("Registro térmico adicionado com sucesso.", "success")
         return redirect(url_for("academico.monitoramento_iot"))
-        
+
     except ValueError:
         flash("Valores inválidos para temperatura ou umidade.", "danger")
         return redirect(url_for("academico.monitoramento_iot"))
@@ -183,14 +180,10 @@ def historico_sensor(sensor_key):
     try:
         limite = request.args.get("limite", 24, type=int)
         limite = max(10, min(limite, 100))  # Entre 10 e 100 leituras
-        
+
         historico = iot_simulator.obter_historico(sensor_key, limite)
-        
-        return resposta_ok({
-            "sensor_key": sensor_key,
-            "historico": historico,
-            "total": len(historico)
-        })
+
+        return resposta_ok({"sensor_key": sensor_key, "historico": historico, "total": len(historico)})
     except Exception as e:
         return resposta_erro(f"Erro ao obter histórico: {str(e)}", 500)
 
@@ -205,43 +198,44 @@ def simular_alerta_critico():
     """
     from flask import request
     from flask_login import current_user
-    
+
     try:
         sensor_id = request.json.get("sensor_id")
         temperatura_pico = request.json.get("temperatura", 25.0)
-        
+
         # Temperatura crítica definida como > 8°C (para câmara fria de 2-8°C)
         TEMPERATURA_CRITICA = 8.0
-        
+
         if temperatura_pico <= TEMPERATURA_CRITICA:
             return resposta_erro(
-                f"Temperatura deve ser maior que {TEMPERATURA_CRITICA}°C para simular alerta crítico.", 
-                400
+                f"Temperatura deve ser maior que {TEMPERATURA_CRITICA}°C para simular alerta crítico.", 400
             )
-        
+
         # Registrar alerta crítico nos logs
         log_alerta = LogAtividade(
             usuario_id=current_user.id if current_user.is_authenticated else None,
             acao="ALERTA_TÉRMICO_CRÍTICO",
             detalhes=f"Sensor {sensor_id or 'N/A'} registrou temperatura crítica de {temperatura_pico}°C. Limite seguro: {TEMPERATURA_CRITICA}°C.",
             ip=request.remote_addr,
-            created_at=datetime.utcnow()
+            created_at=datetime.utcnow(),
         )
         db.session.add(log_alerta)
         db.session.commit()
-        
+
         # Forçar simulação de temperatura crítica no sensor
         if sensor_id:
             iot_simulator.forcar_temperatura_critica(sensor_id, temperatura_pico)
-        
-        return resposta_ok({
-            "mensagem": "Alerta térmico crítico simulado com sucesso",
-            "sensor_id": sensor_id,
-            "temperatura": temperatura_pico,
-            "limite_seguro": TEMPERATURA_CRITICA,
-            "registrado_em": datetime.utcnow().isoformat()
-        })
-        
+
+        return resposta_ok(
+            {
+                "mensagem": "Alerta térmico crítico simulado com sucesso",
+                "sensor_id": sensor_id,
+                "temperatura": temperatura_pico,
+                "limite_seguro": TEMPERATURA_CRITICA,
+                "registrado_em": datetime.utcnow().isoformat(),
+            }
+        )
+
     except Exception as e:
         db.session.rollback()
         return resposta_erro(f"Erro ao simular alerta crítico: {str(e)}", 500)
@@ -256,12 +250,12 @@ def auditoria():
         farmacias = Farmacia.query.order_by(Farmacia.id.desc()).limit(50).all()
     except Exception:
         farmacias = []
-    
+
     try:
         logs = LogAtividade.query.order_by(LogAtividade.created_at.desc()).limit(50).all()
     except Exception:
         logs = []
-    
+
     return render_template("auditoria_complementar.html", farmacias=farmacias, logs=logs)
 
 
@@ -313,6 +307,4 @@ def busca_rapida():
 
     medicamentos = Medicamento.query.all() if tipo in {"todos", "medicamentos"} else []
     pacientes = Paciente.query.all() if tipo in {"todos", "pacientes"} else []
-    return resposta_ok(
-        buscar_entidades_rapida(query, medicamentos, pacientes, limite=20)
-    )
+    return resposta_ok(buscar_entidades_rapida(query, medicamentos, pacientes, limite=20))

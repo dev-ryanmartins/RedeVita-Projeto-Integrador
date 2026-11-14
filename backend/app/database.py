@@ -3513,10 +3513,10 @@ def init_db(app):
 # ============================================================================
 # NOTA: MIGRAÇÕES DE SCHEMA (P1.12)
 # ============================================================================
-# 
+#
 # A função aplicar_migracoes_manuais foi removida do startup da aplicação.
 # Gerenciamento de schema agora usa Flask-Migrate (Alembic).
-# 
+#
 # Comandos de migração:
 #   cd backend
 #   flask --app main:create_app db migrate -m "descrição da mudança"
@@ -3547,51 +3547,21 @@ def aplicar_migracoes_manuais(app):
     with app.app_context():
         with db.engine.connect() as conn:
             inspector = inspect(conn)
-            _add_column_if_missing(
-                conn, inspector, "usuarios", "ativo", "BOOLEAN DEFAULT TRUE"
-            )
-            _add_column_if_missing(
-                conn, inspector, "usuarios", "credencial_versao", "INTEGER DEFAULT 1 NOT NULL"
-            )
-            _add_column_if_missing(
-                conn, inspector, "doacoes", "cancelado", "BOOLEAN DEFAULT FALSE NOT NULL"
-            )
-            _add_column_if_missing(
-                conn, inspector, "doacoes", "cancelado_por_id", "INTEGER"
-            )
-            _add_column_if_missing(
-                conn, inspector, "doacoes", "cancelado_em", "TIMESTAMP"
-            )
-            _add_column_if_missing(
-                conn, inspector, "doacoes", "justificativa_cancelamento", "TEXT"
-            )
-            _add_column_if_missing(
-                conn, inspector, "doacoes", "compensacao_id", "INTEGER"
-            )
-            _add_column_if_missing(
-                conn, inspector, "farmacias", "razao_social", "VARCHAR(200)"
-            )
-            _add_column_if_missing(
-                conn, inspector, "farmacias", "latitude", "FLOAT"
-            )
-            _add_column_if_missing(
-                conn, inspector, "farmacias", "longitude", "FLOAT"
-            )
-            _add_column_if_missing(
-                conn, inspector, "receitas", "status", "VARCHAR(20) DEFAULT 'pendente'"
-            )
-            _add_column_if_missing(
-                conn, inspector, "receitas", "dispensada_em", "TIMESTAMP"
-            )
-            _add_column_if_missing(
-                conn, inspector, "receitas", "dispensada_por_id", "INTEGER"
-            )
-            _add_column_if_missing(
-                conn, inspector, "receitas", "tipo_receita", "VARCHAR(60)"
-            )
-            _add_column_if_missing(
-                conn, inspector, "receitas", "imagem_url", "VARCHAR(255)"
-            )
+            _add_column_if_missing(conn, inspector, "usuarios", "ativo", "BOOLEAN DEFAULT TRUE")
+            _add_column_if_missing(conn, inspector, "usuarios", "credencial_versao", "INTEGER DEFAULT 1 NOT NULL")
+            _add_column_if_missing(conn, inspector, "doacoes", "cancelado", "BOOLEAN DEFAULT FALSE NOT NULL")
+            _add_column_if_missing(conn, inspector, "doacoes", "cancelado_por_id", "INTEGER")
+            _add_column_if_missing(conn, inspector, "doacoes", "cancelado_em", "TIMESTAMP")
+            _add_column_if_missing(conn, inspector, "doacoes", "justificativa_cancelamento", "TEXT")
+            _add_column_if_missing(conn, inspector, "doacoes", "compensacao_id", "INTEGER")
+            _add_column_if_missing(conn, inspector, "farmacias", "razao_social", "VARCHAR(200)")
+            _add_column_if_missing(conn, inspector, "farmacias", "latitude", "FLOAT")
+            _add_column_if_missing(conn, inspector, "farmacias", "longitude", "FLOAT")
+            _add_column_if_missing(conn, inspector, "receitas", "status", "VARCHAR(20) DEFAULT 'pendente'")
+            _add_column_if_missing(conn, inspector, "receitas", "dispensada_em", "TIMESTAMP")
+            _add_column_if_missing(conn, inspector, "receitas", "dispensada_por_id", "INTEGER")
+            _add_column_if_missing(conn, inspector, "receitas", "tipo_receita", "VARCHAR(60)")
+            _add_column_if_missing(conn, inspector, "receitas", "imagem_url", "VARCHAR(255)")
             _add_column_if_missing(
                 conn,
                 inspector,
@@ -3599,45 +3569,19 @@ def aplicar_migracoes_manuais(app):
                 "tarja",
                 "VARCHAR(30) DEFAULT 'Sem Tarja'",
             )
-            _add_column_if_missing(
-                conn, inspector, "medicamentos", "principio_ativo", "VARCHAR(120)"
-            )
-            _add_column_if_missing(
-                conn, inspector, "medicamentos", "status_semaforo", "INTEGER DEFAULT 0"
-            )
-            _add_column_if_missing(
-                conn, inspector, "medicamentos", "ativo", "BOOLEAN DEFAULT TRUE NOT NULL"
-            )
-            _add_column_if_missing(
-                conn, inspector, "campanhas", "titulo", "VARCHAR(200)"
-            )
-            _add_column_if_missing(
-                conn, inspector, "campanhas", "descricao", "TEXT"
-            )
-            _add_column_if_missing(
-                conn, inspector, "campanhas", "tipo", "VARCHAR(50)"
-            )
-            _add_column_if_missing(
-                conn, inspector, "campanhas", "data_inicio", "DATE"
-            )
-            _add_column_if_missing(
-                conn, inspector, "campanhas", "data_fim", "DATE"
-            )
-            _add_column_if_missing(
-                conn, inspector, "campanhas", "status", "VARCHAR(20) DEFAULT 'ativa'"
-            )
-            _add_column_if_missing(
-                conn, inspector, "campanhas", "criador_id", "INTEGER"
-            )
-            _add_column_if_missing(
-                conn, inspector, "campanhas", "created_at", "TIMESTAMP"
-            )
-            _add_column_if_missing(
-                conn, inspector, "medicamentos", "uso_continuo", "BOOLEAN DEFAULT FALSE"
-            )
-            _add_column_if_missing(
-                conn, inspector, "medicamentos", "referencia_id", "INTEGER"
-            )
+            _add_column_if_missing(conn, inspector, "medicamentos", "principio_ativo", "VARCHAR(120)")
+            _add_column_if_missing(conn, inspector, "medicamentos", "status_semaforo", "INTEGER DEFAULT 0")
+            _add_column_if_missing(conn, inspector, "medicamentos", "ativo", "BOOLEAN DEFAULT TRUE NOT NULL")
+            _add_column_if_missing(conn, inspector, "campanhas", "titulo", "VARCHAR(200)")
+            _add_column_if_missing(conn, inspector, "campanhas", "descricao", "TEXT")
+            _add_column_if_missing(conn, inspector, "campanhas", "tipo", "VARCHAR(50)")
+            _add_column_if_missing(conn, inspector, "campanhas", "data_inicio", "DATE")
+            _add_column_if_missing(conn, inspector, "campanhas", "data_fim", "DATE")
+            _add_column_if_missing(conn, inspector, "campanhas", "status", "VARCHAR(20) DEFAULT 'ativa'")
+            _add_column_if_missing(conn, inspector, "campanhas", "criador_id", "INTEGER")
+            _add_column_if_missing(conn, inspector, "campanhas", "created_at", "TIMESTAMP")
+            _add_column_if_missing(conn, inspector, "medicamentos", "uso_continuo", "BOOLEAN DEFAULT FALSE")
+            _add_column_if_missing(conn, inspector, "medicamentos", "referencia_id", "INTEGER")
             _add_column_if_missing(
                 conn,
                 inspector,
@@ -3651,7 +3595,6 @@ def aplicar_migracoes_manuais(app):
 def seed_medicamentos_referencia(app):
     """Popula / atualiza a tabela de referência ANVISA (upsert por nome_comercial)."""
     from app.models.medicamento_referencia import MedicamentoReferencia
-    from app.models.campanha import Campanha
 
     with app.app_context():
         existentes = {r.nome_comercial for r in MedicamentoReferencia.query.all()}

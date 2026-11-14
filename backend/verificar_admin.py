@@ -13,7 +13,7 @@ from app.models.usuario import Usuario
 app = create_app()
 
 with app.app_context():
-    admin = Usuario.query.filter_by(cargo='Admin').first()
+    admin = Usuario.query.filter_by(cargo="Admin").first()
     if admin:
         print(f"Admin encontrado:")
         print(f"Nome: {admin.nome}")

@@ -1,13 +1,11 @@
-from flask import Blueprint, render_template, request, jsonify, send_file
-from flask_login import login_required, current_user
+from flask import Blueprint, render_template, request, send_file
+from flask_login import login_required
 from app.models.medicamento import Medicamento
 from app.models.doacao import Doacao
 from app.models.paciente import Paciente
 from app.models.farmacia import Farmacia
-from app.database import db
 from app.core.decorators import equipe_clinica_required
 from app.core.api_responses import (
-    resposta_ok,
     resposta_erro,
     ERRO_VALIDACAO,
     ERRO_INTERNO,
@@ -16,7 +14,6 @@ from app.utils.pdf_generator import obter_gerador_pdf
 from datetime import date, datetime
 from io import BytesIO
 import logging
-import os
 
 logger = logging.getLogger(__name__)
 
@@ -28,33 +25,31 @@ impacto_bp = Blueprint("impacto", __name__)
 @equipe_clinica_required
 def impacto_social():
     """Calcula e exibe métricas de impacto social e sustentabilidade"""
-    
+
     # Cálculos de impacto
     total_medicamentos = Medicamento.query.count()
     total_doacoes = Doacao.query.count()
     total_pacientes = Paciente.query.count()
     total_farmacias = Farmacia.query.count()
-    
+
     # Estimativas baseadas em dados reais
     total_estoque = sum(m.quantidade for m in Medicamento.query.all())
-    
+
     # Cálculo de impacto (estimativas conservadoras)
     # 1 unidade de medicamento = ~1 paciente beneficiado
     pacientes_beneficiados = total_doacoes + total_estoque
-    
+
     # Estimativa de resíduos evitados (1 unidade = ~50g de resíduo evitado)
     residuos_evitados_kg = (total_doacoes + total_estoque) * 0.05
-    
+
     # Medicamentos salvos (total - vencidos)
     medicamentos_vencidos = Medicamento.query.filter_by(status_semaforo=2).count()
     medicamentos_salvos = total_medicamentos - medicamentos_vencidos
-    
+
     # Métricas mensais
     hoje = date.today()
-    doacoes_mes = Doacao.query.filter(
-        Doacao.data_doacao >= date(hoje.year, hoje.month, 1)
-    ).count()
-    
+    doacoes_mes = Doacao.query.filter(Doacao.data_doacao >= date(hoje.year, hoje.month, 1)).count()
+
     return render_template(
         "impacto.html",
         total_medicamentos=total_medicamentos,
@@ -66,7 +61,7 @@ def impacto_social():
         residuos_evitados_kg=round(residuos_evitados_kg, 2),
         medicamentos_salvos=medicamentos_salvos,
         medicamentos_vencidos=medicamentos_vencidos,
-        doacoes_mes=doacoes_mes
+        doacoes_mes=doacoes_mes,
     )
 
 
@@ -77,21 +72,21 @@ def exportar_pdf():
     """Exporta o relatório de impacto social em PDF"""
     try:
         data = request.get_json()
-        
+
         if not data:
             return resposta_erro(ERRO_VALIDACAO, "Corpo da requisição vazio", 400)
-        
+
         data_inicio = data.get("data_inicio")
         data_fim = data.get("data_fim")
         titulo = data.get("titulo", "Relatório de Impacto Social")
         observacoes = data.get("observacoes", "")
         dados_atuais = data.get("dados_atuais", {})
         graficos = data.get("graficos", {})
-        
+
         # Escape de texto fornecido pelo usuário
         titulo = titulo.replace("<", "&lt;").replace(">", "&gt;")
         observacoes = observacoes.replace("<", "&lt;").replace(">", "&gt;")
-        
+
         # Gerar PDF
         gerador = obter_gerador_pdf()
         pdf_bytes = gerador.gerar_pdf_impacto_social(
@@ -100,31 +95,22 @@ def exportar_pdf():
             titulo=titulo,
             observacoes=observacoes,
             dados=dados_atuais,
-            graficos=graficos
+            graficos=graficos,
         )
-        
+
         # Criar nome do arquivo
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"relatorio_impacto_social_{timestamp}.pdf"
-        
+
         # Enviar arquivo
         buffer = BytesIO(pdf_bytes)
         buffer.seek(0)
-        
-        return send_file(
-            buffer,
-            as_attachment=True,
-            download_name=filename,
-            mimetype="application/pdf"
-        )
-        
+
+        return send_file(buffer, as_attachment=True, download_name=filename, mimetype="application/pdf")
+
     except ImportError as e:
         logger.error(f"reportlab não instalado: {e}")
-        return resposta_erro(
-            ERRO_INTERNO,
-            "Biblioteca de PDF não instalada. Contate o administrador.",
-            500
-        )
+        return resposta_erro(ERRO_INTERNO, "Biblioteca de PDF não instalada. Contate o administrador.", 500)
     except Exception as e:
         logger.error(f"Erro ao exportar PDF: {e}")
         return resposta_erro(ERRO_INTERNO, "Erro ao gerar PDF", 500)

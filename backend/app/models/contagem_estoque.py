@@ -4,8 +4,9 @@ from datetime import datetime
 
 class ContagemEstoque(db.Model):
     """Modelo para contagem cíclica de estoque."""
+
     __tablename__ = "contagens_estoque"
-    __table_args__ = {'extend_existing': True}
+    __table_args__ = {"extend_existing": True}
 
     id = db.Column(db.Integer, primary_key=True)
     medicamento_id = db.Column(db.Integer, db.ForeignKey("medicamentos.id"), nullable=False)

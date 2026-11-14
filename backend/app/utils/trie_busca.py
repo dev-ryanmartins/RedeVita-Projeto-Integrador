@@ -7,7 +7,6 @@ usada com qualquer fonte de dados no futuro.
 
 import re
 import unicodedata
-from collections import defaultdict
 from typing import Any, Iterable
 
 

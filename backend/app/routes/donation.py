@@ -1,11 +1,12 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
+from sqlalchemy.orm import joinedload
 from app.models.doacao import Doacao
 from app.models.medicamento import Medicamento
 from app.models.doacao_etapa import DoacaoEtapa, TipoEtapa, OrigemEvento
 from app.database import db
 from app.utils.log_helper import registrar_log
-from app.core.decorators import cargo_required, admin_required, operador_required, voluntario_required, equipe_clinica_required, audit_critical_action
+from app.core.decorators import admin_required, operador_required, equipe_clinica_required, audit_critical_action
 from app.utils.email_service import email_service
 from app.utils.sms_service import sms_service
 from app.utils.medication_validation import (
@@ -28,7 +29,7 @@ donation_bp = Blueprint("donation", __name__)
 @donation_bp.route("/doacoes", methods=["GET", "POST"])
 @login_required
 @operador_required
-@audit_critical_action('REGISTRO_DOAÇÃO')
+@audit_critical_action("REGISTRO_DOAÇÃO")
 def nova_doacao():
     if request.method == "POST":
         medicamento_id = request.form.get("medicamento_id", type=int)
@@ -40,7 +41,10 @@ def nova_doacao():
 
         # Require explicit medication ID - no creation by name/type
         if not medicamento_id:
-            flash("ERRO BLOQUEANTE: Selecione um medicamento existente. Não é possível registrar saída sem identificação explícita do lote.", "danger")
+            flash(
+                "ERRO BLOQUEANTE: Selecione um medicamento existente. Não é possível registrar saída sem identificação explícita do lote.",
+                "danger",
+            )
             return redirect(url_for("donation.nova_doacao"))
 
         try:
@@ -56,7 +60,10 @@ def nova_doacao():
         medicamento = Medicamento.query.get(medicamento_id)
 
         if not medicamento:
-            flash("ERRO BLOQUEANTE: Medicamento não encontrado no estoque. O ID informado não corresponde a nenhum lote existente.", "danger")
+            flash(
+                "ERRO BLOQUEANTE: Medicamento não encontrado no estoque. O ID informado não corresponde a nenhum lote existente.",
+                "danger",
+            )
             return redirect(url_for("donation.nova_doacao"))
 
         if not medicamento.ativo:
@@ -68,18 +75,24 @@ def nova_doacao():
 
         if is_controlled:
             if not receita_medica:
-                flash("ERRO BLOQUEANTE: Para medicamentos controlados (Portaria 344), é obrigatório informar a receita médica válida.", "danger")
+                flash(
+                    "ERRO BLOQUEANTE: Para medicamentos controlados (Portaria 344), é obrigatório informar a receita médica válida.",
+                    "danger",
+                )
                 return redirect(url_for("donation.nova_doacao"))
-            
-            if aprovacao_farmaceutico != 'aprovado':
-                flash("ERRO BLOQUEANTE: Para medicamentos controlados (Portaria 344), é obrigatória a aprovação do farmacêutico responsável.", "danger")
+
+            if aprovacao_farmaceutico != "aprovado":
+                flash(
+                    "ERRO BLOQUEANTE: Para medicamentos controlados (Portaria 344), é obrigatória a aprovação do farmacêutico responsável.",
+                    "danger",
+                )
                 return redirect(url_for("donation.nova_doacao"))
 
         # Use centralized validation for stock reduction (includes expiration check)
         validacao_saida = validate_batch_for_stock_reduction(
             data_validade=medicamento.data_validade,
             quantidade_solicitada=qtd,
-            quantidade_disponivel=medicamento.quantidade
+            quantidade_disponivel=medicamento.quantidade,
         )
 
         if not validacao_saida.is_valid:
@@ -87,7 +100,10 @@ def nova_doacao():
             return redirect(url_for("donation.nova_doacao"))
 
         if medicamento.controlado:
-            flash("⚠️ ALERTA DE PORTARIA 344: Este medicamento é controlado pela ANVISA. A doação requer aprovação obrigatória do farmacêutico responsável.", "warning")
+            flash(
+                "⚠️ ALERTA DE PORTARIA 344: Este medicamento é controlado pela ANVISA. A doação requer aprovação obrigatória do farmacêutico responsável.",
+                "warning",
+            )
 
         medicamento.quantidade -= qtd
 
@@ -107,7 +123,7 @@ def nova_doacao():
                 data_hora=datetime.utcnow(),
                 usuario_id=current_user.id,
                 origem=OrigemEvento.USUARIO.value,
-                observacao=f"Registro de saída de {qtd} unidades de {medicamento.nome}"
+                observacao=f"Registro de saída de {qtd} unidades de {medicamento.nome}",
             )
             db.session.add(etapa_inicial)
             db.session.commit()
@@ -131,16 +147,15 @@ def nova_doacao():
                     medicamento=medicamento.nome,
                     quantidade=qtd,
                     lote=medicamento.lote,
-                    data_validade=medicamento.data_validade.strftime('%d/%m/%Y') if medicamento.data_validade else 'N/A',
-                    data_doacao=datetime.utcnow()
+                    data_validade=(
+                        medicamento.data_validade.strftime("%d/%m/%Y") if medicamento.data_validade else "N/A"
+                    ),
+                    data_doacao=datetime.utcnow(),
                 )
-            
-            if hasattr(current_user, 'telefone') and current_user.telefone:
-                sms_service.send_doacao_confirmation_async(
-                    to_phone=current_user.telefone,
-                    medicamento=medicamento.nome
-                )
-            
+
+            if hasattr(current_user, "telefone") and current_user.telefone:
+                sms_service.send_doacao_confirmation_async(to_phone=current_user.telefone, medicamento=medicamento.nome)
+
             flash("Doação registrada com sucesso!", "success")
         except Exception:
             db.session.rollback()
@@ -153,33 +168,30 @@ def nova_doacao():
     except Exception:
         medicamentos = []
 
-    # Pagination parameters (for future use)
-    page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('per_page', 50, type=int)
-    
+    # Parâmetros de paginação
+    page = request.args.get("page", 1, type=int)
+    per_page = request.args.get("per_page", 50, type=int)
+
     data_inicio = request.args.get("data_inicio", "").strip()
     data_fim = request.args.get("data_fim", "").strip()
-    
+
     try:
-        q = Doacao.query.order_by(Doacao.data_doacao.desc())
+        q = Doacao.query.options(joinedload(Doacao.medicamento), joinedload(Doacao.usuario)).order_by(
+            Doacao.data_doacao.desc()
+        )
     except Exception:
         q = None
     if data_inicio:
         try:
-            q = q.filter(
-                Doacao.data_doacao >= datetime.strptime(data_inicio, "%Y-%m-%d")
-            )
+            q = q.filter(Doacao.data_doacao >= datetime.strptime(data_inicio, "%Y-%m-%d"))
         except (ValueError, AttributeError):
             pass
     if data_fim:
         try:
-            q = q.filter(
-                Doacao.data_doacao
-                <= datetime.strptime(data_fim + " 23:59:59", "%Y-%m-%d %H:%M:%S")
-            )
+            q = q.filter(Doacao.data_doacao <= datetime.strptime(data_fim + " 23:59:59", "%Y-%m-%d %H:%M:%S"))
         except (ValueError, AttributeError):
             pass
-    
+
     try:
         doacoes = q.all() if q else []
     except Exception:
@@ -197,7 +209,7 @@ def nova_doacao():
 @donation_bp.route("/doacoes/triagem", methods=["GET", "POST"])
 @login_required
 @operador_required
-@audit_critical_action('TRIAGEM_DOAÇÃO')
+@audit_critical_action("TRIAGEM_DOAÇÃO")
 def triagem():
     if request.method == "POST":
         nome = request.form.get("nome", "").strip()
@@ -225,13 +237,9 @@ def triagem():
 
         # Centralized domain validation - rejects expired batches and unknown tarja
         validacao = validate_batch_for_creation(
-            nome=nome,
-            lote=lote,
-            data_validade=data_validade,
-            quantidade=quantidade,
-            tarja=tarja
+            nome=nome, lote=lote, data_validade=data_validade, quantidade=quantidade, tarja=tarja
         )
-        
+
         if not validacao.is_valid:
             flash(validacao.error_message, "danger")
             return redirect(url_for("donation.triagem"))
@@ -242,7 +250,7 @@ def triagem():
 
         try:
             status_semaforo = calculate_semaforo_status(data_validade)
-            
+
             med = Medicamento(
                 nome=nome,
                 lote=lote,
@@ -257,17 +265,31 @@ def triagem():
             if not is_valid:
                 flash(f"Erro de validação ANVISA: {error_msg}", "danger")
                 return redirect(url_for("donation.triagem"))
-            
+
             if tarja == "Portaria 344":
-                flash("ERRO BLOQUEANTE: Substâncias controladas pela Portaria 344 não podem ser cadastradas automaticamente. Requer validação manual do farmacêutico responsável.", "danger")
+                flash(
+                    "ERRO BLOQUEANTE: Substâncias controladas pela Portaria 344 não podem ser cadastradas automaticamente. Requer validação manual do farmacêutico responsável.",
+                    "danger",
+                )
                 return redirect(url_for("donation.triagem"))
-            
+
             principio_lower = (principio_ativo or "").lower()
-            controlled_keywords = ['antibiotico', 'antidepressivo', 'anfetamina', 'opiaceo', 'benzodiazepin', 'controlado', 'psicotropico']
+            controlled_keywords = [
+                "antibiotico",
+                "antidepressivo",
+                "anfetamina",
+                "opiaceo",
+                "benzodiazepin",
+                "controlado",
+                "psicotropico",
+            ]
             if any(keyword in principio_lower for keyword in controlled_keywords):
-                flash("ERRO BLOQUEANTE: Substâncias controladas detectadas pelo princípio ativo. Requer validação manual do farmacêutico responsável.", "danger")
+                flash(
+                    "ERRO BLOQUEANTE: Substâncias controladas detectadas pelo princípio ativo. Requer validação manual do farmacêutico responsável.",
+                    "danger",
+                )
                 return redirect(url_for("donation.triagem"))
-            
+
             db.session.add(med)
             db.session.commit()
             registrar_log(
@@ -278,16 +300,14 @@ def triagem():
 
             if doador and doador != "Não informado":
                 logger.info(f"Notificação de triagem aprovada para doador: {doador} - Medicamento: {nome}")
-            
+
             if status_semaforo == 1:
                 flash(
                     f'"{nome}" adicionado ao estoque. Lote próximo ao vencimento.',
                     "warning",
                 )
             else:
-                flash(
-                    f'"{nome}" validado e adicionado ao estoque com sucesso!', "success"
-                )
+                flash(f'"{nome}" validado e adicionado ao estoque com sucesso!', "success")
         except Exception:
             db.session.rollback()
             flash("Erro ao registrar o medicamento. Tente novamente.", "danger")
@@ -336,147 +356,187 @@ def pre_checagem():
 
         # 1. Validar nome
         if not nome:
-            bloqueios.append({
-                "campo": "nome",
-                "mensagem": "Nome do medicamento é obrigatório.",
-                "proximo_passo": "Informe o nome completo do medicamento conforme a embalagem."
-            })
+            bloqueios.append(
+                {
+                    "campo": "nome",
+                    "mensagem": "Nome do medicamento é obrigatório.",
+                    "proximo_passo": "Informe o nome completo do medicamento conforme a embalagem.",
+                }
+            )
         else:
-            informativos.append({
-                "campo": "nome",
-                "mensagem": f"Nome informado: {nome}",
-                "nota": "O sistema não valida se o nome está correto ou se corresponde a um medicamento real."
-            })
+            informativos.append(
+                {
+                    "campo": "nome",
+                    "mensagem": f"Nome informado: {nome}",
+                    "nota": "O sistema não valida se o nome está correto ou se corresponde a um medicamento real.",
+                }
+            )
 
         # 2. Validar lote
         if not lote:
-            bloqueios.append({
-                "campo": "lote",
-                "mensagem": "Número do lote é obrigatório.",
-                "proximo_passo": "Informe o número do lote conforme a embalagem."
-            })
+            bloqueios.append(
+                {
+                    "campo": "lote",
+                    "mensagem": "Número do lote é obrigatório.",
+                    "proximo_passo": "Informe o número do lote conforme a embalagem.",
+                }
+            )
         else:
-            informativos.append({
-                "campo": "lote",
-                "mensagem": f"Lote informado: {lote}",
-                "nota": "O sistema não verifica se o lote existe ou é válido."
-            })
+            informativos.append(
+                {
+                    "campo": "lote",
+                    "mensagem": f"Lote informado: {lote}",
+                    "nota": "O sistema não verifica se o lote existe ou é válido.",
+                }
+            )
 
         # 3. Validar data de validade
         try:
             data_validade = datetime.strptime(data_validade_str, "%Y-%m-%d").date()
             exp_result = validate_expiration(data_validade)
             if not exp_result.is_valid:
-                bloqueios.append({
-                    "campo": "data_validade",
-                    "mensagem": exp_result.error_message,
-                    "proximo_passo": "Verifique a data de validade na embalagem. Lotes vencidos não podem ser aceitos."
-                })
+                bloqueios.append(
+                    {
+                        "campo": "data_validade",
+                        "mensagem": exp_result.error_message,
+                        "proximo_passo": "Verifique a data de validade na embalagem. Lotes vencidos não podem ser aceitos.",
+                    }
+                )
             else:
                 dias_restantes = (data_validade - datetime.now().date()).days
                 if dias_restantes <= 30:
-                    pendencias_humanas.append({
-                        "campo": "data_validade",
-                        "mensagem": f"Lote próximo ao vencimento ({dias_restantes} dias restantes).",
-                        "proximo_passo": "Avalie se o prazo é suficiente para uso ou redistribuição."
-                    })
+                    pendencias_humanas.append(
+                        {
+                            "campo": "data_validade",
+                            "mensagem": f"Lote próximo ao vencimento ({dias_restantes} dias restantes).",
+                            "proximo_passo": "Avalie se o prazo é suficiente para uso ou redistribuição.",
+                        }
+                    )
                 else:
-                    informativos.append({
-                        "campo": "data_validade",
-                        "mensagem": f"Data de validade: {data_validade.strftime('%d/%m/%Y')} ({dias_restantes} dias restantes).",
-                        "nota": "A validade foi verificada automaticamente."
-                    })
+                    informativos.append(
+                        {
+                            "campo": "data_validade",
+                            "mensagem": f"Data de validade: {data_validade.strftime('%d/%m/%Y')} ({dias_restantes} dias restantes).",
+                            "nota": "A validade foi verificada automaticamente.",
+                        }
+                    )
         except ValueError:
-            bloqueios.append({
-                "campo": "data_validade",
-                "mensagem": "Data de validade inválida. Use formato AAAA-MM-DD.",
-                "proximo_passo": "Informe a data no formato correto (ex: 2025-12-31)."
-            })
+            bloqueios.append(
+                {
+                    "campo": "data_validade",
+                    "mensagem": "Data de validade inválida. Use formato AAAA-MM-DD.",
+                    "proximo_passo": "Informe a data no formato correto (ex: 2025-12-31).",
+                }
+            )
 
         # 4. Validar quantidade
         try:
             quantidade = int(quantidade_str)
             qty_result = validate_quantity(quantidade)
             if not qty_result.is_valid:
-                bloqueios.append({
-                    "campo": "quantidade",
-                    "mensagem": qty_result.error_message,
-                    "proximo_passo": "Informe um número inteiro positivo para a quantidade."
-                })
+                bloqueios.append(
+                    {
+                        "campo": "quantidade",
+                        "mensagem": qty_result.error_message,
+                        "proximo_passo": "Informe um número inteiro positivo para a quantidade.",
+                    }
+                )
             else:
-                informativos.append({
-                    "campo": "quantidade",
-                    "mensagem": f"Quantidade informada: {quantidade} unidades.",
-                    "nota": "O sistema não verifica se a quantidade corresponde ao conteúdo real da embalagem."
-                })
+                informativos.append(
+                    {
+                        "campo": "quantidade",
+                        "mensagem": f"Quantidade informada: {quantidade} unidades.",
+                        "nota": "O sistema não verifica se a quantidade corresponde ao conteúdo real da embalagem.",
+                    }
+                )
         except ValueError:
-            bloqueios.append({
-                "campo": "quantidade",
-                "mensagem": "Quantidade inválida. Informe um número inteiro.",
-                "proximo_passo": "Informe um número inteiro positivo (ex: 10, 20, 50)."
-            })
+            bloqueios.append(
+                {
+                    "campo": "quantidade",
+                    "mensagem": "Quantidade inválida. Informe um número inteiro.",
+                    "proximo_passo": "Informe um número inteiro positivo (ex: 10, 20, 50).",
+                }
+            )
 
         # 5. Validar tarja
         tarja_result = validate_tarja(tarja, allow_unknown=False)
         if not tarja_result.is_valid:
-            bloqueios.append({
-                "campo": "tarja",
-                "mensagem": tarja_result.error_message,
-                "proximo_passo": "Selecione uma classificação válida (Sem Tarja, Tarja Amarela, Tarja Vermelha, Portaria 344)."
-            })
+            bloqueios.append(
+                {
+                    "campo": "tarja",
+                    "mensagem": tarja_result.error_message,
+                    "proximo_passo": "Selecione uma classificação válida (Sem Tarja, Tarja Amarela, Tarja Vermelha, Portaria 344).",
+                }
+            )
         else:
             if tarja == "Portaria 344":
-                bloqueios.append({
-                    "campo": "tarja",
-                    "mensagem": "Medicamento controlado pela Portaria 344.",
-                    "proximo_passo": "Este medicamento requer avaliação obrigatória do farmacêutico responsável antes do cadastro."
-                })
+                bloqueios.append(
+                    {
+                        "campo": "tarja",
+                        "mensagem": "Medicamento controlado pela Portaria 344.",
+                        "proximo_passo": "Este medicamento requer avaliação obrigatória do farmacêutico responsável antes do cadastro.",
+                    }
+                )
             else:
-                informativos.append({
-                    "campo": "tarja",
-                    "mensagem": f"Classificação: {tarja}.",
-                    "nota": "A classificação foi verificada automaticamente."
-                })
+                informativos.append(
+                    {
+                        "campo": "tarja",
+                        "mensagem": f"Classificação: {tarja}.",
+                        "nota": "A classificação foi verificada automaticamente.",
+                    }
+                )
 
         # 6. Verificar princípio ativo controlado
         if principio_ativo:
             principio_lower = principio_ativo.lower()
-            controlled_keywords = ['antibiotico', 'antidepressivo', 'anfetamina', 'opiaceo', 'benzodiazepin', 'controlado', 'psicotropico']
+            controlled_keywords = [
+                "antibiotico",
+                "antidepressivo",
+                "anfetamina",
+                "opiaceo",
+                "benzodiazepin",
+                "controlado",
+                "psicotropico",
+            ]
             if any(keyword in principio_lower for keyword in controlled_keywords):
-                pendencias_humanas.append({
-                    "campo": "principio_ativo",
-                    "mensagem": "Princípio ativo pode indicar substância controlada.",
-                    "proximo_passo": "Solicite avaliação do farmacêutico responsável para confirmar a classificação correta."
-                })
+                pendencias_humanas.append(
+                    {
+                        "campo": "principio_ativo",
+                        "mensagem": "Princípio ativo pode indicar substância controlada.",
+                        "proximo_passo": "Solicite avaliação do farmacêutico responsável para confirmar a classificação correta.",
+                    }
+                )
             else:
-                informativos.append({
-                    "campo": "principio_ativo",
-                    "mensagem": f"Princípio ativo informado: {principio_ativo}.",
-                    "nota": "O sistema não valida se o princípio ativo está correto ou corresponde ao medicamento."
-                })
+                informativos.append(
+                    {
+                        "campo": "principio_ativo",
+                        "mensagem": f"Princípio ativo informado: {principio_ativo}.",
+                        "nota": "O sistema não valida se o princípio ativo está correto ou corresponde ao medicamento.",
+                    }
+                )
 
         # 7. Verificações não feitas pelo sistema
         verificacoes_nao_feitas = [
             {
                 "item": "Procedência da doação",
-                "explicacao": "O sistema não verifica se o doador é legítimo ou se a origem é segura."
+                "explicacao": "O sistema não verifica se o doador é legítimo ou se a origem é segura.",
             },
             {
                 "item": "Integridade da embalagem",
-                "explicacao": "O sistema não verifica se a embalagem está íntegra, lacrada ou violada."
+                "explicacao": "O sistema não verifica se a embalagem está íntegra, lacrada ou violada.",
             },
             {
                 "item": "Condições de conservação",
-                "explicacao": "O sistema não verifica se o medicamento foi armazenado corretamente (temperatura, umidade, luz)."
+                "explicacao": "O sistema não verifica se o medicamento foi armazenado corretamente (temperatura, umidade, luz).",
             },
             {
                 "item": "Condições de transporte",
-                "explicacao": "O sistema não verifica se o transporte respeitou as condições de cadeia de frio quando necessário."
+                "explicacao": "O sistema não verifica se o transporte respeitou as condições de cadeia de frio quando necessário.",
             },
             {
                 "item": "Documentação exigida",
-                "explicacao": "O sistema não verifica se há documentação legal ou sanitária exigida para o medicamento."
-            }
+                "explicacao": "O sistema não verifica se há documentação legal ou sanitária exigida para o medicamento.",
+            },
         ]
 
         # Determinar status geral
@@ -487,7 +547,7 @@ def pre_checagem():
             "bloqueios": bloqueios,
             "pendencias_humanas": pendencias_humanas,
             "informativos": informativos,
-            "verificacoes_nao_feitas": verificacoes_nao_feitas
+            "verificacoes_nao_feitas": verificacoes_nao_feitas,
         }
 
         if request.is_json:
@@ -502,14 +562,10 @@ def pre_checagem():
                 quantidade=quantidade_str,
                 tarja=tarja,
                 principio_ativo=principio_ativo,
-                tarjas=TARJAS_VALIDAS
+                tarjas=TARJAS_VALIDAS,
             )
 
-    return render_template(
-        "doacoes_pre_checagem.html",
-        resultado=None,
-        tarjas=TARJAS_VALIDAS
-    )
+    return render_template("doacoes_pre_checagem.html", resultado=None, tarjas=TARJAS_VALIDAS)
 
 
 @donation_bp.route("/doacoes/<int:doacao_id>/excluir", methods=["POST"])
@@ -536,7 +592,12 @@ def excluir_doacao(doacao_id):
 @login_required
 @equipe_clinica_required
 def movimentacoes():
-    saidas = Doacao.query.order_by(Doacao.data_doacao.desc()).limit(100).all()
+    saidas = (
+        Doacao.query.options(joinedload(Doacao.medicamento), joinedload(Doacao.usuario))
+        .order_by(Doacao.data_doacao.desc())
+        .limit(100)
+        .all()
+    )
     entradas = Medicamento.query.order_by(Medicamento.id.desc()).limit(50).all()
     total_saidas = sum(d.quantidade for d in saidas)
     total_entradas = sum(m.quantidade for m in entradas)

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Script para criar a tabela doacoes_etapas usando db.create_all()"""
+
 import sys
 import os
 
@@ -15,7 +16,7 @@ app = create_app()
 with app.app_context():
 
     inspector = db.inspect(db.engine)
-    if inspector.has_table('doacoes_etapas'):
+    if inspector.has_table("doacoes_etapas"):
         print("Tabela 'doacoes_etapas' já existe.")
     else:
         db.create_all()

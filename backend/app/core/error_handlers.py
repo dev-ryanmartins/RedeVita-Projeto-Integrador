@@ -13,7 +13,6 @@ from app.core.api_responses import (
 )
 from app.database import db
 
-
 # Mapeamento de código HTTP -> template HTML amigável (rotas não-API).
 _TEMPLATES_ERRO = {
     400: "400.html",

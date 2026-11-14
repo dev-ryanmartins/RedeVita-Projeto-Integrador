@@ -14,8 +14,8 @@ from app.core.security import criptografar_senha
 app = create_app()
 
 with app.app_context():
-    
-    admin_existente = Usuario.query.filter_by(cpf='11111111111').first()
+
+    admin_existente = Usuario.query.filter_by(cpf="11111111111").first()
     if admin_existente:
         print("Admin já existe com CPF 11111111111")
         print("Senha: admin123")
@@ -28,7 +28,7 @@ with app.app_context():
             senha=senha_hash,
             cargo="Admin",
             ativo=True,
-            senha_trocada=False
+            senha_trocada=False,
         )
         db.session.add(admin)
         db.session.commit()

@@ -29,41 +29,41 @@ def _limpar_cnpj(cnpj: str) -> str:
 def _validar_coordenada(latitude: str, longitude: str) -> tuple[bool, str]:
     """
     Valida coordenadas geográficas fornecidas como strings.
-    
+
     Args:
         latitude: Latitude como string
         longitude: Longitude como string
-    
+
     Returns:
         Tuple (valido, mensagem_erro)
     """
     # Se vazias, são opcionais (válido)
     if not latitude and not longitude:
         return True, ""
-    
+
     # Se uma fornecida, ambas devem ser fornecidas
     if (latitude and not longitude) or (not latitude and longitude):
         return False, "Forneça latitude e longitude, ou deixe ambos vazios"
-    
+
     # Tentar converter para float
     try:
         lat = float(latitude)
         lon = float(longitude)
     except (TypeError, ValueError):
         return False, "Latitude e longitude devem ser números válidos"
-    
+
     # Verificar NaN ou infinito
     if math.isnan(lat) or math.isnan(lon):
         return False, "Coordenadas não podem ser NaN"
     if math.isinf(lat) or math.isinf(lon):
         return False, "Coordenadas não podem ser infinitas"
-    
+
     # Verificar intervalos geográficos
     if not (-90 <= lat <= 90):
         return False, f"Latitude deve estar entre -90 e 90 (recebido: {lat})"
     if not (-180 <= lon <= 180):
         return False, f"Longitude deve estar entre -180 e 180 (recebido: {lon})"
-    
+
     return True, ""
 
 
@@ -76,13 +76,13 @@ def _validar_campos_farmacia(nome_fantasia, cnpj_raw, endereco, responsavel, lat
         return f"Endereço muito longo (máx. {_MAX_END} caracteres)."
     if len(responsavel) > _MAX_RESP:
         return f"Nome do responsável muito longo (máx. {_MAX_RESP} caracteres)."
-    
+
     # Validar coordenadas se fornecidas
     if latitude is not None or longitude is not None:
         valido, erro = _validar_coordenada(latitude or "", longitude or "")
         if not valido:
             return erro
-    
+
     return None
 
 
@@ -110,7 +110,11 @@ def nova_farmacia():
     longitude = request.form.get("longitude", "").strip()
 
     # Detecta padrões suspeitos
-    if detectar_padroes_suspeitos(nome_fantasia) or detectar_padroes_suspeitos(endereco) or detectar_padroes_suspeitos(responsavel):
+    if (
+        detectar_padroes_suspeitos(nome_fantasia)
+        or detectar_padroes_suspeitos(endereco)
+        or detectar_padroes_suspeitos(responsavel)
+    ):
         flash("Entrada contém caracteres não permitidos.", "danger")
         return redirect(url_for("farmacias.listar_farmacias"))
 
@@ -134,7 +138,7 @@ def nova_farmacia():
         # Converter coordenadas se fornecidas
         lat_float = float(latitude) if latitude else None
         lon_float = float(longitude) if longitude else None
-        
+
         farmacia = Farmacia(
             nome_fantasia=nome_fantasia,
             razao_social=razao_social or None,
@@ -142,13 +146,11 @@ def nova_farmacia():
             endereco=endereco,
             responsavel=responsavel,
             latitude=lat_float,
-            longitude=lon_float
+            longitude=lon_float,
         )
         db.session.add(farmacia)
         db.session.commit()
-        registrar_log(
-            "Nova Farmácia", f'Farmácia "{nome_fantasia}" ({cnpj_fmt}) cadastrada'
-        )
+        registrar_log("Nova Farmácia", f'Farmácia "{nome_fantasia}" ({cnpj_fmt}) cadastrada')
         flash(f'Farmácia "{nome_fantasia}" cadastrada com sucesso!', "success")
     except Exception:
         db.session.rollback()
@@ -175,7 +177,11 @@ def editar_farmacia(farmacia_id):
     longitude = request.form.get("longitude", "").strip()
 
     # Detecta padrões suspeitos
-    if detectar_padroes_suspeitos(nome_fantasia) or detectar_padroes_suspeitos(endereco) or detectar_padroes_suspeitos(responsavel):
+    if (
+        detectar_padroes_suspeitos(nome_fantasia)
+        or detectar_padroes_suspeitos(endereco)
+        or detectar_padroes_suspeitos(responsavel)
+    ):
         flash("Entrada contém caracteres não permitidos.", "danger")
         return redirect(url_for("farmacias.listar_farmacias"))
 
@@ -200,7 +206,7 @@ def editar_farmacia(farmacia_id):
         # Converter coordenadas se fornecidas
         lat_float = float(latitude) if latitude else None
         lon_float = float(longitude) if longitude else None
-        
+
         farmacia.nome_fantasia = nome_fantasia
         farmacia.razao_social = razao_social or None
         farmacia.cnpj = cnpj_fmt
@@ -221,7 +227,7 @@ def editar_farmacia(farmacia_id):
 @farmacias_bp.route("/farmacia/<int:farmacia_id>/excluir", methods=["POST"])
 @login_required
 @admin_required
-@audit_critical_action('EXCLUSÃO_FARMÁCIA')
+@audit_critical_action("EXCLUSÃO_FARMÁCIA")
 def excluir_farmacia(farmacia_id):
     farmacia = db.session.get(Farmacia, farmacia_id)
     if not farmacia:

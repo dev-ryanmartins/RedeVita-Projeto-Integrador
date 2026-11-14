@@ -3,6 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <script>
+        // CSRF global: injeta automaticamente o token em requisições fetch/XHR que
+        // alteram estado (POST/PUT/PATCH/DELETE), cobrindo todas as chamadas AJAX.
+        (function () {
+            var meta = document.querySelector('meta[name="csrf-token"]');
+            if (!meta) { return; }
+            var token = meta.getAttribute('content');
+            var safeMethods = ['GET', 'HEAD', 'OPTIONS', 'TRACE'];
+
+            var originalFetch = window.fetch ? window.fetch.bind(window) : null;
+            if (originalFetch) {
+                window.fetch = function (input, init) {
+                    init = init || {};
+                    var method = (init.method || (input && input.method) || 'GET').toUpperCase();
+                    if (safeMethods.indexOf(method) === -1) {
+                        var headers = new Headers(init.headers || (input && input.headers) || {});
+                        if (!headers.has('X-CSRFToken')) {
+                            headers.set('X-CSRFToken', token);
+                        }
+                        init.headers = headers;
+                    }
+                    return originalFetch(input, init);
+                };
+            }
+
+            var originalOpen = XMLHttpRequest.prototype.open;
+            var originalSend = XMLHttpRequest.prototype.send;
+            XMLHttpRequest.prototype.open = function (method) {
+                this.__csrfMethod = (method || 'GET').toUpperCase();
+                return originalOpen.apply(this, arguments);
+            };
+            XMLHttpRequest.prototype.send = function () {
+                if (safeMethods.indexOf(this.__csrfMethod) === -1) {
+                    try { this.setRequestHeader('X-CSRFToken', token); } catch (e) { /* header já enviado */ }
+                }
+                return originalSend.apply(this, arguments);
+            };
+        })();
+    </script>
     <title>{% block title %}RedeVita{% endblock %}</title>
     <link rel="icon" href="{{ url_for('static', filename='img/icons/icon.svg') }}" type="image/svg+xml">
     <script src="{{ url_for('static', filename='js/theme.js') }}"></script>

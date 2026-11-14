@@ -14,11 +14,13 @@ from app.core.security import criptografar_senha
 @pytest.fixture
 def app():
     """App Flask com banco temporário."""
-    app = create_app({
-        'TESTING': True,
-        'SQLALCHEMY_DATABASE_URI': 'sqlite:///:memory:',
-        'WTF_CSRF_ENABLED': False,
-    })
+    app = create_app(
+        {
+            "TESTING": True,
+            "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
+            "WTF_CSRF_ENABLED": False,
+        }
+    )
     with app.app_context():
         db.create_all()
         yield app
@@ -39,7 +41,7 @@ def farmacia(app):
         razao_social="Farmácia Teste LTDA",
         cnpj="12345678000190",
         endereco="Rua Teste, 123",
-        responsavel="Responsável Teste"
+        responsavel="Responsável Teste",
     )
     db.session.add(farmacia)
     db.session.commit()
@@ -55,7 +57,7 @@ def usuario_admin(app):
         email="admin@teste.com",
         senha=criptografar_senha("senha123"),
         cargo="Admin",
-        ativo=True
+        ativo=True,
     )
     db.session.add(usuario)
     db.session.commit()
@@ -71,7 +73,7 @@ def usuario_operador(app):
         email="operador@teste.com",
         senha=criptografar_senha("senha123"),
         cargo="Operador",
-        ativo=True
+        ativo=True,
     )
     db.session.add(usuario)
     db.session.commit()
@@ -82,7 +84,7 @@ def test_usuario_vinculado_recebe_farmacia_correta(farmacia, usuario_operador):
     """Usuário vinculado deve receber a farmácia correta."""
     usuario_operador.farmacia_id = farmacia.id
     db.session.commit()
-    
+
     db.session.refresh(usuario_operador)
     assert usuario_operador.farmacia_id == farmacia.id
     assert usuario_operador.farmacia.nome_fantasia == "Farmácia Teste"
@@ -99,7 +101,7 @@ def test_associacao_farmacia_inexistente_rejeitada(usuario_operador):
     # Tenta associar a uma farmácia que não existe
     usuario_operador.farmacia_id = 99999
     db.session.commit()
-    
+
     # O relacionamento deve retornar None pois a farmácia não existe
     assert usuario_operador.farmacia is None
 
@@ -107,11 +109,10 @@ def test_associacao_farmacia_inexistente_rejeitada(usuario_operador):
 def test_usuario_sem_permissao_nao_consegue_alterar_vinculo(client, usuario_operador, farmacia):
     """Usuário sem permissão não deve conseguir alterar o vínculo."""
     # Tenta associar farmácia sem estar logado (deve falhar por falta de permissão @admin_required)
-    response = client.post(f'/usuario/{usuario_operador.id}/farmacia', data={
-        'farmacia_id': farmacia.id,
-        'csrf_token': 'test'
-    })
-    
+    response = client.post(
+        f"/usuario/{usuario_operador.id}/farmacia", data={"farmacia_id": farmacia.id, "csrf_token": "test"}
+    )
+
     # Deve retornar redirecionamento ou erro (403 ou 302 para login)
     assert response.status_code in [302, 403]
 
@@ -119,27 +120,27 @@ def test_usuario_sem_permissao_nao_consegue_alterar_vinculo(client, usuario_oper
 def test_migration_adiciona_coluna_farmacia_id(app):
     """Migration deve adicionar coluna farmacia_id sem preencher dados."""
     from backend.migrations_custom.add_farmacia_id_usuario import migrate
-    
+
     # Executa migration
     migrate()
-    
+
     # Verifica se a coluna existe
     inspector = db.inspect(db.engine)
-    columns = [col['name'] for col in inspector.get_columns('usuarios')]
-    assert 'farmacia_id' in columns
+    columns = [col["name"] for col in inspector.get_columns("usuarios")]
+    assert "farmacia_id" in columns
 
 
 def test_usuarios_existentes_sem_vinculo(usuario_admin, usuario_operador):
     """Usuários existentes devem permanecer sem vínculo após migration."""
     from backend.migrations_custom.add_farmacia_id_usuario import migrate
-    
+
     # Executa migration
     migrate()
-    
+
     # Verifica que usuários existentes ainda estão sem vínculo
     db.session.refresh(usuario_admin)
     db.session.refresh(usuario_operador)
-    
+
     assert usuario_admin.farmacia_id is None
     assert usuario_operador.farmacia_id is None
 
@@ -147,18 +148,18 @@ def test_usuarios_existentes_sem_vinculo(usuario_admin, usuario_operador):
 def test_verificar_constraint_sqlite(app):
     """Verifica se a constraint foreign_key existe no schema SQLite após migration."""
     from backend.migrations_custom.add_farmacia_id_usuario import migrate
-    
+
     # Executa migration
     migrate()
-    
+
     # Verifica constraints usando PRAGMA
     with db.engine.connect() as conn:
         result = conn.execute(db.text("PRAGMA foreign_key_list(usuarios)"))
         foreign_keys = result.fetchall()
-    
+
     # Busca por constraint que referencia farmacias
-    fk_farmacia = [fk for fk in foreign_keys if fk[2] == 'farmacias']
-    
+    fk_farmacia = [fk for fk in foreign_keys if fk[2] == "farmacias"]
+
     # Se não houver constraint, reporte a lacuna
     if not fk_farmacia:
         print("CONSTRAINT FALTANDO: Nao ha foreign key constraint para farmacias na tabela usuarios")
@@ -168,5 +169,5 @@ def test_verificar_constraint_sqlite(app):
         print(f"CONSTRAINT ENCONTRADA: {len(fk_farmacia)} foreign key(s) para farmacias")
         for fk in fk_farmacia:
             print(f"   ID: {fk[0]}, Table: {fk[1]}, From: {fk[2]}, To: {fk[3]}")
-    
+
     return fk_farmacia

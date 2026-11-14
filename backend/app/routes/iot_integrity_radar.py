@@ -7,7 +7,7 @@ que merecem conferência. Ferramenta de observabilidade, não prova de falha.
 NOTA: Não faz alterações em dados reais. Apenas análise.
 """
 
-from flask import Blueprint, render_template, request, jsonify, redirect, url_for
+from flask import Blueprint, render_template, request, redirect, url_for
 from flask_login import login_required
 from app.core.decorators import admin_required
 from app.core.api_responses import (
@@ -21,17 +21,17 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-iot_integrity_radar_bp = Blueprint('iot_integrity_radar', __name__)
+iot_integrity_radar_bp = Blueprint("iot_integrity_radar", __name__)
 
 
-@iot_integrity_radar_bp.route('/iot-integrity-radar', methods=['GET'])
+@iot_integrity_radar_bp.route("/iot-integrity-radar", methods=["GET"])
 @login_required
 def radar_alias():
     """Alias amigável para o Radar de Integridade da Telemetria."""
-    return redirect(url_for('iot_integrity_radar.radar_page'))
+    return redirect(url_for("iot_integrity_radar.radar_page"))
 
 
-@iot_integrity_radar_bp.route('/radar-integridade-telemetria', methods=['GET'])
+@iot_integrity_radar_bp.route("/radar-integridade-telemetria", methods=["GET"])
 @login_required
 @admin_required
 def radar_page():
@@ -40,10 +40,10 @@ def radar_page():
 
     Acesso apenas para Admin.
     """
-    return render_template('iot_integrity_radar.html')
+    return render_template("iot_integrity_radar.html")
 
 
-@iot_integrity_radar_bp.route('/api/radar-integridade-telemetria/resumo', methods=['GET'])
+@iot_integrity_radar_bp.route("/api/radar-integridade-telemetria/resumo", methods=["GET"])
 @login_required
 @admin_required
 def obter_resumo():
@@ -57,15 +57,12 @@ def obter_resumo():
         JSON com resumo dos sinais
     """
     try:
-        periodo_dias = request.args.get('periodo_dias', 7, type=int)
+        periodo_dias = request.args.get("periodo_dias", 7, type=int)
 
         service = IotIntegrityRadarService()
         resumo = service.obter_resumo(periodo_dias=periodo_dias)
 
-        return resposta_ok(
-            dados=resumo,
-            mensagem="Resumo calculado com sucesso"
-        )
+        return resposta_ok(dados=resumo, mensagem="Resumo calculado com sucesso")
 
     except ValueError as e:
         logger.warning(f"Parâmetro inválido: {e}")
@@ -75,7 +72,7 @@ def obter_resumo():
         return resposta_erro(ERRO_INTERNO, "Erro ao calcular resumo", 500)
 
 
-@iot_integrity_radar_bp.route('/api/radar-integridade-telemetria/frescor', methods=['GET'])
+@iot_integrity_radar_bp.route("/api/radar-integridade-telemetria/frescor", methods=["GET"])
 @login_required
 @admin_required
 def analisar_frescor():
@@ -89,17 +86,13 @@ def analisar_frescor():
         JSON com análise de frescor
     """
     try:
-        periodo_dias = request.args.get('periodo_dias', 7, type=int)
+        periodo_dias = request.args.get("periodo_dias", 7, type=int)
 
         service = IotIntegrityRadarService()
         frescor = service.analisar_frescor(periodo_dias=periodo_dias)
 
         return resposta_ok(
-            dados={
-                'dispositivos': frescor,
-                'total': len(frescor)
-            },
-            mensagem="Análise de frescor concluída"
+            dados={"dispositivos": frescor, "total": len(frescor)}, mensagem="Análise de frescor concluída"
         )
 
     except ValueError as e:
@@ -110,7 +103,7 @@ def analisar_frescor():
         return resposta_erro(ERRO_INTERNO, "Erro ao analisar frescor", 500)
 
 
-@iot_integrity_radar_bp.route('/api/radar-integridade-telemetria/lacunas', methods=['GET'])
+@iot_integrity_radar_bp.route("/api/radar-integridade-telemetria/lacunas", methods=["GET"])
 @login_required
 @admin_required
 def analisar_lacunas():
@@ -127,26 +120,20 @@ def analisar_lacunas():
         JSON com lacunas temporais detectadas
     """
     try:
-        intervalo_minutos = request.args.get('intervalo_minutos', '1h')
-        farmacia_id = request.args.get('farmacia_id', None, type=int)
-        dispositivo_id = request.args.get('dispositivo_id', None, type=str)
-        periodo_dias = request.args.get('periodo_dias', 7, type=int)
+        intervalo_minutos = request.args.get("intervalo_minutos", "1h")
+        farmacia_id = request.args.get("farmacia_id", None, type=int)
+        dispositivo_id = request.args.get("dispositivo_id", None, type=str)
+        periodo_dias = request.args.get("periodo_dias", 7, type=int)
 
         service = IotIntegrityRadarService()
         lacunas = service.analisar_lacunas_temporais(
             intervalo_minutos=intervalo_minutos,
             farmacia_id=farmacia_id,
             dispositivo_id=dispositivo_id,
-            periodo_dias=periodo_dias
+            periodo_dias=periodo_dias,
         )
 
-        return resposta_ok(
-            dados={
-                'lacunas': lacunas,
-                'total': len(lacunas)
-            },
-            mensagem="Análise de lacunas concluída"
-        )
+        return resposta_ok(dados={"lacunas": lacunas, "total": len(lacunas)}, mensagem="Análise de lacunas concluída")
 
     except ValueError as e:
         logger.warning(f"Parâmetro inválido: {e}")
@@ -156,7 +143,7 @@ def analisar_lacunas():
         return resposta_erro(ERRO_INTERNO, "Erro ao analisar lacunas", 500)
 
 
-@iot_integrity_radar_bp.route('/api/radar-integridade-telemetria/duplicidades', methods=['GET'])
+@iot_integrity_radar_bp.route("/api/radar-integridade-telemetria/duplicidades", methods=["GET"])
 @login_required
 @admin_required
 def analisar_duplicidades():
@@ -172,23 +159,18 @@ def analisar_duplicidades():
         JSON com candidatos a duplicidade
     """
     try:
-        periodo_dias = request.args.get('periodo_dias', 7, type=int)
-        farmacia_id = request.args.get('farmacia_id', None, type=int)
-        dispositivo_id = request.args.get('dispositivo_id', None, type=str)
+        periodo_dias = request.args.get("periodo_dias", 7, type=int)
+        farmacia_id = request.args.get("farmacia_id", None, type=int)
+        dispositivo_id = request.args.get("dispositivo_id", None, type=str)
 
         service = IotIntegrityRadarService()
         duplicidades = service.analisar_duplicidade_candidatos(
-            periodo_dias=periodo_dias,
-            farmacia_id=farmacia_id,
-            dispositivo_id=dispositivo_id
+            periodo_dias=periodo_dias, farmacia_id=farmacia_id, dispositivo_id=dispositivo_id
         )
 
         return resposta_ok(
-            dados={
-                'duplicidades': duplicidades,
-                'total': len(duplicidades)
-            },
-            mensagem="Análise de duplicidade concluída"
+            dados={"duplicidades": duplicidades, "total": len(duplicidades)},
+            mensagem="Análise de duplicidade concluída",
         )
 
     except ValueError as e:
@@ -199,7 +181,7 @@ def analisar_duplicidades():
         return resposta_erro(ERRO_INTERNO, "Erro ao analisar duplicidades", 500)
 
 
-@iot_integrity_radar_bp.route('/api/radar-integridade-telemetria/futuros', methods=['GET'])
+@iot_integrity_radar_bp.route("/api/radar-integridade-telemetria/futuros", methods=["GET"])
 @login_required
 @admin_required
 def analisar_futuros():
@@ -216,25 +198,21 @@ def analisar_futuros():
         JSON com leituras com timestamps no futuro
     """
     try:
-        tolerancia_minutos = request.args.get('tolerancia_minutos', 60, type=int)
-        periodo_dias = request.args.get('periodo_dias', 7, type=int)
-        farmacia_id = request.args.get('farmacia_id', None, type=int)
-        dispositivo_id = request.args.get('dispositivo_id', None, type=str)
+        tolerancia_minutos = request.args.get("tolerancia_minutos", 60, type=int)
+        periodo_dias = request.args.get("periodo_dias", 7, type=int)
+        farmacia_id = request.args.get("farmacia_id", None, type=int)
+        dispositivo_id = request.args.get("dispositivo_id", None, type=str)
 
         service = IotIntegrityRadarService()
         futuros = service.analisar_timestamps_futuros(
             tolerancia_minutos=tolerancia_minutos,
             periodo_dias=periodo_dias,
             farmacia_id=farmacia_id,
-            dispositivo_id=dispositivo_id
+            dispositivo_id=dispositivo_id,
         )
 
         return resposta_ok(
-            dados={
-                'futuros': futuros,
-                'total': len(futuros)
-            },
-            mensagem="Análise de timestamps futuros concluída"
+            dados={"futuros": futuros, "total": len(futuros)}, mensagem="Análise de timestamps futuros concluída"
         )
 
     except ValueError as e:

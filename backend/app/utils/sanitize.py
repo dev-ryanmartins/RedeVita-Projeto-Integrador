@@ -6,14 +6,14 @@ from typing import Any, Dict, List, Union
 _CTRL_RE = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x9f]")
 # Padrão para detectar tags HTML e scripts maliciosos
 _XSS_PATTERN = re.compile(
-    r'<script[^>]*>.*?</script>|'
-    r'<iframe[^>]*>.*?</iframe>|'
-    r'<object[^>]*>.*?</object>|'
-    r'<embed[^>]*>|'
-    r'on\w+\s*=|'
-    r'javascript:|'
-    r'data:text/html',
-    re.IGNORECASE
+    r"<script[^>]*>.*?</script>|"
+    r"<iframe[^>]*>.*?</iframe>|"
+    r"<object[^>]*>.*?</object>|"
+    r"<embed[^>]*>|"
+    r"on\w+\s*=|"
+    r"javascript:|"
+    r"data:text/html",
+    re.IGNORECASE,
 )
 
 
@@ -28,9 +28,7 @@ def limpar_html(value: str, max_len: int = 255) -> str:
     return _html.escape(limpar(value, max_len))
 
 
-def limpar_inteiro(
-    value, default: int = 0, minimo: int = None, maximo: int = None
-) -> int:
+def limpar_inteiro(value, default: int = 0, minimo: int = None, maximo: int = None) -> int:
     try:
         v = int(str(value).strip())
     except (ValueError, TypeError):
@@ -60,25 +58,25 @@ def sanitizar_json_payload(payload: Union[Dict, List, str, Any]) -> Union[Dict, 
     """
     Sanitiza payloads JSON de entrada para prevenir ataques XSS.
     Remove tags HTML, scripts maliciosos e caracteres de controle.
-    
+
     Args:
         payload: Dados JSON (dict, list, string ou outro tipo)
-    
+
     Returns:
         Payload sanitizado com o mesmo tipo de estrutura
     """
     if isinstance(payload, str):
         return limpar_html(payload)
-    
+
     elif isinstance(payload, dict):
         return {key: sanitizar_json_payload(value) for key, value in payload.items()}
-    
+
     elif isinstance(payload, list):
         return [sanitizar_json_payload(item) for item in payload]
-    
+
     elif isinstance(payload, (int, float, bool, type(None))):
         return payload
-    
+
     else:
         # Para outros tipos, converte para string e sanitiza
         return limpar_html(str(payload))
@@ -87,10 +85,10 @@ def sanitizar_json_payload(payload: Union[Dict, List, str, Any]) -> Union[Dict, 
 def validar_json_string(json_str: str) -> tuple[bool, Any]:
     """
     Valida e parseia uma string JSON.
-    
+
     Args:
         json_str: String JSON para validar
-    
+
     Returns:
         Tuple (valido, dados_parseados ou mensagem_erro)
     """
@@ -106,10 +104,10 @@ def validar_json_string(json_str: str) -> tuple[bool, Any]:
 def detectar_xss(value: str) -> bool:
     """
     Detecta padrões de XSS em uma string.
-    
+
     Args:
         value: String para verificar
-    
+
     Returns:
         True se detectar padrões XSS, False caso contrário
     """
@@ -121,33 +119,33 @@ def detectar_xss(value: str) -> bool:
 def sanitizar_input_usuario(value: str, max_len: int = 255, permitir_html: bool = False) -> str:
     """
     Sanitização estrita de input de usuário.
-    
+
     Args:
         value: String de input do usuário
         max_len: Comprimento máximo permitido
         permitir_html: Se False, remove todos os tags HTML
-    
+
     Returns:
         String sanitizada
     """
     if not isinstance(value, str):
         return ""
-    
+
     # Remove caracteres de controle
     value = _CTRL_RE.sub("", value)
-    
+
     # Remove espaços excessivos
     value = " ".join(value.split())
-    
+
     # Detecta XSS
     if detectar_xss(value):
         # Remove tags HTML se detectar XSS
-        value = re.sub(r'<[^>]+>', '', value)
-    
+        value = re.sub(r"<[^>]+>", "", value)
+
     # Escapa HTML se não permitido
     if not permitir_html:
         value = _html.escape(value)
-    
+
     # Trunca se necessário
     return value[:max_len].strip()
 
@@ -155,61 +153,88 @@ def sanitizar_input_usuario(value: str, max_len: int = 255, permitir_html: bool 
 def validar_email(email: str) -> bool:
     """
     Valida formato de email com regex estrita.
-    
+
     Args:
         email: String de email para validar
-    
+
     Returns:
         True se formato válido, False caso contrário
     """
     if not isinstance(email, str):
         return False
-    
-    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+
+    pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
     return bool(re.match(pattern, email.strip()))
 
 
 def validar_telefone(telefone: str) -> str:
     """
     Valida e normaliza número de telefone brasileiro.
-    
+
     Args:
         telefone: String de telefone
-    
+
     Returns:
         Telefone normalizado (apenas dígitos) ou string vazia se inválido
     """
     if not isinstance(telefone, str):
         return ""
-    
+
     # Remove tudo que não é dígito
-    digitos = re.sub(r'\D', '', telefone)
-    
+    digitos = re.sub(r"\D", "", telefone)
+
     # Valida tamanho (10 ou 11 dígitos para Brasil)
     if len(digitos) in [10, 11]:
         return digitos
-    
+
     return ""
 
 
 def sanitizar_cnpj(cnpj: str) -> str:
     """
     Sanitiza e valida formato básico de CNPJ.
-    
+
     Args:
         cnpj: String de CNPJ
-    
+
     Returns:
         CNPJ sanitizado (apenas dígitos) ou string vazia se inválido
     """
     if not isinstance(cnpj, str):
         return ""
-    
+
     # Remove tudo que não é dígito
-    digitos = re.sub(r'\D', '', cnpj)
-    
+    digitos = re.sub(r"\D", "", cnpj)
+
     # Valida tamanho (14 dígitos)
     if len(digitos) == 14:
         return digitos
-    
+
     return ""
+
+
+# Caracteres que precisam ser neutralizados ao embutir JSON em <script>.
+# Sem isso, um valor como "</script>" encerraria a tag e permitiria XSS.
+_JSON_SCRIPT_UNSAFE = {
+    "<": "\\u003c",
+    ">": "\\u003e",
+    "&": "\\u0026",
+    "\u2028": "\\u2028",
+    "\u2029": "\\u2029",
+}
+_JSON_SCRIPT_RE = re.compile("|".join(re.escape(c) for c in _JSON_SCRIPT_UNSAFE))
+
+
+def json_seguro_para_script(data: Any, **dumps_kwargs) -> str:
+    """Serializa ``data`` em JSON pronto para ser embutido dentro de ``<script>``.
+
+    Preserva acentuação (``ensure_ascii=False``) e neutraliza os caracteres que
+    permitem quebra de contexto e injeção de XSS (``<``, ``>``, ``&``, U+2028,
+    U+2029), substituindo-os por sequências de escape equivalentes em JSON.
+
+    O resultado é seguro para uso com o filtro ``| safe`` do Jinja2, pois todo
+    conteúdo potencialmente perigoso já saiu escapado.
+    """
+    dumps_kwargs.setdefault("ensure_ascii", False)
+    texto = json.dumps(data, **dumps_kwargs)
+    return _JSON_SCRIPT_RE.sub(lambda m: _JSON_SCRIPT_UNSAFE[m.group(0)], texto)

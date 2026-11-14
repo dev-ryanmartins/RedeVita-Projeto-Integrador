@@ -1,6 +1,5 @@
 import re
 import html
-from urllib.parse import quote, unquote
 
 
 def validar_cpf(cpf):
@@ -31,7 +30,7 @@ def sanitizar_input_string(input_str, max_length=255):
     dangerous_chars = ["'", '"', ";", "--", "/*", "*/", "xp_", "exec"]
     for char in dangerous_chars:
         input_str = input_str.replace(char, "")
-    
+
     return input_str
 
 
@@ -39,7 +38,7 @@ def validar_email(email):
     if not email or not isinstance(email, str):
         return False
 
-    email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
     return re.match(email_pattern, email.strip()) is not None
 
 
@@ -61,7 +60,7 @@ def validar_nome(nome, min_length=2, max_length=100):
     if len(nome) < min_length or len(nome) > max_length:
         return False
 
-    nome_pattern = r'^[a-zA-ZÀ-ÿ\s\-\'\.]+$'
+    nome_pattern = r"^[a-zA-ZÀ-ÿ\s\-\'\.]+$"
     return re.match(nome_pattern, nome) is not None
 
 
@@ -110,14 +109,14 @@ def sanitizar_dados_formulario(dados, campos_obrigatorios=None, regras_validacao
 
     for campo, regra in regras_validacao.items():
         if campo in dados_sanitizados and dados_sanitizados[campo]:
-            if regra == 'email' and not validar_email(dados_sanitizados[campo]):
-                erros[campo] = f"Email inválido"
-            elif regra == 'cpf' and not validar_cpf(dados_sanitizados[campo]):
-                erros[campo] = f"CPF inválido"
-            elif regra == 'cnpj' and not validar_cnpj(dados_sanitizados[campo]):
-                erros[campo] = f"CNPJ inválido"
-            elif regra == 'telefone' and not validar_telefone(dados_sanitizados[campo]):
-                erros[campo] = f"Telefone inválido"
+            if regra == "email" and not validar_email(dados_sanitizados[campo]):
+                erros[campo] = "Email inválido"
+            elif regra == "cpf" and not validar_cpf(dados_sanitizados[campo]):
+                erros[campo] = "CPF inválido"
+            elif regra == "cnpj" and not validar_cnpj(dados_sanitizados[campo]):
+                erros[campo] = "CNPJ inválido"
+            elif regra == "telefone" and not validar_telefone(dados_sanitizados[campo]):
+                erros[campo] = "Telefone inválido"
 
     return dados_sanitizados, erros
 
@@ -127,17 +126,17 @@ def detectar_padroes_suspeitos(input_str):
         return False
 
     padroes_suspeitos = [
-        r'<script.*?>.*?</script>',
-        r'javascript:',
-        r'on\w+\s*=',
-        r'union.*select',
-        r'or.*1.*=.*1',
-        r'drop.*table',
-        r'--.*$',
-        r'/\*.*\*/',
-        r'\.\./',
-        r'eval\(',
-        r'exec\(',
+        r"<script.*?>.*?</script>",
+        r"javascript:",
+        r"on\w+\s*=",
+        r"union.*select",
+        r"or.*1.*=.*1",
+        r"drop.*table",
+        r"--.*$",
+        r"/\*.*\*/",
+        r"\.\./",
+        r"eval\(",
+        r"exec\(",
     ]
 
     input_str_lower = input_str.lower()

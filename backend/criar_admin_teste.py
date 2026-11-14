@@ -19,7 +19,7 @@ app = create_app()
 
 with app.app_context():
     # Verifica se já existe admin
-    admin_existente = Usuario.query.filter_by(cargo='Admin').first()
+    admin_existente = Usuario.query.filter_by(cargo="Admin").first()
     if admin_existente:
         print("Admin já existe. CPF:", admin_existente.cpf)
         print("Senha: admin123")
@@ -33,7 +33,7 @@ with app.app_context():
             senha=senha_hash,
             cargo="Admin",
             ativo=True,
-            senha_trocada=False
+            senha_trocada=False,
         )
         db.session.add(admin)
         db.session.commit()

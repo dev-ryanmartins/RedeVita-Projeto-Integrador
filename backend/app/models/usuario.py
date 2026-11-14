@@ -4,19 +4,19 @@ from flask_login import UserMixin
 
 class Usuario(db.Model, UserMixin):
     __tablename__ = "usuarios"
-    __table_args__ = {'extend_existing': True}
+    __table_args__ = {"extend_existing": True}
 
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
     cpf = db.Column(db.String(14), unique=True, nullable=False)
     email = db.Column(db.String(150), unique=True, nullable=True)
     senha = db.Column(db.String(255), nullable=False)
-    cargo = db.Column(db.String(50), default="Voluntário")
-    ativo = db.Column(db.Boolean, default=True, nullable=True)
+    cargo = db.Column(db.String(50), default="Voluntário", index=True)
+    ativo = db.Column(db.Boolean, default=True, nullable=True, index=True)
     senha_trocada = db.Column(db.Boolean, default=True, nullable=False)
     credencial_versao = db.Column(db.Integer, default=1, nullable=False)
-    farmacia_id = db.Column(db.Integer, db.ForeignKey("farmacias.id"), nullable=True)
-    instituicao_id = db.Column(db.Integer, db.ForeignKey("instituicoes.id"), nullable=True)
+    farmacia_id = db.Column(db.Integer, db.ForeignKey("farmacias.id"), nullable=True, index=True)
+    instituicao_id = db.Column(db.Integer, db.ForeignKey("instituicoes.id"), nullable=True, index=True)
 
     def __repr__(self):
         return f"<Usuario {self.nome}>"

@@ -1,4 +1,5 @@
 """Testes para Recibo de Etapas da Doação"""
+
 import pytest
 from main import create_app
 from app.database import db
@@ -12,7 +13,7 @@ from datetime import datetime
 @pytest.fixture
 def app():
     """Cria uma aplicação Flask para testes."""
-    app = create_app({'TESTING': True, 'SQLALCHEMY_DATABASE_URI': 'sqlite:///:memory:'})
+    app = create_app({"TESTING": True, "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:"})
     with app.app_context():
         db.create_all()
         yield app
@@ -30,12 +31,7 @@ def admin_usuario_id(app):
     """Cria um usuário admin e retorna seu ID."""
     with app.app_context():
         admin = Usuario(
-            nome="Admin Teste",
-            cpf="00000000000",
-            email="admin@teste.com",
-            senha="senha123",
-            cargo="Admin",
-            ativo=True
+            nome="Admin Teste", cpf="00000000000", email="admin@teste.com", senha="senha123", cargo="Admin", ativo=True
         )
         db.session.add(admin)
         db.session.commit()
@@ -52,7 +48,7 @@ def operador_usuario_id(app):
             email="operador@teste.com",
             senha="senha123",
             cargo="Operador",
-            ativo=True
+            ativo=True,
         )
         db.session.add(operador)
         db.session.commit()
@@ -69,7 +65,7 @@ def outro_operador_usuario_id(app):
             email="outro@teste.com",
             senha="senha123",
             cargo="Operador",
-            ativo=True
+            ativo=True,
         )
         db.session.add(operador)
         db.session.commit()
@@ -86,7 +82,7 @@ def medicamento_id(app):
             data_validade=datetime(2027, 12, 31),
             quantidade=100,
             tarja="Sem Tarja",
-            ativo=True
+            ativo=True,
         )
         db.session.add(med)
         db.session.commit()
@@ -97,11 +93,7 @@ def medicamento_id(app):
 def doacao_id(app, operador_usuario_id, medicamento_id):
     """Cria uma doação e retorna seu ID."""
     with app.app_context():
-        doacao = Doacao(
-            usuario_id=operador_usuario_id,
-            medicamento_id=medicamento_id,
-            quantidade=10
-        )
+        doacao = Doacao(usuario_id=operador_usuario_id, medicamento_id=medicamento_id, quantidade=10)
         db.session.add(doacao)
         db.session.commit()
 
@@ -112,7 +104,7 @@ def doacao_id(app, operador_usuario_id, medicamento_id):
             data_hora=datetime.utcnow(),
             usuario_id=operador_usuario_id,
             origem=OrigemEvento.USUARIO.value,
-            observacao="Registro de saída"
+            observacao="Registro de saída",
         )
         db.session.add(etapa)
         db.session.commit()
@@ -121,7 +113,7 @@ def doacao_id(app, operador_usuario_id, medicamento_id):
 
 def test_recibo_visitante_nao_autorizado(client, doacao_id):
     """Visitante sem login deve ser redirecionado."""
-    response = client.get(f'/doacoes/{doacao_id}/recibo')
+    response = client.get(f"/doacoes/{doacao_id}/recibo")
     assert response.status_code == 302  # Redirect para login
 
 
@@ -130,11 +122,11 @@ def test_recibo_admin_pode_ver_qualquer_doacao(client, app, admin_usuario_id, do
     with app.app_context():
         # Login como admin
         with client.session_transaction() as sess:
-            sess['_user_id'] = str(admin_usuario_id)
+            sess["_user_id"] = str(admin_usuario_id)
 
-    response = client.get(f'/doacoes/{doacao_id}/recibo')
+    response = client.get(f"/doacoes/{doacao_id}/recibo")
     assert response.status_code == 200
-    assert 'Recibo de Etapas' in response.data.decode('utf-8')
+    assert "Recibo de Etapas" in response.data.decode("utf-8")
 
 
 def test_recibo_operador_pode_ver_sua_doacao(client, app, operador_usuario_id, doacao_id):
@@ -142,11 +134,11 @@ def test_recibo_operador_pode_ver_sua_doacao(client, app, operador_usuario_id, d
     with app.app_context():
         # Login como operador
         with client.session_transaction() as sess:
-            sess['_user_id'] = str(operador_usuario_id)
+            sess["_user_id"] = str(operador_usuario_id)
 
-    response = client.get(f'/doacoes/{doacao_id}/recibo')
+    response = client.get(f"/doacoes/{doacao_id}/recibo")
     assert response.status_code == 200
-    assert 'Recibo de Etapas' in response.data.decode('utf-8')
+    assert "Recibo de Etapas" in response.data.decode("utf-8")
 
 
 def test_recibo_operador_nao_pode_ver_doacao_alheia(client, app, outro_operador_usuario_id, doacao_id):
@@ -154,9 +146,9 @@ def test_recibo_operador_nao_pode_ver_doacao_alheia(client, app, outro_operador_
     with app.app_context():
         # Login como outro operador
         with client.session_transaction() as sess:
-            sess['_user_id'] = str(outro_operador_usuario_id)
+            sess["_user_id"] = str(outro_operador_usuario_id)
 
-    response = client.get(f'/doacoes/{doacao_id}/recibo')
+    response = client.get(f"/doacoes/{doacao_id}/recibo")
     assert response.status_code == 302  # Redirect ou erro
 
 
@@ -170,20 +162,20 @@ def test_recibo_mostra_etapas_em_ordem_cronologica(client, app, operador_usuario
             data_hora=datetime.utcnow(),
             usuario_id=None,
             origem=OrigemEvento.SISTEMA.value,
-            observacao="Peso registrado: 50g"
+            observacao="Peso registrado: 50g",
         )
         db.session.add(etapa2)
         db.session.commit()
 
         # Login como operador
         with client.session_transaction() as sess:
-            sess['_user_id'] = str(operador_usuario_id)
+            sess["_user_id"] = str(operador_usuario_id)
 
-    response = client.get(f'/doacoes/{doacao_id}/recibo')
+    response = client.get(f"/doacoes/{doacao_id}/recibo")
     assert response.status_code == 200
-    data = response.data.decode('utf-8')
-    assert 'Registro Criado' in data
-    assert 'Pesagem Registrada' in data
+    data = response.data.decode("utf-8")
+    assert "Registro Criado" in data
+    assert "Pesagem Registrada" in data
 
 
 def test_recibo_distingue_evento_automatico_vs_manual(client, app, operador_usuario_id, doacao_id):
@@ -196,7 +188,7 @@ def test_recibo_distingue_evento_automatico_vs_manual(client, app, operador_usua
             data_hora=datetime.utcnow(),
             usuario_id=None,
             origem=OrigemEvento.SISTEMA.value,
-            observacao="Evento automático"
+            observacao="Evento automático",
         )
         db.session.add(etapa_auto)
 
@@ -207,42 +199,38 @@ def test_recibo_distingue_evento_automatico_vs_manual(client, app, operador_usua
             data_hora=datetime.utcnow(),
             usuario_id=operador_usuario_id,
             origem=OrigemEvento.USUARIO.value,
-            observacao="Evento manual"
+            observacao="Evento manual",
         )
         db.session.add(etapa_manual)
         db.session.commit()
 
         # Login como operador
         with client.session_transaction() as sess:
-            sess['_user_id'] = str(operador_usuario_id)
+            sess["_user_id"] = str(operador_usuario_id)
 
-    response = client.get(f'/doacoes/{doacao_id}/recibo')
+    response = client.get(f"/doacoes/{doacao_id}/recibo")
     assert response.status_code == 200
-    data = response.data.decode('utf-8')
-    assert 'Sistema' in data
-    assert 'Usuário' in data
+    data = response.data.decode("utf-8")
+    assert "Sistema" in data
+    assert "Usuário" in data
 
 
 def test_recibo_sem_etapas(client, app, admin_usuario_id, medicamento_id):
     """Recibo sem etapas mostra estado vazio."""
     with app.app_context():
         # Cria doação sem etapas
-        doacao = Doacao(
-            usuario_id=admin_usuario_id,
-            medicamento_id=medicamento_id,
-            quantidade=5
-        )
+        doacao = Doacao(usuario_id=admin_usuario_id, medicamento_id=medicamento_id, quantidade=5)
         db.session.add(doacao)
         db.session.commit()
         doacao_id = doacao.id
 
         # Login como admin
         with client.session_transaction() as sess:
-            sess['_user_id'] = str(admin_usuario_id)
+            sess["_user_id"] = str(admin_usuario_id)
 
-    response = client.get(f'/doacoes/{doacao_id}/recibo')
+    response = client.get(f"/doacoes/{doacao_id}/recibo")
     assert response.status_code == 200
-    assert 'Nenhuma etapa registrada' in response.data.decode('utf-8')
+    assert "Nenhuma etapa registrada" in response.data.decode("utf-8")
 
 
 def test_recibo_nao_exibe_dados_pessoais(client, app, operador_usuario_id, doacao_id):
@@ -250,18 +238,18 @@ def test_recibo_nao_exibe_dados_pessoais(client, app, operador_usuario_id, doaca
     with app.app_context():
         # Login como operador
         with client.session_transaction() as sess:
-            sess['_user_id'] = str(operador_usuario_id)
+            sess["_user_id"] = str(operador_usuario_id)
 
-    response = client.get(f'/doacoes/{doacao_id}/recibo')
+    response = client.get(f"/doacoes/{doacao_id}/recibo")
     assert response.status_code == 200
-    data = response.data.decode('utf-8')
+    data = response.data.decode("utf-8")
     # O recibo não deve exibir CPF do usuário no conteúdo principal
     # (o sidebar pode mostrar informações do usuário logado, o que é aceitável)
     # Verifica que o CPF não aparece no contexto da doação
-    assert 'CPF: 11111111111' not in data  # CPF do operador
+    assert "CPF: 11111111111" not in data  # CPF do operador
     # Verifica que não há campos de CPF/email no recibo da doação
-    assert 'CPF do doador' not in data
-    assert 'Email do doador' not in data
+    assert "CPF do doador" not in data
+    assert "Email do doador" not in data
 
 
 def test_recibo_aviso_persistente(client, app, operador_usuario_id, doacao_id):
@@ -269,13 +257,13 @@ def test_recibo_aviso_persistente(client, app, operador_usuario_id, doacao_id):
     with app.app_context():
         # Login como operador
         with client.session_transaction() as sess:
-            sess['_user_id'] = str(operador_usuario_id)
+            sess["_user_id"] = str(operador_usuario_id)
 
-    response = client.get(f'/doacoes/{doacao_id}/recibo')
+    response = client.get(f"/doacoes/{doacao_id}/recibo")
     assert response.status_code == 200
-    data = response.data.decode('utf-8')
-    assert 'Este recibo mostra apenas etapas registradas no sistema' in data
-    assert 'Não comprova por si só a entrega física' in data
+    data = response.data.decode("utf-8")
+    assert "Este recibo mostra apenas etapas registradas no sistema" in data
+    assert "Não comprova por si só a entrega física" in data
 
 
 def test_recibo_nao_altera_estoque(client, app, operador_usuario_id, doacao_id, medicamento_id):
@@ -287,10 +275,10 @@ def test_recibo_nao_altera_estoque(client, app, operador_usuario_id, doacao_id, 
 
         # Login como operador
         with client.session_transaction() as sess:
-            sess['_user_id'] = str(operador_usuario_id)
+            sess["_user_id"] = str(operador_usuario_id)
 
     # Abre recibo
-    response = client.get(f'/doacoes/{doacao_id}/recibo')
+    response = client.get(f"/doacoes/{doacao_id}/recibo")
     assert response.status_code == 200
 
     with app.app_context():
@@ -305,9 +293,9 @@ def test_api_etapas_protegida(client, app, outro_operador_usuario_id, doacao_id)
     with app.app_context():
         # Login como outro operador (não autorizado)
         with client.session_transaction() as sess:
-            sess['_user_id'] = str(outro_operador_usuario_id)
+            sess["_user_id"] = str(outro_operador_usuario_id)
 
-    response = client.get(f'/api/doacoes/{doacao_id}/etapas')
+    response = client.get(f"/api/doacoes/{doacao_id}/etapas")
     assert response.status_code == 403
 
 
@@ -316,8 +304,8 @@ def test_api_etapas_admin_autorizado(client, app, admin_usuario_id, doacao_id):
     with app.app_context():
         # Login como admin
         with client.session_transaction() as sess:
-            sess['_user_id'] = str(admin_usuario_id)
+            sess["_user_id"] = str(admin_usuario_id)
 
-    response = client.get(f'/api/doacoes/{doacao_id}/etapas')
+    response = client.get(f"/api/doacoes/{doacao_id}/etapas")
     assert response.status_code == 200
-    assert 'etapas' in response.data.decode('utf-8')
+    assert "etapas" in response.data.decode("utf-8")

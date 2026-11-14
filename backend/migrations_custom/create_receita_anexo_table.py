@@ -39,6 +39,7 @@ def downgrade():
 
 if __name__ == "__main__":
     from main import create_app
+
     app = create_app()
     with app.app_context():
         upgrade()

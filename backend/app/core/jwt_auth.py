@@ -10,9 +10,7 @@ from app.models.usuario import Usuario
 
 
 def gerar_token(usuario):
-    expira = datetime.now(timezone.utc) + timedelta(
-        seconds=current_app.config.get("JWT_EXPIRATION", 3600)
-    )
+    expira = datetime.now(timezone.utc) + timedelta(seconds=current_app.config.get("JWT_EXPIRATION", 3600))
     payload = {
         "sub": str(usuario.id),
         "cpf": usuario.cpf,

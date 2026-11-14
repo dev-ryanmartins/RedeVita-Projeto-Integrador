@@ -13,28 +13,24 @@ def _normalize_text(text: str) -> str:
 
 class Medicamento(db.Model):
     __tablename__ = "medicamentos"
-    __table_args__ = {'extend_existing': True}
+    __table_args__ = {"extend_existing": True}
 
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
-    lote = db.Column(db.String(50), nullable=False)
-    data_validade = db.Column(db.Date, nullable=False)
+    lote = db.Column(db.String(50), nullable=False, index=True)
+    data_validade = db.Column(db.Date, nullable=False, index=True)
     quantidade = db.Column(db.Integer, default=0)
 
-    status_semaforo = db.Column(db.Integer, default=0)
-    ativo = db.Column(db.Boolean, default=True, nullable=False)
+    status_semaforo = db.Column(db.Integer, default=0, index=True)
+    ativo = db.Column(db.Boolean, default=True, nullable=False, index=True)
 
     tarja = db.Column(db.String(30), default="Sem Tarja", nullable=False)
     principio_ativo = db.Column(db.String(120), nullable=True)
     uso_continuo = db.Column(db.Boolean, default=False)
-    referencia_id = db.Column(
-        db.Integer, db.ForeignKey("medicamentos_referencia.id"), nullable=True
-    )
+    referencia_id = db.Column(db.Integer, db.ForeignKey("medicamentos_referencia.id"), nullable=True, index=True)
     observacoes = db.Column(db.Text, nullable=True)
 
-    referencia = db.relationship(
-        "MedicamentoReferencia", backref="medicamentos", lazy=True
-    )
+    referencia = db.relationship("MedicamentoReferencia", backref="medicamentos", lazy=True)
 
     @property
     def controlado(self):
@@ -55,17 +51,20 @@ class Medicamento(db.Model):
         Valida se o medicamento está em conformidade com a Portaria 344/ANVISA.
         Se o principio_ativo ou referencia indicarem substância controlada,
         a tarja deve ser 'Portaria 344'.
-        
+
         Returns:
             tuple: (is_valid, error_message)
         """
         from app.models.medicamento_referencia import MedicamentoReferencia
-        
+
         if self.referencia_id:
             referencia = MedicamentoReferencia.query.get(self.referencia_id)
             if referencia and referencia.lista_portaria:
                 if self.tarja != "Portaria 344":
-                    return False, f"Substância controlada (Lista {referencia.lista_portaria}): tarja deve ser 'Portaria 344'"
+                    return (
+                        False,
+                        f"Substância controlada (Lista {referencia.lista_portaria}): tarja deve ser 'Portaria 344'",
+                    )
 
         if self.principio_ativo and not self.referencia_id:
             normalized_pa = _normalize_text(self.principio_ativo)
@@ -76,9 +75,12 @@ class Medicamento(db.Model):
                 for referencia in referencias:
                     if _normalize_text(referencia.principio_ativo) == normalized_pa:
                         if referencia.lista_portaria and self.tarja != "Portaria 344":
-                            return False, f"Princípio ativo controlado (Lista {referencia.lista_portaria}): tarja deve ser 'Portaria 344'"
+                            return (
+                                False,
+                                f"Princípio ativo controlado (Lista {referencia.lista_portaria}): tarja deve ser 'Portaria 344'",
+                            )
                         break
-        
+
         return True, None
 
     def __repr__(self):

@@ -17,7 +17,6 @@ from app.config import Config
 from app.database import db, init_db
 from app.extensions import limiter, registrar_handlers_limite
 from app.models.usuario import Usuario
-from app.models.iot import LeituraIoT, TagRFID
 from app.routes.auth import auth_bp
 from app.routes.inventory import inventory_bp
 from app.routes.donation import donation_bp
@@ -70,46 +69,46 @@ compress = Compress()
 cache = Cache()
 
 CSP = {
-    'default-src': ["'self'"],
-    'script-src': [
+    "default-src": ["'self'"],
+    "script-src": [
         "'self'",
         "'unsafe-inline'",
         "'unsafe-eval'",
-        'https://cdn.jsdelivr.net',
-        'https://cdnjs.cloudflare.com',
+        "https://cdn.jsdelivr.net",
+        "https://cdnjs.cloudflare.com",
     ],
-    'style-src': [
+    "style-src": [
         "'self'",
         "'unsafe-inline'",
-        'https://fonts.googleapis.com',
-        'https://cdnjs.cloudflare.com',
-        'https://unpkg.com',
+        "https://fonts.googleapis.com",
+        "https://cdnjs.cloudflare.com",
+        "https://unpkg.com",
     ],
-    'font-src': [
+    "font-src": [
         "'self'",
-        'https://fonts.gstatic.com',
-        'https://cdnjs.cloudflare.com',
-        'https://unpkg.com',
+        "https://fonts.gstatic.com",
+        "https://cdnjs.cloudflare.com",
+        "https://unpkg.com",
     ],
-    'img-src': [
+    "img-src": [
         "'self'",
-        'data:',
-        'blob:',
-        'https://*.tile.openstreetmap.org',
-        'https://*.basemaps.cartocdn.com',
-        'https://*.cartocdn.com',
+        "data:",
+        "blob:",
+        "https://*.tile.openstreetmap.org",
+        "https://*.basemaps.cartocdn.com",
+        "https://*.cartocdn.com",
     ],
-    'connect-src': [
+    "connect-src": [
         "'self'",
-        'https://nominatim.openstreetmap.org',
-        'https://overpass-api.de',
-        'https://*.tile.openstreetmap.org',
-        'https://*.basemaps.cartocdn.com',
-        'https://viacep.com.br',
+        "https://nominatim.openstreetmap.org",
+        "https://overpass-api.de",
+        "https://*.tile.openstreetmap.org",
+        "https://*.basemaps.cartocdn.com",
+        "https://viacep.com.br",
     ],
-    'worker-src': ["'self'", "blob:"],
-    'frame-ancestors': ["'none'"],
-    'form-action': ["'self'"],
+    "worker-src": ["'self'", "blob:"],
+    "frame-ancestors": ["'none'"],
+    "form-action": ["'self'"],
 }
 
 
@@ -135,10 +134,7 @@ def _inicializar_banco(app, tentativas=6):
         except SQLAlchemyError as exc:
             db.session.rollback()
             mensagem = str(getattr(exc, "orig", exc)).lower()
-            benigno = any(
-                marca in mensagem
-                for marca in ("already exists", "1050", "duplicate", "1062", "unique")
-            )
+            benigno = any(marca in mensagem for marca in ("already exists", "1050", "duplicate", "1062", "unique"))
             if benigno and tentativa < tentativas:
                 app.logger.warning(
                     "Corrida de inicialização do banco (tentativa %s/%s): %s",
@@ -160,23 +156,23 @@ def create_app(config_overrides=None):
     # Use caminhos absolutos para evitar problemas de diretório de trabalho
     backend_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(backend_dir)
-    
+
     app = Flask(
         __name__,
-        template_folder=os.path.join(project_root, 'frontend', 'templates'),
-        static_folder=os.path.join(project_root, 'frontend', 'static')
+        template_folder=os.path.join(project_root, "frontend", "templates"),
+        static_folder=os.path.join(project_root, "frontend", "static"),
     )
     app.config.from_object(Config)
     if config_overrides:
         app.config.update(config_overrides)
-        if app.config.get('SQLALCHEMY_DATABASE_URI', '').startswith('sqlite'):
-            engine_options = dict(app.config.get('SQLALCHEMY_ENGINE_OPTIONS', {}))
-            connect_args = dict(engine_options.get('connect_args', {}))
-            if 'connect_timeout' in connect_args:
-                connect_args.pop('connect_timeout')
-                connect_args.setdefault('timeout', 5)
-                engine_options['connect_args'] = connect_args
-                app.config['SQLALCHEMY_ENGINE_OPTIONS'] = engine_options
+        if app.config.get("SQLALCHEMY_DATABASE_URI", "").startswith("sqlite"):
+            engine_options = dict(app.config.get("SQLALCHEMY_ENGINE_OPTIONS", {}))
+            connect_args = dict(engine_options.get("connect_args", {}))
+            if "connect_timeout" in connect_args:
+                connect_args.pop("connect_timeout")
+                connect_args.setdefault("timeout", 5)
+                engine_options["connect_args"] = connect_args
+                app.config["SQLALCHEMY_ENGINE_OPTIONS"] = engine_options
 
     logging.basicConfig(level=logging.WARNING)
     app.logger.setLevel(logging.WARNING)
@@ -188,15 +184,15 @@ def create_app(config_overrides=None):
     # envio de receitas/anexos, a geração de QR Codes e os recibos em PDF
     # funcionem 100% em disco local, sem depender de buckets externos.
     for diretorio in (
-        app.config.get('PRIVATE_STORAGE_DIR'),
-        os.path.join(project_root, 'frontend', 'static', app.config.get('LOCAL_UPLOAD_DIR', 'uploads')),
+        app.config.get("PRIVATE_STORAGE_DIR"),
+        os.path.join(project_root, "frontend", "static", app.config.get("LOCAL_UPLOAD_DIR", "uploads")),
     ):
         if not diretorio:
             continue
         try:
             os.makedirs(diretorio, exist_ok=True)
         except OSError as exc:
-            app.logger.warning('Não foi possível criar o diretório de armazenamento %s: %s', diretorio, exc)
+            app.logger.warning("Não foi possível criar o diretório de armazenamento %s: %s", diretorio, exc)
 
     # Aplicar middleware de request-id e logging estruturado
     request_id_middleware(app)
@@ -215,19 +211,19 @@ def create_app(config_overrides=None):
         strict_transport_security=False,
         content_security_policy=CSP,
         content_security_policy_nonce_in=[],
-        referrer_policy='strict-origin-when-cross-origin',
+        referrer_policy="strict-origin-when-cross-origin",
         x_content_type_options=True,
         x_xss_protection=True,
-        frame_options='SAMEORIGIN',
-        session_cookie_secure=app.config.get('SESSION_COOKIE_SECURE', False),
-        session_cookie_http_only=app.config.get('SESSION_COOKIE_HTTPONLY', True),
-        session_cookie_samesite=app.config.get('SESSION_COOKIE_SAMESITE', 'Lax'),
+        frame_options="SAMEORIGIN",
+        session_cookie_secure=app.config.get("SESSION_COOKIE_SECURE", False),
+        session_cookie_http_only=app.config.get("SESSION_COOKIE_HTTPONLY", True),
+        session_cookie_samesite=app.config.get("SESSION_COOKIE_SAMESITE", "Lax"),
     )
 
     login_manager = LoginManager()
-    login_manager.login_view = 'auth.login'
-    login_manager.login_message = 'Por favor, faça login para acessar o RedeVita.'
-    login_manager.login_message_category = 'info'
+    login_manager.login_view = "auth.login"
+    login_manager.login_message = "Por favor, faça login para acessar o RedeVita."
+    login_manager.login_message_category = "info"
     login_manager.init_app(app)
 
     @login_manager.user_loader
@@ -288,22 +284,22 @@ def create_app(config_overrides=None):
     @app.after_request
     def adicionar_cabecalhos_seguranca(response):
         """Aplica cabeçalhos HTTP de segurança para blindar a aplicação contra ataques comuns."""
-        response.headers['X-Content-Type-Options'] = 'nosniff'
-        response.headers['X-Frame-Options'] = 'SAMEORIGIN'
-        response.headers['X-XSS-Protection'] = '1; mode=block'
-        response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "SAMEORIGIN"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         return response
 
-    @app.route('/')
+    @app.route("/")
     def index():
-        return render_template('login.html')
+        return render_template("login.html")
 
-    @app.route('/prescriptions')
+    @app.route("/prescriptions")
     def prescriptions_legacy():
-        return redirect(url_for('medical.prescriptions'))
+        return redirect(url_for("medical.prescriptions"))
 
-    @app.route('/health')
-    @app.route('/api/v1/ping')
+    @app.route("/health")
+    @app.route("/api/v1/ping")
     def health_check():
         """
         Liveness probe: verifica apenas se o processo Flask está ativo.
@@ -311,11 +307,8 @@ def create_app(config_overrides=None):
         Sempre retorna 200 se o servidor está respondendo.
         """
         from flask import jsonify
-        return jsonify({
-            'status': 'ok',
-            'service': 'RedeVita',
-            'type': 'liveness'
-        }), 200
+
+        return jsonify({"status": "ok", "service": "RedeVita", "type": "liveness"}), 200
 
     @app.context_processor
     def inject_global_vars():
@@ -344,50 +337,62 @@ def create_app(config_overrides=None):
         def is_admin():
             """Helper para verificar se usuário é Admin"""
             from flask_login import current_user
-            return current_user.is_authenticated and current_user.cargo == 'Admin'
+
+            return current_user.is_authenticated and current_user.cargo == "Admin"
 
         def is_farmaceutico():
             """Helper para verificar se usuário é Farmacêutico"""
             from flask_login import current_user
-            return current_user.is_authenticated and current_user.cargo in ['Admin', 'Farmacêutico']
+
+            return current_user.is_authenticated and current_user.cargo in ["Admin", "Farmacêutico"]
 
         def is_medico():
             """Helper para verificar se usuário é Médico"""
             from flask_login import current_user
-            return current_user.is_authenticated and current_user.cargo in ['Admin', 'Médico']
+
+            return current_user.is_authenticated and current_user.cargo in ["Admin", "Médico"]
 
         def is_operador():
             """Helper para verificar se usuário é Operador"""
             from flask_login import current_user
-            return current_user.is_authenticated and current_user.cargo in ['Admin', 'Operador']
+
+            return current_user.is_authenticated and current_user.cargo in ["Admin", "Operador"]
 
         def is_equipe_clinica():
             """Helper para verificar se usuário é da equipe clínica"""
             from flask_login import current_user
-            return current_user.is_authenticated and current_user.cargo in ['Admin', 'Operador', 'Médico', 'Farmacêutico']
+
+            return current_user.is_authenticated and current_user.cargo in [
+                "Admin",
+                "Operador",
+                "Médico",
+                "Farmacêutico",
+            ]
 
         def has_cargo(*cargos):
             """Helper para verificar se usuário tem um dos cargos especificados"""
             from flask_login import current_user
+
             if not current_user.is_authenticated:
                 return False
             from app.core.decorators import _cargo_normalizado
+
             cargo_atual = _cargo_normalizado(current_user.cargo)
             cargos_validos = {_cargo_normalizado(cargo) for cargo in cargos}
             return cargo_atual in cargos_validos
 
         return {
-            'alertas': alertas,
-            'is_admin': is_admin,
-            'is_farmaceutico': is_farmaceutico,
-            'is_medico': is_medico,
-            'is_operador': is_operador,
-            'is_equipe_clinica': is_equipe_clinica,
-            'has_cargo': has_cargo,
-            'demo_contas': demo_contas,
-            'demo_atalhos': demo_atalhos,
-            'demo_senha': demo_senha,
-            'demo_mode': demo_mode,
+            "alertas": alertas,
+            "is_admin": is_admin,
+            "is_farmaceutico": is_farmaceutico,
+            "is_medico": is_medico,
+            "is_operador": is_operador,
+            "is_equipe_clinica": is_equipe_clinica,
+            "has_cargo": has_cargo,
+            "demo_contas": demo_contas,
+            "demo_atalhos": demo_atalhos,
+            "demo_senha": demo_senha,
+            "demo_mode": demo_mode,
         }
 
     with app.app_context():
@@ -398,9 +403,9 @@ def create_app(config_overrides=None):
     return app
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app = create_app()
-    host = os.environ.get('APP_HOST', '0.0.0.0')
-    port = int(os.environ.get('PORT', 5000))
-    debug = os.environ.get('APP_DEBUG', 'false').lower() == 'true'
+    host = os.environ.get("APP_HOST", "0.0.0.0")
+    port = int(os.environ.get("PORT", 5000))
+    debug = os.environ.get("APP_DEBUG", "false").lower() == "true"
     app.run(host=host, port=port, debug=debug)

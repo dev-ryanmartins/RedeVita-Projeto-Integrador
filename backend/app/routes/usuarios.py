@@ -122,7 +122,7 @@ def alterar_cargo(uid):
 @usuarios_bp.route("/usuario/<int:uid>/toggle-ativo", methods=["POST"])
 @login_required
 @admin_required
-@audit_critical_action('TOGGLE_USUARIO_ATIVO')
+@audit_critical_action("TOGGLE_USUARIO_ATIVO")
 def toggle_ativo(uid):
     from flask_login import current_user
 
@@ -138,10 +138,10 @@ def toggle_ativo(uid):
     try:
         ativo_atual = usuario.ativo is not False
         usuario.ativo = not ativo_atual
-        
+
         # Increment credential version to invalidate all sessions and tokens
         usuario.credencial_versao += 1
-        
+
         db.session.commit()
         status = "ativado" if usuario.ativo else "desativado"
         registrar_log("Toggle Usuário", f'Usuário "{usuario.nome}" foi {status}, versão credencial incrementada')
@@ -164,7 +164,7 @@ def associar_farmacia(uid):
         return redirect(url_for("usuarios.listar_usuarios"))
 
     farmacia_id = request.form.get("farmacia_id", type=int)
-    
+
     if not farmacia_id:
         flash("Selecione uma farmácia.", "danger")
         return redirect(url_for("usuarios.listar_usuarios"))
@@ -181,7 +181,7 @@ def associar_farmacia(uid):
             "Associação Farmácia",
             f'Usuário "{usuario.nome}" associado à farmácia "{farmacia.nome_fantasia}"',
         )
-        flash(f'{usuario.nome} associado à farmácia {farmacia.nome_fantasia}.', "success")
+        flash(f"{usuario.nome} associado à farmácia {farmacia.nome_fantasia}.", "success")
     except Exception:
         db.session.rollback()
         flash("Erro ao associar farmácia. Tente novamente.", "danger")
@@ -207,7 +207,7 @@ def remover_farmacia(uid):
             "Remoção Associação Farmácia",
             f'Usuário "{usuario.nome}" desvinculado da farmácia "{farmacia_anterior}"',
         )
-        flash(f'{usuario.nome} desvinculado da farmácia.', "success")
+        flash(f"{usuario.nome} desvinculado da farmácia.", "success")
     except Exception:
         db.session.rollback()
         flash("Erro ao remover vínculo. Tente novamente.", "danger")
@@ -226,7 +226,7 @@ def associar_instituicao(uid):
         return redirect(url_for("usuarios.listar_usuarios"))
 
     instituicao_id = request.form.get("instituicao_id", type=int)
-    
+
     if not instituicao_id:
         flash("Selecione uma instituição.", "danger")
         return redirect(url_for("usuarios.listar_usuarios"))
@@ -243,7 +243,7 @@ def associar_instituicao(uid):
             "Associação Instituição",
             f'Usuário "{usuario.nome}" associado à instituição "{instituicao.nome}"',
         )
-        flash(f'{usuario.nome} associado à instituição {instituicao.nome}.', "success")
+        flash(f"{usuario.nome} associado à instituição {instituicao.nome}.", "success")
     except Exception:
         db.session.rollback()
         flash("Erro ao associar instituição. Tente novamente.", "danger")
@@ -269,7 +269,7 @@ def remover_instituicao(uid):
             "Remoção Associação Instituição",
             f'Usuário "{usuario.nome}" desvinculado da instituição "{instituicao_anterior}"',
         )
-        flash(f'{usuario.nome} desvinculado da instituição.', "success")
+        flash(f"{usuario.nome} desvinculado da instituição.", "success")
     except Exception:
         db.session.rollback()
         flash("Erro ao remover vínculo. Tente novamente.", "danger")

@@ -4,8 +4,9 @@ from datetime import datetime
 
 class Instituicao(db.Model):
     """Modelo para Instituições Receptoras."""
+
     __tablename__ = "instituicoes"
-    __table_args__ = {'extend_existing': True}
+    __table_args__ = {"extend_existing": True}
 
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(200), nullable=False)

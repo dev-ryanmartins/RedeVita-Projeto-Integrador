@@ -635,9 +635,16 @@
       }
 
       // Adiciona marcadores de farmácias cadastradas
+      const bounds = [];
       FARMACIAS_REDEVITA.forEach(farmacia => {
         addFarmaciaMarker(farmacia);
+        bounds.push([farmacia.lat, farmacia.lng]);
       });
+
+      // Enquadra todos os pontos no mapa (visão geral)
+      if (bounds.length > 0) {
+        map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
+      }
 
       hideLoading();
       setStatus('Mapa carregado com sucesso');
@@ -665,12 +672,12 @@
     if (!map) return;
 
     const marker = L.circleMarker([farmacia.lat, farmacia.lng], {
-      radius: 150,
+      radius: 9,
       fillColor: COLOR.farmacia,
       color: '#ffffff',
       weight: 2,
-      opacity: 0.8,
-      fillOpacity: 0.6
+      opacity: 1,
+      fillOpacity: 0.95
     }).addTo(map);
 
     marker.bindPopup(popupHTML(farmacia.nome, farmacia.endereco, 'farmacia'));
@@ -692,12 +699,12 @@
     }
 
     userMarker = L.circleMarker([userLat, userLng], {
-      radius: 200,
+      radius: 12,
       fillColor: '#f59e0b',
       color: '#ffffff',
       weight: 3,
-      opacity: 0.9,
-      fillOpacity: 0.9
+      opacity: 1,
+      fillOpacity: 0.95
     }).addTo(map);
 
     map.setView([userLat, userLng], 15);

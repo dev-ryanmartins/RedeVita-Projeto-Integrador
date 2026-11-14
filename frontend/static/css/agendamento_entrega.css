@@ -1,0 +1,145 @@
+/* CSS específico para Agendamento de Entrega */
+
+.alert-warning {
+    background-color: rgba(243, 156, 18, 0.1);
+    border: 1px solid var(--warning);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 2rem;
+    color: var(--warning);
+}
+
+.alert-warning strong {
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+/* Campos de data/hora datetime-local seguindo padrão global */
+.input-with-icon input[type="datetime-local"] {
+    padding-left: 44px !important;
+    padding-right: 14px !important;
+    min-height: 42px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    background: var(--bg-input) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius) !important;
+    color: var(--text-main) !important;
+    font-size: 0.9rem !important;
+}
+
+.input-with-icon input[type="datetime-local"]:focus {
+    border-color: #38bdf8 !important;
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.15) !important;
+    outline: none !important;
+}
+
+.card {
+    background-color: var(--bg-card);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.form-label {
+    color: var(--text-muted);
+}
+
+.form-control,
+.form-select {
+    background-color: var(--bg-input);
+    border: 1px solid var(--border-input);
+    color: var(--text-primary);
+}
+
+.form-control:focus,
+.form-select:focus {
+    background-color: var(--bg-input);
+    border-color: var(--primary-blue);
+    color: var(--text-primary);
+    box-shadow: 0 0 0 0.2rem rgba(2, 132, 199, 0.25);
+}
+
+.table {
+    color: var(--text-primary);
+}
+
+.table thead th {
+    border-color: var(--border-subtle);
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.table tbody tr {
+    border-color: var(--border-subtle);
+}
+
+.table tbody tr:hover {
+    background-color: var(--bg-hover);
+}
+
+.btn-primary {
+    background-color: var(--primary-blue);
+    border-color: var(--primary-blue);
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-blue-hover);
+    border-color: var(--primary-blue-hover);
+}
+
+.btn-secondary {
+    background-color: var(--border-subtle);
+    border-color: var(--border-input);
+    color: var(--text-primary);
+}
+
+.btn-secondary:hover {
+    background-color: var(--border-input);
+    color: var(--text-primary);
+}
+
+.btn-info {
+    background-color: var(--primary-blue);
+    border-color: var(--primary-blue);
+}
+
+.btn-info:hover {
+    background-color: var(--primary-blue-hover);
+    border-color: var(--primary-blue-hover);
+}
+
+.btn-warning {
+    background-color: var(--warning);
+    border-color: var(--warning);
+    color: #000;
+}
+
+.btn-warning:hover {
+    background-color: #e0a800;
+    border-color: #e0a800;
+    color: #000;
+}
+
+.btn-danger {
+    background-color: var(--danger);
+    border-color: var(--danger);
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+    border-color: #c82333;
+}
+
+.badge {
+    font-weight: 500;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .btn,
+    .form-control,
+    .form-select {
+        transition: none;
+    }
+}

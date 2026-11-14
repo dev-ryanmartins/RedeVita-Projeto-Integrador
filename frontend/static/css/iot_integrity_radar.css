@@ -1,0 +1,474 @@
+/* CSS Radar de Integridade e Telemetria - Design Profissional e Limpo */
+
+/* Reset e Base */
+.radar-page {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 32px;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #0f172a;
+    color: #f8fafc;
+}
+
+/* Cabeçalho da Página */
+.radar-page-header {
+    margin-bottom: 24px;
+}
+
+.radar-header-content h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #f8fafc;
+    margin: 0 0 8px 0;
+    background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.radar-header-subtitle {
+    font-size: 0.95rem;
+    color: #94a3b8;
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Aviso Operacional */
+.radar-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.9) 100%);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 12px;
+    margin-bottom: 32px;
+    color: #cbd5e1;
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+.radar-notice-icon {
+    font-size: 1.2rem;
+    color: #38bdf8;
+    margin-top: 2px;
+}
+
+.radar-notice-content strong {
+    color: #e2e8f0;
+}
+
+/* Painel de Controles */
+.radar-controls-panel {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.9) 100%);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 32px;
+}
+
+.radar-controls-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    align-items: end;
+}
+
+.radar-control-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.radar-control-action {
+    justify-content: flex-end;
+}
+
+.radar-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.radar-input-wrapper,
+.radar-select-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.radar-input-icon {
+    position: absolute;
+    left: 14px;
+    color: #94a3b8;
+    font-size: 1rem;
+    pointer-events: none;
+}
+
+.radar-input,
+.radar-select {
+    width: 100%;
+    padding: 12px 14px;
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    border-radius: 10px;
+    color: #e2e8f0;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    appearance: none;
+}
+
+.radar-input-wrapper .radar-input {
+    padding-left: 44px;
+}
+
+.radar-input:focus,
+.radar-select:focus {
+    outline: none;
+    border-color: #38bdf8;
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.1);
+}
+
+.radar-input-wrapper:focus-within .radar-input-icon {
+    color: #38bdf8;
+}
+
+/* Botões */
+.radar-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    justify-content: center;
+}
+
+.radar-btn-primary {
+    background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+    color: white;
+    box-shadow: 0 4px 16px rgba(56, 189, 248, 0.3);
+}
+
+.radar-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(56, 189, 248, 0.4);
+}
+
+.radar-btn-secondary {
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.radar-btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(148, 163, 184, 0.5);
+}
+
+/* Estados */
+.hidden {
+    display: none !important;
+}
+
+.radar-loading,
+.radar-error,
+.radar-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 64px 32px;
+    text-align: center;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.9) 100%);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 16px;
+    color: #94a3b8;
+}
+
+.radar-spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid rgba(255, 255, 255, 0.1);
+    border-top-color: #38bdf8;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 16px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.radar-error-icon,
+.radar-empty-icon {
+    font-size: 3rem;
+    margin-bottom: 16px;
+}
+
+.radar-error i {
+    color: #ef4444;
+}
+
+.radar-empty i {
+    color: #94a3b8;
+}
+
+.radar-loading p,
+.radar-error p,
+.radar-empty p {
+    font-size: 0.95rem;
+    margin: 0 16px 0 0;
+}
+
+.radar-error .radar-btn {
+    margin-top: 16px;
+}
+
+/* Conteúdo Principal */
+.radar-main {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Cards de Métricas */
+.radar-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+    margin-bottom: 32px;
+}
+
+.radar-metric-card {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.9) 100%);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: all 0.3s ease;
+}
+
+.radar-metric-card:hover {
+    border-color: rgba(56, 189, 248, 0.3);
+    transform: translateY(-2px);
+}
+
+.radar-metric-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.radar-metric-success .radar-metric-icon {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+}
+
+.radar-metric-warning .radar-metric-icon {
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+}
+
+.radar-metric-danger .radar-metric-icon {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+}
+
+.radar-metric-info .radar-metric-icon {
+    background: rgba(56, 189, 248, 0.15);
+    color: #38bdf8;
+}
+
+.radar-metric-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.radar-metric-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.radar-metric-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #f8fafc;
+}
+
+/* Seção de Dados */
+.radar-data-section {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.9) 100%);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.radar-data-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.radar-data-header h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #f8fafc;
+    margin: 0;
+}
+
+.radar-table-container {
+    overflow-x: auto;
+}
+
+.radar-data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.radar-data-table thead {
+    background: rgba(15, 23, 42, 0.98);
+}
+
+.radar-data-table th {
+    padding: 16px 20px;
+    text-align: left;
+    font-weight: 600;
+    color: #94a3b8;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.radar-data-table td {
+    padding: 16px 20px;
+    color: #e2e8f0;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.radar-data-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.radar-data-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Rodapé Informativo */
+.radar-footer {
+    margin-top: 32px;
+    padding: 20px;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.9) 100%);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 12px;
+}
+
+.radar-footer-summary {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #94a3b8;
+    padding: 8px 0;
+    user-select: none;
+}
+
+.radar-footer-summary:hover {
+    color: #e2e8f0;
+}
+
+.radar-footer-summary i {
+    color: #38bdf8;
+}
+
+.radar-footer-content {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.radar-footer-content ul {
+    margin: 0;
+    padding-left: 24px;
+    color: #94a3b8;
+}
+
+.radar-footer-content li {
+    margin-bottom: 8px;
+    line-height: 1.6;
+}
+
+.radar-footer-content li strong {
+    color: #e2e8f0;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .radar-page {
+        padding: 20px 16px;
+    }
+
+    .radar-header-content h1 {
+        font-size: 1.5rem;
+    }
+
+    .radar-controls-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .radar-metrics {
+        grid-template-columns: 1fr;
+    }
+
+    .radar-data-table {
+        font-size: 0.85rem;
+    }
+
+    .radar-data-table th,
+    .radar-data-table td {
+        padding: 12px 16px;
+    }
+}
+
+/* Acessibilidade */
+@media (prefers-reduced-motion: reduce) {
+    .radar-spinner {
+        animation: none;
+    }
+
+    .radar-main {
+        animation: none;
+    }
+
+    .radar-metric-card:hover,
+    .radar-btn:hover {
+        transform: none;
+    }
+}
+
+*:focus-visible {
+    outline: 2px solid #38bdf8;
+    outline-offset: 2px;
+}

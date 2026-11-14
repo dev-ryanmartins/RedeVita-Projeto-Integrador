@@ -1,0 +1,77 @@
+/* Perfil de Resiliência da Farmácia */
+[data-perfil-resiliencia] {
+    --pr-primary: #00d4ff;
+    --pr-secondary: #0099cc;
+    --pr-bg: rgba(0, 212, 255, 0.05);
+    --pr-border: rgba(0, 212, 255, 0.2);
+    --pr-text: #e0e0e0;
+}
+
+.pr-banner {
+    background: linear-gradient(135deg, rgba(255, 165, 0, 0.2), rgba(255, 107, 107, 0.2));
+    border: 1px solid rgba(255, 165, 0, 0.3);
+    border-radius: 8px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.pr-banner-content {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.pr-banner i {
+    font-size: 1.5rem;
+    color: #ffa500;
+}
+
+.pr-banner span {
+    color: var(--pr-text);
+    font-size: 0.95rem;
+}
+
+.pr-intro {
+    margin-bottom: 2rem;
+}
+
+.pr-intro h2 {
+    color: var(--pr-text);
+    margin-bottom: 0.5rem;
+}
+
+.pr-intro p {
+    color: #a0a0a0;
+}
+
+.pr-list-section {
+    background: var(--pr-bg);
+    border: 1px solid var(--pr-border);
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.pr-list-header h3 {
+    color: var(--pr-text);
+    margin: 0 0 1rem 0;
+}
+
+.pr-loading {
+    text-align: center;
+    padding: 2rem;
+}
+
+.loading-spinner {
+    border: 3px solid rgba(0, 212, 255, 0.3);
+    border-top: 3px solid var(--pr-primary);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

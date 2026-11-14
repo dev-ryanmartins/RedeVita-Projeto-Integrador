@@ -1,0 +1,55 @@
+{% macro brand_logo(href, compact=false) -%}
+<style>
+    .redevita-brand {
+        display: inline-flex;
+        align-items: center;
+        vertical-align: middle;
+        gap: 1px;
+        text-decoration: none;
+    }
+    .redevita-brand--compact {
+        gap: 0px;
+    }
+    .redevita-logo-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        vertical-align: middle;
+        margin-right: -4px;
+    }
+    .redevita-logo-icon svg {
+        height: 32px;
+        width: auto;
+    }
+    .redevita-brand--compact .redevita-logo-icon svg {
+        height: 24px;
+        width: auto;
+    }
+    .redevita-brand-text {
+        display: inline-flex;
+        align-items: center;
+        vertical-align: middle;
+        margin-left: 0px;
+        padding-left: 0px;
+    }
+</style>
+<a href="{{ href }}" class="redevita-brand{% if compact %} redevita-brand--compact{% endif %}" aria-label="RedeVita — início">
+    <span class="redevita-logo-icon" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 56">
+            <defs>
+                <style>
+                    .cruz-borda { fill: none; stroke: #0ea5e9; stroke-width: 2.8; stroke-linecap: round; stroke-linejoin: round; }
+                    .coracao-vermelho { fill: #f43f5e; }
+                    .ecg-linha { fill: none; stroke: #ffffff; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+                </style>
+            </defs>
+            <path class="cruz-borda" d="M 27 5 h 12 a 4 4 0 0 1 4 4 v 11 h 11 a 4 4 0 0 1 4 4 v 10 a 4 4 0 0 1 -4 4 h -11 v 11 a 4 4 0 0 1 -4 4 h -12 a 4 4 0 0 1 -4 -4 v -11 h -11 a 4 4 0 0 1 -4 -4 v -10 a 4 4 0 0 1 4 -4 h 11 v -11 a 4 4 0 0 1 4 -4 z" />
+            <path class="coracao-vermelho" transform="translate(1, -4) scale(1.5)" d="M 40 20 C 40 13 31 11 27 17 C 23 11 14 13 14 20 C 14 29 27 37 27 37 C 27 37 40 29 40 20 Z" />
+            <path class="ecg-linha" d="M 21 25 h 5 l 3.5 -11 l 5 22 l 4.5 -14 l 3.5 3 h 6" />
+        </svg>
+    </span>
+    <span class="redevita-brand-text">
+        <span class="brand-rede">Rede</span><span class="brand-vita">Vita</span>
+    </span>
+</a>
+{%- endmacro %}

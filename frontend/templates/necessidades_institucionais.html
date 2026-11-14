@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block title %}Quadro de Necessidades de Instituições - RedeVita{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header-corporate">
+        <div class="page-header-content">
+            <h1><i class="fas fa-hospital"></i> Quadro de Necessidades</h1>
+            <p class="subtitle">Gestão de necessidades de medicamentos de instituições parceiras</p>
+        </div>
+    </div>
+
+    <div class="alert-banner-corporate warning">
+        <div class="alert-banner-content">
+            <div class="alert-banner-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="alert-banner-text">
+                <strong>Aviso Importante:</strong> Necessidades registradas para planejamento. Este quadro não confirma estoque, reserva, elegibilidade clínica ou atendimento.
+            </div>
+        </div>
+    </div>
+
+    <div class="card-corporate">
+        <div class="card-header-corporate">
+            <h3><i class="fas fa-plus-circle"></i> Registrar Nova Necessidade</h3>
+        </div>
+        <div class="card-body-corporate">
+            <form method="POST" class="form-section">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="nome_instituicao">Nome da Instituição <span class="required">*</span></label>
+                        <input type="text" id="nome_instituicao" name="nome_instituicao" required placeholder="Ex: Hospital Municipal">
+                    </div>
+                    <div class="form-group">
+                        <label for="medicamento_referencia_id">Referência do Medicamento</label>
+                        <select id="medicamento_referencia_id" name="medicamento_referencia_id">
+                            <option value="">Selecione...</option>
+                            {% for ref in referencias %}
+                            <option value="{{ ref.id }}">{{ ref.nome_comercial }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="produto_descritivo">Produto (se não houver referência) <span class="required">*</span></label>
+                        <input type="text" id="produto_descritivo" name="produto_descritivo" required placeholder="Ex: Dipirona 500mg">
+                    </div>
+                    <div class="form-group">
+                        <label for="quantidade_solicitada">Quantidade <span class="required">*</span></label>
+                        <input type="number" id="quantidade_solicitada" name="quantidade_solicitada" required min="1" placeholder="1">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="unidade">Unidade</label>
+                        <input type="text" id="unidade" name="unidade" value="unidade" placeholder="unidade">
+                    </div>
+                    <div class="form-group">
+                        <label for="data_desejada">Data Desejada</label>
+                        <input type="date" id="data_desejada" name="data_desejada">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="prioridade">Prioridade</label>
+                        <select id="prioridade" name="prioridade">
+                            <option value="baixa">Baixa</option>
+                            <option value="media" selected>Média</option>
+                            <option value="alta">Alta</option>
+                            <option value="urgente">Urgente</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="observacoes">Observações</label>
+                        <textarea id="observacoes" name="observacoes" rows="1" placeholder="Informações adicionais..."></textarea>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn-form btn-form-primary">
+                        <i class="fas fa-plus"></i> Registrar Necessidade
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card-corporate">
+        <div class="card-header-corporate">
+            <h3><i class="fas fa-filter"></i> Filtros</h3>
+        </div>
+        <div class="card-body-corporate">
+            <form method="GET" class="form-row">
+                <div class="form-group">
+                    <label for="status">Status</label>
+                    <select id="status" name="status">
+                        <option value="">Todos os Status</option>
+                        <option value="rascunho" {% if status_filtro == 'rascunho' %}selected{% endif %}>Rascunho</option>
+                        <option value="em_revisao" {% if status_filtro == 'em_revisao' %}selected{% endif %}>Em Revisão</option>
+                        <option value="registrada" {% if status_filtro == 'registrada' %}selected{% endif %}>Registrada</option>
+                        <option value="encerrada" {% if status_filtro == 'encerrada' %}selected{% endif %}>Encerrada</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="prioridade_filtro">Prioridade</label>
+                    <select id="prioridade_filtro" name="prioridade">
+                        <option value="">Todas as Prioridades</option>
+                        <option value="baixa" {% if prioridade_filtro == 'baixa' %}selected{% endif %}>Baixa</option>
+                        <option value="media" {% if prioridade_filtro == 'media' %}selected{% endif %}>Média</option>
+                        <option value="alta" {% if prioridade_filtro == 'alta' %}selected{% endif %}>Alta</option>
+                        <option value="urgente" {% if prioridade_filtro == 'urgente' %}selected{% endif %}>Urgente</option>
+                    </select>
+                </div>
+                <div class="form-group" style="display: flex; align-items: flex-end;">
+                    <button type="submit" class="btn-form btn-form-secondary">
+                        <i class="fas fa-search"></i> Filtrar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card-corporate">
+        <div class="card-header-corporate">
+            <h3><i class="fas fa-list"></i> Necessidades Registradas</h3>
+        </div>
+        <div class="card-body-corporate">
+            {% if necessidades %}
+            <div class="table-wrapper-corporate">
+                <table class="styled-table-corporate">
+                    <thead>
+                        <tr>
+                            <th>Instituição</th>
+                            <th>Produto</th>
+                            <th>Quantidade</th>
+                            <th>Prioridade</th>
+                            <th>Status</th>
+                            <th>Data Desejada</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for necessidade in necessidades %}
+                        <tr>
+                            <td><strong>{{ necessidade.nome_instituicao }}</strong></td>
+                            <td>{{ necessidade.produto_descritivo or 'Referência: ' + (necessidade.referencia.nome_comercial if necessidade.referencia else 'N/A') }}</td>
+                            <td>{{ necessidade.quantidade_solicitada }} {{ necessidade.unidade }}</td>
+                            <td>
+                                <span class="status-pill-corporate {% if necessidade.prioridade == 'urgente' %}red{% elif necessidade.prioridade == 'alta' %}yellow{% elif necessidade.prioridade == 'baixa' %}green{% else %}blue{% endif %}">
+                                    <i class="fas fa-{% if necessidade.prioridade == 'urgente' %}exclamation-circle{% elif necessidade.prioridade == 'alta' %}exclamation-triangle{% elif necessidade.prioridade == 'baixa' %}check-circle{% else %}info-circle{% endif %}"></i>
+                                    {{ necessidade.prioridade|capitalize }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="status-pill-corporate {% if necessidade.status == 'encerrada' %}gray{% elif necessidade.status == 'registrada' %}green{% elif necessidade.status == 'em_revisao' %}yellow{% else %}blue{% endif %}">
+                                    {{ necessidade.status|replace('_', ' ')|capitalize }}
+                                </span>
+                            </td>
+                            <td>{{ necessidade.data_desejada.strftime('%d/%m/%Y') if necessidade.data_desejada else 'N/A' }}</td>
+                            <td>
+                                <div class="action-buttons-inline">
+                                    <a href="{{ url_for('necessidade_institucional.detalhes_necessidade', id=necessidade.id) }}" class="btn-corporate-sm btn-corporate-info">
+                                        <i class="fas fa-eye"></i> Detalhes
+                                    </a>
+                                    {% if necessidade.status != 'encerrada' %}
+                                    <form method="POST" action="{{ url_for('necessidade_institucional.revisar_necessidade', id=necessidade.id) }}" class="inline-form">
+                                        <select name="status" class="form-select-sm">
+                                            <option value="em_revisao">Em Revisão</option>
+                                            <option value="registrada">Registrada</option>
+                                            <option value="encerrada">Encerrar</option>
+                                        </select>
+                                        <button type="submit" class="btn-corporate-sm btn-corporate-warning">
+                                            <i class="fas fa-edit"></i> Revisar
+                                        </button>
+                                    </form>
+                                    <form method="POST" action="{{ url_for('necessidade_institucional.encerrar_necessidade', id=necessidade.id) }}" class="inline-form">
+                                        <button type="submit" class="btn-corporate-sm btn-corporate-danger">
+                                            <i class="fas fa-times"></i> Encerrar
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state-corporate">
+                <i class="fas fa-inbox"></i>
+                <p>Nenhuma necessidade registrada.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

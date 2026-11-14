@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Detalhes da Necessidade - RedeVita{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header-corporate">
+        <div class="page-header-content">
+            <h1><i class="fas fa-hospital"></i> Detalhes da Necessidade #{{ necessidade.id }}</h1>
+            <p class="subtitle">Quadro privado de necessidades de instituições parceiras</p>
+        </div>
+    </div>
+
+    <div class="alert-banner-corporate warning">
+        <div class="alert-banner-content">
+            <div class="alert-banner-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="alert-banner-text">
+                <strong>Aviso Importante:</strong> Necessidade registrada para planejamento. Não confirma estoque, reserva, elegibilidade clínica ou atendimento.
+            </div>
+        </div>
+    </div>
+
+    <div class="card-corporate">
+        <div class="card-header-corporate">
+            <h3><i class="fas fa-info-circle"></i> Informações da Necessidade</h3>
+            <span class="status-pill-corporate {% if necessidade.status == 'encerrada' %}gray{% elif necessidade.status == 'registrada' %}green{% elif necessidade.status == 'em_revisao' %}yellow{% else %}blue{% endif %}">
+                {{ necessidade.status|replace('_', ' ')|capitalize }}
+            </span>
+        </div>
+        <div class="card-body-corporate">
+            <div class="table-wrapper-corporate">
+                <table class="styled-table-corporate">
+                    <tbody>
+                        <tr>
+                            <th>Instituição</th>
+                            <td>{{ necessidade.instituicao.nome if necessidade.instituicao else (necessidade.nome_instituicao or '-') }}</td>
+                        </tr>
+                        <tr>
+                            <th>Produto</th>
+                            <td>{{ necessidade.produto_descritivo or ('Referência: ' + necessidade.referencia.nome_comercial if necessidade.referencia else 'N/A') }}</td>
+                        </tr>
+                        <tr>
+                            <th>Quantidade</th>
+                            <td>{{ necessidade.quantidade_solicitada }} {{ necessidade.unidade }}</td>
+                        </tr>
+                        <tr>
+                            <th>Prioridade</th>
+                            <td>
+                                <span class="status-pill-corporate {% if necessidade.prioridade == 'urgente' %}red{% elif necessidade.prioridade == 'alta' %}yellow{% elif necessidade.prioridade == 'baixa' %}green{% else %}blue{% endif %}">
+                                    {{ necessidade.prioridade|capitalize }}
+                                </span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Data Desejada</th>
+                            <td>{{ necessidade.data_desejada.strftime('%d/%m/%Y') if necessidade.data_desejada else 'N/A' }}</td>
+                        </tr>
+                        <tr>
+                            <th>Registrado por</th>
+                            <td>
+                                {{ necessidade.criado_por.nome if necessidade.criado_por else '-' }}
+                                {% if necessidade.criado_em %}
+                                — {{ necessidade.criado_em.strftime('%d/%m/%Y %H:%M') }}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Revisado por</th>
+                            <td>
+                                {% if necessidade.revisado_por %}
+                                {{ necessidade.revisado_por.nome }}
+                                {% if necessidade.revisado_em %}
+                                — {{ necessidade.revisado_em.strftime('%d/%m/%Y %H:%M') }}
+                                {% endif %}
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% if necessidade.status == 'encerrada' %}
+                        <tr>
+                            <th>Encerrado por</th>
+                            <td>
+                                {{ necessidade.encerrado_por.nome if necessidade.encerrado_por else '-' }}
+                                {% if necessidade.encerrado_em %}
+                                — {{ necessidade.encerrado_em.strftime('%d/%m/%Y %H:%M') }}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endif %}
+                        <tr>
+                            <th>Observações</th>
+                            <td>{{ necessidade.observacoes or '-' }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="form-actions">
+                <a href="{{ url_for('necessidade_institucional.listar_necessidades') }}" class="btn-form btn-form-secondary">
+                    <i class="fas fa-arrow-left"></i> Voltar
+                </a>
+
+                {% if necessidade.status != 'encerrada' %}
+                <form method="POST" action="{{ url_for('necessidade_institucional.revisar_necessidade', id=necessidade.id) }}" class="inline-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <select name="status" class="form-select-sm">
+                        <option value="em_revisao">Em Revisão</option>
+                        <option value="registrada">Registrada</option>
+                        <option value="encerrada">Encerrar</option>
+                    </select>
+                    <button type="submit" class="btn-form btn-form-primary">
+                        <i class="fas fa-edit"></i> Revisar
+                    </button>
+                </form>
+                <form method="POST" action="{{ url_for('necessidade_institucional.encerrar_necessidade', id=necessidade.id) }}" class="inline-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn-form btn-form-danger">
+                        <i class="fas fa-times"></i> Encerrar
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

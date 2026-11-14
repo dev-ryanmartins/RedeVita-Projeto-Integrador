@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}Detalhes do Agendamento - RedeVita{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header-corporate">
+        <div class="page-header-content">
+            <h1><i class="fas fa-truck"></i> Detalhes do Agendamento #{{ agendamento.id }}</h1>
+            <p class="subtitle">Agendamento operacional entre farmácias autorizadas</p>
+        </div>
+    </div>
+
+    <div class="alert-banner-corporate warning">
+        <div class="alert-banner-content">
+            <div class="alert-banner-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="alert-banner-text">
+                <strong>Aviso Importante:</strong> Agendamento operacional. Não reserva estoque, não autoriza a transferência e não comprova a entrega de medicamentos.
+            </div>
+        </div>
+    </div>
+
+    <div class="card-corporate">
+        <div class="card-header-corporate">
+            <h3><i class="fas fa-info-circle"></i> Informações do Agendamento</h3>
+            <span class="status-pill-corporate {% if agendamento.estado == 'confirmado' %}green{% elif agendamento.estado == 'cancelado' %}red{% elif agendamento.estado == 'proposta' %}blue{% else %}yellow{% endif %}">
+                {{ agendamento.estado|replace('_', ' ')|capitalize }}
+            </span>
+        </div>
+        <div class="card-body-corporate">
+            <div class="table-wrapper-corporate">
+                <table class="styled-table-corporate">
+                    <tbody>
+                        <tr>
+                            <th>Farmácia de Origem</th>
+                            <td>{{ agendamento.farmacia_origem.nome_fantasia }}</td>
+                        </tr>
+                        <tr>
+                            <th>Farmácia de Destino</th>
+                            <td>{{ agendamento.farmacia_destino.nome_fantasia }}</td>
+                        </tr>
+                        <tr>
+                            <th>Início</th>
+                            <td>{{ agendamento.data_hora_inicio.strftime('%d/%m/%Y %H:%M') }}</td>
+                        </tr>
+                        <tr>
+                            <th>Fim</th>
+                            <td>{{ agendamento.data_hora_fim.strftime('%d/%m/%Y %H:%M') }}</td>
+                        </tr>
+                        <tr>
+                            <th>Criado por</th>
+                            <td>
+                                {{ agendamento.criado_por.nome if agendamento.criado_por else '-' }}
+                                {% if agendamento.criado_em %}
+                                — {{ agendamento.criado_em.strftime('%d/%m/%Y %H:%M') }}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Confirmação Origem</th>
+                            <td>
+                                {% if agendamento.confirmado_origem_por %}
+                                {{ agendamento.confirmado_origem_por.nome }}
+                                {% if agendamento.confirmado_origem_em %}
+                                — {{ agendamento.confirmado_origem_em.strftime('%d/%m/%Y %H:%M') }}
+                                {% endif %}
+                                {% else %}
+                                <span class="text-muted">Aguardando</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Confirmação Destino</th>
+                            <td>
+                                {% if agendamento.confirmado_destino_por %}
+                                {{ agendamento.confirmado_destino_por.nome }}
+                                {% if agendamento.confirmado_destino_em %}
+                                — {{ agendamento.confirmado_destino_em.strftime('%d/%m/%Y %H:%M') }}
+                                {% endif %}
+                                {% else %}
+                                <span class="text-muted">Aguardando</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% if agendamento.estado == 'cancelado' %}
+                        <tr>
+                            <th>Cancelado por</th>
+                            <td>
+                                {{ agendamento.cancelado_por.nome if agendamento.cancelado_por else '-' }}
+                                {% if agendamento.cancelado_em %}
+                                — {{ agendamento.cancelado_em.strftime('%d/%m/%Y %H:%M') }}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Motivo do Cancelamento</th>
+                            <td>{{ agendamento.motivo_cancelamento or '-' }}</td>
+                        </tr>
+                        {% endif %}
+                        <tr>
+                            <th>Observações</th>
+                            <td>{{ agendamento.observacoes or '-' }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="form-actions">
+                <a href="{{ url_for('agendamento_entrega.listar_agendamentos') }}" class="btn-form btn-form-secondary">
+                    <i class="fas fa-arrow-left"></i> Voltar
+                </a>
+
+                {% if agendamento.estado in ['proposta', 'aguardando_confirmacao_origem'] %}
+                <form method="POST" action="{{ url_for('agendamento_entrega.confirmar_origem', id=agendamento.id) }}" class="inline-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn-form btn-form-primary">
+                        <i class="fas fa-check"></i> Confirmar Origem
+                    </button>
+                </form>
+                {% endif %}
+
+                {% if agendamento.estado in ['proposta', 'aguardando_confirmacao_destino'] %}
+                <form method="POST" action="{{ url_for('agendamento_entrega.confirmar_destino', id=agendamento.id) }}" class="inline-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn-form btn-form-primary">
+                        <i class="fas fa-check-double"></i> Confirmar Destino
+                    </button>
+                </form>
+                {% endif %}
+
+                {% if agendamento.estado != 'cancelado' %}
+                <form method="POST" action="{{ url_for('agendamento_entrega.cancelar_agendamento', id=agendamento.id) }}" class="inline-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn-form btn-form-danger">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

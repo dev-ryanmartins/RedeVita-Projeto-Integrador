@@ -1,0 +1,450 @@
+{% extends "base.html" %}
+
+{% block title %}Relatório da Cadeia de Frio - RedeVita{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/cold_chain_report.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="cold-chain-container">
+    <div class="cold-chain-header">
+        <div class="header-title">
+            <h1>
+                <i class="fas fa-snowflake"></i>
+                Relatório da Cadeia de Frio
+            </h1>
+            <p class="header-subtitle">Histórico de telemetria IoT persistida com filtros e indicadores</p>
+        </div>
+        <div class="header-actions">
+            <button id="exportCsvBtn" class="btn-export" aria-label="Exportar CSV">
+                <i class="fas fa-file-csv"></i>
+                Exportar CSV
+            </button>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <section class="filters-section">
+        <h2 class="section-title">
+            <i class="fas fa-filter"></i>
+            Filtros
+        </h2>
+        <form id="filtersForm" class="filters-form">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="dataInicio">Data Início</label>
+                    <input type="date" id="dataInicio" name="data_inicio" required>
+                </div>
+                <div class="filter-group">
+                    <label for="dataFim">Data Fim</label>
+                    <input type="date" id="dataFim" name="data_fim" required>
+                </div>
+            </div>
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="farmaciaId">Farmácia (opcional)</label>
+                    <select id="farmaciaId" name="farmacia_id">
+                        <option value="">Todas</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="dispositivoId">Dispositivo (opcional)</label>
+                    <input type="text" id="dispositivoId" name="dispositivo_id" placeholder="ID do dispositivo">
+                </div>
+            </div>
+            <div class="filter-actions">
+                <button type="submit" class="btn-apply">
+                    <i class="fas fa-search"></i>
+                    Aplicar Filtros
+                </button>
+                <button type="button" id="resetFiltersBtn" class="btn-reset">
+                    <i class="fas fa-undo"></i>
+                    Limpar
+                </button>
+            </div>
+            <div class="filter-note">
+                <i class="fas fa-info-circle"></i>
+                Intervalo máximo permitido: {{ max_interval_days }} dias
+            </div>
+        </form>
+    </section>
+
+    <!-- Estado de carregamento -->
+    <div id="loadingState" class="loading-state" aria-live="polite">
+        <div class="loading-spinner"></div>
+        <p>Carregando dados do relatório...</p>
+    </div>
+
+    <!-- Estado de erro -->
+    <div id="errorState" class="error-state hidden" aria-live="assertive">
+        <div class="error-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <h2>Erro ao carregar dados</h2>
+        <p id="errorMessage">Não foi possível obter os dados do relatório.</p>
+        <button id="retryBtn" class="btn-retry">Tentar novamente</button>
+    </div>
+
+    <!-- Conteúdo do relatório -->
+    <div id="reportContent" class="report-content hidden">
+        <!-- Indicadores -->
+        <section class="indicators-section">
+            <h2 class="section-title">
+                <i class="fas fa-chart-bar"></i>
+                Indicadores
+            </h2>
+            <div class="indicators-grid">
+                <div class="indicator-card">
+                    <div class="indicator-icon">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <div class="indicator-content">
+                        <div class="indicator-label">Total de Leituras</div>
+                        <div class="indicator-value" id="totalLeituras">--</div>
+                    </div>
+                </div>
+
+                <div class="indicator-card">
+                    <div class="indicator-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="indicator-content">
+                        <div class="indicator-label">Alertas Críticos</div>
+                        <div class="indicator-value" id="alertasCriticos">--</div>
+                        <div class="indicator-status" id="alertasStatus">--</div>
+                    </div>
+                </div>
+
+                <div class="indicator-card">
+                    <div class="indicator-icon">
+                        <i class="fas fa-thermometer-half"></i>
+                    </div>
+                    <div class="indicator-content">
+                        <div class="indicator-label">Temperatura Mínima</div>
+                        <div class="indicator-value" id="tempMin">--</div>
+                        <div class="indicator-unit">°C</div>
+                    </div>
+                </div>
+
+                <div class="indicator-card">
+                    <div class="indicator-icon">
+                        <i class="fas fa-thermometer-full"></i>
+                    </div>
+                    <div class="indicator-content">
+                        <div class="indicator-label">Temperatura Máxima</div>
+                        <div class="indicator-value" id="tempMax">--</div>
+                        <div class="indicator-unit">°C</div>
+                    </div>
+                </div>
+
+                <div class="indicator-card">
+                    <div class="indicator-icon">
+                        <i class="fas fa-thermometer"></i>
+                    </div>
+                    <div class="indicator-content">
+                        <div class="indicator-label">Temperatura Média</div>
+                        <div class="indicator-value" id="tempMedia">--</div>
+                        <div class="indicator-unit">°C</div>
+                    </div>
+                </div>
+
+                <div class="indicator-card">
+                    <div class="indicator-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="indicator-content">
+                        <div class="indicator-label">Última Leitura</div>
+                        <div class="indicator-value" id="ultimaLeitura">--</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tabela de leituras -->
+        <section class="readings-section">
+            <h2 class="section-title">
+                <i class="fas fa-table"></i>
+                Leituras
+            </h2>
+            
+            <div id="emptyState" class="empty-state hidden">
+                <div class="empty-icon">
+                    <i class="fas fa-box-open"></i>
+                </div>
+                <h3>Nenhuma leitura encontrada</h3>
+                <p>Não há leituras para os filtros selecionados.</p>
+            </div>
+
+            <div id="tableContainer" class="table-container hidden">
+                <div class="table-wrapper">
+                    <table class="readings-table">
+                        <thead>
+                            <tr>
+                                <th>Data/Hora</th>
+                                <th>Dispositivo</th>
+                                <th>Farmácia</th>
+                                <th>Temperatura</th>
+                                <th>Umidade</th>
+                                <th>Luminosidade</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="readingsTableBody">
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Paginação -->
+                <div class="pagination">
+                    <button id="prevPageBtn" class="pagination-btn" disabled>
+                        <i class="fas fa-chevron-left"></i>
+                        Anterior
+                    </button>
+                    <span class="pagination-info" id="paginationInfo">Página 1</span>
+                    <button id="nextPageBtn" class="pagination-btn" disabled>
+                        Próximo
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+
+<script>
+    // Configurações
+    const MAX_INTERVAL_DAYS = {{ max_interval_days }};
+    const DEFAULT_ITEMS_PER_PAGE = {{ default_items_per_page }};
+    let currentPage = 1;
+    let currentFilters = {};
+
+    // Inicializar datas (últimos 7 dias)
+    function initializeDates() {
+        const hoje = new Date();
+        const seteDiasAtras = new Date();
+        seteDiasAtras.setDate(hoje.getDate() - 7);
+
+        document.getElementById('dataFim').value = hoje.toISOString().split('T')[0];
+        document.getElementById('dataInicio').value = seteDiasAtras.toISOString().split('T')[0];
+    }
+
+    // Carregar dados
+    async function loadData(page = 1) {
+        try {
+            showLoading();
+            
+            const params = new URLSearchParams(currentFilters);
+            params.append('page', page);
+            params.append('per_page', DEFAULT_ITEMS_PER_PAGE);
+            
+            const response = await fetch(`/api/admin/relatorio-cadeia-frio/dados?${params}`);
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Erro ao carregar dados');
+            }
+            
+            const data = await response.json();
+            
+            if (data.status === 'ok') {
+                updateIndicators(data.indicators);
+                updateTable(data.readings, data.pagination);
+                showContent();
+            } else {
+                showError(data.message || 'Erro desconhecido');
+            }
+            
+        } catch (error) {
+            console.error('Erro ao carregar dados:', error);
+            showError(error.message || 'Erro ao carregar dados');
+        }
+    }
+
+    // Atualizar indicadores
+    function updateIndicators(indicators) {
+        document.getElementById('totalLeituras').textContent = indicators.total_leituras || 0;
+        document.getElementById('alertasCriticos').textContent = indicators.alertas_criticos || 0;
+        
+        const alertasStatus = document.getElementById('alertasStatus');
+        if (indicators.alertas_criticos > 0) {
+            alertasStatus.textContent = 'Atenção';
+            alertasStatus.className = 'indicator-status warning';
+        } else {
+            alertasStatus.textContent = 'OK';
+            alertasStatus.className = 'indicator-status healthy';
+        }
+        
+        document.getElementById('tempMin').textContent = indicators.temperatura_min?.toFixed(2) || '--';
+        document.getElementById('tempMax').textContent = indicators.temperatura_max?.toFixed(2) || '--';
+        document.getElementById('tempMedia').textContent = indicators.temperatura_media?.toFixed(2) || '--';
+        
+        if (indicators.ultima_leitura) {
+            const ultima = new Date(indicators.ultima_leitura);
+            document.getElementById('ultimaLeitura').textContent = ultima.toLocaleString('pt-BR');
+        } else {
+            document.getElementById('ultimaLeitura').textContent = '--';
+        }
+    }
+
+    // Atualizar tabela
+    function updateTable(readings, pagination) {
+        const tbody = document.getElementById('readingsTableBody');
+        const emptyState = document.getElementById('emptyState');
+        const tableContainer = document.getElementById('tableContainer');
+        
+        tbody.innerHTML = '';
+        
+        if (!readings || readings.length === 0) {
+            emptyState.classList.remove('hidden');
+            tableContainer.classList.add('hidden');
+            return;
+        }
+        
+        emptyState.classList.add('hidden');
+        tableContainer.classList.remove('hidden');
+        
+        readings.forEach(reading => {
+            const row = document.createElement('tr');
+            
+            const dataHora = reading.data_hora ? new Date(reading.data_hora).toLocaleString('pt-BR') : '--';
+            const statusClass = getStatusClass(reading.status_alerta);
+            
+            row.innerHTML = `
+                <td>${dataHora}</td>
+                <td>${reading.dispositivo_id}</td>
+                <td>${reading.farmacia_id}</td>
+                <td>${reading.temperatura.toFixed(2)}°C</td>
+                <td>${reading.umidade.toFixed(1)}%</td>
+                <td>${reading.luminosidade_lux ? reading.luminosidade_lux.toFixed(0) : '--'}</td>
+                <td><span class="status-badge ${statusClass}">${reading.status_alerta}</span></td>
+            `;
+            
+            tbody.appendChild(row);
+        });
+        
+        // Atualizar paginação
+        currentPage = pagination.page;
+        const totalPages = Math.ceil(pagination.total / pagination.per_page);
+        
+        document.getElementById('paginationInfo').textContent = 
+            `Página ${currentPage} de ${totalPages || 1} (${pagination.total} total)`;
+        
+        document.getElementById('prevPageBtn').disabled = currentPage <= 1;
+        document.getElementById('nextPageBtn').disabled = currentPage >= totalPages;
+    }
+
+    function getStatusClass(status) {
+        switch (status) {
+            case 'NORMAL':
+                return 'status-healthy';
+            case 'ALERTA_LEVE':
+                return 'status-warning';
+            case 'CRITICO_TERMICO':
+                return 'status-error';
+            default:
+                return 'status-unknown';
+        }
+    }
+
+    // Controles de visibilidade
+    function showLoading() {
+        document.getElementById('loadingState').classList.remove('hidden');
+        document.getElementById('errorState').classList.add('hidden');
+        document.getElementById('reportContent').classList.add('hidden');
+    }
+
+    function showError(message) {
+        document.getElementById('loadingState').classList.add('hidden');
+        document.getElementById('errorState').classList.remove('hidden');
+        document.getElementById('errorMessage').textContent = message;
+        document.getElementById('reportContent').classList.add('hidden');
+    }
+
+    function showContent() {
+        document.getElementById('loadingState').classList.add('hidden');
+        document.getElementById('errorState').classList.add('hidden');
+        document.getElementById('reportContent').classList.remove('hidden');
+    }
+
+    // Exportar CSV
+    async function exportCsv() {
+        try {
+            const params = new URLSearchParams(currentFilters);
+            
+            const response = await fetch(`/api/admin/relatorio-cadeia-frio/exportar-csv?${params}`);
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Erro ao exportar CSV');
+            }
+            
+            // Download do arquivo
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `relatorio_cadeia_frio_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            
+        } catch (error) {
+            console.error('Erro ao exportar CSV:', error);
+            alert(error.message || 'Erro ao exportar CSV');
+        }
+    }
+
+    // Event listeners
+    document.getElementById('filtersForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        const formData = new FormData(e.target);
+        currentFilters = Object.fromEntries(formData.entries());
+        
+        // Validar intervalo
+        const dataInicio = new Date(currentFilters.data_inicio);
+        const dataFim = new Date(currentFilters.data_fim);
+        const diffDays = (dataFim - dataInicio) / (1000 * 60 * 60 * 24);
+        
+        if (diffDays > MAX_INTERVAL_DAYS) {
+            alert(`O intervalo máximo permitido é de ${MAX_INTERVAL_DAYS} dias.`);
+            return;
+        }
+        
+        currentPage = 1;
+        loadData(currentPage);
+    });
+
+    document.getElementById('resetFiltersBtn').addEventListener('click', () => {
+        document.getElementById('filtersForm').reset();
+        initializeDates();
+        currentFilters = {};
+        currentPage = 1;
+        loadData(currentPage);
+    });
+
+    document.getElementById('prevPageBtn').addEventListener('click', () => {
+        if (currentPage > 1) {
+            currentPage--;
+            loadData(currentPage);
+        }
+    });
+
+    document.getElementById('nextPageBtn').addEventListener('click', () => {
+        currentPage++;
+        loadData(currentPage);
+    });
+
+    document.getElementById('retryBtn').addEventListener('click', () => {
+        loadData(currentPage);
+    });
+
+    document.getElementById('exportCsvBtn').addEventListener('click', exportCsv);
+
+    // Inicialização
+    initializeDates();
+    loadData(currentPage);
+</script>
+{% endblock %}

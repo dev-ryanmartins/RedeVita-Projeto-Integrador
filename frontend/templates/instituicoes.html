@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}Instituições - RedeVita{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header-corporate">
+        <div class="page-header-content">
+            <h1><i class="fas fa-hospital"></i> Instituições Receptoras</h1>
+            <p class="subtitle">Gerencie as instituições parceiras do RedeVita</p>
+        </div>
+        <button onclick="document.getElementById('form-cadastro').style.display='block'" 
+                class="btn-form btn-form-primary">
+            <i class="fas fa-plus"></i> Nova Instituição
+        </button>
+    </div>
+
+    <!-- Formulário de Cadastro -->
+    <div id="form-cadastro" class="card-corporate" style="display:none;">
+        <div class="card-header-corporate">
+            <h3><i class="fas fa-plus-circle"></i> Cadastrar Instituição</h3>
+        </div>
+        <div class="card-body-corporate">
+            <form action="{{ url_for('instituicoes.cadastrar_instituicao') }}" method="POST" class="form-section">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="nome">Nome <span class="required">*</span></label>
+                        <input type="text" id="nome" name="nome" required placeholder="Nome da instituição">
+                    </div>
+                    <div class="form-group">
+                        <label for="cnpj">CNPJ</label>
+                        <input type="text" id="cnpj" name="cnpj" placeholder="00.000.000/0000-00">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="endereco">Endereço</label>
+                    <input type="text" id="endereco" name="endereco" placeholder="Endereço completo">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="responsavel">Responsável</label>
+                        <input type="text" id="responsavel" name="responsavel" placeholder="Nome do responsável">
+                    </div>
+                    <div class="form-group">
+                        <label for="telefone">Telefone</label>
+                        <input type="text" id="telefone" name="telefone" placeholder="(00) 00000-0000">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">E-mail</label>
+                    <input type="email" id="email" name="email" placeholder="email@instituicao.com">
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-form btn-form-primary">
+                        <i class="fas fa-save"></i> Salvar
+                    </button>
+                    <button type="button" onclick="document.getElementById('form-cadastro').style.display='none'" class="btn-form btn-form-secondary">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabela de Instituições -->
+    <div class="card-corporate">
+        <div class="card-header-corporate">
+            <h3><i class="fas fa-list"></i> Instituições Cadastradas</h3>
+        </div>
+        <div class="card-body-corporate">
+            {% if instituicoes %}
+            <div class="table-wrapper-corporate">
+                <table class="styled-table-corporate">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome</th>
+                            <th>CNPJ</th>
+                            <th>Responsável</th>
+                            <th>Status</th>
+                            <th style="text-align:center;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for i in instituicoes %}
+                        <tr>
+                            <td><strong>{{ i.id }}</strong></td>
+                            <td>{{ i.nome }}</td>
+                            <td>{{ i.cnpj or '—' }}</td>
+                            <td>{{ i.responsavel or '—' }}</td>
+                            <td>
+                                {% if i.ativo %}
+                                    <span class="status-pill-corporate green">
+                                        <i class="fas fa-check-circle"></i> Ativo
+                                    </span>
+                                {% else %}
+                                    <span class="status-pill-corporate red">
+                                        <i class="fas fa-times-circle"></i> Inativo
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td style="text-align:center;">
+                                <form action="{{ url_for('instituicoes.toggle_ativo', pid=i.id) }}" method="POST" class="inline-form">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn-corporate-sm {% if i.ativo %}btn-corporate-danger{% else %}btn-corporate-success{% endif %}"
+                                            title="{% if i.ativo %}Desativar instituição{% else %}Reativar instituição{% endif %}">
+                                        <i class="fas fa-{% if i.ativo %}power-off{% else %}check{% endif %}"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state-corporate">
+                <i class="fas fa-hospital"></i>
+                <p>Nenhuma instituição cadastrada.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

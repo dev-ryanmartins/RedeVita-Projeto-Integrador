@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}Agendamento de Entrega - RedeVita{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header-corporate">
+        <div class="page-header-content">
+            <h1><i class="fas fa-truck"></i> Agendamento de Entrega</h1>
+            <p class="subtitle">Agendamento operacional entre farmácias autorizadas</p>
+        </div>
+    </div>
+
+    <div class="alert-banner-corporate warning">
+        <div class="alert-banner-content">
+            <div class="alert-banner-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="alert-banner-text">
+                <strong>Aviso Importante:</strong> Agendamento operacional. Não reserva estoque, não autoriza a transferência e não comprova a entrega de medicamentos.
+            </div>
+        </div>
+    </div>
+
+    <div class="card-corporate">
+        <div class="card-header-corporate">
+            <h3><i class="fas fa-plus-circle"></i> Criar Novo Agendamento</h3>
+        </div>
+        <div class="card-body-corporate">
+            <form method="POST" class="form-section">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="farmacia_origem_id">Farmácia de Origem <span class="required">*</span></label>
+                        <select id="farmacia_origem_id" name="farmacia_origem_id" required>
+                            <option value="">Selecione...</option>
+                            {% for f in farmacias %}
+                            <option value="{{ f.id }}">{{ f.nome_fantasia }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="farmacia_destino_id">Farmácia de Destino <span class="required">*</span></label>
+                        <select id="farmacia_destino_id" name="farmacia_destino_id" required>
+                            <option value="">Selecione...</option>
+                            {% for f in farmacias %}
+                            <option value="{{ f.id }}">{{ f.nome_fantasia }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="data_hora_inicio">Data/Hora Início <span class="required">*</span></label>
+                        <input type="datetime-local" id="data_hora_inicio" name="data_hora_inicio" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="data_hora_fim">Data/Hora Fim <span class="required">*</span></label>
+                        <input type="datetime-local" id="data_hora_fim" name="data_hora_fim" required>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-form btn-form-primary">
+                        <i class="fas fa-check"></i> Agendar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card-corporate">
+        <div class="card-header-corporate">
+            <h3><i class="fas fa-list"></i> Agendamentos</h3>
+        </div>
+        <div class="card-body-corporate">
+            {% if agendamentos %}
+            <div class="table-wrapper-corporate">
+                <table class="styled-table-corporate">
+                    <thead>
+                        <tr>
+                            <th>Origem</th>
+                            <th>Destino</th>
+                            <th>Início</th>
+                            <th>Fim</th>
+                            <th>Estado</th>
+                            <th style="text-align:center;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ag in agendamentos %}
+                        <tr>
+                            <td><strong>{{ ag.farmacia_origem.nome_fantasia }}</strong></td>
+                            <td><strong>{{ ag.farmacia_destino.nome_fantasia }}</strong></td>
+                            <td>{{ ag.data_hora_inicio.strftime('%d/%m/%Y %H:%M') }}</td>
+                            <td>{{ ag.data_hora_fim.strftime('%d/%m/%Y %H:%M') }}</td>
+                            <td>
+                                <span class="status-pill-corporate {% if ag.estado == 'confirmado' %}green{% elif ag.estado == 'cancelado' %}red{% elif ag.estado == 'proposta' %}blue{% else %}yellow{% endif %}">
+                                    {{ ag.estado|replace('_', ' ')|capitalize }}
+                                </span>
+                            </td>
+                            <td style="text-align:center;">
+                                <div class="action-buttons-inline" style="justify-content:center;">
+                                    <a href="{{ url_for('agendamento_entrega.detalhes_agendamento', id=ag.id) }}" class="btn-corporate-sm btn-corporate-info" title="Detalhes">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if ag.estado in ['proposta', 'aguardando_confirmacao_origem'] %}
+                                    <form method="POST" action="{{ url_for('agendamento_entrega.confirmar_origem', id=ag.id) }}" class="inline-form">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn-corporate-sm btn-corporate-success" title="Confirmar Origem">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                    {% if ag.estado in ['proposta', 'aguardando_confirmacao_destino'] %}
+                                    <form method="POST" action="{{ url_for('agendamento_entrega.confirmar_destino', id=ag.id) }}" class="inline-form">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn-corporate-sm btn-corporate-success" title="Confirmar Destino">
+                                            <i class="fas fa-check-double"></i>
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                    {% if ag.estado != 'cancelado' %}
+                                    <form method="POST" action="{{ url_for('agendamento_entrega.cancelar_agendamento', id=ag.id) }}" class="inline-form">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn-corporate-sm btn-corporate-danger" title="Cancelar">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state-corporate">
+                <i class="fas fa-truck"></i>
+                <p>Nenhum agendamento registrado.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

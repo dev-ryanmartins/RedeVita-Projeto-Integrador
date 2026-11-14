@@ -1,0 +1,27 @@
+.login-box {
+    display: flex; /* Mantém as duas colunas no desktop */
+    background: var(--bg-card);
+    width: 1000px;
+    height: 600px;
+    border-radius: 28px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+}
+
+.login-side-image {
+    flex: 1.2;
+    background: url('../img/login-bg.jpg') no-repeat center center;
+    background-size: cover;
+    display: flex;
+    align-items: flex-end;
+    padding: 40px;
+}
+
+/* Balão de texto legível sobre a imagem */
+.image-overlay-card {
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(20px);
+    padding: 30px;
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}

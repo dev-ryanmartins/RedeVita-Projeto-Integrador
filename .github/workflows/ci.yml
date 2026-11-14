@@ -1,0 +1,518 @@
+name: CI RedeVita
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        python-version: ['3.11', '3.12']
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Configurar Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Instalar dependências
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f backend/requirements.txt ]; then pip install -r backend/requirements.txt; fi
+        pip install pytest pytest-cov flake8
+    
+    - name: Lint com flake8
+      run: |
+        flake8 backend/ --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 backend/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    
+    - name: Testes unitários
+      run: |
+        cd backend
+        if [ -d "../tests" ]; then
+          export PYTHONPATH="../backend:$PYTHONPATH"
+          pytest ../tests/ --cov=backend --cov-report=xml --cov-report=html --tb=short
+        else
+          echo "Pasta tests/ não encontrada. Pulando testes."
+        fi
+    
+    - name: Upload coverage reports
+      if: matrix.python-version == '3.12'
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+
+  test-mysql-concurrency:
+    runs-on: ubuntu-latest
+    
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: test_root_password_123
+          MYSQL_DATABASE: test_redevita
+          MYSQL_USER: test_user
+          MYSQL_PASSWORD: test_password_123
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -u root -ptest_root_password_123"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Configurar Python 3.12
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+    
+    - name: Instalar dependências
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f backend/requirements.txt ]; then pip install -r backend/requirements.txt; fi
+        pip install pytest pymysql
+    
+    - name: Aguardar MySQL estar pronto
+      run: |
+        for i in {1..30}; do
+          if mysqladmin ping -h 127.0.0.1 -u root -ptest_root_password_123 --silent; then
+            echo "MySQL está pronto"
+            break
+          fi
+          echo "Aguardando MySQL... ($i/30)"
+          sleep 2
+        done
+    
+    - name: Preparar schema de teste MySQL
+      run: |
+        mysql -h 127.0.0.1 -u root -ptest_root_password_123 test_redevita < tests/mysql_test_schema.sql
+    
+    - name: Testes de concorrência MySQL (P0.9)
+      env:
+        MYSQL_HOST: 127.0.0.1
+        MYSQL_PORT: 3306
+        MYSQL_USER: test_user
+        MYSQL_PASSWORD: test_password_123
+        MYSQL_DATABASE: test_redevita
+      run: |
+        cd backend
+        export PYTHONPATH="../backend:$PYTHONPATH"
+        pytest ../tests/test_mysql_concurrency.py -v --tb=short
+
+  test-admin-health:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Configurar Python 3.12
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+    
+    - name: Instalar dependências
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f backend/requirements.txt ]; then pip install -r backend/requirements.txt; fi
+        pip install pytest pytest-cov
+    
+    - name: Testes do Painel de Saúde Operacional
+      run: |
+        cd backend
+        export PYTHONPATH="../backend:$PYTHONPATH"
+        pytest ../tests/test_admin_painel_saude.py -v --tb=short --cov=backend/app/routes/admin_health --cov-report=xml --cov-report=html
+    
+    - name: Verificar se testes foram executados
+      run: |
+        cd backend
+        export PYTHONPATH="../backend:$PYTHONPATH"
+        pytest ../tests/test_admin_painel_saude.py --collect-only | grep "test session starts"
+        pytest ../tests/test_admin_painel_saude.py --collect-only | grep "collected"
+
+  test-cold-chain-report:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Configurar Python 3.12
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+    
+    - name: Instalar dependências
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f backend/requirements.txt ]; then pip install -r backend/requirements.txt; fi
+        pip install pytest pytest-cov
+    
+    - name: Testes do Relatório da Cadeia de Frio
+      run: |
+        cd backend
+        export PYTHONPATH="../backend:$PYTHONPATH"
+        pytest ../tests/test_cold_chain_report.py -v --tb=short --cov=backend/app/routes/cold_chain_report --cov-report=xml --cov-report=html
+    
+    - name: Verificar se testes foram executados
+      run: |
+        cd backend
+        export PYTHONPATH="../backend:$PYTHONPATH"
+        pytest ../tests/test_cold_chain_report.py --collect-only | grep "test session starts"
+        pytest ../tests/test_cold_chain_report.py --collect-only | grep "collected"
+
+  test-iot-sync-diagnostic:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Configurar Python 3.12
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+    
+    - name: Instalar dependências
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f backend/requirements.txt ]; then pip install -r backend/requirements.txt; fi
+        pip install pytest pytest-cov
+    
+    - name: Testes do Diagnóstico de Sincronização IoT
+      run: |
+        cd backend
+        export PYTHONPATH="../backend:$PYTHONPATH"
+        pytest ../tests/test_iot_sync_diagnostic.py -v --tb=short --cov=backend/app/routes/iot_sync_diagnostic --cov-report=xml --cov-report=html
+    
+    - name: Verificar se testes foram executados
+      run: |
+        cd backend
+        export PYTHONPATH="../backend:$PYTHONPATH"
+        pytest ../tests/test_iot_sync_diagnostic.py --collect-only | grep "test session starts"
+        pytest ../tests/test_iot_sync_diagnostic.py --collect-only | grep "collected"
+
+  test-cold-crisis-lab:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Configurar Python 3.12
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+    
+    - name: Instalar dependências
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f backend/requirements.txt ]; then pip install -r backend/requirements.txt; fi
+        pip install pytest pytest-cov
+    
+    - name: Testes do Laboratório de Crises da Cadeia Frio
+      run: |
+        cd backend
+        export PYTHONPATH="../backend:$PYTHONPATH"
+        pytest ../tests/test_cold_crisis_lab.py ../tests/test_cold_crisis_simulator.py -v --tb=short --cov=backend/app/routes/cold_crisis_lab --cov=backend/app/services/cold_crisis_simulator --cov-report=xml --cov-report=html
+    
+    - name: Verificar se testes foram executados
+      run: |
+        cd backend
+        export PYTHONPATH="../backend:$PYTHONPATH"
+        pytest ../tests/test_cold_crisis_lab.py ../tests/test_cold_crisis_simulator.py --collect-only | grep "test session starts"
+        pytest ../tests/test_cold_crisis_lab.py ../tests/test_cold_crisis_simulator.py --collect-only | grep "collected"
+
+  test-lot-rescue:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Configurar Python 3.12
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+    
+    - name: Instalar dependências
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f backend/requirements.txt ]; then pip install -r backend/requirements.txt; fi
+        pip install pytest pytest-cov
+    
+    - name: Testes da Janela de Resgate de Lotes
+      run: |
+        cd backend
+        export PYTHONPATH="../backend:$PYTHONPATH"
+        pytest ../tests/test_lot_rescue.py ../tests/test_lot_rescue_service.py -v --tb=short --cov=backend/app/routes/lot_rescue --cov=backend/app/services/lot_rescue_service --cov-report=xml --cov-report=html
+    
+    - name: Verificar se testes foram executados
+      run: |
+        cd backend
+        export PYTHONPATH="../backend:$PYTHONPATH"
+        pytest ../tests/test_lot_rescue.py ../tests/test_lot_rescue_service.py --collect-only | grep "test session starts"
+        pytest ../tests/test_lot_rescue.py ../tests/test_lot_rescue_service.py --collect-only | grep "collected"
+
+  test-iot-integrity-radar:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Configurar Python 3.12
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Instalar dependências
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f backend/requirements.txt ]; then pip install -r backend/requirements.txt; fi
+        pip install pytest pytest-cov
+
+    - name: Testes do Radar de Integridade da Telemetria
+      run: |
+        cd backend
+        export PYTHONPATH="../backend:$PYTHONPATH"
+        pytest ../tests/test_iot_integrity_radar.py ../tests/test_iot_integrity_radar_service.py -v --tb=short --cov=backend/app/routes/iot_integrity_radar --cov=backend/app/services/iot_integrity_radar --cov-report=xml --cov-report=html
+
+    - name: Verificar se testes foram executados
+      run: |
+        cd backend
+        export PYTHONPATH="../backend:$PYTHONPATH"
+        pytest ../tests/test_iot_integrity_radar.py ../tests/test_iot_integrity_radar_service.py --collect-only | grep "test session starts"
+        pytest ../tests/test_iot_integrity_radar.py ../tests/test_iot_integrity_radar_service.py --collect-only | grep "collected"
+
+  test-cold-crisis-replay:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Configurar Python 3.12
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Instalar dependências
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f backend/requirements.txt ]; then pip install -r backend/requirements.txt; fi
+        pip install pytest pytest-cov
+
+    - name: Testes de Replay e Avaliação de Resposta a Crises
+      run: |
+        cd backend
+        export PYTHONPATH="../backend:$PYTHONPATH"
+        pytest ../tests/test_cold_crisis_replay.py -v --tb=short --cov=backend/app/routes/cold_crisis_lab --cov=backend/app/services/cold_crisis_replay --cov-report=xml --cov-report=html
+
+    - name: Verificar se testes foram executados
+      run: |
+        cd backend
+        export PYTHONPATH="../backend:$PYTHONPATH"
+        pytest ../tests/test_cold_crisis_replay.py --collect-only | grep "test session starts"
+        pytest ../tests/test_cold_crisis_replay.py --collect-only | grep "collected"
+
+  test-perfil-resiliencia:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Configurar Python 3.12
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Instalar dependências
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f backend/requirements.txt ]; then pip install -r backend/requirements.txt; fi
+        pip install pytest pytest-cov
+
+    - name: Testes do Perfil de Resiliência
+      run: |
+        cd backend
+        export PYTHONPATH="../backend:$PYTHONPATH"
+        pytest ../tests/test_perfil_resiliencia.py -v --tb=short --cov=backend/app/routes/perfil_resiliencia --cov=backend/app/services/perfil_resiliencia --cov-report=xml --cov-report=html
+
+    - name: Verificar se testes foram executados
+      run: |
+        cd backend
+        export PYTHONPATH="../backend:$PYTHONPATH"
+        pytest ../tests/test_perfil_resiliencia.py --collect-only | grep "test session starts"
+        pytest ../tests/test_perfil_resiliencia.py --collect-only | grep "collected"
+
+  test-pre-checagem:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Configurar Python 3.12
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Instalar dependências
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f backend/requirements.txt ]; then pip install -r backend/requirements.txt; fi
+        pip install pytest pytest-cov
+
+    - name: Testes de Pré-checagem de Doações
+      run: |
+        cd backend
+        export PYTHONPATH="../backend:$PYTHONPATH"
+        pytest ../tests/test_pre_checagem.py -v --tb=short --cov=backend/app/routes/donation --cov-report=xml --cov-report=html
+
+    - name: Verificar se testes foram executados
+      run: |
+        cd backend
+        export PYTHONPATH="../backend:$PYTHONPATH"
+        pytest ../tests/test_pre_checagem.py --collect-only | grep "test session starts"
+        pytest ../tests/test_pre_checagem.py --collect-only | grep "collected"
+
+  test-necessidade-institucional:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Configurar Python 3.12
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Instalar dependências
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f backend/requirements.txt ]; then pip install -r backend/requirements.txt; fi
+        pip install pytest pytest-cov
+
+    - name: Testes de Necessidade Institucional
+      run: |
+        cd backend
+        export PYTHONPATH="../backend:$PYTHONPATH"
+        pytest ../tests/test_necessidade_institucional.py -v --tb=short --cov=backend/app/routes/necessidade_institucional --cov=backend/app/models/necessidade_institucional --cov-report=xml --cov-report=html
+
+    - name: Verificar se testes foram executados
+      run: |
+        cd backend
+        export PYTHONPATH="../backend:$PYTHONPATH"
+        pytest ../tests/test_necessidade_institucional.py --collect-only | grep "test session starts"
+        pytest ../tests/test_necessidade_institucional.py --collect-only | grep "collected"
+
+  test-agendamento-entrega:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Configurar Python 3.12
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Instalar dependências
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f backend/requirements.txt ]; then pip install -r backend/requirements.txt; fi
+        pip install pytest pytest-cov
+
+    - name: Testes de Agendamento de Entrega
+      run: |
+        cd backend
+        export PYTHONPATH="../backend:$PYTHONPATH"
+        pytest ../tests/test_agendamento_entrega.py -v --tb=short --cov=backend/app/routes/agendamento_entrega --cov=backend/app/models/agendamento_entrega --cov-report=xml --cov-report=html
+
+    - name: Verificar se testes foram executados
+      run: |
+        cd backend
+        export PYTHONPATH="../backend:$PYTHONPATH"
+        pytest ../tests/test_agendamento_entrega.py --collect-only | grep "test session starts"
+        pytest ../tests/test_agendamento_entrega.py --collect-only | grep "collected"
+
+  smoke-test-docker-compose:
+    runs-on: ubuntu-latest
+    name: Smoke Test Docker Compose
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build application image
+      run: |
+        docker build -t redevita-app:smoke-test .
+
+    - name: Run smoke test with Docker Compose
+      run: |
+        export COMPOSE_PROJECT_NAME=redevita_smoke_test_${{ github.run_id }}
+        
+        # Start services
+        docker compose -f docker-compose.smoke-test.yml up -d
+        
+        # Wait for services to be healthy with timeout
+        echo "Aguardando serviços ficarem saudáveis..."
+        timeout 120 bash -c '
+          until docker compose -f docker-compose.smoke-test.yml ps | grep -q "web.*healthy"; do
+            echo "Aguardando web service..."
+            sleep 5
+          done
+        ' || {
+          echo "Timeout: Web service não ficou saudável"
+          docker compose -f docker-compose.smoke-test.yml ps
+          docker compose -f docker-compose.smoke-test.yml logs --no-log-prefix
+          exit 1
+        }
+        
+        # Test /health endpoint (liveness)
+        echo "Testando /health endpoint..."
+        response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5000/health)
+        if [ "$response" -eq 200 ]; then
+          echo "✓ /health retornou 200"
+        else
+          echo "✗ /health retornou $response (esperado 200)"
+          exit 1
+        fi
+        
+        # Test /healthz endpoint (readiness with database)
+        echo "Testando /healthz endpoint..."
+        response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5000/healthz)
+        if [ "$response" -eq 200 ]; then
+          echo "✓ /healthz retornou 200"
+        else
+          echo "✗ /healthz retornou $response (esperado 200)"
+          exit 1
+        fi
+        
+        echo "Smoke test concluído com sucesso"
+
+    - name: Cleanup Docker Compose on success
+      if: always()
+      run: |
+        export COMPOSE_PROJECT_NAME=redevita_smoke_test_${{ github.run_id }}
+        docker compose -f docker-compose.smoke-test.yml down -v --remove-orphans
+
+    - name: Collect logs on failure
+      if: failure()
+      run: |
+        export COMPOSE_PROJECT_NAME=redevita_smoke_test_${{ github.run_id }}
+        echo "=== Docker Compose PS ==="
+        docker compose -f docker-compose.smoke-test.yml ps
+        echo ""
+        echo "=== Web Service Logs ==="
+        docker compose -f docker-compose.smoke-test.yml logs --no-log-prefix web
+        echo ""
+        echo "=== DB Service Logs ==="
+        docker compose -f docker-compose.smoke-test.yml logs --no-log-prefix db

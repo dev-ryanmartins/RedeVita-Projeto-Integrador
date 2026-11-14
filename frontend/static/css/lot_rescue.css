@@ -1,0 +1,647 @@
+/* CSS específico para Janela de Resgate de Lotes - Padrão RedeVita */
+
+[data-lot-rescue] {
+    --rescue-primary: #38bdf8;
+    --rescue-secondary: #0ea5e9;
+    --rescue-accent: #f59e0b;
+    --rescue-success: #22c55e;
+    --rescue-danger: #ef4444;
+    --rescue-bg: rgba(56, 189, 248, 0.05);
+    --rescue-border: rgba(56, 189, 248, 0.2);
+    --rescue-text: #e0e0e0;
+    --rescue-text-muted: #a0a0a0;
+}
+
+/* Container principal */
+.page-wrapper {
+    max-width: 100%;
+    padding: 0;
+}
+
+/* Banner de Aviso de Simulação */
+.simulation-banner {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(255, 107, 107, 0.2));
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    border-radius: 8px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.simulation-banner-content {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1;
+}
+
+.simulation-banner i {
+    font-size: 1.5rem;
+    color: var(--rescue-accent);
+}
+
+.simulation-banner span {
+    color: var(--rescue-text);
+    font-size: 0.95rem;
+}
+
+/* Introdução */
+.lab-intro {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 2rem;
+    gap: 1rem;
+}
+
+.lab-intro h2 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--rescue-primary);
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.lab-intro p {
+    color: var(--rescue-text-muted);
+    font-size: 0.95rem;
+    max-width: 600px;
+}
+
+/* Seção de Controles */
+.lab-controls-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.lab-controls-header h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.lab-controls-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.lab-control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.lab-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+.lab-input {
+    padding: 0.65rem 0.95rem;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text-main);
+    font-size: 0.9rem;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.lab-input:focus {
+    border-color: #38bdf8;
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.15);
+    outline: none;
+}
+
+.lab-help {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.lab-controls-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+}
+
+/* Botões */
+.btn-primary {
+    background-color: var(--primary-blue);
+    border-color: var(--primary-blue);
+    color: white;
+    padding: 0.65rem 1.25rem;
+    border-radius: var(--radius);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-blue-hover);
+}
+
+.btn-secondary {
+    background-color: var(--border-subtle);
+    border-color: var(--border-input);
+    color: var(--text-primary);
+    padding: 0.65rem 1.25rem;
+    border-radius: var(--radius);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-secondary:hover {
+    background-color: var(--border-input);
+}
+
+.btn-link {
+    background: none;
+    border: none;
+    color: var(--primary-blue);
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+/* Estado de Carregamento */
+.lab-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    gap: 1rem;
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--border);
+    border-top-color: var(--primary-blue);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.lab-loading p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
+
+/* Estado de Erro */
+.lab-error {
+    background: rgba(255, 107, 107, 0.1);
+    border: 1px solid rgba(255, 107, 107, 0.3);
+    border-radius: 8px;
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.lab-error i {
+    font-size: 1.25rem;
+    color: var(--danger);
+}
+
+.lab-error span {
+    flex: 1;
+    color: var(--text-main);
+    font-size: 0.95rem;
+}
+
+/* Estado Vazio */
+.lab-empty {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--text-muted);
+}
+
+.lab-empty i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.lab-empty p {
+    font-size: 0.95rem;
+}
+
+/* Conteúdo Principal */
+.main-content {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Estatísticas */
+.lab-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.lab-stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+}
+
+.lab-stat-card strong {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-blue);
+    margin-bottom: 0.25rem;
+}
+
+.lab-stat-card span {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.lab-stat-card-critico strong {
+    color: var(--danger);
+}
+
+.lab-stat-card-alerta strong {
+    color: var(--rescue-accent);
+}
+
+.lab-stat-card-normal strong {
+    color: var(--rescue-success);
+}
+
+/* Tabela de Lotes */
+.lab-readings-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.lab-readings-section h4 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.lab-readings-table-wrapper {
+    overflow-x: auto;
+    border-radius: 6px;
+}
+
+.lab-readings-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.lab-readings-table thead {
+    background: var(--bg-input);
+}
+
+.lab-readings-table th {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+}
+
+.lab-readings-table td {
+    padding: 0.75rem 1rem;
+    color: var(--text-main);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.lab-readings-table tbody tr:hover {
+    background: var(--bg-hover);
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.status-badge.green {
+    background: rgba(34, 197, 94, 0.2);
+    color: var(--rescue-success);
+}
+
+.status-badge.yellow {
+    background: rgba(245, 158, 11, 0.2);
+    color: var(--rescue-accent);
+}
+
+.status-badge.red {
+    background: rgba(239, 68, 68, 0.2);
+    color: var(--rescue-danger);
+}
+
+.btn-simular {
+    background-color: var(--primary-blue);
+    border-color: var(--primary-blue);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.btn-simular:hover {
+    background-color: var(--primary-blue-hover);
+}
+
+/* Informação / Limitações */
+.lab-info-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.lab-info-section h4 {
+    color: var(--text-primary);
+    margin: 0 0 1rem 0;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.lab-info-content p {
+    color: var(--text-muted);
+    margin: 0.5rem 0;
+    font-size: 0.9rem;
+}
+
+.lab-info-section ul {
+    margin: 0;
+    padding-left: 1.5rem;
+    color: var(--text-muted);
+}
+
+.lab-info-section li {
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+/* Modal */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+}
+
+.modal-content {
+    background: var(--bg-card);
+    border-radius: 12px;
+    max-width: 600px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.modal-header h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius);
+    transition: background 0.2s, color 0.2s;
+}
+
+.close-btn:hover {
+    background: var(--bg-input);
+    color: var(--text-main);
+}
+
+.close-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.15);
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+/* Etapas do Modal */
+.etapas-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.etapa-row {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.etapa-nome {
+    flex: 2;
+}
+
+.etapa-duracao {
+    flex: 1;
+}
+
+.btn-remove-etapa {
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Resultado da Simulação */
+#result-content {
+    color: var(--text-main);
+    font-size: 0.875rem;
+    line-height: 1.6;
+}
+
+#result-content h4 {
+    color: var(--text-primary);
+    margin: 1rem 0 0.5rem 0;
+    font-size: 0.9rem;
+}
+
+#result-content ul {
+    margin: 0;
+    padding-left: 1.5rem;
+}
+
+#result-content li {
+    margin-bottom: 0.25rem;
+}
+
+.simulation-result.result-compativel {
+    border-color: var(--rescue-success);
+    background: linear-gradient(135deg, var(--bg-card) 0%, rgba(34, 197, 94, 0.1) 100%);
+}
+
+.simulation-result.result-margem-reduzida {
+    border-color: var(--rescue-accent);
+    background: linear-gradient(135deg, var(--bg-card) 0%, rgba(245, 158, 11, 0.1) 100%);
+}
+
+.simulation-result.result-incompativel {
+    border-color: var(--rescue-danger);
+    background: linear-gradient(135deg, var(--bg-card) 0%, rgba(239, 68, 68, 0.1) 100%);
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .lab-intro {
+        flex-direction: column;
+    }
+
+    .lab-controls-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .lab-controls-actions {
+        flex-direction: column;
+    }
+
+    .lab-controls-actions button {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .lab-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .lab-readings-table {
+        font-size: 0.8rem;
+    }
+
+    .lab-readings-table th,
+    .lab-readings-table td {
+        padding: 0.5rem 0.75rem;
+    }
+
+    .modal-content {
+        max-height: 95vh;
+    }
+
+    .etapa-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .btn-remove-etapa {
+        width: 100%;
+    }
+}
+
+/* Acessibilidade - Preferência de Movimento Reduzido */
+@media (prefers-reduced-motion: reduce) {
+    .loading-spinner {
+        animation: none;
+    }
+
+    .main-content {
+        animation: none;
+    }
+
+    .btn-primary:hover,
+    .btn-simular:hover {
+        transform: none;
+    }
+}
+
+/* Foco Visível */
+.lab-input:focus-visible,
+.btn-primary:focus-visible,
+.btn-secondary:focus-visible,
+.btn-simular:focus-visible,
+.close-btn:focus-visible {
+    outline: 2px solid var(--primary-blue);
+    outline-offset: 2px;
+}

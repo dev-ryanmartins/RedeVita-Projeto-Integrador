@@ -1,0 +1,56 @@
+{
+  "id": "/",
+  "name": "RedeVita - Gestão Farmacêutica",
+  "short_name": "RedeVita",
+  "description": "Sistema integrado de gestão farmacêutica, controle de estoque de medicamentos, doações e monitoramento da rede de saúde.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0f172a",
+  "theme_color": "#0ea5e9",
+  "icons": [
+    {
+      "src": "/static/img/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/img/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/img/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/static/img/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["health", "medical", "productivity"],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "url": "/dashboard",
+      "description": "Ver painel de indicadores"
+    },
+    {
+      "name": "Inventário",
+      "url": "/inventario",
+      "description": "Consultar estoque de medicamentos"
+    },
+    {
+      "name": "Doações",
+      "url": "/doacoes",
+      "description": "Gerenciar doações"
+    }
+  ]
+}

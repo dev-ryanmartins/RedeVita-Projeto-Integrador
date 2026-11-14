@@ -1,0 +1,68 @@
+# Python
+__pycache__/
+*.py[oc]
+*.pyo
+build/
+dist/
+wheels/
+*.egg-info/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# uv / pip
+.pythonlibs/
+.cache/
+uv.lock
+
+# Environment variables / secrets
+.env
+*.env
+
+# Database
+instance/
+*.db
+*.sqlite
+*.sqlite3
+*.db-wal
+*.db-shm
+*.sqlite-wal
+*.sqlite-shm
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+*.swp
+*.swo
+
+# Uploads / temp
+uploads/
+tmp/
+
+# Replit / agente
+.local/
+.replit
+replit.nix
+attached_assets/
+
+# E2E testing
+e2e/
+e2e-results.xml
+test-results/
+playwright-report/
+playwright.config.ts
+locustfile.py
+
+# Node.js
+node_modules/
+package-lock.json
+package.json

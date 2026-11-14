@@ -464,7 +464,8 @@
 <script>
 (function () {
 
-  const FARMACIAS_REDEVITA = {{ farmacias_json | safe }};
+  const FARMACIAS_DATA = {{ farmacias_json | safe }};
+  const FARMACIAS_REDEVITA = Array.isArray(FARMACIAS_DATA) ? FARMACIAS_DATA : (FARMACIAS_DATA.pontos || []);
   const DEFAULT_LAT = {{ default_lat }};
   const DEFAULT_LNG = {{ default_lng }};
   const MAPBOX_TOKEN = document.getElementById('map').dataset.mapboxToken || '';
